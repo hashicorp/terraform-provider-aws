@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -42,6 +43,7 @@ func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
 }
 
 func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -99,6 +101,7 @@ func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 }
 
 func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -156,6 +159,7 @@ func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 }
 
 func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 

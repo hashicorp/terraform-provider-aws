@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -33,6 +34,7 @@ func TestAccVPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 }
 
 func TestAccVPCPeeringConnectionDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -73,6 +75,7 @@ func TestAccVPCPeeringConnectionDataSource_id(t *testing.T) {
 }
 
 func TestAccVPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -95,6 +98,7 @@ func TestAccVPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 }
 
 func TestAccVPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -116,6 +120,7 @@ func TestAccVPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 }
 
 func TestAccVPCPeeringConnectionDataSource_vpcID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"

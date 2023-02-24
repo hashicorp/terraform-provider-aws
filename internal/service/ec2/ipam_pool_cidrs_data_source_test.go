@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc_ipam_pool_cidrs.test"
 
 	resource.ParallelTest(t, resource.TestCase{

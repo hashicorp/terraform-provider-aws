@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,6 +30,7 @@ func TestAccVPCsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,6 +49,7 @@ func TestAccVPCsDataSource_tags(t *testing.T) {
 }
 
 func TestAccVPCsDataSource_filters(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -65,6 +68,7 @@ func TestAccVPCsDataSource_filters(t *testing.T) {
 }
 
 func TestAccVPCsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

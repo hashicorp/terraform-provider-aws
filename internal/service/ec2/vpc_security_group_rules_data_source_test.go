@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCSecurityGroupRulesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,6 +30,7 @@ func TestAccVPCSecurityGroupRulesDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRulesDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

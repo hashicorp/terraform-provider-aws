@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_volume.test"
 	dataSourceName := "data.aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -38,6 +39,7 @@ func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSVolumeDataSource_multipleFilters(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_volume.test"
 	dataSourceName := "data.aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

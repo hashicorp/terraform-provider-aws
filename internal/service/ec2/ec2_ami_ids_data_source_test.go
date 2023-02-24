@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami_ids.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,6 +29,7 @@ func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami_ids.test"
 
 	resource.ParallelTest(t, resource.TestCase{

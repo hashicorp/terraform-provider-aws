@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rtResourceName := "aws_route_table.test"
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -99,6 +100,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCRouteTableDataSource_main(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

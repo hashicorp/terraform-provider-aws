@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2EIPDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -33,6 +34,7 @@ func TestAccEC2EIPDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -55,6 +57,7 @@ func TestAccEC2EIPDataSource_id(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_publicIP(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -78,6 +81,7 @@ func TestAccEC2EIPDataSource_publicIP(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -100,6 +104,7 @@ func TestAccEC2EIPDataSource_tags(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_networkInterface(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,6 +129,7 @@ func TestAccEC2EIPDataSource_networkInterface(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_instance(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

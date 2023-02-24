@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt1 := sdkacctest.RandIntRange(1, 128)
 	rInt2 := sdkacctest.RandIntRange(128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)

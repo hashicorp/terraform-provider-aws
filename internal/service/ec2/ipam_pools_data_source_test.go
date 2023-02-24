@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc_ipam_pools.test"
 	dataSourceNameTwo := "data.aws_vpc_ipam_pools.testtwo"
 	resourceName := "aws_vpc_ipam_pool.testthree"
@@ -55,6 +56,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 }
 
 func TestAccIPAMPoolsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc_ipam_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{

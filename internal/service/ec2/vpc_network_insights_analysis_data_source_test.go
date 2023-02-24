@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNetworkInsightsAnalysisDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	datasourceName := "data.aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

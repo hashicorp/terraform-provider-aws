@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccIPAMPoolDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam_pool.test"
 	dataSourceName := "data.aws_vpc_ipam_pool.test"
 

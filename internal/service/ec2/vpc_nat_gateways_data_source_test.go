@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

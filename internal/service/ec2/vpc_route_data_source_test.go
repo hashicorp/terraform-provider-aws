@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccVPCRouteDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	instanceRouteResourceName := "aws_route.instance"
 	pcxRouteResourceName := "aws_route.vpc_peering_connection"
 	rtResourceName := "aws_route_table.test"

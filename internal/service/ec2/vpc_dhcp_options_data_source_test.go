@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
@@ -48,6 +49,7 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"

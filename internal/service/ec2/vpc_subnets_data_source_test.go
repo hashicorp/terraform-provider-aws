@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,6 +36,7 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

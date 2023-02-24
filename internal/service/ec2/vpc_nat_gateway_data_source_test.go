@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_nat_gateway.test_by_id"
 	dataSourceNameBySubnetId := "data.aws_nat_gateway.test_by_subnet_id"

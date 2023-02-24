@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,6 +51,7 @@ func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
 }
 
 func TestAccVPCEndpointDataSource_byID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,6 +91,7 @@ func TestAccVPCEndpointDataSource_byID(t *testing.T) {
 }
 
 func TestAccVPCEndpointDataSource_byFilter(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -128,6 +131,7 @@ func TestAccVPCEndpointDataSource_byFilter(t *testing.T) {
 }
 
 func TestAccVPCEndpointDataSource_byTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -167,6 +171,7 @@ func TestAccVPCEndpointDataSource_byTags(t *testing.T) {
 }
 
 func TestAccVPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -206,6 +211,7 @@ func TestAccVPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
 }
 
 func TestAccVPCEndpointDataSource_interface(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint.test"
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

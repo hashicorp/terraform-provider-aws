@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
@@ -32,6 +33,7 @@ func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
@@ -53,6 +55,7 @@ func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 

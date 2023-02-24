@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2InstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,6 +37,7 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -58,6 +60,7 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -82,6 +85,7 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -108,6 +112,7 @@ func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -134,6 +139,7 @@ func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -163,6 +169,7 @@ func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 
 // Test to verify that ebs_block_device kms_key_id does not elicit a panic
 func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,6 +186,7 @@ func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
 
 // Test to verify that root_block_device kms_key_id does not elicit a panic
 func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -194,6 +202,7 @@ func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -218,6 +227,7 @@ func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -244,6 +254,7 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_secondaryPrivateIPs(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,6 +277,7 @@ func TestAccEC2InstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -288,6 +300,7 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -316,6 +329,7 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -340,6 +354,7 @@ func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -360,6 +375,7 @@ func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -384,6 +400,7 @@ func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -407,6 +424,7 @@ func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -439,6 +457,7 @@ func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -471,6 +490,7 @@ func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -505,6 +525,7 @@ func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -543,6 +564,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -570,6 +592,7 @@ func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -593,6 +616,7 @@ func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_metadataOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -617,6 +641,7 @@ func TestAccEC2InstanceDataSource_metadataOptions(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_enclaveOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -638,6 +663,7 @@ func TestAccEC2InstanceDataSource_enclaveOptions(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -658,6 +684,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_disableAPIStopTermination(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -685,6 +712,7 @@ func TestAccEC2InstanceDataSource_disableAPIStopTermination(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

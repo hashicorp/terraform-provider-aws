@@ -376,6 +376,7 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 }
 
 func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

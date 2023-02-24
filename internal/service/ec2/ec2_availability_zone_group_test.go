@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_availability_zone_group.test"
 
 	// Filter to one Availability Zone Group per Region as Local Zones become available

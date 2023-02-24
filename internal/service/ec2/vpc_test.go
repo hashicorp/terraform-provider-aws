@@ -402,6 +402,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 }
 
 func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),

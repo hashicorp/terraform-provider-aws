@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot.test"
 	resourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,6 +42,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot.test"
 	resourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,6 +63,7 @@ func TestAccEC2EBSSnapshotDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotDataSource_mostRecent(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot.test"
 	resourceName := "aws_ebs_snapshot.b"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

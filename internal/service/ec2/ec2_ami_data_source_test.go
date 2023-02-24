@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,6 +65,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 }
 
 func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,6 +112,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 }
 
 func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -152,6 +155,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 }
 
 func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -170,6 +174,7 @@ func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 }
 
 func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ami.test"
 	datasourceName := "data.aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

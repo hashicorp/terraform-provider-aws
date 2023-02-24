@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2InstancesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,6 +33,7 @@ func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2InstancesDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,6 +52,7 @@ func TestAccEC2InstancesDataSource_tags(t *testing.T) {
 }
 
 func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -68,6 +71,7 @@ func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
 }
 
 func TestAccEC2InstancesDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,6 +92,7 @@ func TestAccEC2InstancesDataSource_empty(t *testing.T) {
 }
 
 func TestAccEC2InstancesDataSource_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

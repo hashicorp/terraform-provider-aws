@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -42,6 +43,7 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCNetworkInterfaceDataSource_filters(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -111,6 +113,7 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 }
 
 func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	eipResourceName := "aws_eip.test"
@@ -160,6 +163,7 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 }
 
 func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	instanceResourceName := "aws_instance.test"

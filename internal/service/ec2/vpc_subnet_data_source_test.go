@@ -139,6 +139,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -162,6 +163,7 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 }
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

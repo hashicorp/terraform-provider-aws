@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCInternetGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	igwResourceName := "aws_internet_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	ds1ResourceName := "data.aws_internet_gateway.by_id"

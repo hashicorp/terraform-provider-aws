@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEC2HostDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -43,6 +44,7 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2HostDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

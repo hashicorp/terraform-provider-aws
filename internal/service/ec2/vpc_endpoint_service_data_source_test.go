@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,6 +43,7 @@ func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,6 +73,7 @@ func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
@@ -101,6 +104,7 @@ func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
@@ -131,6 +135,7 @@ func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
@@ -161,6 +166,7 @@ func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -180,6 +186,7 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{

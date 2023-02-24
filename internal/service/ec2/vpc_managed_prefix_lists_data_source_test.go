@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -27,6 +28,7 @@ func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,6 +47,7 @@ func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
 }
 
 func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
