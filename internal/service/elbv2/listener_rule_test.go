@@ -654,10 +654,9 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_lb_listener_rule.oidc"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+	listenerResourceName := "aws_lb_listener.test"
 	targetGroupResourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -667,11 +666,11 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_oidc(lbName, key, certificate),
+				Config: testAccListenerRuleConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
@@ -1509,7 +1508,11 @@ resource "aws_lb_target_group" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccListenerRuleConfig_baseWithListener(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1528,7 +1531,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerRuleConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), `
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
@@ -2344,7 +2347,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccListenerRuleConfig_updatePriority(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), `
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
   priority     = 101
@@ -2364,7 +2367,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 func testAccListenerRuleConfig_changeARN(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test2.arn
   priority     = 101
@@ -2825,9 +2828,9 @@ resource "aws_cognito_user_pool_domain" "test" {
 }
 
 func testAccListenerRuleConfig_oidc(rName, key, certificate string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "oidc" {
-  listener_arn = aws_lb_listener.front_end.arn
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
   priority     = 100
 
   action {
@@ -2857,6 +2860,10 @@ resource "aws_lb_listener_rule" "oidc" {
       values = ["/static/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_iam_server_certificate" "test" {
@@ -2865,8 +2872,8 @@ resource "aws_iam_server_certificate" "test" {
   private_key      = "%[3]s"
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -2876,98 +2883,12 @@ resource "aws_lb_listener" "front_end" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-cognito"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-cognito-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccListenerRuleConfig_actionOrder(rName, key, certificate string) string {
@@ -3561,7 +3482,7 @@ condition {
 }
 
 func testAccListenerRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
@@ -3585,7 +3506,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 func testAccListenerRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
