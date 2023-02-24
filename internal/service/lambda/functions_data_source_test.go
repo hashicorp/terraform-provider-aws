@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccLambdaFunctionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_functions.test"
 

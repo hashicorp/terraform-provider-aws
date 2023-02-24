@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLambdaAliasDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	dataSourceName := "data.aws_lambda_alias.test"

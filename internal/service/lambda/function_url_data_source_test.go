@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function_url.test"
 	resourceName := "aws_lambda_function_url.test"

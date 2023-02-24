@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -56,6 +57,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_version(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -81,6 +83,7 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -105,6 +108,7 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -129,6 +133,7 @@ func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	lambdaAliasResourceName := "aws_lambda_alias.test"
@@ -153,6 +158,7 @@ func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -174,6 +180,7 @@ func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -201,6 +208,7 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -225,6 +233,7 @@ func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -252,6 +261,7 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_image(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -275,6 +285,7 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -295,6 +306,7 @@ func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"

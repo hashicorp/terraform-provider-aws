@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLambdaLayerVersionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -42,6 +43,7 @@ func TestAccLambdaLayerVersionDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaLayerVersionDataSource_version(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -63,6 +65,7 @@ func TestAccLambdaLayerVersionDataSource_version(t *testing.T) {
 }
 
 func TestAccLambdaLayerVersionDataSource_runtime(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -84,6 +87,7 @@ func TestAccLambdaLayerVersionDataSource_runtime(t *testing.T) {
 }
 
 func TestAccLambdaLayerVersionDataSource_architectures(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"

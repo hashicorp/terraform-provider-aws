@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
@@ -33,6 +34,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_qualifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
@@ -54,6 +56,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
@@ -75,6 +78,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_triggers(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"

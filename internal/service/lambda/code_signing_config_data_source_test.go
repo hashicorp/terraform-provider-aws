@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccLambdaCodeSigningConfigDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,6 +29,7 @@ func TestAccLambdaCodeSigningConfigDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaCodeSigningConfigDataSource_policyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,6 +51,7 @@ func TestAccLambdaCodeSigningConfigDataSource_policyID(t *testing.T) {
 }
 
 func TestAccLambdaCodeSigningConfigDataSource_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{

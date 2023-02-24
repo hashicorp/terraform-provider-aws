@@ -38,6 +38,7 @@ func testAccCheckInvocationResult(name, expectedResult string) resource.TestChec
 }
 
 func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
@@ -57,6 +58,7 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
@@ -76,6 +78,7 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
