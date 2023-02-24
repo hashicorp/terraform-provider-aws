@@ -66,11 +66,9 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
-	resourceName := "aws_lb_listener_rule.static"
-	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+	listenerResourceName := "aws_lb_listener.test"
 	targetGroupResourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,11 +78,11 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_basic(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
@@ -112,13 +110,11 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_tags(t *testing.T) {
+func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
-	resourceName := "aws_lb_listener_rule.static"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -127,7 +123,31 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_tags1(lbName, targetGroupName, "key1", "value1"),
+				Config: testAccListenerRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +155,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_tags2(lbName, targetGroupName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccListenerRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -144,7 +164,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_tags1(lbName, targetGroupName, "key2", "value2"),
+				Config: testAccListenerRuleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -448,10 +468,8 @@ func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
-	resourceName := "aws_lb_listener_rule.static"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -460,14 +478,14 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_basic(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_updatePriority(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_updatePriority(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &after),
 					testAccCheckListenerRuleNotRecreated(t, &before, &after),
@@ -481,10 +499,8 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
-	resourceName := "aws_lb_listener_rule.static"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -493,13 +509,13 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_basic(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &before),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_changeARN(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_changeARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &after),
 					testAccCheckListenerRuleRecreated(t, &before, &after),
@@ -1433,105 +1449,11 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccListenerRuleConfig_basic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
-  }
-}
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-basic"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+func testAccListenerRuleConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -1551,7 +1473,78 @@ resource "aws_security_group" "alb_test" {
     Name = %[1]q
   }
 }
-`, lbName, targetGroupName)
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+`)
 }
 
 func testAccListenerRuleConfig_forwardWeighted(lbName, targetGroupName1 string, targetGroupName2 string) string {
@@ -2350,10 +2343,30 @@ resource "aws_security_group" "alb_test" {
 `, response, lbName)
 }
 
-func testAccListenerRuleConfig_updatePriority(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+func testAccListenerRuleConfig_updatePriority(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 101
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleConfig_changeARN(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test2.arn
   priority     = 101
 
   action {
@@ -2368,140 +2381,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-update-rule-priority"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-update-rule-priority-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, lbName, targetGroupName)
-}
-
-func testAccListenerRuleConfig_changeARN(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end_ruleupdate.arn
-  priority     = 101
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
-  }
-}
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb_listener" "front_end_ruleupdate" {
-  load_balancer_arn = aws_lb.alb_test.id
+resource "aws_lb_listener" "test2" {
+  load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "8080"
 
@@ -2509,98 +2390,12 @@ resource "aws_lb_listener" "front_end_ruleupdate" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-change-rule-arn"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-change-rule-arn-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, lbName, targetGroupName)
+`, rName))
 }
 
 func testAccListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
@@ -2899,8 +2694,8 @@ resource "aws_lb_listener_rule" "cognito" {
 
 resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
-  certificate_body = %[2]q
-  private_key      = %[3]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -3066,8 +2861,8 @@ resource "aws_lb_listener_rule" "oidc" {
 
 resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
-  certificate_body = %[2]q
-  private_key      = %[3]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -3765,10 +3560,10 @@ condition {
 `, lbName)
 }
 
-func testAccListenerRuleConfig_tags1(lbName, targetGroupName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+func testAccListenerRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
   priority     = 100
 
   action {
@@ -3783,117 +3578,16 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   tags = {
-    %[3]q = %[4]q
+    %[1]q = %[2]q
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
+`, tagKey1, tagValue1))
 }
 
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-basic"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, lbName, targetGroupName, tagKey1, tagValue1)
-}
-
-func testAccListenerRuleConfig_tags2(lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.front_end.arn
+func testAccListenerRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
   priority     = 100
 
   action {
@@ -3908,110 +3602,9 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   tags = {
+    %[1]q = %[2]q
     %[3]q = %[4]q
-    %[5]q = %[6]q
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-basic"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
