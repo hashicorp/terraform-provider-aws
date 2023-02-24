@@ -23,8 +23,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.206 h1:xC7O40wdnKH4A95KdYt+smXl9hig1vu9b3mFxAxUoak=
-github.com/aws/aws-sdk-go v1.44.206/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.208 h1:xk1E2zWAIskrOP+huXuCYFR9ZdQWfTVid8Cjiwj2H1o=
+github.com/aws/aws-sdk-go v1.44.208/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.17.4/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.17.5 h1:TzCUW1Nq4H8Xscph5M/skINUitxM5UBAyvm2s7XBzL4=
 github.com/aws/aws-sdk-go-v2 v1.17.5/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -72,6 +72,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4 h1:nGVv8RFgC4P7BsnL/NPGhT8W0
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4/go.mod h1:Ic/51aMt0SrY+rLEBYCMW6iuORW0wQJ/rhV0PGg07mQ=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5 h1:vYyn1h1+/eRL8UxfzRgxhH8tm+Jd6ujsyXmUFztfnks=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5/go.mod h1:PMq9hXXhaNxmBMIolmknhJ9gXi4PYDsZwsFBaJs7Zak=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.29.4 h1:gYGaEptCzFTlw91ETLla+d33SilaGnuJIT2ksJYXoVc=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.29.4/go.mod h1:iPDYs5hrSZ+/8Ifoq9ZpoiuHZXDEJx9Udurdoq20958=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4 h1:1K+jiIQQdFGgYUmITnQRTRFQSCv0fUIH/X//Kgq0m/8=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4/go.mod h1:MDHSj74ylVyTusJYPIoFhNXqwaD8W8cIf8yTEI7+ccc=
 github.com/aws/aws-sdk-go-v2/service/oam v1.1.5 h1:b4IaVHpAfwj2cOmTUgoIFTjLjTuC1yh3Ml3K7cjZFaU=
