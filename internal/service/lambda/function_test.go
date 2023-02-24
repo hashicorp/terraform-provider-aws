@@ -1732,7 +1732,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "publish"},
+				ImportStateVerifyIgnore: []string{"publish", "s3_bucket", "s3_key", "skip_destroy"},
 			},
 		},
 	})
@@ -1899,7 +1899,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "s3_object_version"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "s3_object_version", "skip_destroy"},
 			},
 			{
 				PreConfig: func() {
@@ -1955,7 +1955,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "skip_destroy"},
 			},
 			{
 				PreConfig: func() {
