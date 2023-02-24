@@ -35,6 +35,7 @@ import (
 const (
 	FunctionVersionLatest = "$LATEST"
 	mutexKey              = `aws_lambda_function`
+	listVersionsMaxItems  = 10000
 )
 
 func ResourceFunction() *schema.Resource {
@@ -1045,7 +1046,7 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, name string) (*types.FunctionConfiguration, error) {
 	input := &lambda.ListVersionsByFunctionInput{
 		FunctionName: aws.String(name),
-		MaxItems:     aws.Int32(10000),
+		MaxItems:     aws.Int32(listVersionsMaxItems),
 	}
 	var output *types.FunctionConfiguration
 
