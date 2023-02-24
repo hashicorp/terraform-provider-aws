@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -935,8 +934,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer":     accessanalyzer.ResourceAnalyzer(),
 			"aws_accessanalyzer_archive_rule": accessanalyzer.ResourceArchiveRule(),
-
-			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAccountAlternateContact_basic(t *testing.T) {
+func testAccAlternateContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
 	domain := acctest.RandomDomainName()
@@ -63,7 +63,7 @@ func TestAccAccountAlternateContact_basic(t *testing.T) {
 	})
 }
 
-func TestAccAccountAlternateContact_disappears(t *testing.T) {
+func testAccAlternateContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
 	domain := acctest.RandomDomainName()
@@ -88,7 +88,7 @@ func TestAccAccountAlternateContact_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAccountAlternateContact_accountID(t *testing.T) {
+func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
 	domain := acctest.RandomDomainName()

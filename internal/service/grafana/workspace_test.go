@@ -152,7 +152,7 @@ func testAccWorkspace_sso(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-			acctest.PreCheckSSOAdminInstances(t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),

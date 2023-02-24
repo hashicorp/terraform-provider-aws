@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
+	ctx := acctest.Context(t)
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
@@ -18,7 +19,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -91,6 +92,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 }
 
 func TestAccDSDirectoryDataSource_connector(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,8 +101,8 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckDirectoryService(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -146,7 +148,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
