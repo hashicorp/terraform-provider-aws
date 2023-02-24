@@ -295,8 +295,14 @@ func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccMultiplexBaseConfig() string {
 	return `
-data "aws_availability_zones" "test" {
-  state = "available"
+data "aws_availability_zones" "available" {
+  state         = "available"
+  exclude_names = ["us-west-2-las-1a"]
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 `
 }
@@ -307,7 +313,7 @@ func testAccMultiplexConfig_basic(rName string, start bool) string {
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
@@ -331,7 +337,7 @@ func testAccMultiplexConfig_update(rName string, start bool) string {
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000001
@@ -355,7 +361,7 @@ func testAccMultiplexConfig_tags1(rName, key1, value1 string) string {
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
@@ -377,7 +383,7 @@ func testAccMultiplexConfig_tags2(rName, key1, value1, key2, value2 string) stri
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
