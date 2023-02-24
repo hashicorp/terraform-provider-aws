@@ -34,7 +34,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					testAccSecretsEncryptDataSource(ctx, &key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
-					testAccSecretsDecryptDataSource(t, plaintext, &encryptedPayload),
+					testAccSecretsDecryptDataSource(ctx, t, plaintext, &encryptedPayload),
 				),
 			},
 		},
@@ -61,7 +61,7 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					testAccSecretsEncryptDataSourceAsymmetric(ctx, &key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
-					testAccSecretsDecryptDataSourceAsym(t, &key, plaintext, &encryptedPayload),
+					testAccSecretsDecryptDataSourceAsym(ctx, t, &key, plaintext, &encryptedPayload),
 				),
 			},
 		},
@@ -114,7 +114,7 @@ func testAccSecretsEncryptDataSourceAsymmetric(ctx context.Context, key *kms.Key
 	}
 }
 
-func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsDecryptDataSource(ctx context.Context, t *testing.T, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		dataSourceName := "data.aws_kms_secrets.test"
 
@@ -137,7 +137,7 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 	}
 }
 
-func testAccSecretsDecryptDataSourceAsym(t *testing.T, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsDecryptDataSourceAsym(ctx context.Context, t *testing.T, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		dataSourceName := "data.aws_kms_secrets.test"
 		keyid := key.Arn

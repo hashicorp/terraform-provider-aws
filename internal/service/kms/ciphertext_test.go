@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccKMSCiphertext_Resource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
@@ -27,6 +28,7 @@ func TestAccKMSCiphertext_Resource_basic(t *testing.T) {
 }
 
 func TestAccKMSCiphertext_Resource_validate(t *testing.T) {
+	ctx := acctest.Context(t)
 	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
 	resourceName := "aws_kms_ciphertext.foo"
 
@@ -48,6 +50,7 @@ func TestAccKMSCiphertext_Resource_validate(t *testing.T) {
 }
 
 func TestAccKMSCiphertext_ResourceValidate_withContext(t *testing.T) {
+	ctx := acctest.Context(t)
 	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
 	resourceName := "aws_kms_ciphertext.foo"
 

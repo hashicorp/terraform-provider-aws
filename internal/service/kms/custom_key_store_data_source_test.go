@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccKMSCustomKeyStoreDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
 	}

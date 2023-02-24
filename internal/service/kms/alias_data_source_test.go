@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccKMSAliasDataSource_service(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
@@ -34,6 +35,7 @@ func TestAccKMSAliasDataSource_service(t *testing.T) {
 }
 
 func TestAccKMSAliasDataSource_cmk(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
