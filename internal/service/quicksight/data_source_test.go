@@ -238,7 +238,7 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -276,7 +276,7 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -301,7 +301,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -348,7 +348,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
