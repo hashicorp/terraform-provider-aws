@@ -68,6 +68,8 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 }
 
 func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
