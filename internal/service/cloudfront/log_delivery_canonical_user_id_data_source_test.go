@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,6 +30,7 @@ func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_basic(t *testing.T) {
 }
 
 func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_default(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,6 +49,7 @@ func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_default(t *testing.T)
 }
 
 func TestAccCloudFrontLogDeliveryCanonicalUserIDDataSource_cn(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
