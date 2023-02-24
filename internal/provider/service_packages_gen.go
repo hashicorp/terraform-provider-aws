@@ -5,7 +5,7 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -199,8 +199,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func servicePackages(context.Context) []intf.ServicePackage {
-	v := []intf.ServicePackage{
+func servicePackages(context.Context) []conns.ServicePackage {
+	v := []conns.ServicePackage{
 		accessanalyzer.ServicePackage,
 		account.ServicePackage,
 		acm.ServicePackage,
