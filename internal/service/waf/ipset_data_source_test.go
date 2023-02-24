@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFIPSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.ipset"
 	datasourceName := "data.aws_waf_ipset.ipset"

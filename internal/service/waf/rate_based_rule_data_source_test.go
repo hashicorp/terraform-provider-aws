@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFRateBasedRuleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 	datasourceName := "data.aws_waf_rate_based_rule.wafrule"

@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFWebACLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_web_acl.web_acl"
 	datasourceName := "data.aws_waf_web_acl.web_acl"
