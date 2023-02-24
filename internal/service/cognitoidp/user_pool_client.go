@@ -316,33 +316,13 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 		PreventUserExistenceErrors:               flex.StringFromFramework(ctx, data.PreventUserExistenceErrors),
 		EnableTokenRevocation:                    flex.BoolFromFramework(ctx, data.EnableTokenRevocation),
 		EnablePropagateAdditionalUserContextData: flex.BoolFromFramework(ctx, data.EnablePropagateAdditionalUserContextData),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration, &response.Diagnostics),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, &response.Diagnostics),
 	}
 
-	// if v, ok := d.GetOk("analytics_configuration"); ok {
-	// 	params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
-	// }
-	var analytics []analyticsConfiguration
-	response.Diagnostics.Append(data.AnalyticsConfiguration.ElementsAs(ctx, &analytics, false)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if len(analytics) == 1 {
-		params.AnalyticsConfiguration = analytics[0].expand(ctx)
-	}
-
-	// if v, ok := d.GetOk("token_validity_units"); ok {
-	// 	params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
-	// }
-	var tokenValidity []tokenValidityUnits
-	response.Diagnostics.Append(data.TokenValidityUnits.ElementsAs(ctx, &tokenValidity, false)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if len(tokenValidity) == 1 {
-		params.TokenValidityUnits = tokenValidity[0].expand(ctx)
-	}
-
-	// log.Printf("[DEBUG] Creating Cognito User Pool Client: %s", params)
 
 	resp, err := conn.CreateUserPoolClientWithContext(ctx, params)
 	if err != nil {
@@ -370,6 +350,10 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 	data.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	data.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
 	data.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -417,16 +401,12 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	data.EnableTokenRevocation = flex.BoolToFramework(ctx, userPoolClient.EnableTokenRevocation)
 	data.EnablePropagateAdditionalUserContextData = flex.BoolToFramework(ctx, userPoolClient.EnablePropagateAdditionalUserContextData)
 	data.AuthSessionValidity = flex.Int64ToFramework(ctx, userPoolClient.AuthSessionValidity)
-
-	// if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting analytics_configuration: %s", err)
-	// }
 	data.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, userPoolClient.AnalyticsConfiguration, &response.Diagnostics)
-
-	// if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting token_validity_units: %s", err)
-	// }
 	data.TokenValidityUnits = flattenTokenValidityUnits(ctx, userPoolClient.TokenValidityUnits)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -467,30 +447,12 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 		PreventUserExistenceErrors:               flex.StringFromFramework(ctx, new.PreventUserExistenceErrors),
 		EnableTokenRevocation:                    flex.BoolFromFramework(ctx, new.EnableTokenRevocation),
 		EnablePropagateAdditionalUserContextData: flex.BoolFromFramework(ctx, new.EnablePropagateAdditionalUserContextData),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, new.AnalyticsConfiguration, &response.Diagnostics),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, new.TokenValidityUnits, &response.Diagnostics),
 	}
 
-	// if v, ok := d.GetOk("analytics_configuration"); ok {
-	// 	params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
-	// }
-	var analytics []analyticsConfiguration
-	response.Diagnostics.Append(new.AnalyticsConfiguration.ElementsAs(ctx, &analytics, false)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-	if len(analytics) == 1 {
-		params.AnalyticsConfiguration = analytics[0].expand(ctx)
-	}
-
-	// if v, ok := d.GetOk("token_validity_units"); ok {
-	// 	params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
-	// }
-	var tokenValidity []tokenValidityUnits
-	response.Diagnostics.Append(new.TokenValidityUnits.ElementsAs(ctx, &tokenValidity, false)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if len(tokenValidity) == 1 {
-		params.TokenValidityUnits = tokenValidity[0].expand(ctx)
 	}
 
 	conn := r.Meta().CognitoIDPConn()
@@ -522,6 +484,10 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	new.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	new.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
 	new.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -560,12 +526,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 	}
 }
 
-// ImportState is called when the provider must import the state of a resource instance.
-// This method must return enough state so the Read method can properly refresh the full resource.
-//
-// If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
@@ -626,6 +587,20 @@ func (ac *analyticsConfiguration) expand(ctx context.Context) *cognitoidentitypr
 	return result
 }
 
+func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.AnalyticsConfigurationType {
+	var analytics []analyticsConfiguration
+	diags.Append(list.ElementsAs(ctx, &analytics, false)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	if len(analytics) == 1 {
+		return analytics[0].expand(ctx)
+	}
+
+	return nil
+}
+
 func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType, diags *diag.Diagnostics) types.List {
 	attributeTypes := framework.AttributeTypesMust[analyticsConfiguration](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
@@ -663,6 +638,19 @@ func (tvu *tokenValidityUnits) expand(ctx context.Context) *cognitoidentityprovi
 	}
 }
 
+func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.TokenValidityUnitsType {
+	var analytics []tokenValidityUnits
+	diags.Append(list.ElementsAs(ctx, &analytics, false)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	if len(analytics) == 1 {
+		return analytics[0].expand(ctx)
+	}
+
+	return nil
+}
 func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
 	attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
