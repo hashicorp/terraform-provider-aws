@@ -22,7 +22,7 @@ func TestAccRoute53TrafficPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
@@ -54,7 +54,7 @@ func TestAccRoute53TrafficPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
@@ -80,7 +80,7 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	commentUpdated := `comment updated`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTrafficPolicy(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTrafficPolicy(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),

@@ -22,7 +22,7 @@ func TestAccRoute53CIDRLocation_basic(t *testing.T) {
 	locationName := sdkacctest.RandString(16)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx),
@@ -63,7 +63,7 @@ func TestAccRoute53CIDRLocation_disappears(t *testing.T) {
 	locationName := sdkacctest.RandString(16)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx),
@@ -88,7 +88,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 	locationName := sdkacctest.RandString(16)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx),
