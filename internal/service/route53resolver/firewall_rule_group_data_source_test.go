@@ -16,7 +16,7 @@ func TestAccRoute53ResolverFirewallRuleGroupDataSource_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
