@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,6 +32,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 }
 
 func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
