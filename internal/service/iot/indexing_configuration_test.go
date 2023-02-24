@@ -20,6 +20,7 @@ func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
 }
 
 func testAccIndexingConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -54,6 +55,7 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 }
 
 func testAccIndexingConfiguration_allAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIoTEndpointDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,6 +30,7 @@ func TestAccIoTEndpointDataSource_basic(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotCredentialProvider(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,6 +49,7 @@ func TestAccIoTEndpointDataSource_EndpointType_iotCredentialProvider(t *testing.
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotData(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -65,6 +68,7 @@ func TestAccIoTEndpointDataSource_EndpointType_iotData(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotDataATS(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,6 +87,7 @@ func TestAccIoTEndpointDataSource_EndpointType_iotDataATS(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotJobs(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{

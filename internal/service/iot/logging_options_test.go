@@ -22,6 +22,7 @@ func TestAccIoTLoggingOptions_serial(t *testing.T) {
 }
 
 func testAccLoggingOptions_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_logging_options.test"
 
@@ -44,6 +45,7 @@ func testAccLoggingOptions_basic(t *testing.T) {
 }
 
 func testAccLoggingOptions_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_logging_options.test"
 
