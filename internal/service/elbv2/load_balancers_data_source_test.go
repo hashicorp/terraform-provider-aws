@@ -26,7 +26,7 @@ func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(elbv2.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
