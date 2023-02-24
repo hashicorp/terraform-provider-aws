@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccEMRReleaseLabels_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,6 +29,7 @@ func TestAccEMRReleaseLabels_basic(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,6 +49,7 @@ func TestAccEMRReleaseLabels_prefix(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_application(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,6 +69,7 @@ func TestAccEMRReleaseLabels_application(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -85,6 +89,7 @@ func TestAccEMRReleaseLabels_full(t *testing.T) {
 }
 
 func TestAccEMRReleaseLabels_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
 	resource.ParallelTest(t, resource.TestCase{
