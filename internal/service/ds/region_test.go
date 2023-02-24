@@ -24,7 +24,7 @@ func TestAccDSRegion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -59,7 +59,7 @@ func TestAccDSRegion_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -88,7 +88,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -139,7 +139,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
