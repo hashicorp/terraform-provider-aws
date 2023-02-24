@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
@@ -44,6 +45,7 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
@@ -85,6 +87,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"

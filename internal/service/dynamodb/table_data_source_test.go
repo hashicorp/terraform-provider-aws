@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_dynamodb_table.test"
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
