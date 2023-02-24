@@ -34,7 +34,7 @@ var testAccProviderWafLoggingConfigurationConfigure sync.Once
 
 // testAccPreCheckLoggingConfiguration verifies AWS credentials and that WAF Logging Configurations is supported
 func testAccPreCheckLoggingConfiguration(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(waf.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, waf.EndpointsID)
 
 	region := testAccGetLoggingConfigurationRegion()
 
