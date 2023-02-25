@@ -49,7 +49,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,7 +173,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -229,7 +229,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSignerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -282,7 +282,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -322,7 +322,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -363,7 +363,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -387,7 +387,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -442,7 +442,7 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -477,7 +477,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -522,7 +522,7 @@ func TestAccLambdaFunction_nameValidation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -548,7 +548,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -593,7 +593,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -664,7 +664,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -722,7 +722,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -767,7 +767,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -810,7 +810,7 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -850,7 +850,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -875,7 +875,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -946,7 +946,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1004,7 +1004,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1055,7 +1055,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1106,7 +1106,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1153,7 +1153,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 
@@ -1196,7 +1196,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1242,7 +1242,7 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1276,7 +1276,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1310,7 +1310,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1352,7 +1352,7 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1388,7 +1388,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1428,7 +1428,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1477,7 +1477,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1512,7 +1512,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1554,7 +1554,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 
@@ -1597,7 +1597,7 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1628,7 +1628,7 @@ func TestAccLambdaFunction_VPC_replaceSGWithDefault(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1661,7 +1661,7 @@ func TestAccLambdaFunction_VPC_replaceSGWithCustom(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1690,7 +1690,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1719,7 +1719,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1760,7 +1760,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1826,7 +1826,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1880,7 +1880,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1936,7 +1936,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1984,7 +1984,7 @@ func TestAccLambdaFunction_snapStart(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2077,7 +2077,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps:                    steps,
@@ -2090,7 +2090,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
