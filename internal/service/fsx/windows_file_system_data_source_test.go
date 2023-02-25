@@ -13,6 +13,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := acctest.Context(t)
 	resourceName := "aws_fsx_windows_file_system.test"
 	datasourceName := "data.aws_fsx_windows_file_system.test"
 
@@ -20,7 +21,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWindowsFileSystemDataSourceConfig_subnetIDs1(),

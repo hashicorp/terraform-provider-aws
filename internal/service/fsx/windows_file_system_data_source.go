@@ -1,17 +1,19 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWindowsFileSystemRead,
+		ReadWithoutTimeout: dataSourceWindowsFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
 			"active_directory_id": {
@@ -144,25 +146,27 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 	}
 }
 
-func dataSourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
 
-	filesystem, err := FindFileSystemByID(conn, id)
+	filesystem, err := FindFileSystemByID(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx Windows File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error reading FSx Windows File System (%s): %s", d.Id(), err)
 	}
 
 	if filesystem.LustreConfiguration != nil {
-		return fmt.Errorf("expected FSx Windows File System, found FSx Lustre File System: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "expected FSx Windows File System, found FSx Lustre File System: %s", d.Id())
 	}
 
 	if filesystem.WindowsConfiguration == nil {
-		return fmt.Errorf("error describing FSx Windows File System (%s): empty Windows configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "error describing FSx Windows File System (%s): empty Windows configuration", d.Id())
 	}
 
 	d.Set("active_directory_id", filesystem.WindowsConfiguration.ActiveDirectoryId)
@@ -184,30 +188,30 @@ func dataSourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
 
 	if err := d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
-		return fmt.Errorf("error setting aliases: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting aliases: %w", err)
 	}
 
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
-		return fmt.Errorf("error setting audit_log_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting audit_log_configuration: %w", err)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return fmt.Errorf("error setting network_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting network_interface_ids: %w", err)
 	}
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting subnet_ids: %w", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %w", err)
 	}
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
