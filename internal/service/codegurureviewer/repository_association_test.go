@@ -347,7 +347,7 @@ resource "aws_codegurureviewer_repository_association" "test" {
   }
   tags = {
     %[1]q = %[2]q
-	%[3]q = %[4]q
+    %[3]q = %[4]q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
@@ -373,8 +373,8 @@ resource "aws_codecommit_repository" "test" {
   description     = "This is a test description"
   lifecycle {
     ignore_changes = [
-	  tags["codeguru-reviewer"]
-	]
+      tags["codeguru-reviewer"]
+    ]
   }
 }
 `, rName)
