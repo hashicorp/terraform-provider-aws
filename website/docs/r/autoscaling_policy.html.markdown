@@ -129,9 +129,9 @@ resource "aws_autoscaling_policy" "example" {
   target_tracking_configuration {
     customized_metric_specification {
       metrics {
-        id          = "e1"
-        expression  = "m1 / m2"
-        label       = "Calculate the backlog per instance"
+        id = "e1"
+        expression = "m1 / m2"
+        label = "Calculate the backlog per instance"
         return_data = true
       }
 
@@ -148,7 +148,7 @@ resource "aws_autoscaling_policy" "example" {
           }
           stat = "Sum"
         }
-        label       = "Get the queue size (the number of messages waiting to be processed)"
+        label = "Get the queue size (the number of messages waiting to be processed)"
         return_data = false
       }
 
@@ -165,7 +165,7 @@ resource "aws_autoscaling_policy" "example" {
           }
           stat = "Average"
         }
-        label       = "Get the group size (the number of InService instances)"
+        label = "Get the group size (the number of InService instances)"
         return_data = false
       }
     }
