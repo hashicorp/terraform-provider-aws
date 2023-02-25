@@ -304,14 +304,14 @@ tools:
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 top5services:
-	@echo "==> Rapid smoketest of top 5 services"
+	@echo "==> Rapid smoke test of top 5 services"
 	TF_ACC=1 $(GO_VER) test \
 		./internal/service/ec2/... \
 		./internal/service/iam/... \
 		./internal/service/logs/... \
 		./internal/service/meta/... \
 		./internal/service/sts/... \
-		-v -count 1 -parallel 3 -run='TestAccIAMRole_basic|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_tags|TestAccLogsGroup_basic|TestAccMetaRegionDataSource_basic'  -timeout 180m
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_tags|TestAccLogsGroup_basic|TestAccMetaRegionDataSource_basic' -timeout $(ACCTEST_TIMEOUT)
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
