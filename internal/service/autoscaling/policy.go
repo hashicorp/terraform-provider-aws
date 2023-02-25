@@ -262,6 +262,28 @@ func ResourcePolicy() *schema.Resource {
 							ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"metric_dimension": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"metric_name": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+									},
 									"metrics": {
 										Type:          schema.TypeSet,
 										Optional:      true,
@@ -341,28 +363,6 @@ func ResourcePolicy() *schema.Resource {
 												},
 											},
 										},
-									},
-									"metric_dimension": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"metric_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 									},
 									"namespace": {
 										Type:          schema.TypeString,

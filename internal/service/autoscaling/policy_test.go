@@ -470,6 +470,7 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -478,12 +479,12 @@ func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_targetTrackingMetricMath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 				),
 			},
 			{
