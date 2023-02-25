@@ -129,7 +129,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
 	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
-	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -143,7 +143,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
-	if err := d.Set("tags", KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

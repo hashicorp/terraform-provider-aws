@@ -15,8 +15,8 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &transfer.UntagResourceInput{

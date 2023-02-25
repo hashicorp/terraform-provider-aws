@@ -31,6 +31,7 @@ const (
 	Inspector2EndpointID           = "inspector2"
 	IVSChatEndpointID              = "ivschat"
 	KendraEndpointID               = "kendra"
+	LambdaEndpointID               = "lambda"
 	MediaLiveEndpointID            = "medialive"
 	OpenSearchServerlessEndpointID = "aoss"
 	PipesEndpointID                = "pipes"

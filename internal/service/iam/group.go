@@ -24,16 +24,13 @@ func ResourceGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,6 +47,18 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Default:  "/",
 			},
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			if d.HasChanges("name", "path") {
+				return d.SetNewComputed("arn")
+			}
+
+			return nil
 		},
 	}
 }
@@ -57,19 +66,28 @@ func ResourceGroup() *schema.Resource {
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
+
 	name := d.Get("name").(string)
-	path := d.Get("path").(string)
-
-	request := &iam.CreateGroupInput{
-		Path:      aws.String(path),
+	input := &iam.CreateGroupInput{
 		GroupName: aws.String(name),
+		Path:      aws.String(d.Get("path").(string)),
 	}
 
-	createResp, err := conn.CreateGroupWithContext(ctx, request)
+	output, err := conn.CreateGroupWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IAM Group %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Group (%s): %s", name, err)
 	}
-	d.SetId(aws.StringValue(createResp.Group.GroupName))
+
+	d.SetId(aws.StringValue(output.Group.GroupName))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindGroupByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Group (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
@@ -78,33 +96,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	request := &iam.GetGroupInput{
-		GroupName: aws.String(d.Id()),
-	}
+	group, err := FindGroupByName(ctx, conn, d.Id())
 
-	var getResp *iam.GetGroupOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		getResp, err = conn.GetGroupWithContext(ctx, request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetGroupWithContext(ctx, request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,53 +108,75 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.Group == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): empty response", d.Id())
-	}
-
-	group := getResp.Group
-
-	d.Set("name", group.GroupName)
 	d.Set("arn", group.Arn)
+	d.Set("name", group.GroupName)
 	d.Set("path", group.Path)
 	d.Set("unique_id", group.GroupId)
+
 	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.HasChanges("name", "path") {
-		conn := meta.(*conns.AWSClient).IAMConn()
-		on, nn := d.GetChange("name")
-		_, np := d.GetChange("path")
+	conn := meta.(*conns.AWSClient).IAMConn()
 
-		request := &iam.UpdateGroupInput{
-			GroupName:    aws.String(on.(string)),
-			NewGroupName: aws.String(nn.(string)),
-			NewPath:      aws.String(np.(string)),
-		}
-		_, err := conn.UpdateGroupWithContext(ctx, request)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Group %s: %s", d.Id(), err)
-		}
-		d.SetId(nn.(string))
-		return append(diags, resourceGroupRead(ctx, d, meta)...)
+	o, n := d.GetChange("name")
+	input := &iam.UpdateGroupInput{
+		GroupName:    aws.String(o.(string)),
+		NewGroupName: aws.String(n.(string)),
+		NewPath:      aws.String(d.Get("path").(string)),
 	}
-	return diags
+
+	_, err := conn.UpdateGroupWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IAM Group (%s): %s", d.Id(), err)
+	}
+
+	d.SetId(n.(string))
+
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	request := &iam.DeleteGroupInput{
+	log.Printf("[DEBUG] Deleting IAM Group: %s", d.Id())
+	_, err := conn.DeleteGroupWithContext(ctx, &iam.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := conn.DeleteGroupWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Group %s: %s", d.Id(), err)
-	}
 	return diags
+}
+
+func FindGroupByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Group, error) {
+	input := &iam.GetGroupInput{
+		GroupName: aws.String(name),
+	}
+
+	output, err := conn.GetGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Group == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Group, nil
 }
 
 func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.IAM, groupName string) error {

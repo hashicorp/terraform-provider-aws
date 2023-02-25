@@ -15,7 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -318,7 +320,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -331,13 +332,14 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []intf.ServicePackage
+	ServicePackages         []ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
 	httpClient *http.Client
 
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
+	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
 	rdsClient       lazyClient[*rds_sdkv2.Client]
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
@@ -549,6 +551,7 @@ type AWSClient struct {
 	networkfirewallConn              *networkfirewall.NetworkFirewall
 	networkmanagerConn               *networkmanager.NetworkManager
 	nimbleConn                       *nimblestudio.NimbleStudio
+	oamClient                        *oam.Client
 	opensearchConn                   *opensearchservice.OpenSearchService
 	opensearchserverlessClient       *opensearchserverless.Client
 	opsworksConn                     *opsworks.OpsWorks
@@ -1319,6 +1322,10 @@ func (client *AWSClient) LambdaConn() *lambda.Lambda {
 	return client.lambdaConn
 }
 
+func (client *AWSClient) LambdaClient() *lambda_sdkv2.Client {
+	return client.lambdaClient.Client()
+}
+
 func (client *AWSClient) LexModelsConn() *lexmodelbuildingservice.LexModelBuildingService {
 	return client.lexmodelsConn
 }
@@ -1485,6 +1492,10 @@ func (client *AWSClient) NetworkManagerConn() *networkmanager.NetworkManager {
 
 func (client *AWSClient) NimbleConn() *nimblestudio.NimbleStudio {
 	return client.nimbleConn
+}
+
+func (client *AWSClient) ObservabilityAccessManagerClient() *oam.Client {
+	return client.oamClient
 }
 
 func (client *AWSClient) OpenSearchConn() *opensearchservice.OpenSearchService {

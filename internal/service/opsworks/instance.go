@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -902,6 +903,71 @@ func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{},
 	}
 
 	return nil
+}
+
+func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
+		Target:     []string{},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    2 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
+		Target:     []string{instanceStatusOnline},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
+		Target:     []string{instanceStatusStopped},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
+			InstanceIds: []*string{aws.String(instanceID)},
+		})
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if resp == nil || len(resp.Instances) == 0 || resp.Instances[0] == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		i := resp.Instances[0]
+		return i, aws.StringValue(i.Status), nil
+	}
 }
 
 func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {

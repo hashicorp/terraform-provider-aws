@@ -47,7 +47,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("description", globalNetwork.Description)
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
-	if err := d.Set("tags", KeyValueTags(globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

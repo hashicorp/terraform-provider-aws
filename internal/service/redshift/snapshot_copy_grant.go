@@ -59,7 +59,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	grantName := d.Get("snapshot_copy_grant_name").(string)
 
@@ -127,7 +127,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
-	tags := KeyValueTags(grant.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, grant.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -51,6 +51,7 @@ The following arguments are required:
   AWS KMS creates the default encryption key for your AWS account.
   Your AWS account has a different default encryption key for each AWS region.
   To encrypt an S3 target with a KMS Key, use the parameter `s3_settings.server_side_encryption_kms_key_id`.
+  When `engine_name` is `redshift`, `kms_key_arn` is the KMS Key for the Redshift target and the parameter `redshift_settings.server_side_encryption_kms_key_id` encrypts the S3 intermediate storage.
 
 The following arguments are optional:
 
@@ -151,7 +152,7 @@ The following arguments are optional:
 * `bucket_folder` - (Optional) Custom S3 Bucket Object prefix for intermediate storage.
 * `bucket_name` - (Optional) Custom S3 Bucket name for intermediate storage.
 * `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate .csv object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
-* `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
+* `server_side_encryption_kms_key_id` - (Required when `encryption_mode` is  `SSE_KMS`, must not be set otherwise) ARN or Id of KMS Key to use when `encryption_mode` is `SSE_KMS`.
 * `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket for intermediate storage.
 
 ### s3_settings
@@ -161,7 +162,7 @@ The following arguments are optional:
 * `add_column_name` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
 * `bucket_folder` - (Optional) S3 object prefix.
 * `bucket_name` - (Optional) S3 bucket name.
-* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `NONE`, `PRIVATE`, `PUBLIC_READ`, `PUBLIC_READ_WRITE`, `AUTHENTICATED_READ`, `AWS_EXEC_READ`, `BUCKET_OWNER_READ`, and `BUCKET_OWNER_FULL_CONTROL`. Default is `NONE`.
+* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `none`, `private`, `public-read`, `public-read-write`, `authenticated-read`, `aws-exec-read`, `bucket-owner-read`, and `bucket-owner-full-control`. Default is `none`.
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. Default is `60`.
@@ -191,7 +192,7 @@ The following arguments are optional:
 * `preserve_transactions` - (Optional) Whether DMS saves the transaction order for a CDC load on the S3 target specified by `cdc_path`. Default is `false`.
 * `rfc_4180` - (Optional) For an S3 source, whether each leading double quotation mark has to be followed by an ending double quotation mark. Default is `true`.
 * `row_group_length` - (Optional) Number of rows in a row group. Default is `10000`.
-* `server_side_encryption_kms_key_id` - (Required when `encryption_mode` is  `SSE_KMS`, cannot be set otherwise) ARN or Id of KMS Key to use when `encryption_mode` is `SSE_KMS`.
+* `server_side_encryption_kms_key_id` - (Required when `encryption_mode` is  `SSE_KMS`, must not be set otherwise) ARN or Id of KMS Key to use when `encryption_mode` is `SSE_KMS`.
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to read from or write to the S3 Bucket.
 * `timestamp_column_name` - (Optional) Column to add with timestamp information to the endpoint data for an Amazon S3 target.
 * `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log.

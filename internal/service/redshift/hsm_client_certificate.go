@@ -55,7 +55,7 @@ func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	certIdentifier := d.Get("hsm_client_certificate_identifier").(string)
 
@@ -105,7 +105,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("hsm_client_certificate_identifier", out.HsmClientCertificateIdentifier)
 	d.Set("hsm_client_certificate_public_key", out.HsmClientCertificatePublicKey)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -232,10 +232,10 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
-* `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
-* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
-* `token` - (Optional) A token to allow replication to be enabled on an Object Lock-enabled bucket. You must contact AWS support for the bucket's "Object Lock token".
+* `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
+* `role` - (Required) ARN of the IAM role for Amazon S3 to assume when replicating the objects.
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
+* `token` - (Optional) Token to allow replication to be enabled on an Object Lock-enabled bucket. You must contact AWS support for the bucket's "Object Lock token".
 For more details, see [Using S3 Object Lock with replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html#object-lock-managing-replication).
 
 ### rule
@@ -250,14 +250,14 @@ To replicate existing objects, please refer to the [Replicating existing objects
 The `rule` configuration block supports the following arguments:
 
 * `delete_marker_replication` - (Optional) Whether delete markers are replicated. This argument is only valid with V2 replication configurations (i.e., when `filter` is used)[documented below](#delete_marker_replication).
-* `destination` - (Required) Specifies the destination for the rule [documented below](#destination).
-* `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations [documented below](#existing_object_replication).
-* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter). If not specified, the `rule` will default to using `prefix`.
+* `destination` - (Required) Specifies the destination for the rule. [See below](#destination).
+* `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations. [See below](#existing_object_replication).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies. [See below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
 * `prefix` - (Optional, Conflicts with `filter`, **Deprecated**) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
-* `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
-* `source_selection_criteria` - (Optional) Specifies special object selection criteria [documented below](#source_selection_criteria).
-* `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
+* `priority` - (Optional) Priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria. [See below](#source_selection_criteria).
+* `status` - (Required) Status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
 
 ### delete_marker_replication
 
@@ -277,12 +277,12 @@ The `delete_marker_replication` configuration block supports the following argum
 
 The `destination` configuration block supports the following arguments:
 
-* `access_control_translation` - (Optional) A configuration block that specifies the overrides to use for object owners on replication [documented below](#access_control_translation). Specify this only in a cross-account scenario (where source and destination bucket owners are not the same), and you want to change replica ownership to the AWS account that owns the destination bucket. If this is not specified in the replication configuration, the replicas are owned by same AWS account that owns the source object. Must be used in conjunction with `account` owner override configuration.
-* `account` - (Optional) The Account ID to specify the replica ownership. Must be used in conjunction with `access_control_translation` override configuration.
-* `bucket` - (Required) The Amazon Resource Name (ARN) of the bucket where you want Amazon S3 to store the results.
-* `encryption_configuration` - (Optional) A configuration block that provides information about encryption [documented below](#encryption_configuration). If `source_selection_criteria` is specified, you must specify this element.
-* `metrics` - (Optional) A configuration block that specifies replication metrics-related settings enabling replication metrics and events [documented below](#metrics).
-* `replication_time` - (Optional) A configuration block that specifies S3 Replication Time Control (S3 RTC), including whether S3 RTC is enabled and the time when all objects and operations on objects must be replicated [documented below](#replication_time). Replication Time Control must be used in conjunction with `metrics`.
+* `access_control_translation` - (Optional) Configuration block that specifies the overrides to use for object owners on replication. [See below](#access_control_translation). Specify this only in a cross-account scenario (where source and destination bucket owners are not the same), and you want to change replica ownership to the AWS account that owns the destination bucket. If this is not specified in the replication configuration, the replicas are owned by same AWS account that owns the source object. Must be used in conjunction with `account` owner override configuration.
+* `account` - (Optional) Account ID to specify the replica ownership. Must be used in conjunction with `access_control_translation` override configuration.
+* `bucket` - (Required) ARN of the bucket where you want Amazon S3 to store the results.
+* `encryption_configuration` - (Optional) Configuration block that provides information about encryption. [See below](#encryption_configuration). If `source_selection_criteria` is specified, you must specify this element.
+* `metrics` - (Optional) Configuration block that specifies replication metrics-related settings enabling replication metrics and events. [See below](#metrics).
+* `replication_time` - (Optional) Configuration block that specifies S3 Replication Time Control (S3 RTC), including whether S3 RTC is enabled and the time when all objects and operations on objects must be replicated. [See below](#replication_time). Replication Time Control must be used in conjunction with `metrics`.
 * `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 
 ### access_control_translation
@@ -307,7 +307,7 @@ encryption_configuration {
 
 The `encryption_configuration` configuration block supports the following arguments:
 
-* `replica_kms_key_id` - (Required) The ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in AWS Key Management Service (KMS) for the destination bucket.
+* `replica_kms_key_id` - (Required) ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in AWS Key Management Service (KMS) for the destination bucket.
 
 ### metrics
 
@@ -322,8 +322,8 @@ metrics {
 
 The `metrics` configuration block supports the following arguments:
 
-* `event_threshold` - (Optional) A configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event [documented below](#event_threshold).
-* `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
+* `event_threshold` - (Optional) Configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event. [See below](#event_threshold).
+* `status` - (Required) Status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
 
 ### event_threshold
 
@@ -344,8 +344,8 @@ replication_time {
 
 The `replication_time` configuration block supports the following arguments:
 
-* `status` - (Required) The status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`.
-* `time` - (Required) A configuration block specifying the time by which replication should be complete for all objects and operations on objects [documented below](#time).
+* `status` - (Required) Status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`.
+* `time` - (Required) Configuration block specifying the time by which replication should be complete for all objects and operations on objects. [See below](#time).
 
 ### time
 
@@ -374,16 +374,16 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 
 The `filter` configuration block supports the following arguments:
 
-* `and` - (Optional) A configuration block for specifying rule filters. This element is required only if you specify more than one filter. See [and](#and) below for more details.
-* `prefix` - (Optional) An object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `tag` - (Optional) A configuration block for specifying a tag key and value [documented below](#tag).
+* `and` - (Optional) Configuration block for specifying rule filters. This element is required only if you specify more than one filter. See [and](#and) below for more details.
+* `prefix` - (Optional) Object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `tag` - (Optional) Configuration block for specifying a tag key and value. [See below](#tag).
 
 ### and
 
 The `and` configuration block supports the following arguments:
 
-* `prefix` - (Optional) An object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `tags` - (Optional, Required if `prefix` is configured) A map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
+* `prefix` - (Optional) Object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `tags` - (Optional, Required if `prefix` is configured) Map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
 
 ### tag
 
@@ -407,9 +407,9 @@ source_selection_criteria {
 
 The `source_selection_criteria` configuration block supports the following arguments:
 
-* `replica_modifications` - (Optional) A configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
+* `replica_modifications` - (Optional) Configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
 
-* `sse_kms_encrypted_objects` - (Optional) A configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replica_kms_key_id` in `destination` `encryption_configuration` must be specified as well.
+* `sse_kms_encrypted_objects` - (Optional) Configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replica_kms_key_id` in `destination` `encryption_configuration` must be specified as well.
 
 ### replica_modifications
 
@@ -427,7 +427,7 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The S3 source bucket name.
+* `id` - S3 source bucket name.
 
 ## Import
 

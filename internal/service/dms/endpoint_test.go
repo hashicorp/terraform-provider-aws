@@ -374,24 +374,8 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
 			},
 			{
@@ -419,24 +403,8 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyId(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
 			},
 			{
@@ -826,6 +794,12 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "data.aws_kms_alias.dms", "target_key_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
 				),
 			},
 			{
@@ -838,7 +812,6 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "scram-sha-1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
@@ -1064,6 +1037,7 @@ func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1119,6 +1093,13 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1131,7 +1112,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`charLengthSemantics=CHAR;`)),
 				),
 			},
 			{
@@ -1455,6 +1436,13 @@ func TestAccDMSEndpoint_Sybase_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1467,7 +1455,7 @@ func TestAccDMSEndpoint_Sybase_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1651,6 +1639,13 @@ func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.service_access_role_arn", ""),
 				),
 			},
 			{
@@ -1709,7 +1704,16 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.service_access_role_arn", ""),
 				),
 			},
 			{
@@ -1717,16 +1721,105 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`acceptanydate=true`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", "bucket_folder"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_S3"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftKMSKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_SSEKMSKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_SSEKMSKeyId(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyId(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -2244,12 +2337,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-  kms_key_arn                 = aws_kms_key.test.arn
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "s3"
+  ssl_mode      = "none"
+  kms_key_arn   = aws_kms_key.test.arn
 
   tags = {
     Name   = %[1]q
@@ -2974,17 +3066,16 @@ data "aws_kms_alias" "dms" {
 }
 
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "mongodb"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
-  kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "mongodb"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "require"
+  kms_key_arn   = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
     Name   = %[1]q
@@ -3133,16 +3224,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_oracle(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "oracle"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -3165,7 +3255,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "charLengthSemantics=CHAR;"
 
   tags = {
     Name   = %[1]q
@@ -3337,16 +3427,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_sybase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "sybase"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "sybase"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -3360,16 +3449,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_sybaseUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "sybase"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "sybase"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -3677,16 +3765,15 @@ data "aws_iam_policy_document" "test" {
 func testAccEndpointConfig_redshift(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "redshift"
-  server_name                 = aws_redshift_cluster.test.dns_name
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -3707,7 +3794,6 @@ resource "aws_dms_endpoint" "test" {
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
   database_name                   = "tftest"
   ssl_mode                        = "none"
-  extra_connection_attributes     = ""
 
   tags = {
     Name   = %[1]q
@@ -3729,7 +3815,7 @@ resource "aws_dms_endpoint" "test" {
   username                    = "tftest-new-username"
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "acceptanydate=true"
 
   redshift_settings {
     service_access_role_arn = aws_iam_role.test.arn
@@ -3743,6 +3829,98 @@ resource "aws_dms_endpoint" "test" {
     Update = "updated"
     Add    = "added"
   }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftKMSKey(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+  kms_key_arn   = aws_kms_key.test.arn
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftConnSSEKMSKeyARN(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  redshift_settings {
+    encryption_mode                   = "SSE_KMS"
+    server_side_encryption_kms_key_id = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftConnSSEKMSKeyId(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  redshift_settings {
+    encryption_mode                   = "SSE_KMS"
+    server_side_encryption_kms_key_id = aws_kms_key.test.key_id
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 `, rName))
 }

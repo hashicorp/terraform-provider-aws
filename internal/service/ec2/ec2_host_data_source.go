@@ -85,7 +85,20 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	host, err := FindHostByIDAndFilters(ctx, conn, d.Get("host_id").(string), BuildFiltersDataSource(d.Get("filter").(*schema.Set)))
+	input := &ec2.DescribeHostsInput{
+		Filter: BuildFiltersDataSource(d.Get("filter").(*schema.Set)),
+	}
+
+	if v, ok := d.GetOk("host_id"); ok {
+		input.HostIds = aws.StringSlice([]string{v.(string)})
+	}
+
+	if len(input.Filter) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filter = nil
+	}
+
+	host, err := FindHost(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
@@ -113,7 +126,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	if err := d.Set("tags", KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

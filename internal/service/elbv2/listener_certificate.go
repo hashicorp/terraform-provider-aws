@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_alb_listener_certificate")
+// @SDKResource("aws_lb_listener_certificate")
 func ResourceListenerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCertificateCreate,

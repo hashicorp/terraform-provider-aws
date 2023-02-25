@@ -19,7 +19,7 @@ func TestAccAuditManagerFrameworkDataSource_standard(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +42,7 @@ func TestAccAuditManagerFrameworkDataSource_custom(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

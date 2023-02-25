@@ -56,7 +56,7 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.IVS, create.ErrActionSetting, DSNameStreamKey, d.Id(), err)
 	}
 

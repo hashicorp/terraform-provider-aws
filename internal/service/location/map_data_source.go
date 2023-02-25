@@ -89,7 +89,7 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
-	d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return diags
 }

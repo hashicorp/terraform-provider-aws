@@ -24,7 +24,7 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -62,7 +62,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -95,7 +95,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -128,7 +128,7 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -164,7 +164,7 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -203,7 +203,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -242,7 +242,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -285,7 +285,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -319,7 +319,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -353,7 +353,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -387,7 +387,7 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -423,7 +423,7 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -466,7 +466,7 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -505,7 +505,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -550,7 +550,7 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),

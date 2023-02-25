@@ -21,6 +21,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
+		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -32,6 +33,10 @@ func ResourcePolicyAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"target_id": {
 				Type:     schema.TypeString,
@@ -94,7 +99,18 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Update is just a pass-through to allow skip_destroy to be updated in-place
+	var diags diag.Diagnostics
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
+}
+
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
+		return nil
+	}
+
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 

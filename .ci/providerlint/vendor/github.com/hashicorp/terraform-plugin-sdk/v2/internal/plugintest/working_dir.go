@@ -33,9 +33,6 @@ type WorkingDir struct {
 	// was stored; empty until SetConfig is called.
 	configFilename string
 
-	// baseArgs is arguments that should be appended to all commands
-	baseArgs []string
-
 	// tf is the instance of tfexec.Terraform used for running Terraform commands
 	tf *tfexec.Terraform
 

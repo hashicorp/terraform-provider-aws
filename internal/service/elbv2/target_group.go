@@ -29,6 +29,8 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_alb_target_group")
+// @SDKResource("aws_lb_target_group")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time
@@ -167,15 +169,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"preserve_client_ip": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
 				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"protocol": {
 				Type:         schema.TypeString,
@@ -326,7 +324,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {

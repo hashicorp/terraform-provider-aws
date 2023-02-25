@@ -46,7 +46,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

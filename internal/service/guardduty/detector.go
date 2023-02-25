@@ -147,7 +147,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
@@ -218,7 +218,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	tags := KeyValueTags(gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
