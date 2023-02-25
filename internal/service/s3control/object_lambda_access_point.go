@@ -20,10 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_object_lambda_access_point", resourceObjectLambdaAccessPoint)
-}
-
+// @SDKResource("aws_s3control_object_lambda_access_point")
 func resourceObjectLambdaAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointCreate,

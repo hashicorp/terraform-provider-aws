@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -57,24 +58,16 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -207,14 +200,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 			},
 			"ebs_optimized": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
@@ -707,26 +696,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_carrier_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"associate_public_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"delete_on_termination": {
-							// Use TypeString to allow an "unspecified" value,
-							// since TypeBool only has true/false with false default.
-							// The conversion from bare true/false values in
-							// configurations to TypeString value is currently safe.
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -957,7 +942,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
@@ -1031,7 +1016,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1206,9 +1191,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		v, _ := strconv.ParseBool(v.(string))
-
+	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).Value(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
@@ -1305,7 +1288,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 	}
 
 	if v, ok := d.GetOk("tag_specifications"); ok && len(v.([]interface{})) > 0 {
-		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(v.([]interface{}))
+		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -1374,15 +1357,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1945,21 +1924,15 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	apiObject := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, ok := tfMap["associate_carrier_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).Value(); !null {
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["associate_public_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).Value(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -2129,7 +2102,7 @@ func expandLaunchTemplatePrivateDNSNameOptionsRequest(tfMap map[string]interface
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[string]interface{}) *ec2.LaunchTemplateTagSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2141,7 +2114,7 @@ func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		if v := tftags.New(v).IgnoreAWS(); len(v) > 0 {
+		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
 			apiObject.Tags = Tags(v)
 		}
 	}
@@ -2149,7 +2122,7 @@ func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequests(ctx context.Context, tfList []interface{}) []*ec2.LaunchTemplateTagSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2163,7 +2136,7 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 			continue
 		}
 
-		apiObject := expandLaunchTemplateTagSpecificationRequest(tfMap)
+		apiObject := expandLaunchTemplateTagSpecificationRequest(ctx, tfMap)
 
 		if apiObject == nil {
 			continue
@@ -2316,7 +2289,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
 	d.Set("security_group_names", aws.StringValueSlice(apiObject.SecurityGroups))
-	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(apiObject.TagSpecifications)); err != nil {
+	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
 		return fmt.Errorf("error setting tag_specifications: %w", err)
 	}
 	d.Set("user_data", apiObject.UserData)
@@ -3092,7 +3065,7 @@ func flattenLaunchTemplatePrivateDNSNameOptions(apiObject *ec2.LaunchTemplatePri
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecification(apiObject *ec2.LaunchTemplateTagSpecification) map[string]interface{} {
+func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.LaunchTemplateTagSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3104,13 +3077,13 @@ func flattenLaunchTemplateTagSpecification(apiObject *ec2.LaunchTemplateTagSpeci
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecifications(apiObjects []*ec2.LaunchTemplateTagSpecification) []interface{} {
+func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []*ec2.LaunchTemplateTagSpecification) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -3122,7 +3095,7 @@ func flattenLaunchTemplateTagSpecifications(apiObjects []*ec2.LaunchTemplateTagS
 			continue
 		}
 
-		tfList = append(tfList, flattenLaunchTemplateTagSpecification(apiObject))
+		tfList = append(tfList, flattenLaunchTemplateTagSpecification(ctx, apiObject))
 	}
 
 	return tfList

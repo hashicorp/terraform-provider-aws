@@ -158,7 +158,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("queue_configs", queueConfigs)
 
-	if err := d.Set("tags", KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

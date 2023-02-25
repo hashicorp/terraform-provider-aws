@@ -186,7 +186,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -245,7 +245,7 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -277,7 +277,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -337,7 +337,7 @@ func TestAccSchedulerSchedule_endDate(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -397,7 +397,7 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -460,7 +460,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -496,7 +496,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -555,7 +555,7 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -591,7 +591,7 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -628,7 +628,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -676,7 +676,7 @@ func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -736,7 +736,7 @@ func TestAccSchedulerSchedule_startDate(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -796,7 +796,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -856,7 +856,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -904,7 +904,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -964,7 +964,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1140,7 +1140,7 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1203,7 +1203,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1268,7 +1268,7 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1328,7 +1328,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1391,7 +1391,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1439,7 +1439,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
@@ -1535,7 +1535,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),

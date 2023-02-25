@@ -127,6 +127,7 @@ val services = mapOf(
     "neptune" to ServiceSpec("Neptune"),
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
     "networkmanager" to ServiceSpec("Network Manager"),
+    "oam" to ServiceSpec("CloudWatch Observability Access Manager"),
     "opensearch" to ServiceSpec("OpenSearch"),
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),
     "opsworks" to ServiceSpec("OpsWorks", vpcLock = true),

@@ -192,7 +192,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("output_resources", nil)
 	}
 
-	d.Set("tags", KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("version", image.Version)
 
 	return diags
