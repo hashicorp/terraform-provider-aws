@@ -27,7 +27,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

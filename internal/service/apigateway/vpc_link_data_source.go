@@ -88,7 +88,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("description", match.Description)
 	d.Set("target_arns", flex.FlattenStringList(match.TargetArns))
 
-	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

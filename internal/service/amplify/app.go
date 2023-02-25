@@ -320,7 +320,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -459,7 +459,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	d.Set("repository", app.Repository)
 
-	tags := KeyValueTags(app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

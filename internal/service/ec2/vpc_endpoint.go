@@ -183,7 +183,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("service_name").(string)
 	input := &ec2.CreateVpcEndpointInput{
@@ -328,7 +328,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("policy", policyToSet)
 
-	tags := KeyValueTags(vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -308,28 +308,6 @@ func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-// ValidTypeStringNullableBoolean provides custom error messaging for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified).
-// This ValidateFunc returns a custom message since the message with
-// validation.StringInSlice([]string{"", "false", "true"}, false) is confusing:
-// to be one of [ false true], got 1
-func ValidTypeStringNullableBoolean(v interface{}, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	for _, str := range []string{"", "0", "1", "false", "true"} {
-		if value == str {
-			return
-		}
-	}
-
-	es = append(es, fmt.Errorf("expected %s to be one of [\"\", false, true], got %s", k, value))
-	return
-}
-
 // ValidTypeStringNullableFloat provides custom error messaging for TypeString floats
 // Some arguments require a floating point value or an unspecified, empty field.
 func ValidTypeStringNullableFloat(v interface{}, k string) (ws []string, es []error) {

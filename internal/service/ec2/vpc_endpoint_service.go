@@ -147,7 +147,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
@@ -247,7 +247,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("state", svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", aws.StringValueSlice(svcCfg.SupportedIpAddressTypes))
 
-	tags := KeyValueTags(svcCfg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, svcCfg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -154,7 +154,7 @@ func ResourceProject() *schema.Resource {
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateProjectInput{
@@ -222,7 +222,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	tags := KeyValueTags(project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)

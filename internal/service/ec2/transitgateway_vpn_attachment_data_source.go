@@ -54,7 +54,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -80,7 +80,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

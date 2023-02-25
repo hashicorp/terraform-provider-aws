@@ -227,7 +227,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNewResourceNotFound(ctx, 5*time.Second, testCase.F, testCase.NewResource)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")

@@ -242,7 +242,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 			testAccPreCheckStackSet(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -288,7 +288,7 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 			testAccPreCheckStackSet(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

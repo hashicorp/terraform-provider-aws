@@ -337,7 +337,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set("tags", KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -28,7 +28,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{

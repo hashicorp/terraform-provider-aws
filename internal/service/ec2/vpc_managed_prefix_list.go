@@ -93,7 +93,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateManagedPrefixListInput{}
 
@@ -166,7 +166,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_id", pl.OwnerId)
 	d.Set("version", pl.Version)
 
-	tags := KeyValueTags(pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

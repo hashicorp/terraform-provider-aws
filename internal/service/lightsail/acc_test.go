@@ -34,7 +34,7 @@ var testAccProviderLightsailDomainConfigure sync.Once
 
 // testAccPreCheckDomain verifies AWS credentials and that Lightsail Domains is supported
 func testAccPreCheckDomain(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 
 	region := testAccGetDomainRegion()
 

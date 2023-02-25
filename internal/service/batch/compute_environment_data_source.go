@@ -93,7 +93,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("state", computeEnvironment.State)
 
-	if err := d.Set("tags", KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

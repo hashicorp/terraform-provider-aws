@@ -128,7 +128,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	if err := d.Set("tags", KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

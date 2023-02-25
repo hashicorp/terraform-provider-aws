@@ -40,7 +40,7 @@ func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	input := &ec2.DescribeCoipPoolsInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(

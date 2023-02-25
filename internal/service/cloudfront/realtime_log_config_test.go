@@ -26,7 +26,7 @@ func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	streamResourceName := "aws_kinesis_stream.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
@@ -65,7 +65,7 @@ func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
@@ -95,7 +95,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	stream2ResourceName := "aws_kinesis_stream.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),

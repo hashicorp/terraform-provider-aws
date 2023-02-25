@@ -92,7 +92,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateClusterParameterGroupInput{
@@ -156,7 +156,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("family", parameterGroup.ParameterGroupFamily)
 	d.Set("name", parameterGroup.ParameterGroupName)
 
-	tags := KeyValueTags(parameterGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, parameterGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
