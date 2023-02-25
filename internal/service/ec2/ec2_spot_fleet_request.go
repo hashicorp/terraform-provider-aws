@@ -595,6 +595,28 @@ func ResourceSpotFleetRequest() *schema.Resource {
 														},
 													},
 												},
+												"network_bandwidth_gbps": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+														},
+													},
+												},
 												"network_interface_count": {
 													Type:     schema.TypeList,
 													Optional: true,
