@@ -336,6 +336,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"allowed_instance_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bare_metal": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -411,6 +416,22 @@ func DataSourceLaunchTemplate() *schema.Resource {
 									},
 									"min": {
 										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_bandwidth_gbps": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeFloat,
 										Computed: true,
 									},
 								},
