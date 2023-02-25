@@ -39,7 +39,7 @@ func ResourceRepositoryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"association_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -317,7 +317,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.CodeGuruReviewer, create.ErrActionReading, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
-	d.Set("association_arn", out.AssociationArn)
+	d.Set("arn", out.AssociationArn)
 	d.Set("association_id", out.AssociationId)
 	d.Set("connection_arn", out.ConnectionArn)
 
@@ -362,7 +362,7 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		arn := d.Get("association_arn").(string)
+		arn := d.Get("arn").(string)
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CodeGuru Repository RepositoryAssociation (%s) tags: %s", d.Get("id").(string), err)
