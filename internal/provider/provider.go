@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"log"
 	"os"
 	"regexp"
@@ -2190,6 +2191,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_worklink_fleet": worklink.ResourceFleet(),
 			"aws_worklink_website_certificate_authority_association": worklink.ResourceWebsiteCertificateAuthorityAssociation(),
+
+			"aws_workmail_organization": workmail.ResourceOrganization(),
 
 			"aws_workspaces_directory": workspaces.ResourceDirectory(),
 			"aws_workspaces_ip_group":  workspaces.ResourceIPGroup(),
