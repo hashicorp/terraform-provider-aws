@@ -421,6 +421,22 @@ func DataSourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
+						"network_bandwidth_gbps": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"network_interface_count": {
 							Type:     schema.TypeList,
 							Computed: true,
