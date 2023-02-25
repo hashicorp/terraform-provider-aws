@@ -162,6 +162,10 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"auto_rollback": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -186,11 +190,6 @@ func ResourceGroup() *schema.Resource {
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
 									"skip_matching": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"auto_rollback": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
@@ -3068,6 +3067,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 
 	apiObject := &autoscaling.RefreshPreferences{}
 
+	if v, ok := tfMap["auto_rollback"].(bool); ok {
+		apiObject.AutoRollback = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
 		if v, null, _ := nullable.Int(v).Value(); !null {
 			apiObject.CheckpointDelay = aws.Int64(v)
@@ -3090,10 +3093,6 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 
 	if v, ok := tfMap["skip_matching"].(bool); ok {
 		apiObject.SkipMatching = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["auto_rollback"].(bool); ok {
-		apiObject.AutoRollback = aws.Bool(v)
 	}
 
 	return apiObject
