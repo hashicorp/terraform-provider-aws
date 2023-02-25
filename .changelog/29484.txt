@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_vpc_security_group_ingress_rule
+```
+
+```release-note:new-resource
+aws_vpc_security_group_egress_rule
+```
+
+```release-note:new-data-source
+aws_vpc_security_group_rules
+```
+
+```release-note:new-data-source
+aws_vpc_security_group_rule
+```

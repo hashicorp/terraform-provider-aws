@@ -9,12 +9,12 @@ func {{ .UpdateTagsFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagRe
 func {{ if .ContextOnly }}{{ .UpdateTagsFunc }}{{ else }}{{ .UpdateTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }},
 {{- if  .TagTypeAddBoolElem -}}
 oldTagsSet interface{}, newTagsSet interface{}) error {
-	oldTags := KeyValueTags(oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-	newTags := KeyValueTags(newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	oldTags := KeyValueTags(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	newTags := KeyValueTags(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 {{- else -}}
 oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
 	{{- if eq (.TagOp) (.UntagOp) }}
 	removedTags := oldTags.Removed(newTags)

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -66,7 +65,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
@@ -87,7 +85,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
@@ -649,16 +646,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
-			// Adding the Aliases for the ALB -> LB Rename
-			"aws_alb":               elbv2.DataSourceLoadBalancer(),
-			"aws_alb_listener":      elbv2.DataSourceListener(),
-			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
-			"aws_lb":                elbv2.DataSourceLoadBalancer(),
-			"aws_lbs":               elbv2.DataSourceLoadBalancers(),
-			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
-			"aws_lb_listener":       elbv2.DataSourceListener(),
-			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
-
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
 
 			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
@@ -946,8 +933,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer":     accessanalyzer.ResourceAnalyzer(),
 			"aws_accessanalyzer_archive_rule": accessanalyzer.ResourceArchiveRule(),
-
-			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
@@ -1256,10 +1241,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
 
-			"aws_dax_cluster":         dax.ResourceCluster(),
-			"aws_dax_parameter_group": dax.ResourceParameterGroup(),
-			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
-
 			"aws_devicefarm_device_pool":       devicefarm.ResourceDevicePool(),
 			"aws_devicefarm_instance_profile":  devicefarm.ResourceInstanceProfile(),
 			"aws_devicefarm_network_profile":   devicefarm.ResourceNetworkProfile(),
@@ -1509,19 +1490,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_load_balancer_listener_policy":       elb.ResourceListenerPolicy(),
 			"aws_load_balancer_policy":                elb.ResourcePolicy(),
 			"aws_proxy_protocol_policy":               elb.ResourceProxyProtocolPolicy(),
-
-			"aws_alb":                         elbv2.ResourceLoadBalancer(),
-			"aws_alb_listener":                elbv2.ResourceListener(),
-			"aws_alb_listener_certificate":    elbv2.ResourceListenerCertificate(),
-			"aws_alb_listener_rule":           elbv2.ResourceListenerRule(),
-			"aws_alb_target_group":            elbv2.ResourceTargetGroup(),
-			"aws_alb_target_group_attachment": elbv2.ResourceTargetGroupAttachment(),
-			"aws_lb":                          elbv2.ResourceLoadBalancer(),
-			"aws_lb_listener":                 elbv2.ResourceListener(),
-			"aws_lb_listener_certificate":     elbv2.ResourceListenerCertificate(),
-			"aws_lb_listener_rule":            elbv2.ResourceListenerRule(),
-			"aws_lb_target_group":             elbv2.ResourceTargetGroup(),
-			"aws_lb_target_group_attachment":  elbv2.ResourceTargetGroupAttachment(),
 
 			"aws_emr_cluster":                emr.ResourceCluster(),
 			"aws_emr_instance_fleet":         emr.ResourceInstanceFleet(),
@@ -1824,6 +1792,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
+			"aws_networkmanager_connect_peer":                             networkmanager.ResourceConnectPeer(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
 			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),
@@ -2240,15 +2209,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	servicePackages := servicePackages(ctx)
 
 	for _, sp := range servicePackages {
-		for _, v := range sp.SDKDataSources(ctx) {
-			typeName := v.TypeName
-
+		for typeName, v := range sp.SDKDataSources(ctx) {
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
 				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
 				continue
 			}
 
-			ds := v.Factory()
+			ds := v()
 
 			if v := ds.ReadWithoutTimeout; v != nil {
 				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
@@ -2257,15 +2224,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			provider.DataSourcesMap[typeName] = ds
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
-
+		for typeName, v := range sp.SDKResources(ctx) {
 			if _, ok := provider.ResourcesMap[typeName]; ok {
 				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
 				continue
 			}
 
-			r := v.Factory()
+			r := v()
 
 			if v := r.CreateWithoutTimeout; v != nil {
 				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
@@ -2354,21 +2319,21 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
+		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
+		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
-		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
 
 		if err != nil {
 			return nil, diag.FromErr(err)
@@ -2382,7 +2347,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -2414,17 +2379,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		meta = new(conns.AWSClient)
 	}
 	meta, diags := config.ConfigureProvider(ctx, meta)
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// Configure each service.
-	for _, v := range meta.ServicePackages {
-		if err := v.Configure(ctx, meta); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
-		}
-	}
 
 	if diags.HasError() {
 		return nil, diags
@@ -2591,7 +2545,7 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRole {
 	if tfMap == nil {
 		return nil
 	}
@@ -2640,7 +2594,7 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
 	if tfMap == nil {
 		return nil
 	}
@@ -2681,7 +2635,7 @@ func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.Assu
 	return &assumeRole
 }
 
-func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2689,13 +2643,13 @@ func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
 	defaultConfig := &tftags.DefaultConfig{}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = tftags.New(v)
+		defaultConfig.Tags = tftags.New(ctx, v)
 	}
 
 	return defaultConfig
 }
 
-func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2703,17 +2657,17 @@ func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
 	ignoreConfig := &tftags.IgnoreConfig{}
 
 	if v, ok := tfMap["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = tftags.New(v.List())
+		ignoreConfig.Keys = tftags.New(ctx, v.List())
 	}
 
 	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = tftags.New(v.List())
+		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {
 	if len(tfList) == 0 {
 		return nil, nil
 	}

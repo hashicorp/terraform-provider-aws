@@ -30,7 +30,7 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -68,7 +68,7 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -117,7 +117,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),

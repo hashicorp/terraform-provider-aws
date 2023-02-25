@@ -733,6 +733,9 @@ service/networkmanager:
 service/nimble:
   - 'internal/service/nimble/**/*'
   - 'website/**/nimble_*'
+service/oam:
+  - 'internal/service/oam/**/*'
+  - 'website/**/oam_*'
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
@@ -1047,6 +1050,7 @@ service/vpc:
   - 'website/**/vpc_ipv*'
   - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
+  - 'website/**/vpc_security_group_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'
 service/vpnclient:

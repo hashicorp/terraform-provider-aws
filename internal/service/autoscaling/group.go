@@ -948,11 +948,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1157,23 +1157,23 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tags", ListOfStringMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
@@ -1317,12 +1317,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := KeyValueTags(oTagRaw, d.Id(), TagResourceTypeGroup)
-		oTags := KeyValueTags(oTagsRaw, d.Id(), TagResourceTypeGroup)
+		oTag := KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup)
+		oTags := KeyValueTags(ctx, oTagsRaw, d.Id(), TagResourceTypeGroup)
 		oldTags := Tags(oTag.Merge(oTags))
 
-		nTag := KeyValueTags(nTagRaw, d.Id(), TagResourceTypeGroup)
-		nTags := KeyValueTags(nTagsRaw, d.Id(), TagResourceTypeGroup)
+		nTag := KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup)
+		nTags := KeyValueTags(ctx, nTagsRaw, d.Id(), TagResourceTypeGroup)
 		newTags := Tags(nTag.Merge(nTags))
 
 		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {

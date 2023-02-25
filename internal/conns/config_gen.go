@@ -14,7 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -651,6 +653,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.oamClient = oam.NewFromConfig(cfg, func(o *oam.Options) {
+		if endpoint := c.Endpoints[names.ObservabilityAccessManager]; endpoint != "" {
+			o.EndpointResolver = oam.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.opensearchserverlessClient = opensearchserverless.NewFromConfig(cfg, func(o *opensearchserverless.Options) {
 		if endpoint := c.Endpoints[names.OpenSearchServerless]; endpoint != "" {
 			o.EndpointResolver = opensearchserverless.EndpointResolverFromURL(endpoint)
@@ -699,6 +706,13 @@ func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
 		return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.EC2]; endpoint != "" {
 				o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.lambdaClient.init(&cfg, func() *lambda_sdkv2.Client {
+		return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.Lambda]; endpoint != "" {
+				o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(endpoint)
 			}
 		})
 	})

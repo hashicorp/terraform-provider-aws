@@ -23,7 +23,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -72,7 +72,7 @@ func TestAccMQConfiguration_withData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -108,7 +108,7 @@ func TestAccMQConfiguration_withLdapData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -145,7 +145,7 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),

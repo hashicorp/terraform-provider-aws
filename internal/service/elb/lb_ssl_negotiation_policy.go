@@ -55,6 +55,12 @@ func ResourceSSLNegotiationPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }

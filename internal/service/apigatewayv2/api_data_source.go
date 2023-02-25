@@ -150,7 +150,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)
-	if err := d.Set("tags", KeyValueTags(api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("version", api.Version)

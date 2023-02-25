@@ -85,7 +85,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/autoscaling-plans")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -149,7 +149,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/autoscaling-plans")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

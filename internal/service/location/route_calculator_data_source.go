@@ -69,7 +69,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
 

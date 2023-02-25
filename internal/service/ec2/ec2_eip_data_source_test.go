@@ -168,12 +168,13 @@ func TestAccEC2EIPDataSource_carrierIP(t *testing.T) {
 }
 
 func TestAccEC2EIPDataSource_customerOwnedIPv4Pool(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

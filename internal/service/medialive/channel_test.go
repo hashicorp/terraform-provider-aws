@@ -32,7 +32,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -89,7 +89,7 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -122,11 +122,13 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 						"name": "test-video-name",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.archive_output_settings.0.container_settings.0.m2ts_settings.*", map[string]string{
-						"audio_buffer_model": "ATSC",
-						"buffer_model":       "MULTIPLEX",
-						"rate_mode":          "CBR",
-						"audio_pids":         "200",
-						"dvb_sub_pids":       "300",
+						"audio_buffer_model":        "ATSC",
+						"buffer_model":              "MULTIPLEX",
+						"rate_mode":                 "CBR",
+						"audio_pids":                "200",
+						"dvb_sub_pids":              "300",
+						"arib_captions_pid":         "100",
+						"arib_captions_pid_control": "AUTO",
 					}),
 				),
 			},
@@ -153,7 +155,7 @@ func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -205,7 +207,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -257,7 +259,7 @@ func TestAccMediaLiveChannel_status(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -296,7 +298,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -374,7 +376,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -423,7 +425,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -782,11 +784,13 @@ resource "aws_medialive_channel" "test" {
             extension     = "m2ts"
             container_settings {
               m2ts_settings {
-                audio_buffer_model = "ATSC"
-                buffer_model       = "MULTIPLEX"
-                rate_mode          = "CBR"
-                audio_pids         = "200"
-                dvb_sub_pids       = "300"
+                audio_buffer_model        = "ATSC"
+                buffer_model              = "MULTIPLEX"
+                rate_mode                 = "CBR"
+                audio_pids                = "200"
+                dvb_sub_pids              = "300"
+                arib_captions_pid         = "100"
+                arib_captions_pid_control = "AUTO"
               }
             }
           }
