@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_autoscaling_policy: Add `metrics` argument to `target_tracking_configuration.customized_metric_specification`
-```
