@@ -119,62 +119,6 @@ resource "aws_autoscaling_policy" "example" {
 }
 ```
 
-### Create target tracking policy using customized metrics
-
-```terraform
-resource "aws_autoscaling_policy" "example" {
-  autoscaling_group_name = "my-test-asg"
-  name                   = "foo"
-  policy_type            = "PredictiveScaling"
-  target_tracking_configuration {
-    customized_metric_specification {
-      metrics {
-        id = "e1"
-        expression = "m1 / m2"
-        label = "Calculate the backlog per instance"
-        return_data = true
-      }
-
-      metrics {
-        id = "m1"
-        metric_stat {
-          metric {
-            namespace   = "AWS/SQS"
-            metric_name = "ApproximateNumberOfMessagesVisible"
-            dimensions {
-              name  = "QueueName"
-              value = "my-queue"
-            }
-          }
-          stat = "Sum"
-        }
-        label = "Get the queue size (the number of messages waiting to be processed)"
-        return_data = false
-      }
-
-      metrics {
-        id = "m2"
-        metric_stat {
-          metric {
-            namespace   = "AWS/AutoScaling"
-            metric_name = "GroupInServiceInstances"
-            dimensions {
-              name  = "AutoScalingGroupName"
-              value = "my-asg"
-            }
-          }
-          stat = "Average"
-        }
-        label = "Get the group size (the number of InService instances)"
-        return_data = false
-      }
-    }
-
-    target_value = 10
-  }
-}
-```
-
 ## Argument Reference
 
 * `name` - (Required) Name of the policy.
