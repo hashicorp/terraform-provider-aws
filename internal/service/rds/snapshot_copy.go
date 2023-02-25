@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -140,6 +140,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 }
 
 func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
@@ -168,20 +169,20 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := conn.CopyDBSnapshotWithContext(ctx, in)
 	if err != nil {
-		return diag.Errorf("error creating RDS DB Snapshot Copy %s", err)
+		return sdkdiag.AppendErrorf(diags, "error creating RDS DB Snapshot Copy %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
 
-	err = waitSnapshotCopyAvailable(ctx, d, meta)
-	if err != nil {
-		return diag.FromErr(err)
+	if err := waitDBSnapshotAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) to be available: %s", d.Id(), err)
 	}
 
-	return resourceSnapshotCopyRead(ctx, d, meta)
+	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -195,7 +196,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("reading RDS DB snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB snapshot (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
@@ -220,31 +221,32 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "error listing tags for RDS DB Snapshot (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
+			sdkdiag.AppendErrorf(diags, "error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
 
@@ -252,40 +254,21 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
-	log.Printf("[INFO] Deleting RDS DB Snapshot %s", d.Id())
-
-	in := &rds.DeleteDBSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteDBSnapshotWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting RDS DB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Waiting for Snapshot %s to become available...", d.Id())
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(ctx, d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
+	return diags
 }

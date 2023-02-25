@@ -210,7 +210,7 @@ func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapsh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		out, err := tfrds.FindDBSnapshotByID(context.Background(), conn, rs.Primary.ID)
+		out, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

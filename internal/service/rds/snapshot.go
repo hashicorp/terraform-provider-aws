@@ -2,7 +2,6 @@ package rds
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -145,18 +143,8 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.SetId(aws.StringValue(resp.DBSnapshot.DBSnapshotIdentifier))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(ctx, d, meta),
-		Timeout:    d.Timeout(schema.TimeoutRead),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWS DB Snapshot (%s): waiting for completion: %s", dBInstanceIdentifier, err)
+	if err := waitDBSnapshotAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot (%s) to be available: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
@@ -299,33 +287,4 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
-}
-
-func resourceSnapshotStateRefreshFunc(ctx context.Context,
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).RDSConn()
-
-		opts := &rds.DescribeDBSnapshotsInput{
-			DBSnapshotIdentifier: aws.String(d.Id()),
-		}
-
-		log.Printf("[DEBUG] DB Snapshot describe configuration: %#v", opts)
-
-		resp, err := conn.DescribeDBSnapshotsWithContext(ctx, opts)
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", fmt.Errorf("Error retrieving DB Snapshots: %s", err)
-		}
-
-		if len(resp.DBSnapshots) != 1 {
-			return nil, "", fmt.Errorf("No snapshots returned for %s", d.Id())
-		}
-
-		snapshot := resp.DBSnapshots[0]
-
-		return resp, *snapshot.Status, nil
-	}
 }
