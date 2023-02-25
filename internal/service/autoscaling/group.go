@@ -162,6 +162,10 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"auto_rollback": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -3062,6 +3066,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 	}
 
 	apiObject := &autoscaling.RefreshPreferences{}
+
+	if v, ok := tfMap["auto_rollback"].(bool); ok {
+		apiObject.AutoRollback = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
 		if v, null, _ := nullable.Int(v).Value(); !null {
