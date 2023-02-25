@@ -316,7 +316,7 @@ resource "aws_codegurureviewer_repository_association" "test" {
 
   kms_key_details {
     encryption_option = "CUSTOMER_MANAGED_CMK"
-    kms_key_id = aws_kms_key.test.key_id
+    kms_key_id        = aws_kms_key.test.key_id
   }
 }
 `)
@@ -357,10 +357,10 @@ func testAccRepositoryAssociationConfig_s3_repository(rName string) string {
 	return acctest.ConfigCompose(testAccRepositoryAssociation_s3_repository(rName), `
 resource "aws_codegurureviewer_repository_association" "test" {
   repository {
-	s3_bucket {
-		bucket_name = aws_s3_bucket.test.id
-		name = "test"
-	  }
+    s3_bucket {
+      bucket_name = aws_s3_bucket.test.id
+      name        = "test"
+    }
   }
 }
 `)
@@ -392,8 +392,9 @@ resource "aws_s3_bucket" "test" {
 func testAccRepositoryAssociation_kms_key() string {
 	return fmt.Sprint(`
 
+
 resource "aws_kms_key" "test" {
-	deletion_window_in_days = 7
+  deletion_window_in_days = 7
 }
 `)
 }
