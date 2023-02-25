@@ -32,6 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.4
+	github.com/aws/aws-sdk-go-v2/service/workmail v1.18.4
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9

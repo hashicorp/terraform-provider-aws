@@ -29,6 +29,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -314,7 +315,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/wellarchitected"
 	"github.com/aws/aws-sdk-go/service/workdocs"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/aws/aws-sdk-go/service/workmail"
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
@@ -648,7 +648,7 @@ type AWSClient struct {
 	wisdomConn                       *connectwisdomservice.ConnectWisdomService
 	workdocsConn                     *workdocs.WorkDocs
 	worklinkConn                     *worklink.WorkLink
-	workmailConn                     *workmail.WorkMail
+	workmailClient                   *workmail.Client
 	workmailmessageflowConn          *workmailmessageflow.WorkMailMessageFlow
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
@@ -1893,8 +1893,8 @@ func (client *AWSClient) WorkLinkConn() *worklink.WorkLink {
 	return client.worklinkConn
 }
 
-func (client *AWSClient) WorkMailConn() *workmail.WorkMail {
-	return client.workmailConn
+func (client *AWSClient) WorkMailClient() *workmail.Client {
+	return client.workmailClient
 }
 
 func (client *AWSClient) WorkMailMessageFlowConn() *workmailmessageflow.WorkMailMessageFlow {

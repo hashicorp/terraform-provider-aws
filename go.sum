@@ -109,6 +109,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.18.5 h1:L1600eLr0YvTT7gNh3Ni24yGI7NS
 github.com/aws/aws-sdk-go-v2/service/sts v1.18.5/go.mod h1:1mKZHLLpDMHTNSYPJ7qrcnCQdHCWsNQaT0xRvq2u80s=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.4 h1:OwII6iBkiA3sw3XfuSJ7X8cZ7enxL3f4ckLeTmCPdj8=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.4/go.mod h1:Sfekn5aPGiTP+22/2DOuE6WoVBY19xfW6esh0HjdgzQ=
+github.com/aws/aws-sdk-go-v2/service/workmail v1.18.4 h1:Erv4xdkJexB4qi43yCASxyBXmQ81HQyJ67aRpE8ITAU=
+github.com/aws/aws-sdk-go-v2/service/workmail v1.18.4/go.mod h1:m0SS54M9YUNeJBc+Gyy+ZPKqlT52qvowgybT6pqj++k=
 github.com/aws/smithy-go v1.13.5 h1:hgz0X/DX0dGqTYpGALqXJoRKRj5oQ7150i5FdTePzO8=
 github.com/aws/smithy-go v1.13.5/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=

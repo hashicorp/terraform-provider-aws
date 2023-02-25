@@ -364,7 +364,7 @@ budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,1,,,aws_budgets_,,bu
 wellarchitected,wellarchitected,wellarchitected,wellarchitected,,wellarchitected,,,WellArchitected,WellArchitected,,1,,,aws_wellarchitected_,,wellarchitected_,Well-Architected Tool,AWS,,,,,
 workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,,aws_workdocs_,,workdocs_,WorkDocs,Amazon,,,,,
 worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_worklink_,,worklink_,WorkLink,Amazon,,,,,
-workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,,,,
+workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,,2,,aws_workmail_,,workmail_,WorkMail,Amazon,,,,,
 workmailmessageflow,workmailmessageflow,workmailmessageflow,workmailmessageflow,,workmailmessageflow,,,WorkMailMessageFlow,WorkMailMessageFlow,,1,,,aws_workmailmessageflow_,,workmailmessageflow_,WorkMail Message Flow,Amazon,,,,,
 workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,1,,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,
 workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSpacesWeb,WorkSpacesWeb,,1,,,aws_workspacesweb_,,workspacesweb_,WorkSpaces Web,Amazon,,,,,
