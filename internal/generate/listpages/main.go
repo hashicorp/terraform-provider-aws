@@ -13,7 +13,6 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -63,13 +62,7 @@ func main() {
 		filename = args[0]
 	}
 
-	wd, err := os.Getwd()
-
-	if err != nil {
-		log.Fatalf("unable to get working directory: %s", err)
-	}
-
-	servicePackage := filepath.Base(wd)
+	servicePackage := os.Getenv("GOPACKAGE")
 	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
 
 	awsService, err := names.AWSGoV1Package(servicePackage)
