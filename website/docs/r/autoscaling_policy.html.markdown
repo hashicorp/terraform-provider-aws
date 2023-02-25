@@ -84,8 +84,8 @@ resource "aws_autoscaling_policy" "example" {
         return_data = false
       }
       metrics {
-        label = "Calculate the backlog per instance"
-        id = "e1"
+        label       = "Calculate the backlog per instance"
+        id          = "e1"
         expression  = "m1 / m2"
         return_data = true
       }
