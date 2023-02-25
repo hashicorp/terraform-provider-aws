@@ -386,7 +386,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if err != expected {
+		if !errors.Is(err, expected) {
 			t.Fatalf("bad: %#v", err)
 		}
 	case <-time.After(5 * time.Second):
