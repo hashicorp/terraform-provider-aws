@@ -1,0 +1,8 @@
+==> Checking that code complies with gofmt requirements...
+TF_ACC=1 go test ./internal/service/rds/... -v -count 1 -parallel 20 -run='TestAccRDSSnapshot_share'  -timeout 180m
+=== RUN   TestAccRDSSnapshot_share
+=== PAUSE TestAccRDSSnapshot_share
+=== CONT  TestAccRDSSnapshot_share
+--- PASS: TestAccRDSSnapshot_share (698.03s)
+PASS
+ok  	github.com/hashicorp/terraform-provider-aws/internal/service/rds	700.312s

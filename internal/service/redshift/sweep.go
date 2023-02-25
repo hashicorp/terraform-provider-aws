@@ -76,6 +76,8 @@ func sweepClusterSnapshots(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).RedshiftConn()
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
 
 	err = conn.DescribeClusterSnapshotsPagesWithContext(ctx, &redshift.DescribeClusterSnapshotsInput{}, func(resp *redshift.DescribeClusterSnapshotsOutput, lastPage bool) bool {
 		if len(resp.Snapshots) == 0 {
@@ -93,14 +95,22 @@ func sweepClusterSnapshots(region string) error {
 
 		return !lastPage
 	})
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Redshift Cluster Snapshot sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Redshift cluster snapshots: %w", err)
+		errs = multierror.Append(errs, fmt.Errorf("describing Redshift Snapshots: %w", err))
+		// in case work can be done, don't jump out yet
 	}
-	return nil
+
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Snapshots for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Snapshots sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepClusters(region string) error {
