@@ -571,7 +571,7 @@ If you add a new test that has preconditions which are checked by an existing pr
 
 These are some of the standard provider PreChecks:
 
-* `acctest.PreCheckPartitionHasService(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `acctest.PreCheckPartitionHasService(t *testing.T, serviceID string)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
 * `acctest.PreCheckOrganizationsAccount(ctx context.Context, t *testing.T)` checks whether the current account can perform AWS Organizations tests.
 * `acctest.PreCheckAlternateAccount(t *testing.T)` checks whether the environment is set up for tests across accounts.
 * `acctest.PreCheckMultipleRegion(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
@@ -584,7 +584,7 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
     // ... additional checks follow ...
   })
 }
@@ -994,7 +994,7 @@ var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
 func testAccPreCheckPricing(t *testing.T) {
-  acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
+  acctest.PreCheckPartitionHasService(t, pricing.EndpointsID)
 
   // Since we are outside the scope of the Terraform configuration we must
   // call Configure() to properly initialize the provider configuration.

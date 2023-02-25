@@ -25,7 +25,7 @@ func TestAccS3BucketAccelerateConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -56,7 +56,7 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

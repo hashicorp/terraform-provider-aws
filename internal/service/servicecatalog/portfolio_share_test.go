@@ -26,7 +26,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -80,7 +80,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -123,7 +123,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,7 +162,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
