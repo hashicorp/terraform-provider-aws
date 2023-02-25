@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfcodegurureviewer "github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Repository types of "BitBucket and GitHubEnterpriseServer cannot be tested, as they require their CodeStar Connection to be in "AVAILABLE" status vs "PENDING", requiring console interaction
