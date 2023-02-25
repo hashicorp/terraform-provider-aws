@@ -188,30 +188,30 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
 
 	if err := d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting aliases: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting aliases: %s", err)
 	}
 
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting audit_log_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting audit_log_configuration: %s", err)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting network_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting network_interface_ids: %s", err)
 	}
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting subnet_ids: %s", err)
 	}
 
 	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
 	}
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
