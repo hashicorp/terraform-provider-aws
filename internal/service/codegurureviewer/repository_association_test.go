@@ -21,7 +21,7 @@ import (
 )
 
 // Repository types of "BitBucket and GitHubEnterpriseServer cannot be tested, as they require their CodeStar Connection to be in "AVAILABLE" status vs "PENDING", requiring console interaction
-// However, this has been manually tested succesfully
+// However, this has been manually tested successfully
 func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -281,16 +281,6 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckRepositoryAssociationNotRecreated(before, after *codegurureviewer.DescribeRepositoryAssociationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.RepositoryAssociation.AssociationArn), aws.StringValue(after.RepositoryAssociation.AssociationArn); before != after {
-			return create.Error(names.CodeGuruReviewer, create.ErrActionCheckingNotRecreated, tfcodegurureviewer.ResNameRepositoryAssociation, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccRepositoryAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccRepositoryAssociation_codecommit_repository(rName), `
 resource "aws_codegurureviewer_repository_association" "test" {
@@ -388,11 +378,9 @@ resource "aws_s3_bucket" "test" {
 }
 
 func testAccRepositoryAssociation_kms_key() string {
-	return fmt.Sprint(`
-
-
+	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
-`)
+`
 }

@@ -37,8 +37,8 @@ func sweepAssociations(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.Associations {
-			r := ResourceAssociation()
+		for _, v := range page.RepositoryAssociationSummaries {
+			r := ResourceRepositoryAssociation()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(v.Name))

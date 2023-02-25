@@ -303,7 +303,6 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
 
 	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
@@ -373,7 +372,6 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
 
 	log.Printf("[INFO] Deleting CodeGuruReviewer RepositoryAssociation %s", d.Id())
