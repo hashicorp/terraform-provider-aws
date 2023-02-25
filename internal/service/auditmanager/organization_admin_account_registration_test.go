@@ -40,7 +40,7 @@ func testAccOrganizationAdminAccountRegistration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -72,7 +72,7 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

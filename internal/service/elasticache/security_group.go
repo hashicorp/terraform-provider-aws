@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -102,22 +102,15 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.DeleteCacheSecurityGroupWithContext(ctx, &elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
-		if err != nil {
-			apierr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-			log.Printf("[DEBUG] APIError.Code: %v", apierr.Code())
-			switch apierr.Code() {
-			case "InvalidCacheSecurityGroupState":
-				return resource.RetryableError(err)
-			case "DependencyViolation":
-				// If it is a dependency violation, we want to retry
-				return resource.RetryableError(err)
-			default:
-				return resource.NonRetryableError(err)
-			}
+
+		if tfawserr.ErrCodeEquals(err, "InvalidCacheSecurityGroupState", "DependencyViolation") {
+			return resource.RetryableError(err)
 		}
+
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+
 		return nil
 	})
 

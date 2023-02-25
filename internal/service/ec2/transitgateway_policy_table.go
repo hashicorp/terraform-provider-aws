@@ -57,7 +57,7 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	transitGatewayID := d.Get("transit_gateway_id").(string)
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
@@ -110,7 +110,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set("state", transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
-	tags := KeyValueTags(transitGatewayPolicyTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, transitGatewayPolicyTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

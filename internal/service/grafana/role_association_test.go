@@ -33,8 +33,8 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -71,8 +71,8 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -109,8 +109,8 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -147,8 +147,8 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -190,8 +190,8 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -235,8 +235,8 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 		resource.TestCase{
 			PreCheck: func() {
 				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),

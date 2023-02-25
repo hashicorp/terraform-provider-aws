@@ -231,7 +231,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting subnet_mappings: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

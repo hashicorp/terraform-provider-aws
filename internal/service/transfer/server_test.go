@@ -715,8 +715,8 @@ func testAccServer_protocols(t *testing.T) {
 			{
 				Config: testAccServerConfig_rootCA(rootDomain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &ca),
 				),
 			},
 			{
@@ -735,7 +735,7 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_protocolsUpdate(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &ca),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -814,8 +814,8 @@ func testAccServer_directoryService(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckDirectoryService(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryService(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

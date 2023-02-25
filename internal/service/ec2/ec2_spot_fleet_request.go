@@ -843,7 +843,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 
@@ -1042,7 +1042,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1270,7 +1270,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
-		tags := Tags(tftags.New(m).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := &ec2.SpotFleetTagSpecification{
 			ResourceType: aws.String(ec2.ResourceTypeInstance),
@@ -1861,12 +1861,12 @@ func launchSpecsToSet(ctx context.Context, conn *ec2.EC2, launchSpecs []*ec2.Spo
 			return nil, err
 		}
 
-		specSet.Add(launchSpecToMap(spec, rootDeviceName))
+		specSet.Add(launchSpecToMap(ctx, spec, rootDeviceName))
 	}
 	return specSet, nil
 }
 
-func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
+func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	m["root_block_device"] = rootBlockDeviceToSet(l.BlockDeviceMappings, rootDevName)
@@ -1940,7 +1940,7 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if aws.StringValue(tagSpecs.ResourceType) == ec2.ResourceTypeInstance {
-				m["tags"] = KeyValueTags(tagSpecs.Tags).IgnoreAWS().Map()
+				m["tags"] = KeyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
 			}
 		}
 	}

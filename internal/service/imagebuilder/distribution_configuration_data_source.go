@@ -264,7 +264,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	d.Set("tags", KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return diags
 }

@@ -93,7 +93,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)

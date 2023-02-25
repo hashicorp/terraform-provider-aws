@@ -131,7 +131,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -211,7 +211,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("description", resp.Description)
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "tags", d.Id(), err))

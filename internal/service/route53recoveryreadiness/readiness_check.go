@@ -59,7 +59,7 @@ func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Get("readiness_check_name").(string)),

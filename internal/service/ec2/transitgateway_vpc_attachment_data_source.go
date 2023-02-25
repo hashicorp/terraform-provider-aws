@@ -98,7 +98,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

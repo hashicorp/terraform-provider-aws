@@ -134,7 +134,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
 	dxgwIdRaw, dxgwOk := d.GetOk("dx_gateway_id")

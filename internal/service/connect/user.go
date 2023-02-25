@@ -143,7 +143,7 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -240,7 +240,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
 	}
 
-	tags := KeyValueTags(resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

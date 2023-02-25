@@ -582,7 +582,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)

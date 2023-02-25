@@ -1114,7 +1114,7 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["sampling_rate"].(float64); ok && v != 0 {
+	if v, ok := tfMap["sampling_rate"].(float64); ok {
 		apiObject.SamplingRate = aws.Float64(v)
 	}
 

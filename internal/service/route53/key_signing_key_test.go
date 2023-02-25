@@ -282,7 +282,7 @@ var testAccProviderRoute53KeySigningKeyConfigure sync.Once
 
 // testAccPreCheckKeySigningKey verifies AWS credentials and that Route 53 Key Signing Key is supported
 func testAccPreCheckKeySigningKey(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, route53.EndpointsID)
 
 	region := testAccGetKeySigningKeyRegion()
 
