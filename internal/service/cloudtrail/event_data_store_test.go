@@ -300,7 +300,7 @@ func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.Te
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudTrail Event Data Store ARN is set")
+			return fmt.Errorf("No CloudTrail Event Data Store ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
@@ -324,6 +324,10 @@ func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFu
 
 			if tfresource.NotFound(err) {
 				continue
+			}
+
+			if err != nil {
+				return err
 			}
 
 			return fmt.Errorf("CloudTrail Event Data Store %s still exists", rs.Primary.ID)
