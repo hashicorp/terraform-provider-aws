@@ -21,7 +21,7 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,7 +63,7 @@ func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

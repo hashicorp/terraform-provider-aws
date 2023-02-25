@@ -22,7 +22,7 @@ func testAccIndex_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +52,7 @@ func testAccIndex_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,7 +77,7 @@ func testAccIndex_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -124,7 +124,7 @@ func testAccIndex_type(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

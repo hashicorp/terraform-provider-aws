@@ -1,4 +1,9 @@
-## 4.56.0 (Unreleased)
+## 4.57.0 (Unreleased)
+## 4.56.0 (February 24, 2023)
+
+NOTES:
+
+* resource/aws_lambda_function: Updated to AWS SDK V2 ([#29615](https://github.com/hashicorp/terraform-provider-aws/issues/29615))
 
 FEATURES:
 
@@ -22,6 +27,7 @@ BUG FIXES:
 
 * resource/aws_acmpca_certificate_authority: `revocation_configuration.crl_configuration.expiration_in_days` is Optional ([#29613](https://github.com/hashicorp/terraform-provider-aws/issues/29613))
 * resource/aws_default_vpc: Change `enable_network_address_usage_metrics` to Optional+Computed, matching the `aws_vpc` resource ([#29607](https://github.com/hashicorp/terraform-provider-aws/issues/29607))
+* resource/aws_lambda_function: Fix missing `ValidationException` message body ([#29615](https://github.com/hashicorp/terraform-provider-aws/issues/29615))
 * resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
 * resource/aws_resourceexplorer2_view: Fix `Unexpected Planned Resource State on Destroy` errors when using Terraform CLI v1.3 and above ([#29550](https://github.com/hashicorp/terraform-provider-aws/issues/29550))
 * resource/aws_servicecatalog_provisioned_product: Fix to allow `outputs` to be `Computed` when the resource changes ([#29559](https://github.com/hashicorp/terraform-provider-aws/issues/29559))

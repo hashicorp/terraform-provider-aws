@@ -706,10 +706,10 @@ func PreCheckAlternateAccount(t *testing.T) {
 	}
 }
 
-func PreCheckPartitionHasService(serviceId string, t *testing.T) {
+func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		if _, ok := partition.Services()[serviceId]; !ok {
-			t.Skipf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId)
+		if _, ok := partition.Services()[serviceID]; !ok {
+			t.Skipf("skipping tests; partition %s does not support %s service", partition.ID(), serviceID)
 		}
 	}
 }

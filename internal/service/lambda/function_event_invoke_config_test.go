@@ -2,18 +2,20 @@ package lambda_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
@@ -508,7 +510,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 
 func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function_event_invoke_config" {
@@ -529,13 +531,12 @@ func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.
 				input.Qualifier = aws.String(qualifier)
 			}
 
-			output, err := conn.GetFunctionEventInvokeConfigWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
+			output, err := conn.GetFunctionEventInvokeConfig(ctx, input)
 			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					continue
+				}
 				return err
 			}
 
@@ -550,13 +551,13 @@ func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.
 
 func testAccCheckFunctionDisappears(ctx context.Context, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
 
 		input := &lambda.DeleteFunctionInput{
 			FunctionName: function.Configuration.FunctionName,
 		}
 
-		_, err := conn.DeleteFunctionWithContext(ctx, input)
+		_, err := conn.DeleteFunction(ctx, input)
 
 		return err
 	}
@@ -573,7 +574,7 @@ func testAccCheckFunctionEventInvokeDisappearsConfig(ctx context.Context, resour
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
 
 		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
@@ -589,7 +590,7 @@ func testAccCheckFunctionEventInvokeDisappearsConfig(ctx context.Context, resour
 			input.Qualifier = aws.String(qualifier)
 		}
 
-		_, err = conn.DeleteFunctionEventInvokeConfigWithContext(ctx, input)
+		_, err = conn.DeleteFunctionEventInvokeConfig(ctx, input)
 
 		return err
 	}
@@ -606,7 +607,7 @@ func testAccCheckFunctionEventInvokeExistsConfig(ctx context.Context, resourceNa
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
 
 		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
@@ -622,7 +623,7 @@ func testAccCheckFunctionEventInvokeExistsConfig(ctx context.Context, resourceNa
 			input.Qualifier = aws.String(qualifier)
 		}
 
-		_, err = conn.GetFunctionEventInvokeConfigWithContext(ctx, input)
+		_, err = conn.GetFunctionEventInvokeConfig(ctx, input)
 
 		return err
 	}
