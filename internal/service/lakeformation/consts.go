@@ -1,6 +1,8 @@
 package lakeformation
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	TableNameAllTables        = "ALL_TABLES"

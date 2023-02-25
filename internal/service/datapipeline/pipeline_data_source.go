@@ -38,7 +38,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	pipelineId := d.Get("pipeline_id").(string)
 
-	v, err := PipelineRetrieve(pipelineId, conn)
+	v, err := PipelineRetrieve(ctx, pipelineId, conn)
 	if err != nil {
 		return diag.Errorf("Error describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}
@@ -46,7 +46,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
 
-	tags := KeyValueTags(v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)

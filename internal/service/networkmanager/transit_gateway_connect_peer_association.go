@@ -25,7 +25,7 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayConnectPeerAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

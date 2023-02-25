@@ -91,7 +91,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
 
-	if err := d.Set("tags", KeyValueTags(link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

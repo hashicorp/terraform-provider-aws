@@ -96,7 +96,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 
 	var output []*mq.BrokerInstanceOption
 
-	err := describeBrokerInstanceOptionsPagesWithContext(ctx, conn, input, func(page *mq.DescribeBrokerInstanceOptionsOutput, lastPage bool) bool {
+	err := describeBrokerInstanceOptionsPages(ctx, conn, input, func(page *mq.DescribeBrokerInstanceOptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

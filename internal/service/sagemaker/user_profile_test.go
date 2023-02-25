@@ -1,6 +1,7 @@
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -18,6 +19,7 @@ import (
 )
 
 func testAccUserProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -26,12 +28,12 @@ func testAccUserProfile_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "0"),
@@ -50,6 +52,7 @@ func testAccUserProfile_basic(t *testing.T) {
 }
 
 func testAccUserProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -58,12 +61,12 @@ func testAccUserProfile_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -76,7 +79,7 @@ func testAccUserProfile_tags(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -85,7 +88,7 @@ func testAccUserProfile_tags(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -95,6 +98,7 @@ func testAccUserProfile_tags(t *testing.T) {
 }
 
 func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -103,12 +107,12 @@ func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
@@ -125,6 +129,7 @@ func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
 }
 
 func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -133,12 +138,12 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettingsImage(rName, "ml.t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
@@ -154,7 +159,7 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettingsImage(rName, "ml.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
@@ -167,6 +172,7 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 }
 
 func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -175,12 +181,12 @@ func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
@@ -197,6 +203,7 @@ func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
 }
 
 func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -205,12 +212,12 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
@@ -229,6 +236,7 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 }
 
 func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -242,12 +250,12 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
@@ -266,6 +274,7 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 }
 
 func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -274,12 +283,12 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
@@ -296,6 +305,7 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 }
 
 func testAccUserProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -304,13 +314,13 @@ func testAccUserProfile_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -318,37 +328,39 @@ func testAccUserProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_user_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_user_profile" {
+				continue
+			}
+
+			domainID := rs.Primary.Attributes["domain_id"]
+			userProfileName := rs.Primary.Attributes["user_profile_name"]
+
+			userProfile, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
+			}
+
+			userProfileArn := aws.StringValue(userProfile.UserProfileArn)
+			if userProfileArn == rs.Primary.ID {
+				return fmt.Errorf("SageMaker User Profile %q still exists", rs.Primary.ID)
+			}
 		}
 
-		domainID := rs.Primary.Attributes["domain_id"]
-		userProfileName := rs.Primary.Attributes["user_profile_name"]
-
-		userProfile, err := tfsagemaker.FindUserProfileByName(conn, domainID, userProfileName)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
-		}
-
-		userProfileArn := aws.StringValue(userProfile.UserProfileArn)
-		if userProfileArn == rs.Primary.ID {
-			return fmt.Errorf("SageMaker User Profile %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckUserProfileExists(n string, userProfile *sagemaker.DescribeUserProfileOutput) resource.TestCheckFunc {
+func testAccCheckUserProfileExists(ctx context.Context, n string, userProfile *sagemaker.DescribeUserProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -364,7 +376,7 @@ func testAccCheckUserProfileExists(n string, userProfile *sagemaker.DescribeUser
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 
-		resp, err := tfsagemaker.FindUserProfileByName(conn, domainID, userProfileName)
+		resp, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
 		if err != nil {
 			return err
 		}

@@ -9,16 +9,27 @@ issues:
     - linters:
         - unparam
       text: "always receives"
+    - path: _test\.go
+      linters:
+        - contextcheck
+        - errorlint
   max-per-linter: 0
   max-same-issues: 0
 
 linters:
   disable-all: true
   enable:
+    - asasalint
     - asciicheck
+    - containedctx
+    - contextcheck
+    - dogsled
     - durationcheck
     - errcheck
+    - errname
+    - errorlint
     - exportloopref
+    - goconst
     - gocritic
     - gofmt
     - gomnd
@@ -44,8 +55,15 @@ linters:
     - whitespace
 
 linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
   errcheck:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  errorlint:
+    errorf: false
+  goconst:
+    ignore-tests: true
+    min-occurrences: 6
   gocritic:
     enabled-tags:
       - diagnostic
@@ -106,5 +124,3 @@ linters-settings:
 
 run:
   timeout: 75m
-  skip-dirs:
-    - .ci/providerlint/vendor

@@ -1,18 +1,20 @@
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceOutpostInstanceTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOutpostInstanceTypesRead,
+		ReadWithoutTimeout: dataSourceOutpostInstanceTypesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -29,7 +31,8 @@ func DataSourceOutpostInstanceTypes() *schema.Resource {
 	}
 }
 
-func dataSourceOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOutpostInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.GetOutpostInstanceTypesInput{
@@ -40,10 +43,10 @@ func dataSourceOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}
 	var instanceTypes []string
 
 	for {
-		output, err := conn.GetOutpostInstanceTypes(input)
+		output, err := conn.GetOutpostInstanceTypesWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error getting Outpost Instance Types: %w", err)
+			return sdkdiag.AppendErrorf(diags, "getting Outpost Instance Types: %s", err)
 		}
 
 		if output == nil {
@@ -64,10 +67,10 @@ func dataSourceOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err := d.Set("instance_types", instanceTypes); err != nil {
-		return fmt.Errorf("error setting instance_types: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting instance_types: %s", err)
 	}
 
 	d.SetId(outpostID)
 
-	return nil
+	return diags
 }

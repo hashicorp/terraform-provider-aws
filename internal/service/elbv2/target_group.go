@@ -2,7 +2,6 @@ package elbv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -13,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,6 +29,8 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_alb_target_group")
+// @SDKResource("aws_lb_target_group")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time
@@ -36,13 +39,13 @@ func ResourceTargetGroup() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
-		Create: resourceTargetGroupCreate,
-		Read:   resourceTargetGroupRead,
-		Update: resourceTargetGroupUpdate,
-		Delete: resourceTargetGroupDelete,
+		CreateWithoutTimeout: resourceTargetGroupCreate,
+		ReadWithoutTimeout:   resourceTargetGroupRead,
+		UpdateWithoutTimeout: resourceTargetGroupUpdate,
+		DeleteWithoutTimeout: resourceTargetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -166,15 +169,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"preserve_client_ip": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
 				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"protocol": {
 				Type:         schema.TypeString,
@@ -321,10 +320,11 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -335,14 +335,14 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		groupName = resource.PrefixedUniqueId("tf-")
 	}
 
-	existingTg, err := FindTargetGroupByName(conn, groupName)
+	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
 
 	if err != nil && !tfresource.NotFound(err) {
-		return fmt.Errorf("reading ELBv2 Target Group (%s): %w", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", groupName, err)
 	}
 
 	if existingTg != nil {
-		return fmt.Errorf("ELBv2 Target Group (%s) already exists", groupName)
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", groupName)
 	}
 
 	input := &elbv2.CreateTargetGroupInput{
@@ -352,15 +352,15 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 		if _, ok := d.GetOk("port"); !ok {
-			return fmt.Errorf("port should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "port should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("protocol"); !ok {
-			return fmt.Errorf("protocol should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "protocol should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("vpc_id"); !ok {
-			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
 		input.Protocol = aws.String(d.Get("protocol").(string))
@@ -422,13 +422,13 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateTargetGroup(input)
+	output, err := conn.CreateTargetGroupWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		input.Tags = nil
-		output, err = conn.CreateTargetGroup(input)
+		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
 	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
@@ -436,25 +436,25 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		input.Tags = nil
-		output, err = conn.CreateTargetGroup(input)
+		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("creating LB Target Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: %s", err)
 	}
 
 	if len(output.TargetGroups) == 0 {
-		return errors.New("error creating LB Target Group: no groups returned in response")
+		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: no groups returned in response")
 	}
 
 	d.SetId(aws.StringValue(output.TargetGroups[0].TargetGroupArn))
 
-	_, err = tfresource.RetryWhenNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindTargetGroupByARN(conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindTargetGroupByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for ELBv2 Target Group (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Target Group (%s) create: %s", d.Id(), err)
 	}
 
 	var attrs []*elbv2.TargetGroupAttribute
@@ -574,52 +574,57 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributes(params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
 
 		if err != nil {
-			return fmt.Errorf("modifying Target Group Attributes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
 		}
 	}
 
 	// Post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
-			return resourceTargetGroupRead(d, meta)
+			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindTargetGroupByARN(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindTargetGroupByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ELBv2 Target Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", d.Id(), err)
 	}
 
-	return flattenTargetGroupResource(d, meta, outputRaw.(*elbv2.TargetGroup))
+	if err := flattenTargetGroupResource(ctx, d, meta, outputRaw.(*elbv2.TargetGroup)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	return diags
 }
 
-func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChange("health_check") {
@@ -662,9 +667,9 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if params != nil {
-			_, err := conn.ModifyTargetGroup(params)
+			_, err := conn.ModifyTargetGroupWithContext(ctx, params)
 			if err != nil {
-				return fmt.Errorf("modifying Target Group: %w", err)
+				return sdkdiag.AppendErrorf(diags, "modifying Target Group: %s", err)
 			}
 		}
 	}
@@ -794,17 +799,17 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributes(params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("modifying Target Group Attributes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
+		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
@@ -819,24 +824,25 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(ctx, conn, d.Id(), o, n)
 		}
 
 		// ISO partitions may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
-			return resourceTargetGroupRead(d, meta)
+			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("updating LB Target Group (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating LB Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	const (
 		targetGroupDeleteTimeout = 2 * time.Minute
 	)
@@ -847,8 +853,8 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.Retry(targetGroupDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteTargetGroup(input)
+	err := resource.RetryContext(ctx, targetGroupDeleteTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteTargetGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
 			return resource.RetryableError(err)
@@ -862,22 +868,22 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTargetGroup(input)
+		_, err = conn.DeleteTargetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Target Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Target Group: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindTargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
+func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := FindTargetGroup(conn, input)
+	output, err := FindTargetGroup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -893,12 +899,12 @@ func FindTargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, er
 	return output, nil
 }
 
-func FindTargetGroupByName(conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
+func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		Names: aws.StringSlice([]string{name}),
 	}
 
-	output, err := FindTargetGroup(conn, input)
+	output, err := FindTargetGroup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -914,10 +920,10 @@ func FindTargetGroupByName(conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, 
 	return output, nil
 }
 
-func FindTargetGroups(conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) ([]*elbv2.TargetGroup, error) {
+func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) ([]*elbv2.TargetGroup, error) {
 	var output []*elbv2.TargetGroup
 
-	err := conn.DescribeTargetGroupsPages(input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
+	err := conn.DescribeTargetGroupsPagesWithContext(ctx, input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -945,8 +951,8 @@ func FindTargetGroups(conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput)
 	return output, nil
 }
 
-func FindTargetGroup(conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) (*elbv2.TargetGroup, error) {
-	output, err := FindTargetGroups(conn, input)
+func FindTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) (*elbv2.TargetGroup, error) {
+	output, err := FindTargetGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1023,7 +1029,7 @@ func TargetGroupSuffixFromARN(arn *string) string {
 }
 
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
-func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
+func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1049,7 +1055,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
+	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -1115,7 +1121,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		return fmt.Errorf("setting target failover: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)

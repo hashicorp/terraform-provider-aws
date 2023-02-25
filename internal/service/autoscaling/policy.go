@@ -2,6 +2,7 @@ package autoscaling
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,23 +11,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourcePolicyImport,
+			StateContext: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -156,7 +159,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -174,7 +177,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -193,13 +196,13 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
 									},
 									"target_value": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Required: true,
 									},
 								},
@@ -412,41 +415,43 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	name := d.Get("name").(string)
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Policy (%s): %s", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Policy: %s", input)
-	_, err = conn.PutScalingPolicy(input)
+	_, err = conn.PutScalingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Policy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
-	p, err := FindScalingPolicy(conn, d.Get("autoscaling_group_name").(string), d.Id())
+	p, err := FindScalingPolicy(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
@@ -462,58 +467,60 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
-		return fmt.Errorf("error setting predictive_scaling_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_configuration: %s", err)
 	}
 	if err := d.Set("step_adjustment", FlattenStepAdjustments(p.StepAdjustments)); err != nil {
-		return fmt.Errorf("error setting step_adjustment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting step_adjustment: %s", err)
 	}
 	if err := d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration)); err != nil {
-		return fmt.Errorf("error setting target_tracking_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting target_tracking_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Updating Auto Scaling Policy: %s", input)
-	_, err = conn.PutScalingPolicy(input)
+	_, err = conn.PutScalingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
-	_, err := conn.DeletePolicy(&autoscaling.DeletePolicyInput{
+	_, err := conn.DeletePolicyWithContext(ctx, &autoscaling.DeletePolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
@@ -529,14 +536,14 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
+func FindScalingPolicy(ctx context.Context, conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
 	input := &autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		PolicyNames:          aws.StringSlice([]string{policyName}),
 	}
 	var output []*autoscaling.ScalingPolicy
 
-	err := conn.DescribePoliciesPages(input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
+	err := conn.DescribePoliciesPagesWithContext(ctx, input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -589,7 +596,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	params.PolicyType = aws.String(policyType.(string))
 
 	// This parameter is supported if the policy type is SimpleScaling or StepScaling.
-	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == PolicyTypeSimpleScaling || policyType == PolicyTypeStepScaling) {
 		params.AdjustmentType = aws.String(v.(string))
 	}
 
@@ -601,7 +608,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	if v, ok := d.GetOkExists("cooldown"); ok {
 		// 0 is allowed as placeholder even if policyType is not supported
 		params.Cooldown = aws.Int64(int64(v.(int)))
-		if v.(int) != 0 && policyType != "SimpleScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeSimpleScaling {
 			return params, fmt.Errorf("cooldown is only supported for policy type SimpleScaling")
 		}
 	}
@@ -609,21 +616,21 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	// This parameter is supported if the policy type is StepScaling or TargetTrackingScaling.
 	if v, ok := d.GetOkExists("estimated_instance_warmup"); ok {
 		// 0 is NOT allowed as placeholder if policyType is not supported
-		if policyType == "StepScaling" || policyType == "TargetTrackingScaling" {
+		if policyType == PolicyTypeStepScaling || policyType == PolicyTypeTargetTrackingScaling {
 			params.EstimatedInstanceWarmup = aws.Int64(int64(v.(int)))
 		}
-		if v.(int) != 0 && policyType != "StepScaling" && policyType != "TargetTrackingScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeStepScaling && policyType != PolicyTypeTargetTrackingScaling {
 			return params, fmt.Errorf("estimated_instance_warmup is only supported for policy type StepScaling and TargetTrackingScaling")
 		}
 	}
 
 	// This parameter is supported if the policy type is StepScaling.
-	if v, ok := d.GetOk("metric_aggregation_type"); ok && policyType == "StepScaling" {
+	if v, ok := d.GetOk("metric_aggregation_type"); ok && policyType == PolicyTypeStepScaling {
 		params.MetricAggregationType = aws.String(v.(string))
 	}
 
 	// MinAdjustmentMagnitude is supported if the policy type is SimpleScaling or StepScaling.
-	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == PolicyTypeSimpleScaling || policyType == PolicyTypeStepScaling) {
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
 	}
 
@@ -631,13 +638,13 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	//if policy_type=="SimpleScaling" then scaling_adjustment is required and 0 is allowed
 	if v, ok := d.GetOkExists("scaling_adjustment"); ok {
 		// 0 is NOT allowed as placeholder if policyType is not supported
-		if policyType == "SimpleScaling" {
+		if policyType == PolicyTypeSimpleScaling {
 			params.ScalingAdjustment = aws.Int64(int64(v.(int)))
 		}
-		if v.(int) != 0 && policyType != "SimpleScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeSimpleScaling {
 			return params, fmt.Errorf("scaling_adjustment is only supported for policy type SimpleScaling")
 		}
-	} else if !ok && policyType == "SimpleScaling" {
+	} else if !ok && policyType == PolicyTypeSimpleScaling {
 		return params, fmt.Errorf("scaling_adjustment is required for policy type SimpleScaling")
 	}
 
@@ -648,20 +655,20 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
 		}
 		params.StepAdjustments = steps
-		if len(steps) != 0 && policyType != "StepScaling" {
+		if len(steps) != 0 && policyType != PolicyTypeStepScaling {
 			return params, fmt.Errorf("step_adjustment is only supported for policy type StepScaling")
 		}
-	} else if !ok && policyType == "StepScaling" {
+	} else if !ok && policyType == PolicyTypeStepScaling {
 		return params, fmt.Errorf("step_adjustment is required for policy type StepScaling")
 	}
 
 	// This parameter is required if the policy type is TargetTrackingScaling and not supported otherwise.
 	if v, ok := d.GetOk("target_tracking_configuration"); ok {
 		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.([]interface{}))
-		if policyType != "TargetTrackingScaling" {
+		if policyType != PolicyTypeTargetTrackingScaling {
 			return params, fmt.Errorf("target_tracking_configuration is only supported for policy type TargetTrackingScaling")
 		}
-	} else if !ok && policyType == "TargetTrackingScaling" {
+	} else if !ok && policyType == PolicyTypeTargetTrackingScaling {
 		return params, fmt.Errorf("target_tracking_configuration is required for policy type TargetTrackingScaling")
 	}
 
@@ -764,7 +771,7 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
 		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
 		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+		TargetValue:                           aws.Float64(metricSpecificationsFlat["target_value"].(float64)),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }
@@ -776,7 +783,9 @@ func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSl
 	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedLoadMetricSpecification := &autoscaling.PredictiveScalingPredefinedLoadMetric{
 		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedLoadMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedLoadMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedLoadMetricSpecification
 }
@@ -788,7 +797,9 @@ func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSl
 	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
 	predefinedMetricPairSpecification := &autoscaling.PredictiveScalingPredefinedMetricPair{
 		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedMetricPairSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedMetricPairSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedMetricPairSpecification
 }
@@ -800,7 +811,9 @@ func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecifica
 	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedScalingMetricSpecification := &autoscaling.PredictiveScalingPredefinedScalingMetric{
 		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedScalingMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedScalingMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedScalingMetricSpecification
 }
