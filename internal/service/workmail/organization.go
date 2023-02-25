@@ -105,7 +105,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.WorkMail, create.ErrActionReading, ResNameOrganization, d.Id(), err)
 	}
 
-	if aws.ToString(out.State) == statusDeleted {
+	if !d.IsNewResource() && aws.ToString(out.State) == statusDeleted {
 		log.Printf("[WARN] WorkMail Organization (%s) is already deleted, removing from state", d.Id())
 		d.SetId("")
 		return nil
