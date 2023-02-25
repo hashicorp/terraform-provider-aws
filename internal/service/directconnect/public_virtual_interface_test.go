@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -38,12 +40,12 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -72,6 +74,7 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -90,12 +93,12 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicVirtualInterfaceConfig_tags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -119,7 +122,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 			{
 				Config: testAccPublicVirtualInterfaceConfig_tagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -150,12 +153,14 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPublicVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_public_virtual_interface")
+func testAccCheckPublicVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_public_virtual_interface")
+	}
 }
 
-func testAccCheckPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckVirtualInterfaceExists(name, vif)
+func testAccCheckPublicVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
 }
 
 func testAccPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {

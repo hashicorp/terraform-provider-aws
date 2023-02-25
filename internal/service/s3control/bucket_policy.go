@@ -18,10 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_bucket_policy", resourceBucketPolicy)
-}
-
+// @SDKResource("aws_s3control_bucket_policy")
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyCreate,
@@ -41,10 +38,11 @@ func resourceBucketPolicy() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -60,7 +58,6 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	bucket := d.Get("bucket").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
@@ -110,7 +107,6 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if output.Policy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -127,7 +123,6 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}

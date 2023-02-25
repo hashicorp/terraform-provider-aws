@@ -1,15 +1,17 @@
 package workspaces
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusDirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
+func StatusDirectoryState(ctx context.Context, conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -24,9 +26,9 @@ func StatusDirectoryState(conn *workspaces.WorkSpaces, id string) resource.State
 }
 
 // nosemgrep:ci.workspaces-in-func-name
-func StatusWorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
+func StatusWorkspaceState(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
+		output, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: aws.StringSlice([]string{workspaceID}),
 		})
 		if err != nil {

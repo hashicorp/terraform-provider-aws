@@ -63,7 +63,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
-	tags, err := ListTagsWithContext(ctx, conn, queueURL)
+	tags, err := ListTags(ctx, conn, queueURL)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error

@@ -7,6 +7,8 @@ import (
 )
 
 func TestARNForNewRegion(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		ARN           string
@@ -31,7 +33,10 @@ func TestARNForNewRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfdynamodb.ARNForNewRegion(testCase.ARN, testCase.NewRegion)
 
 			if err != nil && !testCase.ErrorExpected {

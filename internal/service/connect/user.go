@@ -143,7 +143,7 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -240,7 +240,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
 	}
 
-	tags := KeyValueTags(resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -284,7 +284,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User hierarchy_group_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User hierarchy_group_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -299,7 +299,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User identity_info (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User identity_info (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -314,7 +314,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User phone_config (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User phone_config (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -329,7 +329,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User routing_profile_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User routing_profile_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -344,14 +344,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User security_profile_ids (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User security_profile_ids (%s): %w", d.Id(), err))
 		}
 	}
 
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

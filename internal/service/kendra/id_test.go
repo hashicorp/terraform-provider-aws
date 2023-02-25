@@ -7,6 +7,8 @@ import (
 )
 
 func TestExperienceParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName        string
 		Input           string
@@ -52,7 +54,10 @@ func TestExperienceParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotId, gotIndexId, err := tfkendra.ExperienceParseResourceID(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -75,6 +80,8 @@ func TestExperienceParseResourceID(t *testing.T) {
 }
 
 func TestQuerySuggestionsBlockListParseID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName        string
 		Input           string
@@ -120,7 +127,10 @@ func TestQuerySuggestionsBlockListParseID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotId, gotIndexId, err := tfkendra.QuerySuggestionsBlockListParseResourceID(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -143,6 +153,8 @@ func TestQuerySuggestionsBlockListParseID(t *testing.T) {
 }
 
 func TestThesaurusParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName        string
 		Input           string
@@ -188,7 +200,10 @@ func TestThesaurusParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotId, gotIndexId, err := tfkendra.ThesaurusParseResourceID(testCase.Input)
 
 			if err != nil && !testCase.Error {

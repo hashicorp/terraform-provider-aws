@@ -8,6 +8,8 @@ import (
 )
 
 func TestNullableFloat(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		val           string
 		expectNull    bool
@@ -68,7 +70,9 @@ func TestNullableFloat(t *testing.T) {
 }
 
 func TestValidationFloat(t *testing.T) {
-	runTestCases(t, []testCase{
+	t.Parallel()
+
+	runValidationTestCases(t, []testCase{
 		{
 			val: "1",
 			f:   ValidateTypeStringNullableFloat,

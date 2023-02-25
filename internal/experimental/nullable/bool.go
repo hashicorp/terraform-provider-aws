@@ -53,9 +53,23 @@ func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []
 	return
 }
 
+func DiffSuppressNullableBool(k, o, n string, d *schema.ResourceData) bool {
+	ov, onull, _ := Bool(o).Value()
+	nv, nnull, _ := Bool(n).Value()
+	if onull && nnull {
+		return true
+	}
+	if !onull && !nnull {
+		return ov == nv
+	}
+	return false
+}
+
 // DiffSuppressNullableBoolFalseAsNull allows false to be treated equivalently to null.
 // This can be used to allow a practitioner to set false when the API requires a null value,
 // as a convenience.
+// This is typically not what you want: it is indended for cases where a parameter is optional
+// in some cases and must be set in others.
 func DiffSuppressNullableBoolFalseAsNull(k, o, n string, d *schema.ResourceData) bool {
 	ov, onull, _ := Bool(o).Value()
 	nv, nnull, _ := Bool(n).Value()

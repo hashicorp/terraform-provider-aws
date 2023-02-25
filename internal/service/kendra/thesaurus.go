@@ -98,7 +98,7 @@ func ResourceThesaurus() *schema.Resource {
 func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &kendra.CreateThesaurusInput{
 		ClientToken:  aws.String(resource.UniqueId()),
@@ -116,8 +116,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateThesaurus(ctx, input)
 		},
@@ -247,8 +246,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		log.Printf("[DEBUG] Updating Kendra Thesaurus (%s): %#v", d.Id(), input)
 
-		_, err = tfresource.RetryWhen(
-			propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateThesaurus(ctx, input)
 			},

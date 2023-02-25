@@ -75,7 +75,7 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[INFO] Creating Route53 Traffic Policy Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateTrafficPolicyInstanceWithContext(ctx, input)
 	}, route53.ErrCodeNoSuchTrafficPolicy)
 
