@@ -194,6 +194,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	"golang.org/x/exp/slices"
@@ -389,6 +390,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		wafregional.ServicePackage,
 		wafv2.ServicePackage,
 		worklink.ServicePackage,
+		workmail.ServicePackage,
 		workspaces.ServicePackage,
 		xray.ServicePackage,
 	}

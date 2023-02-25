@@ -185,6 +185,7 @@ val services = mapOf(
     "wafregional" to ServiceSpec("WAF Classic Regional"),
     "wafv2" to ServiceSpec("WAF"),
     "worklink" to ServiceSpec("WorkLink"),
+    "workmail" to ServiceSpec("WorkMail"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),
     "xray" to ServiceSpec("X-Ray"),
 )
