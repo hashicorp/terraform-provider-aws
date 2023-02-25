@@ -1287,7 +1287,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 						Port:         aws.Int64(int64(d.Get("port").(int))),
 						DatabaseName: aws.String(d.Get("database_name").(string)),
 					}
-					input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+					input.EngineName = aws.String(engineName) // Must be included (should be 'db2')
 
 					// Update connection info in top-level namespace as well
 					expandTopLevelConnectionInfoModify(d, input)
