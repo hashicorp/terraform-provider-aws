@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindAdminAccount(conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
+func FindAdminAccount(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
 	input := &securityhub.ListOrganizationAdminAccountsInput{}
 	var result *securityhub.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(input, func(page *securityhub.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *securityhub.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -97,12 +97,12 @@ func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx co
 	return output, nil
 }
 
-func FindStandardsSubscriptionByARN(conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
+func FindStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
 	input := &securityhub.GetEnabledStandardsInput{
 		StandardsSubscriptionArns: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := conn.GetEnabledStandards(input)
+	output, err := conn.GetEnabledStandardsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{

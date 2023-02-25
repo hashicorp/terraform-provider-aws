@@ -32,7 +32,7 @@ func ResourceEnvironment() *schema.Resource {
 		DeleteWithoutTimeout: resourceEnvironmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -336,7 +336,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Execution roles created just before the MWAA Environment may result in ValidationExceptions
 		due to IAM permission propagation delays.
 	*/
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateEnvironmentWithContext(ctx, input)
 	}, mwaa.ErrCodeValidationException, mwaa.ErrCodeInternalServerException)
 
@@ -511,7 +511,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating MWAA Environment (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -753,19 +753,19 @@ func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenLastUpdateError(error *mwaa.UpdateError) []interface{} {
-	if error == nil {
+func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	if error.ErrorCode != nil {
-		m["error_code"] = error.ErrorCode
+	if apiObject.ErrorCode != nil {
+		m["error_code"] = apiObject.ErrorCode
 	}
 
-	if error.ErrorMessage != nil {
-		m["error_message"] = error.ErrorMessage
+	if apiObject.ErrorMessage != nil {
+		m["error_message"] = apiObject.ErrorMessage
 	}
 
 	return []interface{}{m}

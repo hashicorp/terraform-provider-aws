@@ -169,7 +169,7 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Network Manager Transit Gateway Peering (%s) tags: %s", d.Id(), err)
 		}
 	}

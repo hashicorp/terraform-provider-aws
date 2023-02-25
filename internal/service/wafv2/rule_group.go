@@ -35,7 +35,7 @@ func ResourceRuleGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -91,9 +91,10 @@ func ResourceRuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": allowConfigSchema(),
-									"block": blockConfigSchema(),
-									"count": countConfigSchema(),
+									"allow":   allowConfigSchema(),
+									"block":   blockConfigSchema(),
+									"count":   countConfigSchema(),
+									"captcha": captchaConfigSchema(),
 								},
 							},
 						},
@@ -154,7 +155,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Creating WAFv2 RuleGroup: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ruleGroupCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupCreateTimeout, func() (interface{}, error) {
 		return conn.CreateRuleGroupWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 
@@ -203,7 +204,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting visibility_config: %s", err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
@@ -245,7 +246,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		log.Printf("[INFO] Updating WAFv2 RuleGroup: %s", input)
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ruleGroupUpdateTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupUpdateTimeout, func() (interface{}, error) {
 			return conn.UpdateRuleGroupWithContext(ctx, input)
 		}, wafv2.ErrCodeWAFUnavailableEntityException)
 
@@ -258,7 +259,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating tags for WAFv2 RuleGroup (%s): %s", arn, err)
 		}
 	}
@@ -277,7 +278,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RuleGroup: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteRuleGroupWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException, wafv2.ErrCodeWAFUnavailableEntityException)
 

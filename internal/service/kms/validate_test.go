@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidGrantName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"123",
 		"Abc",
@@ -36,6 +38,8 @@ func TestValidGrantName(t *testing.T) {
 }
 
 func TestValidNameForDataSource(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -75,6 +79,8 @@ func TestValidNameForDataSource(t *testing.T) {
 }
 
 func TestValidNameForResource(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -114,6 +120,8 @@ func TestValidNameForResource(t *testing.T) {
 }
 
 func TestValidKey(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

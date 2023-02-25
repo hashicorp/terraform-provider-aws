@@ -20,62 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestProvider(t *testing.T) {
-	p, err := provider.New(context.Background())
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = p.InternalValidate()
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestReverseDNS(t *testing.T) {
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "amazonaws.com",
-			input:    "amazonaws.com",
-			expected: "com.amazonaws",
-		},
-		{
-			name:     "amazonaws.com.cn",
-			input:    "amazonaws.com.cn",
-			expected: "cn.com.amazonaws",
-		},
-		{
-			name:     "sc2s.sgov.gov",
-			input:    "sc2s.sgov.gov",
-			expected: "gov.sgov.sc2s",
-		},
-		{
-			name:     "c2s.ic.gov",
-			input:    "c2s.ic.gov",
-			expected: "gov.ic.c2s",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			if got, want := conns.ReverseDNS(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
 func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 	var provider *schema.Provider
 

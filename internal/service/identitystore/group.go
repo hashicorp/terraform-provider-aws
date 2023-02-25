@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -118,7 +119,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	out, err := findGroupByID(ctx, conn, identityStoreId, groupId)
+	out, err := FindGroupByTwoPartKey(ctx, conn, identityStoreId, groupId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore Group (%s) not found, removing from state", d.Id())
@@ -173,42 +174,39 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	log.Printf("[INFO] Deleting IdentityStore Group %s", d.Id())
-
 	_, err := conn.DeleteGroup(ctx, &identitystore.DeleteGroupInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
 		GroupId:         aws.String(d.Get("group_id").(string)),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionDeleting, ResNameGroup, d.Id(), err)
 	}
 
 	return nil
 }
 
-func findGroupByID(ctx context.Context, conn *identitystore.Client, identityStoreId, groupId string) (*identitystore.DescribeGroupOutput, error) {
+func FindGroupByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, groupID string) (*identitystore.DescribeGroupOutput, error) {
 	in := &identitystore.DescribeGroupInput{
-		GroupId:         aws.String(groupId),
-		IdentityStoreId: aws.String(identityStoreId),
+		GroupId:         aws.String(groupID),
+		IdentityStoreId: aws.String(identityStoreID),
 	}
 
 	out, err := conn.DescribeGroup(ctx, in)
 
-	if err != nil {
-		var e *types.ResourceNotFoundException
-		if errors.As(err, &e) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		} else {
-			return nil, err
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if out == nil || out.GroupId == nil {

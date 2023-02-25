@@ -239,13 +239,13 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating HoursOfOperation (%s): %w", d.Id(), err))
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

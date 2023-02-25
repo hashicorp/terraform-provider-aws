@@ -27,7 +27,7 @@ func ResourceCustomerGateway() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomerGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -171,7 +171,7 @@ func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Customer Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}

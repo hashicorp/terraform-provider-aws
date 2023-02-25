@@ -294,7 +294,7 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 
 ### environment
 
-* `variables` - (Optional) Map of environment variables that are accessible from the function code during execution.
+* `variables` - (Optional) Map of environment variables that are accessible from the function code during execution. If provided at least one key must be present.
 
 ### ephemeral_storage
 
@@ -370,6 +370,7 @@ In addition to all arguments above, the following attributes are exported:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

@@ -399,7 +399,7 @@ resource "aws_s3_bucket" "source" {
 }
 ```
 
-### Enable Default Server Side Encryption
+### Enable SSE-KMS Server Side Encryption
 
 -> **NOTE:** The parameter `server_side_encryption_configuration` is deprecated.
 Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
@@ -721,8 +721,8 @@ In addition to all arguments above, the following attributes are exported:
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
-* `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
+* `website_endpoint` - (**Deprecated**) The website endpoint, if the bucket is configured with a website. If not, this will be an empty string. Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
+* `website_domain` - (**Deprecated**) The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records. Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
 
 ## Timeouts
 

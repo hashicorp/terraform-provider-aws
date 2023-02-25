@@ -299,7 +299,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("error updating Lightsail Container Service (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var origin cloudfront.GetCloudFrontOriginAccessIdentityOutput
 	dataSourceName := "data.aws_cloudfront_origin_access_identity.test"
 	resourceName := "aws_cloudfront_origin_access_identity.test"
@@ -17,12 +18,12 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
+					testAccCheckOriginAccessIdentityExistence(ctx, resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),

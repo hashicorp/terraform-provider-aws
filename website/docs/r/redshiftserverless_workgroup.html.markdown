@@ -21,15 +21,19 @@ resource "aws_redshiftserverless_workgroup" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
+
+* `namespace_name` - (Required) The name of the namespace.
+* `workgroup_name` - (Required) The name of the workgroup.
+
+The following arguments are optional:
 
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
 * `enhanced_vpc_routing` - (Optional) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
-* `subnet_ids` - (Optional) An array of VPC subnet IDs to associate with the workgroup.
-* `workgroup_name` - (Required) The name of the workgroup.
+* `subnet_ids` - (Optional) An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Config Parameter
