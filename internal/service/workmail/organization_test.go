@@ -184,7 +184,7 @@ func testAccCheckOrganizationRecreated(before, after *workmail.DescribeOrganizat
 func testAccOrganizationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_workmail_organization" "test" {
-  alias             = %[1]q
+  alias = %[1]q
 }
 `, rName)
 }
