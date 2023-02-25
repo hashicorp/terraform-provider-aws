@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` argument
+resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments
 ```
 
 ```release-note:enhancement

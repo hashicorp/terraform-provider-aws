@@ -510,6 +510,25 @@ func ResourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
+						"network_bandwidth_gbps": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: verify.FloatGreaterThan(0.0),
+									},
+									"min": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: verify.FloatGreaterThan(0.0),
+									},
+								},
+							},
+						},
 						"network_interface_count": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1623,6 +1642,10 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
 		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
 	}
@@ -1745,6 +1768,26 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest 
 
 	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *ec2.NetworkBandwidthGbpsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkBandwidthGbpsRequest{}
+
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		min = v
+		apiObject.Min = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
 	}
 
 	return apiObject
@@ -2617,6 +2660,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
 	}
 
+	if v := apiObject.NetworkBandwidthGbps; v != nil {
+		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
+	}
+
 	if v := apiObject.NetworkInterfaceCount; v != nil {
 		tfMap["network_interface_count"] = []interface{}{flattenNetworkInterfaceCount(v)}
 	}
@@ -2729,6 +2776,24 @@ func flattenMemoryMiB(apiObject *ec2.MemoryMiB) map[string]interface{} {
 
 	if v := apiObject.Min; v != nil {
 		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkBandwidthGbps(apiObject *ec2.NetworkBandwidthGbps) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap

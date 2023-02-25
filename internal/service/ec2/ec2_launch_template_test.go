@@ -2473,6 +2473,92 @@ func TestAccEC2LaunchTemplate_instanceRequirements_memoryGiBPerVCPU(t *testing.T
 	})
 }
 
+func TestAccEC2LaunchTemplate_instanceRequirements_networkBandwidthGbps(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+                       min = 1.5
+                     }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.min", "1.5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+                       max = 200
+                     }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.max", "200"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_instanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+                       min = 2.5
+                       max = 250
+                     }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.min", "2.5"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.max", "250"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_instanceRequirements_networkInterfaceCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template ec2.LaunchTemplate
