@@ -52,6 +52,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -1162,6 +1163,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_codedeploy_app":               deploy.ResourceApp(),
 			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
 			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
+
+			"aws_codegurureviewer_repository_association": codegurureviewer.ResourceRepositoryAssociation(),
 
 			"aws_codepipeline":                    codepipeline.ResourcePipeline(),
 			"aws_codepipeline_custom_action_type": codepipeline.ResourceCustomActionType(),
