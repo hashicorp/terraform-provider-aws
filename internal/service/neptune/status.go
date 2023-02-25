@@ -16,12 +16,6 @@ const (
 	// EventSubscription Unknown
 	EventSubscriptionStatusUnknown = "Unknown"
 
-	// Cluster NotFound
-	ClusterStatusNotFound = "NotFound"
-
-	// Cluster Unknown
-	ClusterStatusUnknown = "Unknown"
-
 	// DBClusterEndpoint Unknown
 	DBClusterEndpointStatusUnknown = "Unknown"
 )
@@ -44,29 +38,6 @@ func StatusEventSubscription(ctx context.Context, conn *neptune.Neptune, subscri
 		}
 
 		return output.EventSubscriptionsList[0], aws.StringValue(output.EventSubscriptionsList[0].Status), nil
-	}
-}
-
-// StatusCluster fetches the Cluster and its Status
-func StatusCluster(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &neptune.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(id),
-		}
-
-		output, err := conn.DescribeDBClustersWithContext(ctx, input)
-
-		if err != nil {
-			return nil, ClusterStatusUnknown, err
-		}
-
-		if len(output.DBClusters) == 0 {
-			return nil, ClusterStatusNotFound, nil
-		}
-
-		cluster := output.DBClusters[0]
-
-		return cluster, aws.StringValue(cluster.Status), nil
 	}
 }
 

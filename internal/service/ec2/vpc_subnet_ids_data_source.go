@@ -35,7 +35,8 @@ func DataSourceSubnetIDs() *schema.Resource {
 			},
 		},
 		DeprecationMessage: `The aws_subnet_ids data source has been deprecated and will be removed in a future version. ` +
-			`Use the aws_subnets data source instead.`,
+			`Use the aws_subnets data source instead: ` +
+			`https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnets`,
 	}
 }
 
@@ -55,7 +56,7 @@ func dataSourceSubnetIDsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

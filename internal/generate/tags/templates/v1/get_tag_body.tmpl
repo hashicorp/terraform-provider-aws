@@ -39,7 +39,7 @@ func {{ if .ContextOnly }}{{ .GetTagFunc }}{{ else }}{{ .GetTagFunc }}WithContex
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	listTags := KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
 	listTags, err := {{ .ListTagsFunc }}{{ if not ( .ContextOnly ) }}WithContext{{ end }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 

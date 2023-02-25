@@ -343,7 +343,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

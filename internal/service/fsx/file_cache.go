@@ -296,7 +296,7 @@ const (
 func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileCacheInput{
 		ClientRequestToken:   aws.String(resource.UniqueId()),
@@ -384,7 +384,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
 
-	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
+	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
@@ -462,7 +462,7 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(dataRepositoryAssociations) == 0 {
 		return nil
 	}
@@ -470,7 +470,7 @@ func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRep
 	var flattenedDataRepositoryAssociations []interface{}
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
-		tags := KeyValueTags(dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
 			"association_id":                 dataRepositoryAssociation.AssociationId,

@@ -13,10 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_s3control_multi_region_access_point", dataSourceMultiRegionAccessPoint)
-}
-
+// @SDKDataSource("aws_s3control_multi_region_access_point")
 func dataSourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMultiRegionAccessPointBlockRead,

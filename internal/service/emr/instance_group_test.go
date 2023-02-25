@@ -3,11 +3,9 @@ package emr_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -27,7 +25,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -59,7 +57,7 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -87,7 +85,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -112,7 +110,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -165,7 +163,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName1"),
@@ -209,7 +207,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 1, 3),
@@ -255,7 +253,7 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -286,7 +284,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, true),
@@ -313,38 +311,6 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckInstanceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_emr_cluster" {
-				continue
-			}
-
-			params := &emr.DescribeClusterInput{
-				ClusterId: aws.String(rs.Primary.ID),
-			}
-
-			describe, err := conn.DescribeClusterWithContext(ctx, params)
-
-			if err == nil {
-				if describe.Cluster != nil &&
-					*describe.Cluster.Status.State == "WAITING" {
-					return fmt.Errorf("EMR Cluster still exists")
-				}
-			}
-
-			if providerErr, ok := err.(awserr.Error); !ok {
-				log.Printf("[ERROR] %v", providerErr)
-				return err
-			}
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.InstanceGroup) resource.TestCheckFunc {

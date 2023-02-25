@@ -72,7 +72,7 @@ func TestNullableFloat(t *testing.T) {
 func TestValidationFloat(t *testing.T) {
 	t.Parallel()
 
-	runTestCases(t, []testCase{
+	runValidationTestCases(t, []testCase{
 		{
 			val: "1",
 			f:   ValidateTypeStringNullableFloat,

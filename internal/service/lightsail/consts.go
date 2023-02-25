@@ -2,6 +2,7 @@ package lightsail
 
 const (
 	ResBucket                             = "Bucket"
+	ResBucketAccessKey                    = "Bucket Access Key"
 	ResCertificate                        = "Certificate"
 	ResDatabase                           = "Database"
 	ResDisk                               = "Disk"

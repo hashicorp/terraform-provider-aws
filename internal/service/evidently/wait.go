@@ -2,10 +2,13 @@ package evidently
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitFeatureCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
@@ -53,6 +56,69 @@ func waitFeatureDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLaunchCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{cloudwatchevidently.LaunchStatusCreated},
+		Refresh: statusLaunch(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLaunchUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{cloudwatchevidently.LaunchStatusUpdating},
+		Target:  []string{cloudwatchevidently.LaunchStatusCreated, cloudwatchevidently.LaunchStatusRunning},
+		Refresh: statusLaunch(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLaunchDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{cloudwatchevidently.LaunchStatusCreated, cloudwatchevidently.LaunchStatusCompleted, cloudwatchevidently.LaunchStatusRunning, cloudwatchevidently.LaunchStatusCancelled, cloudwatchevidently.LaunchStatusUpdating},
+		Target:  []string{},
+		Refresh: statusLaunch(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
 		return output, err
 	}
 

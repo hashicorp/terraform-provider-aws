@@ -23,7 +23,7 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
@@ -99,7 +99,7 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
@@ -124,7 +124,7 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),

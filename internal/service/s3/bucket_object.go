@@ -433,7 +433,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 

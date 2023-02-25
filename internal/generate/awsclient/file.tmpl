@@ -15,7 +15,6 @@ import (
 	{{- end }}
 {{- end }}
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -28,7 +27,7 @@ type AWSClient struct {
 	Partition                 string
 	Region                    string
 	ReverseDNSPrefix          string
-	ServicePackages           []intf.ServicePackage
+	ServicePackages           []ServicePackage
 	Session                   *session.Session
 	TerraformVersion          string
 
