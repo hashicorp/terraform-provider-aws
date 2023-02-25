@@ -52,7 +52,7 @@ resource "aws_ce_anomaly_subscription" "test" {
     type    = "EMAIL"
     address = "abc@example.com"
   }
-  
+
   threshold_expression {
     dimension {
       key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
