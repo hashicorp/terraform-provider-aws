@@ -109,6 +109,39 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
+			"queue_configs_associated": {
+				Deprecated: "Use the queue_configs instead",
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"channel": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"delay": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"priority": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"queue_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"queue_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"queue_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"routing_profile_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -211,6 +244,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("queue_configs", queueConfigs)
+	d.Set("queue_configs_associated", queueConfigs)
 
 	tags := KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

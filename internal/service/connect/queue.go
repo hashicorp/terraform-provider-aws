@@ -93,6 +93,14 @@ func ResourceQueue() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"quick_connect_ids_associated": {
+				Deprecated: "Use the quick_connect_ids instead",
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -209,6 +217,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
+	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
 
 	tags := KeyValueTags(ctx, resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
