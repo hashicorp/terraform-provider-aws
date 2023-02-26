@@ -337,7 +337,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		quickConnectIdsUpdateAdd := ns.Difference(os)
 		quickConnectIdsUpdateRemove := os.Difference(ns)
 
-		if len(quickConnectIdsUpdateAdd.List()) > 0 {
+		if len(quickConnectIdsUpdateAdd.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
 			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, &connect.AssociateQueueQuickConnectsInput{
 				InstanceId:      aws.String(instanceID),
 				QueueId:         aws.String(queueID),
@@ -348,7 +348,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		if len(quickConnectIdsUpdateRemove.List()) > 0 {
+		if len(quickConnectIdsUpdateRemove.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
 			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, &connect.DisassociateQueueQuickConnectsInput{
 				InstanceId:      aws.String(instanceID),
 				QueueId:         aws.String(queueID),
