@@ -344,7 +344,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateAdd),
 			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %s", d.Id(), err)
 			}
 		}
 
@@ -355,7 +355,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateRemove),
 			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %s", d.Id(), err)
 			}
 		}
 	}

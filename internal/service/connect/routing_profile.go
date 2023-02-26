@@ -351,7 +351,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 				RoutingProfileId: aws.String(routingProfileID),
 			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
+				return diag.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %s", d.Id(), err)
 			}
 		}
 
