@@ -17,7 +17,7 @@ Terraform resource for managing an AWS CloudWatch Observability Access Manager S
 ```terraform
 resource "aws_oam_sink" "example" {
   name = "ExampleSink"
-  
+
   tags = {
     Env = "prod"
   }

@@ -234,7 +234,7 @@ func testAccSinkConfigTags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_oam_sink" "test" {
   name = %[1]q
-  
+
   tags = {
     %[2]q = %[3]q
   }
@@ -246,10 +246,10 @@ func testAccSinkConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string
 	return fmt.Sprintf(`
 resource "aws_oam_sink" "test" {
   name = %[1]q
-  
+
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
