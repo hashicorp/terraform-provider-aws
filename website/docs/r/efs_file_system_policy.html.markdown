@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "policy" {
       "elasticfilesystem:ClientWrite",
     ]
 
-    resources = aws_efs_file_system.fs.arn
+    resources = [aws_efs_file_system.fs.arn]
 
     condition {
       test     = "Bool"
