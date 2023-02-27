@@ -535,6 +535,7 @@ resource "aws_iam_role_policy" "iam_emr_service_policy" {
   policy = data.aws_iam_policy_document.iam_emr_service_policy.json
 }
 
+# IAM Role for EC2 Instance Profile
 data "aws_iam_policy_document" "ec2_assume_role" {
   statement {
     effect = "Allow"
@@ -548,7 +549,6 @@ data "aws_iam_policy_document" "ec2_assume_role" {
   }
 }
 
-# IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
   name               = "iam_emr_profile_role"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
