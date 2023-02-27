@@ -28,7 +28,6 @@ Follow the guide for your contribution type and refer to the Development Referen
 | [Import Support](add-import-support.md) | Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this will need to be added later. |
 | [Documentation Changes](documentation-changes.md)| The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process. |
 
-
 ### 3. Write Tests
 
 We require changes to be covered by [acceptance tests](running-and-writing-acceptance-tests.md) for all contributions. If you are unable to pay for acceptance tests for your contributions, mention this in your pull request. We will happily accept "best effort" acceptance tests implementations and run them for you on our side. Your PR may take longer to merge, but this is not a blocker for contributions.

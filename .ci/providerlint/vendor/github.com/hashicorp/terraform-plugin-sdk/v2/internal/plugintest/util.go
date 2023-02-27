@@ -28,79 +28,40 @@ func symlinkFile(src string, dest string) error {
 	return nil
 }
 
-// symlinkDir is a simplistic function for recursively symlinking all files in a directory to a new path.
-// It is intended only for limited internal use and does not cover all edge cases.
-func symlinkDir(srcDir string, destDir string) (err error) {
-	srcInfo, err := os.Stat(srcDir)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(destDir, srcInfo.Mode())
-	if err != nil {
-		return err
-	}
-
-	directory, _ := os.Open(srcDir)
-	defer directory.Close()
-	objects, err := directory.Readdir(-1)
-
-	for _, obj := range objects {
-		srcPath := filepath.Join(srcDir, obj.Name())
-		destPath := filepath.Join(destDir, obj.Name())
-
-		if obj.IsDir() {
-			err = symlinkDir(srcPath, destPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = symlinkFile(srcPath, destPath)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-	return
-}
-
 // symlinkDirectoriesOnly finds only the first-level child directories in srcDir
 // and symlinks them into destDir.
 // Unlike symlinkDir, this is done non-recursively in order to limit the number
 // of file descriptors used.
-func symlinkDirectoriesOnly(srcDir string, destDir string) (err error) {
+func symlinkDirectoriesOnly(srcDir string, destDir string) error {
 	srcInfo, err := os.Stat(srcDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to stat source directory %q: %w", srcDir, err)
 	}
 
 	err = os.MkdirAll(destDir, srcInfo.Mode())
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to make destination directory %q: %w", destDir, err)
 	}
 
-	directory, err := os.Open(srcDir)
+	dirEntries, err := os.ReadDir(srcDir)
+
 	if err != nil {
-		return err
-	}
-	defer directory.Close()
-	objects, err := directory.Readdir(-1)
-	if err != nil {
-		return err
+		return fmt.Errorf("unable to read source directory %q: %w", srcDir, err)
 	}
 
-	for _, obj := range objects {
-		srcPath := filepath.Join(srcDir, obj.Name())
-		destPath := filepath.Join(destDir, obj.Name())
-
-		if obj.IsDir() {
-			err = symlinkFile(srcPath, destPath)
-			if err != nil {
-				return err
-			}
+	for _, dirEntry := range dirEntries {
+		if !dirEntry.IsDir() {
+			continue
 		}
 
+		srcPath := filepath.Join(srcDir, dirEntry.Name())
+		destPath := filepath.Join(destDir, dirEntry.Name())
+		err := symlinkFile(srcPath, destPath)
+
+		if err != nil {
+			return fmt.Errorf("unable to symlink directory %q to %q: %w", srcPath, destPath, err)
+		}
 	}
-	return
+
+	return nil
 }

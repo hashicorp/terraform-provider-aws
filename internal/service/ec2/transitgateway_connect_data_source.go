@@ -46,7 +46,7 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 }
 
 func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayConnectsInput{}
@@ -59,7 +59,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnect, err := FindTransitGatewayConnect(conn, input)
+	transitGatewayConnect, err := FindTransitGatewayConnect(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect", err))
@@ -71,7 +71,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

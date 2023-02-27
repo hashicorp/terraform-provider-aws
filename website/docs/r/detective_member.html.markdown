@@ -49,7 +49,6 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_detective_member` can be imported using the ARN of the graph followed by the account ID of the member account, e.g.
 
-
 ```
 $ terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
 ```

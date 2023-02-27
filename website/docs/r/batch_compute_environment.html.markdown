@@ -155,6 +155,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
 * `compute_environment_name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `compute_environment_name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
+* `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
 * `service_role` - (Required) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -173,7 +174,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `launch_template` - (Optional) The launch template to use for your compute resources. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `max_vcpus` - (Required) The maximum number of EC2 vCPUs that an environment can reach.
 * `min_vcpus` - (Optional) The minimum number of EC2 vCPUs that an environment should maintain. For `EC2` or `SPOT` compute environments, if the parameter is not explicitly defined, a `0` default value will be set. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `security_group_ids` - (Required) A list of EC2 security group that are associated with instances launched in the compute environment.
+* `security_group_ids` - (Optional) A list of EC2 security group that are associated with instances launched in the compute environment. This parameter is required for Fargate compute environments.
 * `spot_iam_fleet_role` - (Optional) The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
@@ -193,6 +194,13 @@ resource "aws_batch_compute_environment" "sample" {
 * `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
 * `launch_template_name` - (Optional) Name of the launch template.
 * `version` - (Optional) The version number of the launch template. Default: The default version of the launch template.
+
+### eks_configuration
+
+`eks_configuration` supports the following:
+
+* `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
+* `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
 
 ## Attributes Reference
 

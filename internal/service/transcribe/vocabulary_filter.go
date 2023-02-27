@@ -90,7 +90,7 @@ const (
 )
 
 func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Get("vocabulary_filter_name").(string)),
@@ -106,7 +106,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -127,7 +127,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindVocabularyFilterByName(ctx, conn, d.Id())
 
@@ -181,7 +181,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateVocabularyFilterInput{
@@ -215,7 +215,7 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
 

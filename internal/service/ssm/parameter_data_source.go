@@ -1,18 +1,20 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceParameter() *schema.Resource {
 	return &schema.Resource{
-		Read: dataParameterRead,
+		ReadWithoutTimeout: dataParameterRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -44,8 +46,9 @@ func DataSourceParameter() *schema.Resource {
 	}
 }
 
-func dataParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	name := d.Get("name").(string)
 
@@ -55,10 +58,10 @@ func dataParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
-	resp, err := conn.GetParameter(paramInput)
+	resp, err := conn.GetParameterWithContext(ctx, paramInput)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM parameter (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "describing SSM parameter (%s): %s", name, err)
 	}
 
 	param := resp.Parameter
@@ -70,5 +73,5 @@ func dataParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("value", param.Value)
 	d.Set("version", param.Version)
 
-	return nil
+	return diags
 }

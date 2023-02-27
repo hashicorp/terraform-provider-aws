@@ -1,24 +1,26 @@
 package route53recoverycontrolconfig
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,55 +57,57 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		ClusterName: aws.String(d.Get("name").(string)),
 	}
 
-	output, err := conn.CreateCluster(input)
+	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Cluster: %s", err)
 	}
 
 	if output == nil || output.Cluster == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Cluster: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Cluster: empty response")
 	}
 
 	result := output.Cluster
 	d.SetId(aws.StringValue(result.ClusterArn))
 
-	if _, err := waitClusterCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %w", d.Id(), err)
+	if _, err := waitClusterCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %s", d.Id(), err)
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.DescribeClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeCluster(input)
+	output, err := conn.DescribeClusterWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Cluster: %s", err)
 	}
 
 	if output == nil || output.Cluster == nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Cluster: %s", "empty response")
+		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Cluster: %s", "empty response")
 	}
 
 	result := output.Cluster
@@ -112,39 +116,40 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", result.Status)
 
 	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(result.ClusterEndpoints)); err != nil {
-		return fmt.Errorf("Error setting cluster_endpoints: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_endpoints: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(&r53rcc.DeleteClusterInput{
+	_, err := conn.DeleteClusterWithContext(ctx, &r53rcc.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Recovery Control Config Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Control Config Cluster: %s", err)
 	}
 
-	_, err = waitClusterDeleted(conn, d.Id())
+	_, err = waitClusterDeleted(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config  Cluster (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config  Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenClusterEndpoints(endpoints []*r53rcc.ClusterEndpoint) []interface{} {

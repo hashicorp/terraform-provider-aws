@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 	dataSourceName := "data.aws_secretsmanager_secrets.test"
@@ -27,10 +28,10 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretDestroy,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretsDataSourceConfig_filter2(rName),

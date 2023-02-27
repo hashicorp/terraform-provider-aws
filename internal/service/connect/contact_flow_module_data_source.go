@@ -14,7 +14,7 @@ import (
 
 func DataSourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceContactFlowModuleRead,
+		ReadWithoutTimeout: dataSourceContactFlowModuleRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,7 +58,7 @@ func DataSourceContactFlowModule() *schema.Resource {
 }
 
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -104,7 +104,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	d.Set("state", contactFlowModule.State)
 	d.Set("status", contactFlowModule.Status)
 
-	if err := d.Set("tags", KeyValueTags(contactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, contactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

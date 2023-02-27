@@ -22,9 +22,9 @@ data "aws_waf_ipset" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF IP set.
+* `name` - (Required) Name of the WAF IP set.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF IP set.
+* `id` - ID of the WAF IP set.

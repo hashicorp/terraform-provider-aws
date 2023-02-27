@@ -1,16 +1,28 @@
 package conns
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
+
+// ServicePackage is the minimal interface exported from each AWS service package.
+// Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
+type ServicePackage interface {
+	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
+	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
+	SDKDataSources(context.Context) map[string]func() *schema.Resource
+	SDKResources(context.Context) map[string]func() *schema.Resource
+	ServicePackageName() string
+}
 
 func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
 	session, err := session.NewSession(cfg)
@@ -34,43 +46,6 @@ func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {
 			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
 		},
 	}
-}
-
-func HasEC2Classic(platforms []string) bool {
-	for _, p := range platforms {
-		if p == "EC2" {
-			return true
-		}
-	}
-	return false
-}
-
-func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
-	attrName := "supported-platforms"
-
-	input := ec2.DescribeAccountAttributesInput{
-		AttributeNames: []*string{aws.String(attrName)},
-	}
-	attributes, err := conn.DescribeAccountAttributes(&input)
-	if err != nil {
-		return nil, err
-	}
-
-	var platforms []string
-	for _, attr := range attributes.AccountAttributes {
-		if *attr.AttributeName == attrName {
-			for _, v := range attr.AttributeValues {
-				platforms = append(platforms, *v.AttributeValue)
-			}
-			break
-		}
-	}
-
-	if len(platforms) == 0 {
-		return nil, fmt.Errorf("no EC2 platforms detected")
-	}
-
-	return platforms, nil
 }
 
 // ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.

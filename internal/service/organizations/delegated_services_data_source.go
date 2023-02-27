@@ -43,7 +43,7 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(d.Get("account_id").(string)),

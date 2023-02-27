@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -23,19 +25,19 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
 				),
 			},
 			{
 				Config: testAccSnapshotScheduleConfig_basic(rName, "cron(30 12 *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
 				),
 			},
@@ -52,6 +54,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -60,19 +63,19 @@ func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_multipleDefinition(rName, "cron(30 12 *)", "cron(15 6 *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
 				),
 			},
 			{
 				Config: testAccSnapshotScheduleConfig_multipleDefinition(rName, "cron(30 8 *)", "cron(15 10 *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
 				),
 			},
@@ -86,10 +89,10 @@ func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.SnapshotSchedule
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
@@ -97,12 +100,12 @@ func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_identifierPrefix,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -119,6 +122,7 @@ func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -127,12 +131,12 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Test Schedule"),
 				),
@@ -150,6 +154,7 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -158,12 +163,12 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
@@ -172,7 +177,7 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 			{
 				Config: testAccSnapshotScheduleConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &v),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
@@ -191,6 +196,7 @@ func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshotSchedule redshift.SnapshotSchedule
 	var cluster redshift.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -201,14 +207,14 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotScheduleDestroy,
+		CheckDestroy:             testAccCheckSnapshotScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotScheduleConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotScheduleExists(resourceName, &snapshotSchedule),
-					testAccCheckClusterExists(clusterResourceName, &cluster),
-					testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(&cluster, &snapshotSchedule),
+					testAccCheckSnapshotScheduleExists(ctx, resourceName, &snapshotSchedule),
+					testAccCheckClusterExists(ctx, clusterResourceName, &cluster),
+					testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(ctx, &cluster, &snapshotSchedule),
 				),
 			},
 			{
@@ -223,34 +229,36 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotScheduleDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_snapshot_schedule" {
-			continue
-		}
+func testAccCheckSnapshotScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_snapshot_schedule" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
-			ScheduleIdentifier: aws.String(rs.Primary.ID),
-		})
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+			resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, &redshift.DescribeSnapshotSchedulesInput{
+				ScheduleIdentifier: aws.String(rs.Primary.ID),
+			})
 
-		if err == nil {
-			if len(resp.SnapshotSchedules) != 0 {
-				for _, s := range resp.SnapshotSchedules {
-					if *s.ScheduleIdentifier == rs.Primary.ID {
-						return fmt.Errorf("Redshift Cluster Snapshot Schedule %s still exists", rs.Primary.ID)
+			if err == nil {
+				if len(resp.SnapshotSchedules) != 0 {
+					for _, s := range resp.SnapshotSchedules {
+						if *s.ScheduleIdentifier == rs.Primary.ID {
+							return fmt.Errorf("Redshift Cluster Snapshot Schedule %s still exists", rs.Primary.ID)
+						}
 					}
 				}
 			}
+
+			return err
 		}
 
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSnapshotScheduleExists(n string, v *redshift.SnapshotSchedule) resource.TestCheckFunc {
+func testAccCheckSnapshotScheduleExists(ctx context.Context, n string, v *redshift.SnapshotSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -261,8 +269,8 @@ func testAccCheckSnapshotScheduleExists(n string, v *redshift.SnapshotSchedule) 
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
-		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, &redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
 
@@ -281,11 +289,11 @@ func testAccCheckSnapshotScheduleExists(n string, v *redshift.SnapshotSchedule) 
 	}
 }
 
-func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *redshift.Cluster, snapshotSchedule *redshift.SnapshotSchedule) resource.TestCheckFunc {
+func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(ctx context.Context, cluster *redshift.Cluster, snapshotSchedule *redshift.SnapshotSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		if _, err := conn.ModifyClusterSnapshotSchedule(&redshift.ModifyClusterSnapshotScheduleInput{
+		if _, err := conn.ModifyClusterSnapshotScheduleWithContext(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    cluster.ClusterIdentifier,
 			ScheduleIdentifier:   snapshotSchedule.ScheduleIdentifier,
 			DisassociateSchedule: aws.Bool(false),
@@ -294,7 +302,7 @@ func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *reds
 		}
 
 		id := fmt.Sprintf("%s/%s", aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier))
-		if _, err := tfredshift.WaitScheduleAssociationActive(conn, id); err != nil {
+		if _, err := tfredshift.WaitScheduleAssociationActive(ctx, conn, id); err != nil {
 			return err
 		}
 

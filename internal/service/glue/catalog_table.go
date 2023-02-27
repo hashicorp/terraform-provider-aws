@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,21 +11,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCatalogTableCreate,
-		Read:   resourceCatalogTableRead,
-		Update: resourceCatalogTableUpdate,
-		Delete: resourceCatalogTableDelete,
+		CreateWithoutTimeout: resourceCatalogTableCreate,
+		ReadWithoutTimeout:   resourceCatalogTableRead,
+		UpdateWithoutTimeout: resourceCatalogTableUpdate,
+		DeleteWithoutTimeout: resourceCatalogTableDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -348,7 +351,7 @@ func ResourceCatalogTable() *schema.Resource {
 	}
 }
 
-func ReadTableID(id string) (catalogID string, dbName string, name string, error error) {
+func ReadTableID(id string) (string, string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)
@@ -356,8 +359,9 @@ func ReadTableID(id string) (catalogID string, dbName string, name string, error
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	name := d.Get("name").(string)
@@ -369,35 +373,34 @@ func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error 
 		PartitionIndexes: expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
-	_, err := conn.CreateTable(input)
+	_, err := conn.CreateTableWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating Glue Catalog Table: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
 
-	return resourceCatalogTableRead(d, meta)
+	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
 }
 
-func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	out, err := FindTableByName(conn, catalogID, dbName, name)
+	out, err := FindTableByName(ctx, conn, catalogID, dbName, name)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("Error reading Glue Catalog Table: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
 	table := out.Table
@@ -418,11 +421,11 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return fmt.Errorf("error setting storage_descriptor: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
 	}
 
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return fmt.Errorf("error setting partition_keys: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
 	}
 
 	d.Set("view_original_text", table.ViewOriginalText)
@@ -430,12 +433,12 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("table_type", table.TableType)
 
 	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
-			return fmt.Errorf("error setting target_table: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
 		d.Set("target_table", nil)
@@ -446,26 +449,27 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 		TableName:    out.Table.Name,
 		DatabaseName: out.Table.DatabaseName,
 	}
-	partOut, err := conn.GetPartitionIndexes(partIndexInput)
+	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
 	if err != nil {
-		return fmt.Errorf("error getting Glue Partition Indexes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
 		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
-			return fmt.Errorf("error setting partition_index: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, _, err := ReadTableID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
 	updateTableInput := &glue.UpdateTableInput{
@@ -474,34 +478,35 @@ func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error 
 		TableInput:   expandTableInput(d),
 	}
 
-	if _, err := conn.UpdateTable(updateTableInput); err != nil {
-		return fmt.Errorf("Error updating Glue Catalog Table: %w", err)
+	if _, err := conn.UpdateTableWithContext(ctx, updateTableInput); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	return resourceCatalogTableRead(d, meta)
+	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
 }
 
-func resourceCatalogTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
-	catalogID, dbName, name, tableIdErr := ReadTableID(d.Id())
-	if tableIdErr != nil {
-		return tableIdErr
+	catalogID, dbName, name, err := ReadTableID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Glue Catalog Table: %s:%s:%s", catalogID, dbName, name)
-	_, err := conn.DeleteTable(&glue.DeleteTableInput{
+	_, err = conn.DeleteTableWithContext(ctx, &glue.DeleteTableInput{
 		CatalogId:    aws.String(catalogID),
 		Name:         aws.String(name),
 		DatabaseName: aws.String(dbName),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Table (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func expandTableInput(d *schema.ResourceData) *glue.TableInput {

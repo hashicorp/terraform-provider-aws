@@ -1,14 +1,19 @@
 package budgets
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,20 +24,16 @@ import (
 
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBudgetActionCreate,
-		Read:   resourceBudgetActionRead,
-		Update: resourceBudgetActionUpdate,
-		Delete: resourceBudgetActionDelete,
+		CreateWithoutTimeout: resourceBudgetActionCreate,
+		ReadWithoutTimeout:   resourceBudgetActionRead,
+		UpdateWithoutTimeout: resourceBudgetActionUpdate,
+		DeleteWithoutTimeout: resourceBudgetActionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"account_id": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -74,6 +75,10 @@ func ResourceBudgetAction() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(budgets.ApprovalModel_Values(), false),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"budget_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -95,16 +100,16 @@ func ResourceBudgetAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"policy_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
 									"groups": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										MaxItems: 100,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"policy_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"roles": {
 										Type:     schema.TypeSet,
@@ -115,6 +120,25 @@ func ResourceBudgetAction() *schema.Resource {
 									"users": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										MaxItems: 100,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"scp_action_definition": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"policy_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"target_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
 										MaxItems: 100,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -141,25 +165,6 @@ func ResourceBudgetAction() *schema.Resource {
 									"region": {
 										Type:     schema.TypeString,
 										Required: true,
-									},
-								},
-							},
-						},
-						"scp_action_definition": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"policy_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"target_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -206,14 +211,13 @@ func ResourceBudgetAction() *schema.Resource {
 	}
 }
 
-func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
-
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
 		ActionThreshold:  expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
@@ -226,13 +230,12 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
-	log.Printf("[DEBUG] Creating Budget Action: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
-		return conn.CreateBudgetAction(input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateBudgetActionWithContext(ctx, input)
 	}, budgets.ErrCodeAccessDeniedException)
 
 	if err != nil {
-		return fmt.Errorf("error creating Budget Action: %w", err)
+		return diag.Errorf("creating Budget Action: %s", err)
 	}
 
 	output := outputRaw.(*budgets.CreateBudgetActionOutput)
@@ -241,23 +244,23 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
-		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBudgetActionRead(d, meta)
+	return resourceBudgetActionRead(ctx, d, meta)
 }
 
-func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	output, err := FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+	output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
@@ -266,32 +269,16 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Budget Action (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Budget Action (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
 	d.Set("action_id", actionID)
-
 	if err := d.Set("action_threshold", flattenBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
-		return fmt.Errorf("error setting action_threshold: %w", err)
+		return diag.Errorf("setting action_threshold: %s", err)
 	}
-
 	d.Set("action_type", output.ActionType)
 	d.Set("approval_model", output.ApprovalModel)
-	d.Set("budget_name", budgetName)
-
-	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
-		return fmt.Errorf("error setting definition: %w", err)
-	}
-
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
-	d.Set("notification_type", output.NotificationType)
-	d.Set("status", output.Status)
-
-	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
-		return fmt.Errorf("error setting subscriber: %w", err)
-	}
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
@@ -299,17 +286,27 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
 	d.Set("arn", arn.String())
+	d.Set("budget_name", budgetName)
+	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
+		return diag.Errorf("setting definition: %s", err)
+	}
+	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set("notification_type", output.NotificationType)
+	d.Set("status", output.Status)
+	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
+		return diag.Errorf("setting subscriber: %s", err)
+	}
 
 	return nil
 }
 
-func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	input := &budgets.UpdateBudgetActionInput{
@@ -342,31 +339,30 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Updating Budget Action: %s", input)
-	_, err = conn.UpdateBudgetAction(input)
+	_, err = conn.UpdateBudgetActionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Budget Action (%s): %w", d.Id(), err)
+		return diag.Errorf("updating Budget Action (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
-		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+		return diag.Errorf("waiting for Budget Action (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceBudgetActionRead(d, meta)
+	return resourceBudgetActionRead(ctx, d, meta)
 }
 
-func resourceBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
-	_, err = conn.DeleteBudgetAction(&budgets.DeleteBudgetActionInput{
+	_, err = conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
 		BudgetName: aws.String(budgetName),
@@ -377,10 +373,104 @@ func resourceBudgetActionDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Budget Action (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Budget Action (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+const budgetActionResourceIDSeparator = ":"
+
+func BudgetActionCreateResourceID(accountID, actionID, budgetName string) string {
+	parts := []string{accountID, actionID, budgetName}
+	id := strings.Join(parts, budgetActionResourceIDSeparator)
+
+	return id
+}
+
+func BudgetActionParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, budgetActionResourceIDSeparator)
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
+}
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
+func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
+	input := &budgets.DescribeBudgetActionInput{
+		AccountId:  aws.String(accountID),
+		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	output, err := conn.DescribeBudgetActionWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Action == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Action, nil
+}
+
+func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+const (
+	actionAvailableTimeout = 2 * time.Minute
+)
+
+func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			budgets.ActionStatusExecutionInProgress,
+			budgets.ActionStatusStandby,
+		},
+		Target: []string{
+			budgets.ActionStatusExecutionSuccess,
+			budgets.ActionStatusExecutionFailure,
+			budgets.ActionStatusPending,
+		},
+		Refresh: statusAction(ctx, conn, accountID, actionID, budgetName),
+		Timeout: actionAvailableTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*budgets.Action); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {

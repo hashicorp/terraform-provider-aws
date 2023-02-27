@@ -36,11 +36,11 @@ output "example" {
 
 The following arguments are supported:
 
-* `source_type` - (Optional) The type of source that will be generating the events. Valid options are db-instance, db-security-group, db-parameter-group, db-snapshot, db-cluster or db-cluster-snapshot.
+* `source_type` - (Optional) Type of source that will be generating the events. Valid options are db-instance, db-security-group, db-parameter-group, db-snapshot, db-cluster or db-cluster-snapshot.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `event_categories` - A list of the event categories.
+* `event_categories` - List of the event categories.
 * `id` - Region of the event categories.

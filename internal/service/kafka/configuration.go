@@ -2,27 +2,28 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Read:   resourceConfigurationRead,
-		Update: resourceConfigurationUpdate,
-		Delete: resourceConfigurationDelete,
+		CreateWithoutTimeout: resourceConfigurationCreate,
+		ReadWithoutTimeout:   resourceConfigurationRead,
+		UpdateWithoutTimeout: resourceConfigurationUpdate,
+		DeleteWithoutTimeout: resourceConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -65,8 +66,9 @@ func ResourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.CreateConfigurationInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -81,42 +83,43 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 		input.KafkaVersions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateConfiguration(input)
+	output, err := conn.CreateConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating MSK Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Configuration: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
 
-	return resourceConfigurationRead(d, meta)
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	configurationInput := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(d.Id()),
 	}
 
-	configurationOutput, err := conn.DescribeConfiguration(configurationInput)
+	configurationOutput, err := conn.DescribeConfigurationWithContext(ctx, configurationInput)
 
 	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
 		log.Printf("[WARN] MSK Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing MSK Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): %s", d.Id(), err)
 	}
 
 	if configurationOutput == nil {
-		return fmt.Errorf("error describing MSK Configuration (%s): missing result", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): missing result", d.Id())
 	}
 
 	if configurationOutput.LatestRevision == nil {
-		return fmt.Errorf("error describing MSK Configuration (%s): missing latest revision", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): missing latest revision", d.Id())
 	}
 
 	revision := configurationOutput.LatestRevision.Revision
@@ -125,32 +128,33 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 		Revision: revision,
 	}
 
-	revisionOutput, err := conn.DescribeConfigurationRevision(revisionInput)
+	revisionOutput, err := conn.DescribeConfigurationRevisionWithContext(ctx, revisionInput)
 
 	if err != nil {
-		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): %s", d.Id(), aws.Int64Value(revision), err)
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): %s", d.Id(), aws.Int64Value(revision), err)
 	}
 
 	if revisionOutput == nil {
-		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): missing result", d.Id(), aws.Int64Value(revision))
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): missing result", d.Id(), aws.Int64Value(revision))
 	}
 
 	d.Set("arn", configurationOutput.Arn)
 	d.Set("description", revisionOutput.Description)
 
 	if err := d.Set("kafka_versions", aws.StringValueSlice(configurationOutput.KafkaVersions)); err != nil {
-		return fmt.Errorf("error setting kafka_versions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting kafka_versions: %s", err)
 	}
 
 	d.Set("latest_revision", revision)
 	d.Set("name", configurationOutput.Name)
 	d.Set("server_properties", string(revisionOutput.ServerProperties))
 
-	return nil
+	return diags
 }
 
-func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
@@ -161,31 +165,33 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateConfiguration(input)
+	_, err := conn.UpdateConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating MSK Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating MSK Configuration (%s): %s", d.Id(), err)
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.DeleteConfigurationInput{
 		Arn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteConfiguration(input)
+	log.Printf("[DEBUG] Deleting MSK Configuration: %s", d.Id())
+	_, err := conn.DeleteConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting MSK Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Configuration (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitConfigurationDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for MSK Configuration (%s): %w", d.Id(), err)
+	if _, err := waitConfigurationDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

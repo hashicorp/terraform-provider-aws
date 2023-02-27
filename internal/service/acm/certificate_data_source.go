@@ -1,11 +1,13 @@
 package acm
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,12 +17,9 @@ import (
 
 func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCertificateRead,
+		ReadWithoutTimeout: dataSourceCertificateRead,
+
 		Schema: map[string]*schema.Schema{
-			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,42 +32,44 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"statuses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"status": {
+			"domain": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice(
-						acm.KeyAlgorithm_Values(), false,
-					),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(acm.KeyAlgorithm_Values(), false),
 				},
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"statuses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tftags.TagsSchemaComputed(),
+			"types": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
 
-func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
+func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ACMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &acm.ListCertificatesInput{}
@@ -90,7 +91,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 	var arns []*string
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
-	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
+	err := conn.ListCertificatesPagesWithContext(ctx, params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
 			if aws.StringValue(cert.DomainName) == target {
 				arns = append(arns, cert.CertificateArn)
@@ -99,12 +100,13 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 		return true
 	})
+
 	if err != nil {
-		return fmt.Errorf("listing certificates: %w", err)
+		return diag.Errorf("listing ACM Certificates: %s", err)
 	}
 
 	if len(arns) == 0 {
-		return fmt.Errorf("No certificate for domain %q found in this region", target)
+		return diag.Errorf("no certificate for domain %q found in this Region", target)
 	}
 
 	filterMostRecent := d.Get("most_recent").(bool)
@@ -114,22 +116,21 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 	if !filterMostRecent && !filterTypesOk && len(arns) > 1 {
 		// Multiple certificates have been found and no additional filtering set
-		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		return diag.Errorf("multiple certificates for domain %q found in this Region", target)
 	}
 
 	typesStrings := flex.ExpandStringList(filterTypes.([]interface{}))
 
 	for _, arn := range arns {
-		var err error
+		arn := aws.StringValue(arn)
+		output, err := conn.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
+			CertificateArn: aws.String(arn),
+		})
 
-		input := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(*arn),
-		}
-		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
-		output, err := conn.DescribeCertificate(input)
 		if err != nil {
-			return fmt.Errorf("describing ACM certificate: %w", err)
+			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
 		}
+
 		certificate := output.Certificate
 
 		if filterTypesOk {
@@ -145,12 +146,12 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 					if filterMostRecent {
 						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 						if err != nil {
-							return err
+							return diag.FromErr(err)
 						}
 						break
 					}
 					// Now we have multiple candidate certificates and we only allow one certificate
-					return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+					return diag.Errorf("multiple certificates for domain %q found in this Region", target)
 				}
 			}
 			continue
@@ -165,27 +166,28 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		if filterMostRecent {
 			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			continue
 		}
 		// Now we have multiple candidate certificates and we only allow one certificate
-		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		return diag.Errorf("multiple certificates for domain %q found in this Region", target)
 	}
 
 	if matchedCertificate == nil {
-		return fmt.Errorf("No certificate for domain %q found in this region", target)
+		return diag.Errorf("no certificate for domain %q found in this Region", target)
 	}
 
 	// Get the certificate data if the status is issued
 	var certOutput *acm.GetCertificateOutput
 	if aws.StringValue(matchedCertificate.Status) == acm.CertificateStatusIssued {
-		getCertInput := acm.GetCertificateInput{
-			CertificateArn: matchedCertificate.CertificateArn,
-		}
-		certOutput, err = conn.GetCertificate(&getCertInput)
+		arn := aws.StringValue(matchedCertificate.CertificateArn)
+		certOutput, err = conn.GetCertificateWithContext(ctx, &acm.GetCertificateInput{
+			CertificateArn: aws.String(arn),
+		})
+
 		if err != nil {
-			return fmt.Errorf("error getting ACM certificate (%s): %w", aws.StringValue(matchedCertificate.CertificateArn), err)
+			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
 		}
 	}
 	if certOutput != nil {
@@ -199,13 +201,15 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
-	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+
+	tags, err := ListTags(ctx, conn, aws.StringValue(matchedCertificate.CertificateArn))
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
+		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

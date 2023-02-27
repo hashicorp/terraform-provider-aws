@@ -1,16 +1,18 @@
 package autoscaling
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -30,6 +32,10 @@ func DataSourceGroup() *schema.Resource {
 			},
 			"desired_capacity": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"desired_capacity_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"enabled_metrics": {
@@ -128,14 +134,15 @@ func DataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	groupName := d.Get("name").(string)
-	group, err := FindGroupByName(conn, groupName)
+	group, err := FindGroupByName(ctx, conn, groupName)
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Group (%s): %w", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", groupName, err)
 	}
 
 	d.SetId(aws.StringValue(group.AutoScalingGroupName))
@@ -143,13 +150,14 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
+	d.Set("desired_capacity_type", group.DesiredCapacityType)
 	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
-			return fmt.Errorf("setting launch_template: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
 		d.Set("launch_template", nil)
@@ -166,5 +174,5 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 
-	return nil
+	return diags
 }

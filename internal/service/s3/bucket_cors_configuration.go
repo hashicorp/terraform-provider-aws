@@ -20,10 +20,10 @@ import (
 
 func ResourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketCorsConfigurationCreate,
-		ReadContext:   resourceBucketCorsConfigurationRead,
-		UpdateContext: resourceBucketCorsConfigurationUpdate,
-		DeleteContext: resourceBucketCorsConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketCorsConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketCorsConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketCorsConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -84,7 +84,7 @@ func ResourceBucketCorsConfiguration() *schema.Resource {
 }
 
 func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -100,7 +100,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketCorsWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -114,7 +114,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -129,7 +129,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketCorsWithContext(ctx, input)
 	}, ErrCodeNoSuchCORSConfiguration)
 
@@ -164,7 +164,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -192,7 +192,7 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

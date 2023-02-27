@@ -1,19 +1,21 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFunctionRead,
+		ReadWithoutTimeout: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -65,16 +67,17 @@ func DataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
 
-	describeFunctionOutput, err := FindFunctionByNameAndStage(conn, name, stage)
+	describeFunctionOutput, err := FindFunctionByNameAndStage(ctx, conn, name, stage)
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", name, stage, err)
+		return sdkdiag.AppendErrorf(diags, "describing CloudFront Function (%s/%s): %s", name, stage, err)
 	}
 
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
@@ -85,18 +88,18 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
-	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
+	getFunctionOutput, err := conn.GetFunctionWithContext(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(name),
 		Stage: aws.String(stage),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting CloudFront Function (%s): %s", d.Id(), err)
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
 
 	d.SetId(aws.StringValue(describeFunctionOutput.FunctionSummary.Name))
 
-	return nil
+	return diags
 }

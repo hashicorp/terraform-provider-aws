@@ -12,7 +12,6 @@ Provides a Glue resource policy. Only one can exist per region.
 
 ## Example Usage
 
-
 ```terraform
 data "aws_caller_identity" "current" {}
 

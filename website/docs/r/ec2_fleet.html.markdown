@@ -93,7 +93,7 @@ resource "aws_ec2_fleet" "example" {
 
 This configuration block supports the following:
 
-~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -133,6 +133,10 @@ This configuration block supports the following:
       * inference
     ```
 
+* `allowed_instance_types` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+
+    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+
 * `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -140,7 +144,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -149,7 +153,10 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+
+    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+
 * `instance_generations` - (Optional) List of instance generation names. Default is any generation.
 
     ```
@@ -172,6 +179,9 @@ This configuration block supports the following:
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
+* `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -196,11 +206,10 @@ This configuration block supports the following:
 
 ### spot_options
 
-* `allocation_strategy` - (Optional) How to allocate the target capacity across the Spot pools. Valid values: `diversified`, `lowestPrice`, `capacity-optimized` and `capacity-optimized-prioritized`. Default: `lowestPrice`.
+* `allocation_strategy` - (Optional) How to allocate the target capacity across the Spot pools. Valid values: `diversified`, `lowestPrice`, `capacity-optimized`, `capacity-optimized-prioritized` and `price-capacity-optimized`. Default: `lowestPrice`.
 * `instance_interruption_behavior` - (Optional) Behavior when a Spot Instance is interrupted. Valid values: `hibernate`, `stop`, `terminate`. Default: `terminate`.
 * `instance_pools_to_use_count` - (Optional) Number of Spot pools across which to allocate your target Spot capacity. Valid only when Spot `allocation_strategy` is set to `lowestPrice`. Default: `1`.
 * `maintenance_strategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
-
 
 ### maintenance_strategies
 
@@ -210,14 +219,13 @@ This configuration block supports the following:
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for fleets of `type` set to `maintain`. Valid values: `launch`.
 
-
-
 ### target_capacity_specification
 
 * `default_target_capacity_type` - (Required) Default target capacity type. Valid values: `on-demand`, `spot`.
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
+* `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 
 ## Attributes Reference
 
@@ -229,7 +237,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ssm_patch_baseline
 
-Provides an SSM Patch Baseline resource
+Provides an SSM Patch Baseline resource.
 
 ~> **NOTE on Patch Baselines:** The `approved_patches` and `approval_rule` are
 both marked as optional fields, but the Patch Baseline requires that at least one
@@ -16,7 +16,9 @@ of them is specified.
 
 ## Example Usage
 
-Basic usage using `approved_patches` only
+### Basic Usage
+
+Using `approved_patches` only.
 
 ```terraform
 resource "aws_ssm_patch_baseline" "production" {
@@ -25,7 +27,7 @@ resource "aws_ssm_patch_baseline" "production" {
 }
 ```
 
-Advanced usage, specifying patch filters
+### Advanced Usage, specifying patch filters
 
 ```terraform
 resource "aws_ssm_patch_baseline" "production" {
@@ -80,7 +82,7 @@ resource "aws_ssm_patch_baseline" "production" {
 }
 ```
 
-Advanced usage, specifying Microsoft application and Windows patch rules
+### Advanced usage, specifying Microsoft application and Windows patch rules
 
 ```terraform
 resource "aws_ssm_patch_baseline" "windows_os_apps" {
@@ -119,7 +121,7 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
 }
 ```
 
-Advanced usage, specifying alternate patch source repository
+### Advanced usage, specifying alternate patch source repository
 
 ```terraform
 resource "aws_ssm_patch_baseline" "al_2017_09" {
@@ -160,31 +162,76 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the patch baseline.
 * `description` - (Optional) The description of the patch baseline.
-* `operating_system` - (Optional) Defines the operating system the patch baseline applies to. Supported operating systems include `WINDOWS`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `SUSE`, `UBUNTU`, `CENTOS`, and `REDHAT_ENTERPRISE_LINUX`. The Default value is `WINDOWS`.
-* `approved_patches_compliance_level` - (Optional) Defines the compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
+* `operating_system` - (Optional) The operating system the patch baseline applies to.
+  Valid values are
+  `AMAZON_LINUX`,
+  `AMAZON_LINUX_2`,
+  `AMAZON_LINUX_2022`,
+  `CENTOS`,
+  `DEBIAN`,
+  `MACOS`,
+  `ORACLE_LINUX`,
+  `RASPBIAN`,
+  `REDHAT_ENTERPRISE_LINUX`,
+  `ROCKY_LINUX`,
+  `SUSE`,
+  `UBUNTU`, and
+  `WINDOWS`.
+  The default value is `WINDOWS`.
+* `approved_patches_compliance_level` - (Optional) The compliance level for approved patches.
+  This means that if an approved patch is reported as missing, this is the severity of the compliance violation.
+  Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`.
+  The default value is `UNSPECIFIED`.
 * `approved_patches` - (Optional) A list of explicitly approved patches for the baseline.
+  Cannot be specified with `approval_rule`.
 * `rejected_patches` - (Optional) A list of rejected patches.
-* `global_filter` - (Optional) A set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
-* `approval_rule` - (Optional) A set of rules used to include patches in the baseline. up to 10 approval rules can be specified. Each approval_rule block requires the fields documented below.
-* `source` - (Optional) Configuration block(s) with alternate sources for patches. Applies to Linux instances only. Documented below.
-* `rejected_patches_action` - (Optional) The action for Patch Manager to take on patches included in the `rejected_patches` list. Allow values are `ALLOW_AS_DEPENDENCY` and `BLOCK`.
-* `approved_patches_enable_non_security` - (Optional) Indicates whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
+* `global_filter` - (Optional) A set of global filters used to exclude patches from the baseline.
+  Up to 4 global filters can be specified using Key/Value pairs.
+  Valid Keys are `PRODUCT`, `CLASSIFICATION`, `MSRC_SEVERITY`, and `PATCH_ID`.
+* `approval_rule` - (Optional) A set of rules used to include patches in the baseline.
+  Up to 10 approval rules can be specified.
+  See [`approval_rule`](#approval_rule-block) below.
+* `source` - (Optional) Configuration block with alternate sources for patches.
+  Applies to Linux instances only.
+  See [`source`](#source-block) below.
+* `rejected_patches_action` - (Optional) The action for Patch Manager to take on patches included in the `rejected_patches` list.
+  Valid values are `ALLOW_AS_DEPENDENCY` and `BLOCK`.
+* `approved_patches_enable_non_security` - (Optional) Indicates whether the list of approved patches includes non-security updates that should be applied to the instances.
+  Applies to Linux instances only.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `approval_rule` Block
 
 The `approval_rule` block supports:
 
-* `approve_after_days` - (Optional) The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 100. Conflicts with `approve_until_date`
-* `approve_until_date` - (Optional) The cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approve_after_days`
-* `patch_filter` - (Required) The patch filter group that defines the criteria for the rule. Up to 5 patch filters can be specified per approval rule using Key/Value pairs. Valid combinations of these Keys and the `operating_system` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html). Valid Values are exact values for the patch property given as the key, or a wildcard `*`, which matches all values.
+* `approve_after_days` - (Optional) The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline.
+  Valid Range: 0 to 100.
+  Conflicts with `approve_until_date`.
+* `approve_until_date` - (Optional) The cutoff date for auto approval of released patches.
+  Any patches released on or before this date are installed automatically.
+  Date is formatted as `YYYY-MM-DD`.
+  Conflicts with `approve_after_days`
+* `patch_filter` - (Required) The patch filter group that defines the criteria for the rule.
+  Up to 5 patch filters can be specified per approval rule using Key/Value pairs.
+  Valid combinations of these Keys and the `operating_system` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html).
+  Valid Values are exact values for the patch property given as the key, or a wildcard `*`, which matches all values.
     * `PATCH_SET` defaults to `OS` if unspecified
-* `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
-* `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is 'false'. Valid for Linux instances only.
+* `compliance_level` - (Optional) The compliance level for patches approved by this rule.
+  Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`.
+  The default value is `UNSPECIFIED`.
+* `enable_non_security` - (Optional) Boolean enabling the application of non-security updates.
+  The default value is `false`.
+  Valid for Linux instances only.
+
+### `source` Block
 
 The `source` block supports:
 
 * `name` - (Required) The name specified to identify the patch source.
-* `configuration` - (Required) The value of the yum repo configuration. For information about other options available for your yum repository configuration, see the [`dnf.conf` documentation](https://man7.org/linux/man-pages/man5/dnf.conf.5.html)
-* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`. For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
+* `configuration` - (Required) The value of the yum repo configuration.
+  For information about other options available for your yum repository configuration, see the [`dnf.conf` documentation](https://man7.org/linux/man-pages/man5/dnf.conf.5.html)
+* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`.
+  For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
 
 ## Attributes Reference
 

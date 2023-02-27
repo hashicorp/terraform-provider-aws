@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidDashboardName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
@@ -33,6 +35,8 @@ func TestValidDashboardName(t *testing.T) {
 }
 
 func TestValidEC2AutomateARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"arn:aws:automate:us-east-1:ec2:reboot",    //lintignore:AWSAT003,AWSAT005
 		"arn:aws:automate:us-east-1:ec2:recover",   //lintignore:AWSAT003,AWSAT005

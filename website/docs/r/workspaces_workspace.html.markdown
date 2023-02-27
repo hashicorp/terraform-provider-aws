@@ -75,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `30m`)
 - `update` - (Default `10m`)
@@ -88,4 +88,3 @@ Workspaces can be imported using their ID, e.g.,
 ```
 $ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
-

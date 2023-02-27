@@ -1,6 +1,7 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,14 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataDocumentRead,
+		ReadWithoutTimeout: dataDocumentRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -47,8 +50,9 @@ func DataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	docInput := &ssm.GetDocumentInput{
 		Name:           aws.String(d.Get("name").(string)),
@@ -60,10 +64,10 @@ func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", docInput)
-	resp, err := conn.GetDocument(docInput)
+	resp, err := conn.GetDocumentWithContext(ctx, docInput)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM Document: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document: %s", err)
 	}
 
 	name := aws.StringValue(resp.Name)
@@ -89,5 +93,5 @@ func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("document_format", resp.DocumentFormat)
 	d.Set("document_type", resp.DocumentType)
 
-	return nil
+	return diags
 }

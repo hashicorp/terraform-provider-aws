@@ -51,7 +51,7 @@ The following arguments are supported:
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
+* `name` - (Required) Name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference

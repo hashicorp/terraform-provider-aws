@@ -1,27 +1,28 @@
 package appsync
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAPICache() *schema.Resource {
-
 	return &schema.Resource{
-		Create: resourceAPICacheCreate,
-		Read:   resourceAPICacheRead,
-		Update: resourceAPICacheUpdate,
-		Delete: resourceAPICacheDelete,
+		CreateWithoutTimeout: resourceAPICacheCreate,
+		ReadWithoutTimeout:   resourceAPICacheRead,
+		UpdateWithoutTimeout: resourceAPICacheUpdate,
+		DeleteWithoutTimeout: resourceAPICacheDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,8 +58,9 @@ func ResourceAPICache() *schema.Resource {
 	}
 }
 
-func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -77,32 +79,33 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 		params.TransitEncryptionEnabled = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.CreateApiCache(params)
+	_, err := conn.CreateApiCacheWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync API Cache: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync API Cache: %s", err)
 	}
 
 	d.SetId(apiID)
 
-	if err := waitAPICacheAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
+	if err := waitAPICacheAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAPICacheRead(d, meta)
+	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
-	cache, err := FindAPICacheByID(conn, d.Id())
+	cache, err := FindAPICacheByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync API Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Appsync API Cache %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Appsync API Cache %q: %s", d.Id(), err)
 	}
 
 	d.Set("api_id", d.Id())
@@ -112,11 +115,12 @@ func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("at_rest_encryption_enabled", cache.AtRestEncryptionEnabled)
 	d.Set("transit_encryption_enabled", cache.TransitEncryptionEnabled)
 
-	return nil
+	return diags
 }
 
-func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
@@ -134,36 +138,36 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 		params.Ttl = aws.Int64(int64(d.Get("ttl").(int)))
 	}
 
-	_, err := conn.UpdateApiCache(params)
+	_, err := conn.UpdateApiCacheWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error updating Appsync API Cache %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Appsync API Cache %q: %s", d.Id(), err)
 	}
 
-	if err := waitAPICacheAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
+	if err := waitAPICacheAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAPICacheRead(d, meta)
-
+	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteApiCache(input)
+	_, err := conn.DeleteApiCacheWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Appsync API Cache: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Cache: %s", err)
 	}
 
-	if err := waitAPICacheDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Appsync API Cache (%s) to be deleted: %w", d.Id(), err)
+	if err := waitAPICacheDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appsync API Cache (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

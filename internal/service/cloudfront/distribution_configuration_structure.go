@@ -94,40 +94,32 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	err = d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate))
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
-	if distributionConfig.CallerReference != nil {
-		d.Set("caller_reference", distributionConfig.CallerReference)
-	}
+	d.Set("caller_reference", distributionConfig.CallerReference)
 	if distributionConfig.Comment != nil {
 		if aws.StringValue(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
-	if distributionConfig.DefaultRootObject != nil {
-		d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	}
-	if distributionConfig.HttpVersion != nil {
-		d.Set("http_version", distributionConfig.HttpVersion)
-	}
-	if distributionConfig.WebACLId != nil {
-		d.Set("web_acl_id", distributionConfig.WebACLId)
-	}
+	d.Set("default_root_object", distributionConfig.DefaultRootObject)
+	d.Set("http_version", distributionConfig.HttpVersion)
+	d.Set("web_acl_id", distributionConfig.WebACLId)
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -137,31 +129,31 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		err = d.Set("logging_config", []interface{}{})
 	}
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if distributionConfig.Aliases != nil {
 		err = d.Set("aliases", FlattenAliases(distributionConfig.Aliases))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.Restrictions != nil {
 		err = d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -720,6 +712,9 @@ func ExpandOrigin(m map[string]interface{}) *cloudfront.Origin {
 			origin.CustomOriginConfig = ExpandCustomOriginConfig(s[0].(map[string]interface{}))
 		}
 	}
+	if v, ok := m["origin_access_control_id"]; ok {
+		origin.OriginAccessControlId = aws.String(v.(string))
+	}
 	if v, ok := m["origin_path"]; ok {
 		origin.OriginPath = aws.String(v.(string))
 	}
@@ -762,6 +757,9 @@ func FlattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	}
 	if or.CustomOriginConfig != nil {
 		m["custom_origin_config"] = []interface{}{FlattenCustomOriginConfig(or.CustomOriginConfig)}
+	}
+	if or.OriginAccessControlId != nil {
+		m["origin_access_control_id"] = aws.StringValue(or.OriginAccessControlId)
 	}
 	if or.OriginPath != nil {
 		m["origin_path"] = aws.StringValue(or.OriginPath)
@@ -894,6 +892,11 @@ func OriginHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d-", customOriginConfigHash((s[0].(map[string]interface{})))))
 		}
 	}
+
+	if v, ok := m["origin_access_control_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
 	if v, ok := m["origin_path"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -1006,7 +1009,6 @@ func OriginCustomHeaderHash(v interface{}) int {
 }
 
 func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOriginConfig {
-
 	customOrigin := &cloudfront.CustomOriginConfig{
 		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
 		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
@@ -1020,7 +1022,6 @@ func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOrigin
 }
 
 func FlattenCustomOriginConfig(cor *cloudfront.CustomOriginConfig) map[string]interface{} {
-
 	customOrigin := map[string]interface{}{
 		"origin_protocol_policy":   aws.StringValue(cor.OriginProtocolPolicy),
 		"http_port":                int(aws.Int64Value(cor.HTTPPort)),

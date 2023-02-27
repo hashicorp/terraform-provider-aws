@@ -1,2 +1,3 @@
 # Needed for testing our workflows
--P ubuntu-latest=ghcr.io/catthehacker/ubuntu:full-18.04
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-22.04
+-P medium=ghcr.io/catthehacker/ubuntu:act-22.04

@@ -1,24 +1,26 @@
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecurityConfigurationCreate,
-		Read:   resourceSecurityConfigurationRead,
-		Delete: resourceSecurityConfigurationDelete,
+		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
+		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
+		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -118,8 +120,9 @@ func ResourceSecurityConfiguration() *schema.Resource {
 	}
 }
 
-func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
@@ -128,70 +131,72 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating Glue Security Configuration: %s", input)
-	_, err := conn.CreateSecurityConfiguration(input)
+	_, err := conn.CreateSecurityConfigurationWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Security Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Security Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceSecurityConfigurationRead(d, meta)
+	return append(diags, resourceSecurityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
-	output, err := conn.GetSecurityConfiguration(input)
+	output, err := conn.GetSecurityConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Security Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Security Configuration (%s): %s", d.Id(), err)
 	}
 
 	securityConfiguration := output.SecurityConfiguration
 	if securityConfiguration == nil {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(securityConfiguration.EncryptionConfiguration)); err != nil {
-		return fmt.Errorf("error setting encryption_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 
 	d.Set("name", securityConfiguration.Name)
 
-	return nil
+	return diags
 }
 
-func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
-	err := DeleteSecurityConfiguration(conn, d.Id())
+	err := DeleteSecurityConfiguration(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Security Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Security Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func DeleteSecurityConfiguration(conn *glue.Glue, name string) error {
+func DeleteSecurityConfiguration(ctx context.Context, conn *glue.Glue, name string) error {
 	input := &glue.DeleteSecurityConfigurationInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteSecurityConfiguration(input)
+	_, err := conn.DeleteSecurityConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil

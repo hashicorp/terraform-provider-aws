@@ -1,6 +1,7 @@
 package macie2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 )
 
 func testAccClassificationExportConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetClassificationExportConfigurationOutput
 	resourceName := "aws_macie2_classification_export_configuration.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -22,13 +24,13 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationExportConfigurationDestroy,
+		CheckDestroy:             testAccCheckClassificationExportConfigurationDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationExportConfigurationConfig_basic("macieprefix/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(resourceName, &macie2Output),
+					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, "status", macie2.MacieStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, "bucket"),
@@ -44,7 +46,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccClassificationExportConfigurationConfig_basic(""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(resourceName, &macie2Output),
+					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, "status", macie2.MacieStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, "bucket"),
@@ -56,47 +58,46 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckClassificationExportConfigurationDestroy(s *terraform.State) error {
+func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie2_classification_export_configuration" {
+				continue
+			}
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie2_classification_export_configuration" {
-			continue
+			input := macie2.GetClassificationExportConfigurationInput{}
+			resp, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
+
+			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException, "Macie is not enabled") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if (macie2.GetClassificationExportConfigurationOutput{}) != *resp || resp != nil { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
+				return fmt.Errorf("macie classification export configuration %q still configured", rs.Primary.ID)
+			}
 		}
 
-		input := macie2.GetClassificationExportConfigurationInput{}
-		resp, err := conn.GetClassificationExportConfiguration(&input)
-
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException, "Macie is not enabled") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if (macie2.GetClassificationExportConfigurationOutput{}) != *resp || resp != nil { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
-			return fmt.Errorf("macie classification export configuration %q still configured", rs.Primary.ID)
-		}
-
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckClassificationExportConfigurationExists(resourceName string, macie2CEConfig *macie2.GetClassificationExportConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckClassificationExportConfigurationExists(ctx context.Context, resourceName string, macie2CEConfig *macie2.GetClassificationExportConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := macie2.GetClassificationExportConfigurationInput{}
 
-		resp, err := conn.GetClassificationExportConfiguration(&input)
+		resp, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
 
 		if err != nil {
 			return err

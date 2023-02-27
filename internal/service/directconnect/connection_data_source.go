@@ -1,19 +1,22 @@
 package directconnect
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,12 +48,17 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var connections []*directconnect.Connection
@@ -58,10 +66,10 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	// DescribeConnections is not paginated.
-	output, err := conn.DescribeConnections(input)
+	output, err := conn.DescribeConnectionsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect Connections: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connections: %s", err)
 	}
 
 	for _, connection := range output.Connections {
@@ -72,10 +80,10 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch count := len(connections); count {
 	case 0:
-		return fmt.Errorf("no matching Direct Connect Connection found")
+		return sdkdiag.AppendErrorf(diags, "no matching Direct Connect Connection found")
 	case 1:
 	default:
-		return fmt.Errorf("%d Direct Connect Connections matched; use additional constraints to reduce matches to a single Direct Connect Connection", count)
+		return sdkdiag.AppendErrorf(diags, "%d Direct Connect Connections matched; use additional constraints to reduce matches to a single Direct Connect Connection", count)
 	}
 
 	connection := connections[0]
@@ -96,16 +104,17 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect Connection (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect Connection (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

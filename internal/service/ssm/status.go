@@ -1,6 +1,8 @@
 package ssm
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,9 +13,9 @@ const (
 	documentStatusUnknown = "Unknown"
 )
 
-func statusAssociation(conn *ssm.SSM, id string) resource.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAssociationById(conn, id)
+		output, err := FindAssociationById(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -34,9 +36,9 @@ func statusAssociation(conn *ssm.SSM, id string) resource.StateRefreshFunc {
 }
 
 // statusDocument fetches the Document and its Status
-func statusDocument(conn *ssm.SSM, name string) resource.StateRefreshFunc {
+func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDocumentByName(conn, name)
+		output, err := FindDocumentByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, ssm.DocumentStatusFailed, err
@@ -50,12 +52,16 @@ func statusDocument(conn *ssm.SSM, name string) resource.StateRefreshFunc {
 	}
 }
 
-func statusServiceSetting(conn *ssm.SSM, arn string) resource.StateRefreshFunc {
+func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindServiceSettingByARN(conn, arn)
+		output, err := FindServiceSettingByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil

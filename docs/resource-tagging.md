@@ -194,7 +194,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 input := &eks.CreateClusterInput{
   /* ... other configuration ... */
@@ -207,7 +207,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 input := &eks.CreateClusterInput{
   /* ... other configuration ... */
@@ -224,7 +224,7 @@ implement the logic to convert the configuration tags into the service API call 
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 /* ... creation steps ... */
 
@@ -242,7 +242,7 @@ This example shows using `TagSpecifications`:
   ```go
   // Typically declared near conn := /* ... */
   defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-  tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+  tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
   
   input := &ec2.CreateFleetInput{
     /* ... other configuration ... */
@@ -261,7 +261,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
   return fmt.Errorf("setting tags: %w", err)
@@ -348,7 +348,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
     CheckDestroy:             testAccCheckClusterDestroy,
     Steps: []resource.TestStep{
       {
-        Config: testAccClusterConfigTags1(rName, "key1", "value1"),
+        Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckClusterExists(resourceName, &cluster1),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -361,7 +361,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
         ImportStateVerify: true,
       },
       {
-        Config: testAccClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+        Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckClusterExists(resourceName, &cluster2),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -370,7 +370,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
         ),
       },
       {
-        Config: testAccClusterConfigTags1(rName, "key2", "value2"),
+        Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckClusterExists(resourceName, &cluster3),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -381,7 +381,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
   })
 }
 
-func testAccClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
   return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -400,7 +400,7 @@ resource "aws_eks_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
   return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -436,4 +436,3 @@ In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`)
 ```markdown
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 ```
-  

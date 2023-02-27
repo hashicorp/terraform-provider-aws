@@ -1,17 +1,19 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrderableInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrderableInstanceRead,
+		ReadWithoutTimeout: dataSourceOrderableInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zone_group": {
 				Type:     schema.TypeString,
@@ -180,8 +182,9 @@ func DataSourceOrderableInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -211,7 +214,7 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 
 	var instanceClassResults []*rds.OrderableDBInstanceOption
 
-	err := conn.DescribeOrderableDBInstanceOptionsPages(input, func(resp *rds.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(resp *rds.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 		for _, instanceOption := range resp.OrderableDBInstanceOptions {
 			if instanceOption == nil {
 				continue
@@ -277,11 +280,11 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading RDS Orderable DB Instance Options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Orderable DB Instance Options: %s", err)
 	}
 
 	if len(instanceClassResults) == 0 {
-		return fmt.Errorf("no RDS Orderable DB Instance Options found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching criteria; try different search")
 	}
 
 	// preferred classes/versions
@@ -361,7 +364,7 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if found == nil && len(instanceClassResults) > 1 {
-		return fmt.Errorf("multiple RDS DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
+		return sdkdiag.AppendErrorf(diags, "multiple RDS DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
 	}
 
 	if found == nil && len(instanceClassResults) == 1 {
@@ -369,7 +372,7 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if found == nil {
-		return fmt.Errorf("no RDS DB Instance Classes match the criteria; try a different search")
+		return sdkdiag.AppendErrorf(diags, "no RDS DB Instance Classes match the criteria; try a different search")
 	}
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
@@ -405,5 +408,5 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("supports_storage_encryption", found.SupportsStorageEncryption)
 	d.Set("vpc", found.Vpc)
 
-	return nil
+	return diags
 }

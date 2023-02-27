@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClientVPNNetworkAssociationCreate,
-		Read:   resourceClientVPNNetworkAssociationRead,
-		Update: resourceClientVPNNetworkAssociationUpdate,
-		Delete: resourceClientVPNNetworkAssociationDelete,
+		CreateWithoutTimeout: resourceClientVPNNetworkAssociationCreate,
+		ReadWithoutTimeout:   resourceClientVPNNetworkAssociationRead,
+		UpdateWithoutTimeout: resourceClientVPNNetworkAssociationUpdate,
+		DeleteWithoutTimeout: resourceClientVPNNetworkAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceClientVPNNetworkAssociationImport,
+			StateContext: resourceClientVPNNetworkAssociationImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -68,8 +71,9 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	}
 }
 
-func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -79,18 +83,18 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Creating EC2 Client VPN Network Association: %s", input)
 
-	output, err := conn.AssociateClientVpnTargetNetwork(input)
+	output, err := conn.AssociateClientVpnTargetNetworkWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Client VPN Network Association: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Network Association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate))
+	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Network Association (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
@@ -100,30 +104,31 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 			VpcId:               targetNetwork.VpcId,
 		}
 
-		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(input)
+		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetworkWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error applying Security Groups to EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "applying Security Groups to EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceClientVPNNetworkAssociationRead(d, meta)
+	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
-	network, err := FindClientVPNNetworkAssociationByIDs(conn, d.Id(), endpointID)
+	network, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, d.Id(), endpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("association_id", network.AssociationId)
@@ -133,11 +138,12 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 	d.Set("subnet_id", network.TargetNetworkId)
 	d.Set("vpc_id", network.VpcId)
 
-	return nil
+	return diags
 }
 
-func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNNetworkAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("security_groups") {
 		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
@@ -146,41 +152,42 @@ func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta inte
 			VpcId:               aws.String(d.Get("vpc_id").(string)),
 		}
 
-		if _, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(input); err != nil {
-			return fmt.Errorf("error applying Security Groups to EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+		if _, err := conn.ApplySecurityGroupsToClientVpnTargetNetworkWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "applying Security Groups to EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceClientVPNNetworkAssociationRead(d, meta)
+	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Network Association: %s", d.Id())
-	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
+	_, err := conn.DisassociateClientVpnTargetNetworkWithContext(ctx, &ec2.DisassociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 		AssociationId:       aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNAssociationIdNotFound, errCodeInvalidClientVPNEndpointIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disassociating EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNNetworkAssociationDeleted(conn, d.Id(), endpointID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) delete: %w", d.Id(), err)
+	if _, err := WaitClientVPNNetworkAssociationDeleted(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Network Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClientVPNNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNNetworkAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ",")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

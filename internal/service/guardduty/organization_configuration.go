@@ -1,26 +1,28 @@
 package guardduty
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationConfigurationUpdate,
-		Read:   resourceOrganizationConfigurationRead,
-		Update: resourceOrganizationConfigurationUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
+		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,8 +121,9 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorID := d.Get("detector_id").(string)
 
@@ -133,45 +136,46 @@ func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interf
 		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.UpdateOrganizationConfiguration(input)
+	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating GuardDuty Organization Configuration (%s): %w", detectorID, err)
+		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Organization Configuration (%s): %s", detectorID, err)
 	}
 
 	d.SetId(detectorID)
 
-	return resourceOrganizationConfigurationRead(d, meta)
+	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DescribeOrganizationConfigurationInput{
 		DetectorId: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeOrganizationConfiguration(input)
+	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		log.Printf("[WARN] GuardDuty Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading GuardDuty Organization Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error reading GuardDuty Organization Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): empty response", d.Id())
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
 
 	if output.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
-			return fmt.Errorf("error setting datasources: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
 		}
 	} else {
 		d.Set("datasources", nil)
@@ -179,7 +183,7 @@ func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interfac
 
 	d.Set("detector_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.OrganizationDataSourceConfigurations {

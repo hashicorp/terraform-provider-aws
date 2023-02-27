@@ -14,7 +14,7 @@ import (
 
 func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRouteCalculatorRead,
+		ReadWithoutTimeout: dataSourceRouteCalculatorRead,
 
 		Schema: map[string]*schema.Schema{
 			"calculator_arn": {
@@ -48,7 +48,7 @@ func DataSourceRouteCalculator() *schema.Resource {
 }
 
 func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Get("calculator_name").(string))
 	if err != nil {
@@ -69,7 +69,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
 

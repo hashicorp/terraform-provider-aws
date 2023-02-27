@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,13 +25,13 @@ import (
 
 func ResourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserPoolClientCreate,
-		Read:   resourceUserPoolClientRead,
-		Update: resourceUserPoolClientUpdate,
-		Delete: resourceUserPoolClientDelete,
+		CreateWithoutTimeout: resourceUserPoolClientCreate,
+		ReadWithoutTimeout:   resourceUserPoolClientRead,
+		UpdateWithoutTimeout: resourceUserPoolClientUpdate,
+		DeleteWithoutTimeout: resourceUserPoolClientDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceUserPoolClientImport,
+			StateContext: resourceUserPoolClientImport,
 		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
@@ -100,6 +103,12 @@ func ResourceUserPoolClient() *schema.Resource {
 						},
 					},
 				},
+			},
+			"auth_session_validity": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(3, 15),
 			},
 			"callback_urls": {
 				Type:     schema.TypeSet,
@@ -253,12 +262,17 @@ func ResourceUserPoolClient() *schema.Resource {
 	}
 }
 
-func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolClientCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.CreateUserPoolClientInput{
 		ClientName: aws.String(d.Get("name").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	}
+
+	if v, ok := d.GetOk("auth_session_validity"); ok {
+		params.AuthSessionValidity = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("generate_secret"); ok {
@@ -339,30 +353,31 @@ func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Creating Cognito User Pool Client: %s", params)
 
-	resp, err := conn.CreateUserPoolClient(params)
+	resp, err := conn.CreateUserPoolClientWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("error creating Cognito User Pool Client (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool Client (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
 
-	return resourceUserPoolClientRead(d, meta)
+	return append(diags, resourceUserPoolClientRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
-	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClient(ctx, conn, d.Get("user_pool_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id(), err)
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)
@@ -384,20 +399,22 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("supported_identity_providers", flex.FlattenStringSet(userPoolClient.SupportedIdentityProviders))
 	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
 	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
+	d.Set("auth_session_validity", userPoolClient.AuthSessionValidity)
 
 	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
-		return fmt.Errorf("error setting analytics_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting analytics_configuration: %s", err)
 	}
 
 	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
-		return fmt.Errorf("error setting token_validity_units: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting token_validity_units: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolClientUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
 		ClientId:              aws.String(d.Id()),
@@ -477,20 +494,25 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 		params.EnablePropagateAdditionalUserContextData = aws.Bool(v.(bool))
 	}
 
-	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.UpdateUserPoolClient(params)
-	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
-	if err != nil {
-		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
+	if v, ok := d.GetOk("auth_session_validity"); ok {
+		params.AuthSessionValidity = aws.Int64(int64(v.(int)))
 	}
 
-	return resourceUserPoolClientRead(d, meta)
+	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.UpdateUserPoolClientWithContext(ctx, params)
+	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool Client (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceUserPoolClientRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolClientDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.DeleteUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
@@ -499,20 +521,20 @@ func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool Client: %s", params)
 
-	_, err := conn.DeleteUserPoolClient(params)
+	_, err := conn.DeleteUserPoolClientWithContext(ctx, params)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cognito User Pool Client (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Pool Client (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserPoolClientImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", d.Id())
 	}

@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccECSTaskSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -24,12 +26,12 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
@@ -50,6 +52,7 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withExternalId(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -57,12 +60,12 @@ func TestAccECSTaskSet_withExternalId(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_externalID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "TEST_ID"),
@@ -81,6 +84,7 @@ func TestAccECSTaskSet_withExternalId(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withScale(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -88,12 +92,12 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_scale(rName, 0.0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "0"),
@@ -110,7 +114,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 			{
 				Config: testAccTaskSetConfig_scale(rName, 100.0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "100"),
@@ -129,6 +133,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 }
 
 func TestAccECSTaskSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -136,13 +141,13 @@ func TestAccECSTaskSet_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTaskSet(), resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,6 +156,7 @@ func TestAccECSTaskSet_disappears(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -158,12 +164,12 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_capacityProviderStrategy(rName, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 				),
 			},
 			{
@@ -177,7 +183,7 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 			{
 				Config: testAccTaskSetConfig_capacityProviderStrategy(rName, 10, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 				),
 			},
 			{
@@ -193,6 +199,7 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -200,12 +207,12 @@ func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_multipleCapacityProviderStrategies(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
 				),
 			},
@@ -222,6 +229,7 @@ func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withAlb(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -229,12 +237,12 @@ func TestAccECSTaskSet_withAlb(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
 				),
 			},
@@ -251,6 +259,7 @@ func TestAccECSTaskSet_withAlb(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -258,12 +267,12 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_launchTypeFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
@@ -285,6 +294,7 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -292,12 +302,12 @@ func TestAccECSTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_launchTypeFargateAndPlatformVersion(rName, "1.3.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.3.0"),
 				),
 			},
@@ -312,7 +322,7 @@ func TestAccECSTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 			{
 				Config: testAccTaskSetConfig_launchTypeFargateAndPlatformVersion(rName, "1.4.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.4.0"),
 				),
 			},
@@ -329,6 +339,7 @@ func TestAccECSTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 }
 
 func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -336,12 +347,12 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_serviceRegistries(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
@@ -358,6 +369,7 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 }
 
 func TestAccECSTaskSet_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
 
@@ -365,12 +377,12 @@ func TestAccECSTaskSet_Tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -386,7 +398,7 @@ func TestAccECSTaskSet_Tags(t *testing.T) {
 			{
 				Config: testAccTaskSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -395,7 +407,7 @@ func TestAccECSTaskSet_Tags(t *testing.T) {
 			{
 				Config: testAccTaskSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(resourceName),
+					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -482,7 +494,7 @@ resource "aws_ecs_task_set" "test" {
 
 func testAccTaskSetConfig_capacityProviderStrategy(rName string, weight, base int) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		testAccTaskSetBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
@@ -657,7 +669,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "test" {
   name     = %[1]q
   internal = true
-  subnets  = aws_subnet.test.*.id
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {
@@ -811,7 +823,7 @@ resource "aws_ecs_task_set" "test" {
   }
   network_configuration {
     security_groups = [aws_security_group.test.id]
-    subnets         = aws_subnet.test.*.id
+    subnets         = aws_subnet.test[*].id
   }
 }
 `, rName))
@@ -891,8 +903,8 @@ resource "aws_ecs_task_set" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   launch_type     = "FARGATE"
   network_configuration {
-    security_groups  = aws_security_group.test.*.id
-    subnets          = aws_subnet.test.*.id
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
     assign_public_ip = false
   }
 }
@@ -974,22 +986,22 @@ resource "aws_ecs_task_set" "test" {
   launch_type      = "FARGATE"
   platform_version = %[2]q
   network_configuration {
-    security_groups  = aws_security_group.test.*.id
-    subnets          = aws_subnet.test.*.id
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
     assign_public_ip = false
   }
 }
 `, rName, platformVersion))
 }
 
-func testAccCheckTaskSetExists(name string) resource.TestCheckFunc {
+func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
 
@@ -1003,7 +1015,7 @@ func testAccCheckTaskSetExists(name string) resource.TestCheckFunc {
 			Service:  aws.String(service),
 		}
 
-		output, err := conn.DescribeTaskSets(input)
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -1017,40 +1029,42 @@ func testAccCheckTaskSetExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTaskSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecs_task_set" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_task_set" {
+				continue
+			}
+
+			taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &ecs.DescribeTaskSetsInput{
+				TaskSets: aws.StringSlice([]string{taskSetId}),
+				Cluster:  aws.String(cluster),
+				Service:  aws.String(service),
+			}
+
+			output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && len(output.TaskSets) == 1 {
+				return fmt.Errorf("ECS TaskSet (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &ecs.DescribeTaskSetsInput{
-			TaskSets: aws.StringSlice([]string{taskSetId}),
-			Cluster:  aws.String(cluster),
-			Service:  aws.String(service),
-		}
-
-		output, err := conn.DescribeTaskSets(input)
-
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && len(output.TaskSets) == 1 {
-			return fmt.Errorf("ECS TaskSet (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }

@@ -15,6 +15,8 @@ Subscribes to a Security Hub standard.
 ```terraform
 resource "aws_securityhub_account" "example" {}
 
+data "aws_region" "current" {}
+
 resource "aws_securityhub_standards_subscription" "cis" {
   depends_on    = [aws_securityhub_account.example]
   standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
@@ -22,7 +24,7 @@ resource "aws_securityhub_standards_subscription" "cis" {
 
 resource "aws_securityhub_standards_subscription" "pci_321" {
   depends_on    = [aws_securityhub_account.example]
-  standards_arn = "arn:aws:securityhub:us-east-1::standards/pci-dss/v/3.2.1"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/pci-dss/v/3.2.1"
 }
 ```
 
@@ -32,13 +34,14 @@ The following arguments are supported:
 
 * `standards_arn` - (Required) The ARN of a standard - see below.
 
-Currently available standards:
+Currently available standards (remember to replace `${var.region}` as appropriate):
 
-| Name                                     | ARN                                                                                         |
-|------------------------------------------|---------------------------------------------------------------------------------------------|
-| AWS Foundational Security Best Practices | `arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0` |
-| CIS AWS Foundations                      | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                       |
-| PCI DSS                                  | `arn:aws:securityhub:us-east-1::standards/pci-dss/v/3.2.1`                                  |
+| Name                                     | ARN                                                                                             |
+|------------------------------------------|-------------------------------------------------------------------------------------------------|
+| AWS Foundational Security Best Practices | `arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
+| CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
+| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
+| PCI DSS                                  | `arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
 ## Attributes Reference
 

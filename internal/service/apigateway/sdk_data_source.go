@@ -1,19 +1,22 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceSdk() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSdkRead,
+		ReadWithoutTimeout: dataSourceSdkRead,
 		Schema: map[string]*schema.Schema{
 			"body": {
 				Type:     schema.TypeString,
@@ -49,8 +52,9 @@ func DataSourceSdk() *schema.Resource {
 	}
 }
 
-func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceSdkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -66,15 +70,17 @@ func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
 		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	export, err := conn.GetSdk(input)
+	id := fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType)
+
+	export, err := conn.GetSdkWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway SDK (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType))
+	d.SetId(id)
 	d.Set("body", string(export.Body))
 	d.Set("content_type", export.ContentType)
 	d.Set("content_disposition", export.ContentDisposition)
 
-	return nil
+	return diags
 }

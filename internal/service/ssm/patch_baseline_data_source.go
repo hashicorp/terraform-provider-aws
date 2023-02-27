@@ -1,19 +1,21 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Read: dataPatchBaselineRead,
+		ReadWithoutTimeout: dataPatchBaselineRead,
 		Schema: map[string]*schema.Schema{
 			"approved_patches": {
 				Type:     schema.TypeList,
@@ -147,8 +149,9 @@ func DataSourcePatchBaseline() *schema.Resource {
 	}
 }
 
-func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	filters := []*ssm.PatchOrchestratorFilter{
 		{
@@ -174,10 +177,10 @@ func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading DescribePatchBaselines: %s", params)
 
-	resp, err := conn.DescribePatchBaselines(params)
+	resp, err := conn.DescribePatchBaselinesWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM PatchBaselines: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing SSM PatchBaselines: %s", err)
 	}
 
 	var filteredBaselines []*ssm.PatchBaselineIdentity
@@ -199,11 +202,11 @@ func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(filteredBaselines) < 1 || filteredBaselines[0] == nil {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(filteredBaselines) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria")
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria")
 	}
 
 	baseline := filteredBaselines[0]
@@ -212,10 +215,10 @@ func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 		BaselineId: baseline.BaselineId,
 	}
 
-	output, err := conn.GetPatchBaseline(input)
+	output, err := conn.GetPatchBaselineWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error getting SSM PatchBaseline: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting SSM PatchBaseline: %s", err)
 	}
 
 	d.SetId(aws.StringValue(baseline.BaselineId))
@@ -232,5 +235,5 @@ func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
 	d.Set("source", flattenPatchSource(output.Sources))
 
-	return nil
+	return diags
 }

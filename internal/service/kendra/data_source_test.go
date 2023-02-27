@@ -19,6 +19,7 @@ import (
 )
 
 func TestAccKendraDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -30,15 +31,15 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
@@ -59,6 +60,7 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 }
 
 func TestAccKendraDataSource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -70,16 +72,16 @@ func TestAccKendraDataSource_disappears(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceDataSource(), resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,6 +90,7 @@ func TestAccKendraDataSource_disappears(t *testing.T) {
 }
 
 func TestAccKendraDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -100,15 +103,15 @@ func TestAccKendraDataSource_name(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName4),
 				),
 			},
@@ -120,7 +123,7 @@ func TestAccKendraDataSource_name(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName5),
 				),
 			},
@@ -129,6 +132,7 @@ func TestAccKendraDataSource_name(t *testing.T) {
 }
 
 func TestAccKendraDataSource_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -142,15 +146,15 @@ func TestAccKendraDataSource_description(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
@@ -170,7 +174,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
@@ -187,6 +191,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 }
 
 func TestAccKendraDataSource_languageCode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -200,15 +205,15 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, originalLanguageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "language_code", originalLanguageCode),
 				),
 			},
@@ -220,7 +225,7 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, updatedLanguageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "language_code", updatedLanguageCode),
 				),
 			},
@@ -229,6 +234,7 @@ func TestAccKendraDataSource_languageCode(t *testing.T) {
 }
 
 func TestAccKendraDataSource_roleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -243,15 +249,15 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
@@ -264,7 +270,7 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
@@ -274,6 +280,7 @@ func TestAccKendraDataSource_roleARN(t *testing.T) {
 }
 
 func TestAccKendraDataSource_schedule(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -289,15 +296,15 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, originalSchedule),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule", originalSchedule),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
@@ -310,7 +317,7 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, updatedSchedule),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule", updatedSchedule),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
@@ -320,6 +327,7 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 }
 
 func TestAccKendraDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -331,15 +339,15 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -352,7 +360,7 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_tags2(rName, rName2, rName3, rName4, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -361,7 +369,7 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -371,6 +379,7 @@ func TestAccKendraDataSource_tags(t *testing.T) {
 }
 
 func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -382,10 +391,10 @@ func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictRoleARN(rName, rName2, rName3, rName4, rName5),
@@ -404,6 +413,7 @@ func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
 }
 
 func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -419,15 +429,15 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -443,7 +453,7 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test2", "id"),
@@ -456,6 +466,7 @@ func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 }
 
 func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -469,15 +480,15 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3AccessControlList(rName, rName2, rName3, rName4, rName5, rName6, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
@@ -495,7 +506,7 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_configurationS3AccessControlList(rName, rName2, rName3, rName4, rName5, rName6, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
@@ -510,6 +521,7 @@ func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 }
 
 func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -525,15 +537,15 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3DocumentsMetadataConfiguration(rName, rName2, rName3, rName4, rName5, rName6, originalS3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -551,7 +563,7 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 			{
 				Config: testAccDataSourceConfig_configurationS3DocumentsMetadataConfiguration(rName, rName2, rName3, rName4, rName5, rName6, updatedS3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -566,6 +578,7 @@ func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *
 }
 
 func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -579,15 +592,15 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes1(rName, rName2, rName3, rName4, rName5, rName6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -609,7 +622,7 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 			{
 				Config: testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes2(rName, rName2, rName3, rName4, rName5, rName6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -631,6 +644,7 @@ func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -643,15 +657,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", "2"),
@@ -674,7 +688,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", "2"),
@@ -695,6 +709,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T)
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -710,15 +725,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 	updatedWebCrawlerMode := string(types.WebCrawlerModeSubdomains)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, originalWebCrawlerMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
@@ -736,7 +751,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, updatedWebCrawlerMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
@@ -751,6 +766,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *test
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicHostPort(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -773,15 +789,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 	port2 := 456
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
@@ -803,7 +819,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort2(rName, rName2, rName3, rName4, rName5, rName6, rName7, updatedHost1, updatedPort1, host2, port2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
@@ -827,6 +843,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicCredentials(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -841,15 +858,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
@@ -867,7 +884,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
@@ -882,6 +899,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfiguratio
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -896,15 +914,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	updatedCrawlDepth := 4
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5, originalCrawlDepth),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(originalCrawlDepth)),
@@ -919,7 +937,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5, updatedCrawlDepth),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(updatedCrawlDepth)),
@@ -931,6 +949,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -945,15 +964,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 	updatedMaxLinksPerPage := 110
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5, originalMaxLinksPerPage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(originalMaxLinksPerPage)),
@@ -968,7 +987,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5, updatedMaxLinksPerPage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(updatedMaxLinksPerPage)),
@@ -980,6 +999,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -994,15 +1014,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 	updatedMaxUrlsPerMinuteCrawlRate := 250
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxURLsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, originalMaxUrlsPerMinuteCrawlRate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_urls_per_minute_crawl_rate", strconv.Itoa(originalMaxUrlsPerMinuteCrawlRate)),
@@ -1017,7 +1037,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxURLsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, updatedMaxUrlsPerMinuteCrawlRate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_urls_per_minute_crawl_rate", strconv.Itoa(updatedMaxUrlsPerMinuteCrawlRate)),
@@ -1029,6 +1049,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1046,15 +1067,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 	originalPort1 := 123
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
@@ -1074,7 +1095,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
@@ -1092,6 +1113,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredenti
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1111,15 +1133,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 	updatedPort1 := 234
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
@@ -1139,7 +1161,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, updatedHost1, updatedPort1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
@@ -1156,6 +1178,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1168,15 +1191,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_exclusion_patterns.#", "1"),
@@ -1194,7 +1217,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.url_exclusion_patterns.#", "2"),
@@ -1211,6 +1234,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatte
 }
 
 func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1223,15 +1247,15 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
@@ -1249,7 +1273,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
@@ -1265,6 +1289,7 @@ func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T)
 }
 
 func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1278,15 +1303,15 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1319,7 +1344,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations2(rName, rName2, rName3, rName4, rName5, rName6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1367,7 +1392,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations3(rName, rName2, rName3, rName4, rName5, rName6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1427,6 +1452,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 }
 
 func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1451,15 +1477,15 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationInvocationCondition(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, originalOperator, originalStringValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1492,7 +1518,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationInvocationCondition(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, updatedOperator, updatedStringValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1522,6 +1548,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 }
 
 func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1541,15 +1568,15 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationRoleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1575,7 +1602,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationRoleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1598,6 +1625,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 }
 
 func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1617,15 +1645,15 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1651,7 +1679,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1674,6 +1702,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 }
 
 func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_LambdaARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1693,15 +1722,15 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationLambdaARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1727,7 +1756,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationLambdaARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -1749,33 +1778,35 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 	})
 }
 
-func testAccCheckDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kendra_data_source" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kendra_data_source" {
+				continue
+			}
+
+			id, indexId, err := tfkendra.DataSourceParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+			_, err = tfkendra.FindDataSourceByID(ctx, conn, id, indexId)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		id, indexId, err := tfkendra.DataSourceParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		_, err = tfkendra.FindDataSourceByID(context.Background(), conn, id, indexId)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDataSourceExists(name string) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -1792,9 +1823,9 @@ func testAccCheckDataSourceExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
-		_, err = tfkendra.FindDataSourceByID(context.Background(), conn, id, indexId)
+		_, err = tfkendra.FindDataSourceByID(ctx, conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Data Source: %s", err.Error())
@@ -2054,7 +2085,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[3]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "test_extraction_hook" {
@@ -3324,7 +3355,7 @@ resource "aws_lambda_function" "test2" {
   function_name = %[1]q
   role          = aws_iam_role.test_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_kendra_data_source" "test" {

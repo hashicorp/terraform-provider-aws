@@ -13,11 +13,7 @@ import (
 // ListTags lists inspector service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &inspector.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -25,10 +21,10 @@ func ListTagsWithContext(ctx context.Context, conn inspectoriface.InspectorAPI, 
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // []*SERVICE.Tag handling
@@ -50,12 +46,12 @@ func Tags(tags tftags.KeyValueTags) []*inspector.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from inspector service tags.
-func KeyValueTags(tags []*inspector.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*inspector.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }

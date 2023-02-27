@@ -1,17 +1,19 @@
 package lambda
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAliasRead,
+		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -47,8 +49,9 @@ func DataSourceAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	name := d.Get("name").(string)
@@ -58,9 +61,9 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 		Name:         aws.String(name),
 	}
 
-	aliasConfiguration, err := conn.GetAlias(params)
+	aliasConfiguration, err := conn.GetAliasWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error getting Lambda alias: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda alias: %s", err)
 	}
 
 	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
@@ -72,5 +75,5 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	invokeArn := functionInvokeARN(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
-	return nil
+	return diags
 }

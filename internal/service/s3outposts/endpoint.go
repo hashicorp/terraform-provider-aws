@@ -1,6 +1,7 @@
 package s3outposts
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,19 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointCreate,
-		Read:   resourceEndpointRead,
-		Delete: resourceEndpointDelete,
+		CreateWithoutTimeout: resourceEndpointCreate,
+		ReadWithoutTimeout:   resourceEndpointRead,
+		DeleteWithoutTimeout: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceEndpointImportState,
+			StateContext: resourceEndpointImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,8 +74,9 @@ func ResourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
@@ -80,42 +84,43 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:        aws.String(d.Get("subnet_id").(string)),
 	}
 
-	output, err := conn.CreateEndpoint(input)
+	output, err := conn.CreateEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Outposts Endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Outposts Endpoint: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating S3 Outposts Endpoint: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating S3 Outposts Endpoint: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.EndpointArn))
 
-	if _, err := waitEndpointStatusCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for S3 Outposts Endpoint (%s) to become available: %w", d.Id(), err)
+	if _, err := waitEndpointStatusCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Outposts Endpoint (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
-	endpoint, err := FindEndpoint(conn, d.Id())
+	endpoint, err := FindEndpoint(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Outposts Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Outposts Endpoint (%s): %s", d.Id(), err)
 	}
 
 	if endpoint == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading S3 Outposts Endpoint (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading S3 Outposts Endpoint (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] S3 Outposts Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", endpoint.EndpointArn)
@@ -126,28 +131,29 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
-		return fmt.Errorf("error setting network_interfaces: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %s", err)
 	}
 
 	d.Set("outpost_id", endpoint.OutpostsId)
 
-	return nil
+	return diags
 }
 
-func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing S3 Outposts Endpoint ARN (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Outposts Endpoint ARN (%s): %s", d.Id(), err)
 	}
 
 	// ARN resource format: outpost/<outpost-id>/endpoint/<endpoint-id>
 	arnResourceParts := strings.Split(parsedArn.Resource, "/")
 
 	if parsedArn.AccountID == "" || len(arnResourceParts) != 4 {
-		return fmt.Errorf("error parsing S3 Outposts Endpoint ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Outposts Endpoint ARN (%s): unknown format", d.Id())
 	}
 
 	input := &s3outposts.DeleteEndpointInput{
@@ -155,16 +161,16 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		OutpostId:  aws.String(arnResourceParts[1]),
 	}
 
-	_, err = conn.DeleteEndpoint(input)
+	_, err = conn.DeleteEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Outposts Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Outposts Endpoint (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEndpointImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ",")
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {

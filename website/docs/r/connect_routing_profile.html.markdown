@@ -75,8 +75,8 @@ In addition to all arguments above, the following attributes are exported:
 
 A `queue_configs` block supports the following attributes in addition to the arguments defined earlier:
 
-* `queue_arn` - Specifies the ARN for the queue.
-* `queue_name` - Specifies the name for the queue.
+* `queue_arn` - ARN for the queue.
+* `queue_name` - Name for the queue.
 
 ## Import
 

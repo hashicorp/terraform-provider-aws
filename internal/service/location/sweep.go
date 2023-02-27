@@ -40,22 +40,28 @@ func init() {
 		Name: "aws_location_tracker",
 		F:    sweepTrackers,
 	})
+
+	resource.AddTestSweepers("aws_location_tracker_association", &resource.Sweeper{
+		Name: "aws_location_tracker_association",
+		F:    sweepTrackerAssociations,
+	})
 }
 
 func sweepGeofenceCollections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListGeofenceCollectionsInput{}
 
-	err = conn.ListGeofenceCollectionsPages(input, func(page *locationservice.ListGeofenceCollectionsOutput, lastPage bool) bool {
+	err = conn.ListGeofenceCollectionsPagesWithContext(ctx, input, func(page *locationservice.ListGeofenceCollectionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -77,7 +83,7 @@ func sweepGeofenceCollections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Geofence Collection for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Geofence Collection for %s: %w", region, err))
 	}
 
@@ -90,19 +96,20 @@ func sweepGeofenceCollections(region string) error {
 }
 
 func sweepMaps(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListMapsInput{}
 
-	err = conn.ListMapsPages(input, func(page *locationservice.ListMapsOutput, lastPage bool) bool {
+	err = conn.ListMapsPagesWithContext(ctx, input, func(page *locationservice.ListMapsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -124,7 +131,7 @@ func sweepMaps(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Map for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Map for %s: %w", region, err))
 	}
 
@@ -137,19 +144,20 @@ func sweepMaps(region string) error {
 }
 
 func sweepPlaceIndexes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListPlaceIndexesInput{}
 
-	err = conn.ListPlaceIndexesPages(input, func(page *locationservice.ListPlaceIndexesOutput, lastPage bool) bool {
+	err = conn.ListPlaceIndexesPagesWithContext(ctx, input, func(page *locationservice.ListPlaceIndexesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -171,7 +179,7 @@ func sweepPlaceIndexes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Place Index for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Place Index for %s: %w", region, err))
 	}
 
@@ -184,19 +192,20 @@ func sweepPlaceIndexes(region string) error {
 }
 
 func sweepRouteCalculators(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListRouteCalculatorsInput{}
 
-	err = conn.ListRouteCalculatorsPages(input, func(page *locationservice.ListRouteCalculatorsOutput, lastPage bool) bool {
+	err = conn.ListRouteCalculatorsPagesWithContext(ctx, input, func(page *locationservice.ListRouteCalculatorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -218,7 +227,7 @@ func sweepRouteCalculators(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Route Calculator for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Route Calculator for %s: %w", region, err))
 	}
 
@@ -231,19 +240,20 @@ func sweepRouteCalculators(region string) error {
 }
 
 func sweepTrackers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListTrackersInput{}
 
-	err = conn.ListTrackersPages(input, func(page *locationservice.ListTrackersOutput, lastPage bool) bool {
+	err = conn.ListTrackersPagesWithContext(ctx, input, func(page *locationservice.ListTrackersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -265,12 +275,77 @@ func sweepTrackers(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Location Service Tracker sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepTrackerAssociations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).LocationConn()
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	input := &locationservice.ListTrackersInput{}
+
+	err = conn.ListTrackersPagesWithContext(ctx, input, func(page *locationservice.ListTrackersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			input := &locationservice.ListTrackerConsumersInput{
+				TrackerName: entry.TrackerName,
+			}
+
+			err := conn.ListTrackerConsumersPagesWithContext(ctx, input, func(page *locationservice.ListTrackerConsumersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, arn := range page.ConsumerArns {
+					r := ResourceTrackerAssociation()
+					d := r.Data(nil)
+
+					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(entry.TrackerName), aws.StringValue(arn)))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker Association for %s: %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker Association for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Location Service Tracker Association sweep for %s: %s", region, errs)
 		return nil
 	}
 

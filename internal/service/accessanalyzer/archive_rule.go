@@ -82,7 +82,7 @@ func ResourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
@@ -109,7 +109,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName, ruleName, err := DecodeRuleID(d.Id())
 	if err != nil {
@@ -136,7 +136,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName, ruleName, err := DecodeRuleID(d.Id())
 	if err != nil {
@@ -151,7 +151,6 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChanges("filter") {
 		in.Filter = expandFilter(d.Get("filter").(*schema.Set))
-
 	}
 
 	log.Printf("[DEBUG] Updating AccessAnalyzer ArchiveRule (%s): %#v", d.Id(), in)
@@ -164,7 +163,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	log.Printf("[INFO] Deleting AccessAnalyzer ArchiveRule %s", d.Id())
 

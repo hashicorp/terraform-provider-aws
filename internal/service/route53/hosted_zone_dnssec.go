@@ -1,26 +1,29 @@
 package route53
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceHostedZoneDNSSEC() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedZoneDNSSECCreate,
-		Read:   resourceHostedZoneDNSSECRead,
-		Update: resourceHostedZoneDNSSECUpdate,
-		Delete: resourceHostedZoneDNSSECDelete,
+		CreateWithoutTimeout: resourceHostedZoneDNSSECCreate,
+		ReadWithoutTimeout:   resourceHostedZoneDNSSECRead,
+		UpdateWithoutTimeout: resourceHostedZoneDNSSECUpdate,
+		DeleteWithoutTimeout: resourceHostedZoneDNSSECDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,8 +45,9 @@ func ResourceHostedZoneDNSSEC() *schema.Resource {
 	}
 }
 
-func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	signingStatus := d.Get("signing_status").(string)
@@ -52,53 +56,54 @@ func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) er
 
 	switch signingStatus {
 	default:
-		return fmt.Errorf("updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
+		return sdkdiag.AppendErrorf(diags, "updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 	case ServeSignatureSigning:
-		if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
-			return fmt.Errorf("enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		if err := hostedZoneDNSSECEnable(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 		}
 	case ServeSignatureNotSigning:
-		if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
-			return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		if err := hostedZoneDNSSECDisable(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 		}
 	}
 
-	if _, err := waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
-		return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
+	if _, err := waitHostedZoneDNSSECStatusUpdated(ctx, conn, d.Id(), signingStatus); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %s", d.Id(), signingStatus, err)
 	}
 
-	return resourceHostedZoneDNSSECRead(d, meta)
+	return append(diags, resourceHostedZoneDNSSECRead(ctx, d, meta)...)
 }
 
-func resourceHostedZoneDNSSECRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
-	hostedZoneDnssec, err := FindHostedZoneDNSSEC(conn, d.Id())
+	hostedZoneDnssec, err := FindHostedZoneDNSSEC(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 	}
 
 	if hostedZoneDnssec == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): not found", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone DNSSEC (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("hosted_zone_id", d.Id())
@@ -107,79 +112,81 @@ func resourceHostedZoneDNSSECRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("signing_status", hostedZoneDnssec.Status.ServeSignature)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceHostedZoneDNSSECUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceHostedZoneDNSSECUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	if d.HasChange("signing_status") {
 		signingStatus := d.Get("signing_status").(string)
 
 		switch signingStatus {
 		default:
-			return fmt.Errorf("updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
+			return sdkdiag.AppendErrorf(diags, "updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 		case ServeSignatureSigning:
-			if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
-				return fmt.Errorf("enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+			if err := hostedZoneDNSSECEnable(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 			}
 		case ServeSignatureNotSigning:
-			if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
-				return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+			if err := hostedZoneDNSSECDisable(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 			}
 		}
 
-		if _, err := waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
-			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
+		if _, err := waitHostedZoneDNSSECStatusUpdated(ctx, conn, d.Id(), signingStatus); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %s", d.Id(), signingStatus, err)
 		}
 	}
 
-	return resourceHostedZoneDNSSECRead(d, meta)
+	return append(diags, resourceHostedZoneDNSSECRead(ctx, d, meta)...)
 }
 
-func resourceHostedZoneDNSSECDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(d.Id()),
 	}
 
-	output, err := conn.DisableHostedZoneDNSSEC(input)
+	output, err := conn.DisableHostedZoneDNSSECWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling Route 53 Hosted Zone DNSSEC (%s): %s", d.Id(), err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
-			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", d.Id(), err)
+		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func hostedZoneDNSSECDisable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	output, err := conn.DisableHostedZoneDNSSEC(input)
+	output, err := conn.DisableHostedZoneDNSSECWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("disabling: %w", err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}
@@ -187,19 +194,19 @@ func hostedZoneDNSSECDisable(conn *route53.Route53, hostedZoneID string) error {
 	return nil
 }
 
-func hostedZoneDNSSECEnable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECEnable(ctx context.Context, conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.EnableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	output, err := conn.EnableHostedZoneDNSSEC(input)
+	output, err := conn.EnableHostedZoneDNSSECWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("enabling: %w", err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}

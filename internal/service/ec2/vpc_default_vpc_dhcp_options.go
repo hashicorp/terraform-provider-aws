@@ -1,13 +1,16 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -15,13 +18,13 @@ import (
 func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceDefaultVPCDHCPOptionsCreate,
-		Read:   resourceVPCDHCPOptionsRead,
-		Update: resourceVPCDHCPOptionsUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceDefaultVPCDHCPOptionsCreate,
+		ReadWithoutTimeout:   resourceVPCDHCPOptionsRead,
+		UpdateWithoutTimeout: resourceVPCDHCPOptionsUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -69,8 +72,9 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	}
 }
 
-func resourceDefaultVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
@@ -87,15 +91,15 @@ func resourceDefaultVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{
 		})...)
 	}
 
-	dhcpOptions, err := FindDHCPOptions(conn, input)
+	dhcpOptions, err := FindDHCPOptions(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Default DHCP Options Set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Default DHCP Options Set: %s", err)
 	}
 
 	d.SetId(aws.StringValue(dhcpOptions.DhcpOptionsId))
 
-	return resourceVPCDHCPOptionsUpdate(d, meta)
+	return append(diags, resourceVPCDHCPOptionsUpdate(ctx, d, meta)...)
 }
 
 func RegionalPrivateDNSSuffix(region string) string {

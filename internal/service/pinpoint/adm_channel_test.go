@@ -1,6 +1,7 @@
 package pinpoint_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -44,21 +45,22 @@ func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccADMChannelConfi
 }
 
 func TestAccPinpointADMChannel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var channel pinpoint.ADMChannelResponse
 	resourceName := "aws_pinpoint_adm_channel.channel"
 
 	config := testAccADMChannelConfigurationFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckADMChannelDestroy,
+		CheckDestroy:             testAccCheckADMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckADMChannelExists(resourceName, &channel),
+					testAccCheckADMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -71,7 +73,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 			{
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckADMChannelExists(resourceName, &channel),
+					testAccCheckADMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -79,7 +81,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckADMChannelExists(n string, channel *pinpoint.ADMChannelResponse) resource.TestCheckFunc {
+func testAccCheckADMChannelExists(ctx context.Context, n string, channel *pinpoint.ADMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -90,13 +92,13 @@ func testAccCheckADMChannelExists(n string, channel *pinpoint.ADMChannelResponse
 			return fmt.Errorf("No Pinpoint ADM channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the ADM Channel exists
 		params := &pinpoint.GetAdmChannelInput{
 			ApplicationId: aws.String(rs.Primary.ID),
 		}
-		output, err := conn.GetAdmChannel(params)
+		output, err := conn.GetAdmChannelWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -122,27 +124,29 @@ resource "aws_pinpoint_adm_channel" "channel" {
 `, conf.ClientID, conf.ClientSecret)
 }
 
-func testAccCheckADMChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+func testAccCheckADMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_pinpoint_adm_channel" {
-			continue
-		}
-
-		// Check if the ADM channel exists by fetching its attributes
-		params := &pinpoint.GetAdmChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.GetAdmChannel(params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_adm_channel" {
 				continue
 			}
-			return err
-		}
-		return fmt.Errorf("ADM Channel exists when it should be destroyed!")
-	}
 
-	return nil
+			// Check if the ADM channel exists by fetching its attributes
+			params := &pinpoint.GetAdmChannelInput{
+				ApplicationId: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.GetAdmChannelWithContext(ctx, params)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+					continue
+				}
+				return err
+			}
+			return fmt.Errorf("ADM Channel exists when it should be destroyed!")
+		}
+
+		return nil
+	}
 }

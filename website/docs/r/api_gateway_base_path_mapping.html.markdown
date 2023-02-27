@@ -43,9 +43,9 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 The following arguments are supported:
 
-* `domain_name` - (Required) The already-registered domain name to connect the API to.
-* `api_id` - (Required) The id of the API to connect.
-* `stage_name` - (Optional) The name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
+* `domain_name` - (Required) Already-registered domain name to connect the API to.
+* `api_id` - (Required) ID of the API to connect.
+* `stage_name` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
 
 ## Attributes Reference

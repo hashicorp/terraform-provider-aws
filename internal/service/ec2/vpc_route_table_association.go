@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRouteTableAssociationCreate,
-		Read:   resourceRouteTableAssociationRead,
-		Update: resourceRouteTableAssociationUpdate,
-		Delete: resourceRouteTableAssociationDelete,
+		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
+		ReadWithoutTimeout:   resourceRouteTableAssociationRead,
+		UpdateWithoutTimeout: resourceRouteTableAssociationUpdate,
+		DeleteWithoutTimeout: resourceRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRouteTableAssociationImport,
+			StateContext: resourceRouteTableAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -44,8 +47,9 @@ func ResourceRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.AssociateRouteTableInput{
@@ -61,43 +65,43 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating Route Table Association: %s", input)
-	output, err := tfresource.RetryWhenAWSErrCodeEquals(
-		RouteTableAssociationPropagationTimeout,
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, RouteTableAssociationPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.AssociateRouteTable(input)
+			return conn.AssociateRouteTableWithContext(ctx, input)
 		},
 		errCodeInvalidRouteTableIDNotFound,
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route Table (%s) Association: %w", routeTableID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route Table (%s) Association: %s", routeTableID, err)
 	}
 
 	d.SetId(aws.StringValue(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) creation", d.Id())
-	if _, err := WaitRouteTableAssociationCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Route Table Association (%s) create: %w", d.Id(), err)
+	if _, err := WaitRouteTableAssociationCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRouteTableAssociationRead(d, meta)
+	return append(diags, resourceRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindRouteTableAssociationByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route Table Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
 
 	association := outputRaw.(*ec2.RouteTableAssociation)
@@ -106,11 +110,12 @@ func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{})
 	d.Set("route_table_id", association.RouteTableId)
 	d.Set("subnet_id", association.SubnetId)
 
-	return nil
+	return diags
 }
 
-func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
@@ -118,18 +123,18 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Updating Route Table Association: %s", input)
-	output, err := conn.ReplaceRouteTableAssociation(input)
+	output, err := conn.ReplaceRouteTableAssociationWithContext(ctx, input)
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
 	// Keeping it here for backwards compatibility...
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one
-		return resourceRouteTableAssociationCreate(d, meta)
+		return append(diags, resourceRouteTableAssociationCreate(ctx, d, meta)...)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating Route Table Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Route Table Association (%s): %s", d.Id(), err)
 	}
 
 	// I don't think we'll ever reach this code for a subnet/gateway route table association.
@@ -138,20 +143,24 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) update", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Route Table Association (%s) update: %w", d.Id(), err)
+	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceRouteTableAssociationRead(d, meta)
+	return append(diags, resourceRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	return routeTableAssociationDelete(conn, d.Id())
+	if err := routeTableAssociationDelete(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	return diags
 }
 
-func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
@@ -162,9 +171,9 @@ func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
 
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	routeTable, err := FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -199,9 +208,9 @@ func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{
 }
 
 // routeTableAssociationDelete attempts to delete a route table association.
-func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
+func routeTableAssociationDelete(ctx context.Context, conn *ec2.EC2, associationID string) error {
 	log.Printf("[INFO] Deleting Route Table Association: %s", associationID)
-	_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
+	_, err := conn.DisassociateRouteTableWithContext(ctx, &ec2.DisassociateRouteTableInput{
 		AssociationId: aws.String(associationID),
 	})
 
@@ -210,12 +219,12 @@ func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route Table Association (%s): %w", associationID, err)
+		return fmt.Errorf("deleting Route Table Association (%s): %w", associationID, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
-	if _, err := WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
-		return fmt.Errorf("error waiting for Route Table Association (%s) delete: %w", associationID, err)
+	if _, err := WaitRouteTableAssociationDeleted(ctx, conn, associationID); err != nil {
+		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}
 
 	return nil

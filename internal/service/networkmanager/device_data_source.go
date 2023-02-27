@@ -92,7 +92,7 @@ func DataSourceDevice() *schema.Resource {
 }
 
 func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -127,7 +127,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("tags", KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

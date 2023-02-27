@@ -1,19 +1,21 @@
 package kms
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceKeyRead,
+		ReadWithoutTimeout: dataSourceKeyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -55,7 +57,7 @@ func DataSourceKey() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_manager": {
 				Type:     schema.TypeString,
@@ -129,8 +131,9 @@ func DataSourceKey() *schema.Resource {
 	}
 }
 
-func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{
@@ -141,10 +144,10 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 		input.GrantTokens = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	output, err := conn.DescribeKey(input)
+	output, err := conn.DescribeKeyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading KMS Key (%s): %w", keyID, err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", keyID, err)
 	}
 
 	keyMetadata := output.KeyMetadata
@@ -165,7 +168,7 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("multi_region", keyMetadata.MultiRegion)
 	if keyMetadata.MultiRegionConfiguration != nil {
 		if err := d.Set("multi_region_configuration", []interface{}{flattenMultiRegionConfiguration(keyMetadata.MultiRegionConfiguration)}); err != nil {
-			return fmt.Errorf("error setting multi_region_configuration: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting multi_region_configuration: %s", err)
 		}
 	} else {
 		d.Set("multi_region_configuration", nil)
@@ -175,7 +178,7 @@ func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
 	}
 
-	return nil
+	return diags
 }
 
 func flattenMultiRegionConfiguration(apiObject *kms.MultiRegionConfiguration) map[string]interface{} {

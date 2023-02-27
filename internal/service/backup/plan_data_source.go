@@ -1,18 +1,20 @@
 package backup
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePlan() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePlanRead,
+		ReadWithoutTimeout: dataSourcePlanRead,
 
 		Schema: map[string]*schema.Schema{
 			"plan_id": {
@@ -36,17 +38,18 @@ func DataSourcePlan() *schema.Resource {
 	}
 }
 
-func dataSourcePlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
 
-	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
+	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(id),
 	})
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Plan: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error getting Backup Plan: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
@@ -54,13 +57,13 @@ func dataSourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	tags, err := ListTags(conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

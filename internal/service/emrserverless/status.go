@@ -1,15 +1,17 @@
 package emrserverless
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusApplication(conn *emrserverless.EMRServerless, id string) resource.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *emrserverless.EMRServerless, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindApplicationByID(conn, id)
+		output, err := FindApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

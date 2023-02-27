@@ -1,26 +1,28 @@
 package acmpca
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateAuthorityCertificateCreate,
-		Read:   resourceCertificateAuthorityCertificateRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,8 +48,9 @@ func ResourceCertificateAuthorityCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 
@@ -59,32 +62,33 @@ func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta 
 		input.CertificateChain = []byte(v)
 	}
 
-	_, err := conn.ImportCertificateAuthorityCertificate(input)
+	_, err := conn.ImportCertificateAuthorityCertificateWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error associating ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
+		return sdkdiag.AppendErrorf(diags, "associating ACM PCA Certificate with Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
 	d.SetId(certificateAuthorityARN)
 
-	return resourceCertificateAuthorityCertificateRead(d, meta)
+	return append(diags, resourceCertificateAuthorityCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
-	output, err := FindCertificateAuthorityCertificateByARN(conn, d.Id())
+	output, err := FindCertificateAuthorityCertificateByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority Certificate (%s): %s", d.Id(), err)
 	}
 
 	d.Set("certificate_authority_arn", d.Id())
 	d.Set("certificate", output.Certificate)
 	d.Set("certificate_chain", output.CertificateChain)
 
-	return nil
+	return diags
 }

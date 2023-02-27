@@ -107,7 +107,7 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.DescribeTypeInput{}
 

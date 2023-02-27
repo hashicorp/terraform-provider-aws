@@ -1,6 +1,7 @@
 package wafregional
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceByteMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceByteMatchSetCreate,
-		Read:   resourceByteMatchSetRead,
-		Update: resourceByteMatchSetUpdate,
-		Delete: resourceByteMatchSetDelete,
+		CreateWithoutTimeout: resourceByteMatchSetCreate,
+		ReadWithoutTimeout:   resourceByteMatchSetRead,
+		UpdateWithoutTimeout: resourceByteMatchSetUpdate,
+		DeleteWithoutTimeout: resourceByteMatchSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,33 +73,35 @@ func ResourceByteMatchSet() *schema.Resource {
 	}
 }
 
-func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
 	wr := NewRetryer(conn, region)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateByteMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(d.Get("name").(string)),
 		}
-		return conn.CreateByteMatchSet(params)
+		return conn.CreateByteMatchSetWithContext(ctx, params)
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating ByteMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ByteMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
 	d.SetId(aws.StringValue(resp.ByteMatchSet.ByteMatchSetId))
 
-	return resourceByteMatchSetUpdate(d, meta)
+	return append(diags, resourceByteMatchSetUpdate(ctx, d, meta)...)
 }
 
-func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 
@@ -104,31 +109,31 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 		ByteMatchSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetByteMatchSet(params)
+	resp, err := conn.GetByteMatchSetWithContext(ctx, params)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting WAF Regional Byte Match Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Byte Match Set (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || resp.ByteMatchSet == nil) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("byte_match_tuples", flattenByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
-		return fmt.Errorf("error setting byte_match_tuples: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
 	}
 
 	d.Set("name", resp.ByteMatchSet.Name)
 
-	return nil
+	return diags
 }
 
 func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
@@ -152,8 +157,9 @@ func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 	return tuples
 }
 
-func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceByteMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -161,16 +167,17 @@ func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("byte_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
+		err := updateByteMatchSetResourceWR(ctx, d, oldT, newT, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating ByteMatchSet: %s", err)
 		}
 	}
-	return resourceByteMatchSetRead(d, meta)
+	return append(diags, resourceByteMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Deleting ByteMatchSet: %s", d.Get("name").(string))
@@ -180,37 +187,37 @@ func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error 
 	if len(oldT) > 0 {
 		var newT []interface{}
 
-		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
+		err := updateByteMatchSetResourceWR(ctx, d, oldT, newT, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "deleting ByteMatchSet: %s", err)
 		}
 	}
 
 	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteByteMatchSetInput{
 			ChangeToken:    token,
 			ByteMatchSetId: aws.String(d.Id()),
 		}
-		return conn.DeleteByteMatchSet(req)
+		return conn.DeleteByteMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ByteMatchSet: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func updateByteMatchSetResourceWR(d *schema.ResourceData, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateByteMatchSetResourceWR(ctx context.Context, d *schema.ResourceData, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateByteMatchSetInput{
 			ChangeToken:    token,
 			ByteMatchSetId: aws.String(d.Id()),
 			Updates:        diffByteMatchSetTuple(oldT, newT),
 		}
 
-		return conn.UpdateByteMatchSet(req)
+		return conn.UpdateByteMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
 		return fmt.Errorf("Error updating ByteMatchSet: %s", err)

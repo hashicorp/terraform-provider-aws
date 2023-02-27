@@ -52,7 +52,7 @@ func ResourceUserStackAssociation() *schema.Resource {
 }
 
 func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	input := &appstream.UserStackAssociation{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
@@ -80,7 +80,6 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 		}
 		return diag.FromErr(fmt.Errorf("error creating AppStream User Stack Association (%s): %w", id, errs))
-
 	}
 
 	d.SetId(id)
@@ -89,7 +88,7 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {
@@ -132,7 +131,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {

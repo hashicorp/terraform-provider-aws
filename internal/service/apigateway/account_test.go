@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccAPIGatewayAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Account
 
 	rInt := sdkacctest.RandInt()
@@ -32,7 +34,7 @@ func TestAccAPIGatewayAccount_basic(t *testing.T) {
 			{
 				Config: testAccAccountConfig_updated(firstName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
+					testAccCheckAccountExists(ctx, resourceName, &conf),
 					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_first),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
 				),
@@ -46,7 +48,7 @@ func TestAccAPIGatewayAccount_basic(t *testing.T) {
 			{
 				Config: testAccAccountConfig_updated2(secondName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
+					testAccCheckAccountExists(ctx, resourceName, &conf),
 					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
 				),
@@ -54,7 +56,7 @@ func TestAccAPIGatewayAccount_basic(t *testing.T) {
 			{
 				Config: testAccAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
+					testAccCheckAccountExists(ctx, resourceName, &conf),
 					// This resource does not un-set the value, so this will preserve the CloudWatch role ARN setting on the
 					// deployed resource, but will be empty in the Terraform state
 					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
@@ -83,7 +85,7 @@ func testAccCheckAccountCloudWatchRoleARN(conf *apigateway.Account, expectedArn 
 	}
 }
 
-func testAccCheckAccountExists(n string, res *apigateway.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(ctx context.Context, n string, res *apigateway.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -94,10 +96,10 @@ func testAccCheckAccountExists(n string, res *apigateway.Account) resource.TestC
 			return fmt.Errorf("No API Gateway Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetAccountInput{}
-		describe, err := conn.GetAccount(req)
+		describe, err := conn.GetAccountWithContext(ctx, req)
 		if err != nil {
 			return err
 		}

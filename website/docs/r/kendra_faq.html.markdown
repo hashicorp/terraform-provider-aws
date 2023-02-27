@@ -20,7 +20,7 @@ resource "aws_kendra_faq" "example" {
   name     = "Example"
   role_arn = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -40,7 +40,7 @@ resource "aws_kendra_faq" "example" {
   file_format = "CSV"
   role_arn    = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -56,7 +56,7 @@ resource "aws_kendra_faq" "example" {
   language_code = "en"
   role_arn      = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -99,7 +99,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `delete` - (Default `30m`)

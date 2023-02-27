@@ -570,10 +570,10 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 }
 
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(resource.UniqueId()),
@@ -632,7 +632,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -669,7 +669,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "s3_job_definition", d.Id(), err))
 	}
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "tags", d.Id(), err))
@@ -694,7 +694,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId: aws.String(d.Id()),
@@ -719,7 +719,7 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),

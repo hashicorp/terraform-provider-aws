@@ -1,12 +1,14 @@
 package cloudfront
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,12 +18,12 @@ import (
 
 func ResourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOriginAccessIdentityCreate,
-		Read:   resourceOriginAccessIdentityRead,
-		Update: resourceOriginAccessIdentityUpdate,
-		Delete: resourceOriginAccessIdentityDelete,
+		CreateWithoutTimeout: resourceOriginAccessIdentityCreate,
+		ReadWithoutTimeout:   resourceOriginAccessIdentityRead,
+		UpdateWithoutTimeout: resourceOriginAccessIdentityUpdate,
+		DeleteWithoutTimeout: resourceOriginAccessIdentityDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -54,35 +56,37 @@ func ResourceOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func resourceOriginAccessIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 	}
 
-	resp, err := conn.CreateCloudFrontOriginAccessIdentity(params)
+	resp, err := conn.CreateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return err
+		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
-	return resourceOriginAccessIdentityRead(d, meta)
+	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
+	resp, err := conn.GetCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
 		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -99,34 +103,37 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 		Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *resp.CloudFrontOriginAccessIdentity.Id),
 	}.String()
 	d.Set("iam_arn", iamArn)
-	return nil
+	return diags
 }
 
-func resourceOriginAccessIdentityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 		IfMatch:                              aws.String(d.Get("etag").(string)),
 	}
-	_, err := conn.UpdateCloudFrontOriginAccessIdentity(params)
+	_, err := conn.UpdateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return err
+		return create.DiagError(names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
-	return resourceOriginAccessIdentityRead(d, meta)
+	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.DeleteCloudFrontOriginAccessIdentity(params)
-
-	return err
+	if _, err := conn.DeleteCloudFrontOriginAccessIdentityWithContext(ctx, params); err != nil {
+		return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
+	}
+	return diags
 }
 
 func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.OriginAccessIdentityConfig {
@@ -143,8 +150,6 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 }
 
 func flattenOriginAccessIdentityConfig(d *schema.ResourceData, originAccessIdentityConfig *cloudfront.OriginAccessIdentityConfig) {
-	if originAccessIdentityConfig.Comment != nil {
-		d.Set("comment", originAccessIdentityConfig.Comment)
-	}
+	d.Set("comment", originAccessIdentityConfig.Comment)
 	d.Set("caller_reference", originAccessIdentityConfig.CallerReference)
 }

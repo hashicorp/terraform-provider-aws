@@ -1,18 +1,20 @@
 package signer
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSigningJob() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSigningJobRead,
+		ReadWithoutTimeout: dataSourceSigningJobRead,
 
 		Schema: map[string]*schema.Schema{
 			"job_id": {
@@ -143,56 +145,57 @@ func DataSourceSigningJob() *schema.Resource {
 	}
 }
 
-func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 	jobId := d.Get("job_id").(string)
 
-	describeSigningJobOutput, err := conn.DescribeSigningJob(&signer.DescribeSigningJobInput{
+	describeSigningJobOutput, err := conn.DescribeSigningJobWithContext(ctx, &signer.DescribeSigningJobInput{
 		JobId: aws.String(jobId),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Signer signing job (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer signing job (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("completed_at", aws.TimeValue(describeSigningJobOutput.CompletedAt).Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting signer signing job completed at: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
 	if err := d.Set("created_at", aws.TimeValue(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting signer signing job created at: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 
 	if err := d.Set("job_invoker", describeSigningJobOutput.JobInvoker); err != nil {
-		return fmt.Errorf("error setting signer signing job invoker: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job invoker: %s", err)
 	}
 
 	if err := d.Set("job_owner", describeSigningJobOutput.JobOwner); err != nil {
-		return fmt.Errorf("error setting signer signing job owner: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job owner: %s", err)
 	}
 
 	if err := d.Set("platform_display_name", describeSigningJobOutput.PlatformDisplayName); err != nil {
-		return fmt.Errorf("error setting signer signing job platform display name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job platform display name: %s", err)
 	}
 
 	if err := d.Set("platform_id", describeSigningJobOutput.PlatformId); err != nil {
-		return fmt.Errorf("error setting signer signing job platform id: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job platform id: %s", err)
 	}
 
 	if err := d.Set("profile_name", describeSigningJobOutput.ProfileName); err != nil {
-		return fmt.Errorf("error setting signer signing job profile name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job profile name: %s", err)
 	}
 
 	if err := d.Set("profile_version", describeSigningJobOutput.ProfileVersion); err != nil {
-		return fmt.Errorf("error setting signer signing job profile version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job profile version: %s", err)
 	}
 
 	if err := d.Set("requested_by", describeSigningJobOutput.RequestedBy); err != nil {
-		return fmt.Errorf("error setting signer signing job requested by: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job requested by: %s", err)
 	}
 
 	if err := d.Set("revocation_record", flattenSigningJobRevocationRecord(describeSigningJobOutput.RevocationRecord)); err != nil {
-		return fmt.Errorf("error setting signer signing job revocation record: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job revocation record: %s", err)
 	}
 
 	signatureExpiresAt := ""
@@ -200,26 +203,26 @@ func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 		signatureExpiresAt = aws.TimeValue(describeSigningJobOutput.SignatureExpiresAt).Format(time.RFC3339)
 	}
 	if err := d.Set("signature_expires_at", signatureExpiresAt); err != nil {
-		return fmt.Errorf("error setting signer signing job requested by: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job requested by: %s", err)
 	}
 
 	if err := d.Set("signed_object", flattenSigningJobSignedObject(describeSigningJobOutput.SignedObject)); err != nil {
-		return fmt.Errorf("error setting signer signing job signed object: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
 	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
-		return fmt.Errorf("error setting signer signing job source: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
 	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
-		return fmt.Errorf("error setting signer signing job status: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
 	if err := d.Set("status_reason", describeSigningJobOutput.StatusReason); err != nil {
-		return fmt.Errorf("error setting signer signing job status reason: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 
 	d.SetId(aws.StringValue(describeSigningJobOutput.JobId))
 
-	return nil
+	return diags
 }
