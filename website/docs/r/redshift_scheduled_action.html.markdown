@@ -44,6 +44,7 @@ data "aws_iam_policy_document" "example" {
     resources = ["*"]
   }
 }
+
 resource "aws_iam_policy" "example" {
   name   = "redshift_scheduled_action"
   policy = data.aws_iam_policy_document.example.json

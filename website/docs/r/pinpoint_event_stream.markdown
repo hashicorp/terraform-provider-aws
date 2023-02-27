@@ -38,6 +38,7 @@ data "aws_iam_policy_document" "assume_role" {
     actions = ["sts:AssumeRole"]
   }
 }
+
 resource "aws_iam_role" "test_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
@@ -51,7 +52,7 @@ data "aws_iam_policy_document" "test_role_policy" {
       "kinesis:DescribeStream",
     ]
 
-    resource = ["arn:aws:kinesis:us-east-1:*:*/*"]
+    resources = ["arn:aws:kinesis:us-east-1:*:*/*"]
   }
 }
 resource "aws_iam_role_policy" "test_role_policy" {

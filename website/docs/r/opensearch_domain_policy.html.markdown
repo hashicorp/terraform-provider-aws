@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "main" {
   }
 
   actions   = ["es:*"]
-  resources = [aws_opensearch_domain.example.arn]
+  resources = ["${aws_opensearch_domain.example.arn}/*"]
 
   condition {
     test     = "IpAddress"
