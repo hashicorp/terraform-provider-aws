@@ -39,9 +39,10 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
 			},
 		},
 	})
@@ -70,12 +71,24 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
+			{
 				Config: testAccUserGroupAssociationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-3", rName)),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
 			},
 		},
 	})
@@ -122,11 +135,23 @@ func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
 				Config: testAccUserGroupAssociationConfig_preMultiple(rName),
 			},
 			{
+				ResourceName:            "aws_elasticache_user.test3",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
+			{
 				Config: testAccUserGroupAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName1),
 					testAccCheckUserGroupAssociationExists(resourceName2),
 				),
+			},
+			{
+				ResourceName:            "aws_elasticache_user.test3",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
 			},
 		},
 	})

@@ -29,6 +29,12 @@ func TestAccElastiCacheUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "access_string", resourceName, "access_string"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
 		},
 	})
 }

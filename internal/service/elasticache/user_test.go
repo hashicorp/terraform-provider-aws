@@ -44,6 +44,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"no_password_required",
 					"passwords",
+					"authentication_mode",
 				},
 			},
 		},
@@ -78,6 +79,11 @@ func TestAccElastiCacheUserWithPasswordAuthMode_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords",
+					"authentication_mode.0.passwords",
+				},
 			},
 		},
 	})
@@ -99,7 +105,7 @@ func TestAccElastiCacheUserWithIamAuthMode_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
 				),
@@ -131,7 +137,7 @@ func TestAccElastiCacheUserWithNoPassRequiredAuthMode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "no-password-required"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "no-password"),
 				),
 			},
 			{
@@ -161,6 +167,12 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
+			{
 				Config: testAccUserConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -174,6 +186,7 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"no_password_required",
 					"passwords",
+					"authentication_mode",
 				},
 			},
 		},
@@ -192,23 +205,43 @@ func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigWithPasswordAuthMode_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
-				),
-			},
-			{
-				Config: testAccUserConfigWithPasswordAuthMode_update(rName, "bbbbbbbbbbbbbbbb", "cccccccccccc"),
+				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+			},
+			{
+				Config: testAccUserConfigWithPasswordAuthMode_onePassword(rName, "aaaaaaaaaaaaaaaa"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+			},
+			{
+				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "cccccccccccccccc", "dddddddddddddddd"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 		},
 	})
@@ -238,6 +271,12 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
+			{
 				Config: testAccUserConfig_tags(rName, "tagKey", "tagVal2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -250,6 +289,12 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
+			},
+			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -259,6 +304,12 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_mode"},
 			},
 		},
 	})
@@ -377,7 +428,7 @@ func testAccUserConfigWithIamAuthMode_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-  user_name     = "username1"
+  user_name     = %[1]q
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
 
@@ -415,7 +466,7 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
-func testAccUserConfigWithPasswordAuthMode_update(rName string, password1 string, password2 string) string {
+func testAccUserConfigWithPasswordAuthMode_twoPasswords(rName string, password1 string, password2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
@@ -429,6 +480,22 @@ resource "aws_elasticache_user" "test" {
   }	
 }
 `, rName, password1, password2))
+}
+
+func testAccUserConfigWithPasswordAuthMode_onePassword(rName string, password string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "password"
+    passwords = [%[2]q]
+  }	
+}
+`, rName, password))
 }
 
 func testAccUserConfig_tags(rName, tagKey, tagValue string) string {
