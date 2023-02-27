@@ -78,6 +78,7 @@ data "aws_iam_policy_document" "queue" {
     }
   }
 }
+
 resource "aws_sqs_queue" "queue" {
   name   = "s3-event-notification-queue"
   policy = data.aws_iam_policy_document.queue.json
@@ -110,7 +111,7 @@ data "aws_iam_policy_document" "assume_role" {
       identifiers = ["lambda.amazonaws.com"]
     }
 
-    actions = "sts:AssumeRole"
+    actions = ["sts:AssumeRole"]
   }
 }
 
@@ -240,7 +241,7 @@ data "aws_iam_policy_document" "queue" {
 
     principals {
       type        = "*"
-      identifiers = "*"
+      identifiers = ["*"]
     }
 
     actions   = ["sqs:SendMessage"]
