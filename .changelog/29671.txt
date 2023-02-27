@@ -1,0 +1,3 @@
+```release-note:bug
+resource/sesv2_configuration_set: Allow suppressed_reasons to be an empty list in order to disable the suppression list
+```

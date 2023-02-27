@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
 	"log"
 	"time"
 
@@ -112,7 +113,6 @@ func ResourceConfigurationSet() *schema.Resource {
 						"suppressed_reasons": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[types.SuppressionListReason](),
@@ -203,8 +203,20 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		in.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("suppression_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SuppressionOptions = expandSuppressionOptions(v.([]interface{})[0].(map[string]interface{}))
+	rawConfigMap := d.GetRawConfig().AsValueMap()
+	if v, ok := rawConfigMap["suppression_options"]; ok && v.LengthInt() > 0 {
+		if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
+
+			options := map[string]interface{}{
+				"suppressed_reasons": []interface{}{},
+			}
+
+			for _, reason := range v.AsValueSlice() {
+				options["suppressed_reasons"] = append(options["suppressed_reasons"].([]interface{}), reason.AsString())
+			}
+
+			in.SuppressionOptions = expandSuppressionOptions(options)
+		}
 	}
 
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -640,14 +652,19 @@ func expandSendingOptions(tfMap map[string]interface{}) *types.SendingOptions {
 }
 
 func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOptions {
+
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.SuppressionOptions{}
 
-	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok && len(v) > 0 {
-		a.SuppressedReasons = expandSuppressedReasons(v)
+	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok {
+		if len(v) > 0 {
+			a.SuppressedReasons = expandSuppressedReasons(v)
+		} else {
+			a.SuppressedReasons = make([]types.SuppressionListReason, 0)
+		}
 	}
 
 	return a
