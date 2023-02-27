@@ -45,3 +45,7 @@ Pull requests are usually triaged within a few days of creation and are prioriti
 ### Submit an Issue
 
 In addition to contributions, we welcome [bug reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md).
+
+### Join the Contributors Slack
+
+For frequent contributors, it's useful to join the contributors Slack channel hosted within the HashiCorp Slack workspace. To do so, fill out the [request form](https://forms.gle/Gf9ZAmUYXuzafkct6) to request to be added. Please allow time for the request to be reviewed and processed.
