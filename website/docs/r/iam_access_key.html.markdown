@@ -26,7 +26,7 @@ resource "aws_iam_user" "lb" {
 data "aws_iam_policy_document" "lb_ro" {
   statement {
     effect    = "Allow"
-    actions   = ["ec2:Describe"]
+    actions   = ["ec2:Describe*"]
     resources = ["*"]
   }
 }
