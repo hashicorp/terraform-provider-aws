@@ -58,13 +58,13 @@ data "aws_iam_policy_document" "firehose_assume_role" {
       identifiers = ["firehose.amazonaws.com"]
     }
 
-    actions = "sts:AssumeRole"
+    actions = ["sts:AssumeRole"]
   }
 }
 
 resource "aws_iam_role" "firehose_role" {
   name               = "firehose_test_role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.firehose_assume_role.json
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -76,13 +76,13 @@ data "aws_iam_policy_document" "lambda_assume_role" {
       identifiers = ["lambda.amazonaws.com"]
     }
 
-    actions = "sts:AssumeRole"
+    actions = ["sts:AssumeRole"]
   }
 }
 
 resource "aws_iam_role" "lambda_iam" {
   name               = "lambda_iam"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
 resource "aws_lambda_function" "lambda_processor" {
@@ -172,7 +172,7 @@ data "aws_iam_policy_document" "assume_role" {
       identifiers = ["firehose.amazonaws.com"]
     }
 
-    actions = "sts:AssumeRole"
+    actions = ["sts:AssumeRole"]
   }
 }
 
