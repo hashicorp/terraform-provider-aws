@@ -2,11 +2,16 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` attributes ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_autoscaling_group: Add `auto_rollback` to the `instance_refresh.preferences` configuration block ([#29513](https://github.com/hashicorp/terraform-provider-aws/issues/29513))
+* resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.allowed_instance_types` and `mixed_instances_policy.launch_template.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_autoscaling_policy: Add `metrics` to the `target_tracking_configuration.customized_metric_specification` configuration block in support of [metric math](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-target-tracking-metric-math.html) ([#28560](https://github.com/hashicorp/terraform-provider-aws/issues/28560))
 * resource/aws_cloudtrail_event_data_store: Add `kms_key_id` argument ([#29224](https://github.com/hashicorp/terraform-provider-aws/issues/29224))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `db2` engine ([#29380](https://github.com/hashicorp/terraform-provider-aws/issues/29380))
 * resource/aws_dms_endpoint: Add support for `azure-sql-managed-instance` `engine_name` value ([#28960](https://github.com/hashicorp/terraform-provider-aws/issues/28960))
+* resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.allowed_instance_types` and `launch_template_config.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 
 ## 4.56.0 (February 24, 2023)
 
