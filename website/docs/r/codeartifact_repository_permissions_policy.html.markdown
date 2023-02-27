@@ -36,6 +36,7 @@ data "aws_iam_policy_document" "example" {
       identifiers = ["*"]
     }
 
+    actions   = ["codeartifact:CreateRepository"]
     resources = [aws_codeartifact_domain.example.arn]
   }
 }

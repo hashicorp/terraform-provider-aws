@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "authenticated" {
       identifiers = ["cognito-identity.amazonaws.com"]
     }
 
-    actions = "sts:AssumeRoleWithWebIdentity"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
 
     condition {
       test     = "StringEquals"
@@ -52,7 +52,7 @@ resource "aws_iam_role" "authenticated" {
   assume_role_policy = data.aws_iam_policy_document.authenticated.json
 }
 
-data "aws_iam_policy_document" "authenticated" {
+data "aws_iam_policy_document" "authenticated_role_policy" {
   effect = "Allow"
 
   actions = [
@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "authenticated" {
 resource "aws_iam_role_policy" "authenticated" {
   name   = "authenticated_policy"
   role   = aws_iam_role.authenticated.id
-  policy = data.aws_iam_policy_document.authenticated.json
+  policy = data.aws_iam_policy_document.authenticated_role_policy.json
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {

@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "assume_role" {
     effect = "Allow"
 
     principals {
-      type        = "AWS"
+      type        = "Service"
       identifiers = ["cognito-idp.amazonaws.com"]
     }
 

@@ -54,9 +54,11 @@ resource "aws_iam_role" "r" {
 }
 
 data "aws_iam_policy_document" "p" {
-  effect    = "Allow"
-  action    = ["config:Put*"]
-  resources = ["*"]
+  statement {
+    effect    = "Allow"
+    actions   = ["config:Put*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "p" {
