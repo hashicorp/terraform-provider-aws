@@ -19,24 +19,34 @@ resource "aws_cloudsearch_domain" "example" {
   name = "example-domain"
 }
 
-resource "aws_cloudsearch_domain_service_access_policy" "example" {
-  domain_name = aws_cloudsearch_domain.example.id
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "search_only"
+    effect = "Allow"
 
-  access_policy = <<POLICY
-{
-  "Version":"2012-10-17",
-  "Statement":[{
-    "Sid":"search_only",
-    "Effect":"Allow",
-    "Principal":"*",
-    "Action":[
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
       "cloudsearch:search",
-      "cloudsearch:document"
-    ],
-    "Condition":{"IpAddress":{"aws:SourceIp":"192.0.2.0/32"}}
-  }]
+      "cloudsearch:document",
+    ]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["192.0.2.0/32"]
+    }
+  }
 }
-POLICY
+
+
+
+resource "aws_cloudsearch_domain_service_access_policy" "example" {
+  domain_name   = aws_cloudsearch_domain.example.id
+  access_policy = data.aws_iam_policy_document.example.json
 }
 ```
 
