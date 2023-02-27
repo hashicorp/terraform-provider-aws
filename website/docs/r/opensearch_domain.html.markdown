@@ -114,7 +114,7 @@ data "aws_iam_policy_document" "example" {
   }
 }
 resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "example"
+  policy_name     = "example"
   policy_document = data.aws_iam_policy_document.example.json
 }
 
