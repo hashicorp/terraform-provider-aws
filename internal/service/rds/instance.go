@@ -1667,7 +1667,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient()
-	deadline := NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -1686,7 +1686,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.remaining()); err != nil {
+			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
 			}
 		} else {
@@ -1759,14 +1759,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.remaining(), optFns...)
+					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
 					if err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
 					}
 				})
 			}()
 
-			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
+			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -1775,19 +1775,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
-			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.remaining())
+			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
 
-			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Id()))
+			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Id()))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Id())
 
-			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
+			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -1804,7 +1804,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 					DeletionProtection:   aws.Bool(false),
 				}
-				err := dbInstanceModify(ctx, conn, input, deadline.remaining())
+				err := dbInstanceModify(ctx, conn, input, deadline.Remaining())
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Id(), err)
 				}
@@ -1836,7 +1836,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.remaining(), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
@@ -1866,7 +1866,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
 			}
 
-			err := dbInstanceModify(ctx, conn, input, deadline.remaining())
+			err := dbInstanceModify(ctx, conn, input, deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
