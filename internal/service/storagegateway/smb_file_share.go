@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_smb_file_share")
 func ResourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMBFileShareCreate,
