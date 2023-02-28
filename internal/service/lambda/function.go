@@ -328,9 +328,10 @@ func ResourceFunction() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  3,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(1, 900),
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
