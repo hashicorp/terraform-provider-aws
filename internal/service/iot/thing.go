@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iot_thing")
 func ResourceThing() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingCreate,
