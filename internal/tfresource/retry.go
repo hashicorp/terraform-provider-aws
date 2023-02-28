@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // Retryable is a function that is used to decide if a function's error is retryable or not.
@@ -66,6 +67,16 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (interface{}, error), needle string) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[T](err, needle) {
 			return true, err
 		}
 
