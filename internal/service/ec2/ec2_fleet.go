@@ -1088,10 +1088,17 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.InstanceType = aws.String(v)
 	}
 
+	if v, ok := tfMap["image_id"].(string); ok && v != "" {
+		apiObject.ImageId = aws.String(v)
+	}
+
 	if v, ok := tfMap["max_price"].(string); ok && v != "" {
 		apiObject.MaxPrice = aws.String(v)
 	}
 
+	if v, ok := tfMap["placement"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.Placement = expandPlacement(v.([]interface{})[0].(map[string]interface{}))
+	}
 	if v, ok := tfMap["priority"].(float64); ok && v != 0 {
 		apiObject.Priority = aws.Float64(v)
 	}
@@ -1446,12 +1453,20 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
 	}
 
+	if v := apiObject.ImageId; v != nil {
+		tfMap["image_id"] = aws.StringValue(v)
+	}
+
 	if v := apiObject.InstanceType; v != nil {
 		tfMap["instance_type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MaxPrice; v != nil {
 		tfMap["max_price"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Placement; v != nil {
+		tfMap["placement"] = []interface{}{flattenPlacement(v)}
 	}
 
 	if v := apiObject.Priority; v != nil {
