@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_inspector_assessment_target")
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTargetCreate,

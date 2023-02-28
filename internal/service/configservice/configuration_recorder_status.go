@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_configuration_recorder_status")
 func ResourceConfigurationRecorderStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderStatusPut,

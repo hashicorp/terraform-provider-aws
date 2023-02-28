@@ -24,6 +24,7 @@ const (
 	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_instance_profile")
 func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,

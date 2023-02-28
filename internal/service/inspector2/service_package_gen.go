@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_inspector2_delegated_admin_account":    ResourceDelegatedAdminAccount,
+		"aws_inspector2_enabler":                    ResourceEnabler,
+		"aws_inspector2_organization_configuration": ResourceOrganizationConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

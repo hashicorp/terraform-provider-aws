@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_rolesanywhere_profile":      ResourceProfile,
+		"aws_rolesanywhere_trust_anchor": ResourceTrustAnchor,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

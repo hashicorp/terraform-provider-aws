@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment")
 func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayDxGatewayAttachmentRead,

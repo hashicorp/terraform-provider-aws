@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_s3_bucket_public_access_block")
 func ResourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,

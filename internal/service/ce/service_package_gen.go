@@ -22,11 +22,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ce_cost_category": DataSourceCostCategory,
+		"aws_ce_tags":          DataSourceTags,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ce_anomaly_monitor":      ResourceAnomalyMonitor,
+		"aws_ce_anomaly_subscription": ResourceAnomalySubscription,
+		"aws_ce_cost_allocation_tag":  ResourceCostAllocationTag,
+		"aws_ce_cost_category":        ResourceCostCategory,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

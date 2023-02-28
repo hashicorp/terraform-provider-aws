@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_connect_user_hierarchy_structure")
 func ResourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserHierarchyStructureCreate,

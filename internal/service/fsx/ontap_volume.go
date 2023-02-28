@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_ontap_volume")
 func ResourceOntapVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOntapVolumeCreate,

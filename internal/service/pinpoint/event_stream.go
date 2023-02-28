@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_pinpoint_event_stream")
 func ResourceEventStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventStreamUpsert,

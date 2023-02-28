@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpc_peering_connection")
 func DataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCPeeringConnectionRead,

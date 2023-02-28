@@ -16,6 +16,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_byte_match_set")
 func ResourceByteMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceByteMatchSetCreate,

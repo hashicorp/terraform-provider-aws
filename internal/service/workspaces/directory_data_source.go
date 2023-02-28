@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_workspaces_directory")
 func DataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDirectoryRead,

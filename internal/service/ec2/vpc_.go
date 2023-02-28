@@ -28,6 +28,7 @@ const (
 	VPCCIDRMaxIPv6 = 56
 )
 
+// @SDKResource("aws_vpc")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

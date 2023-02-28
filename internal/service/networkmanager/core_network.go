@@ -29,6 +29,7 @@ const (
 
 // This resource is explicitly NOT exported from the provider until design is finalized.
 // Its Delete handler is used by sweepers.
+// @SDKResource("aws_networkmanager_core_network")
 func ResourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,

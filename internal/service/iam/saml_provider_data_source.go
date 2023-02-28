@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_saml_provider")
 func DataSourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,

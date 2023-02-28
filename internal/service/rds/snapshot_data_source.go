@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_db_snapshot")
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,

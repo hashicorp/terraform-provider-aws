@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_data_catalog_encryption_settings")
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transcribe_medical_vocabulary")
 func ResourceMedicalVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMedicalVocabularyCreate,

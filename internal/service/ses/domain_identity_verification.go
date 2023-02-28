@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ses_domain_identity_verification")
 func ResourceDomainIdentityVerification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainIdentityVerificationCreate,

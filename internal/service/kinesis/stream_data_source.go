@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kinesis_stream")
 func DataSourceStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamRead,
