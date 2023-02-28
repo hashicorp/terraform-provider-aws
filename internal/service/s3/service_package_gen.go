@@ -25,6 +25,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 	return map[string]func() *schema.Resource{
 		"aws_canonical_user_id": DataSourceCanonicalUserID,
 		"aws_s3_bucket":         DataSourceBucket,
+		"aws_s3_bucket_object":  DataSourceBucketObject,
+		"aws_s3_bucket_objects": DataSourceBucketObjects,
 		"aws_s3_bucket_policy":  DataSourceBucketPolicy,
 		"aws_s3_object":         DataSourceObject,
 		"aws_s3_objects":        DataSourceObjects,
@@ -44,6 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_s3_bucket_logging":                              ResourceBucketLogging,
 		"aws_s3_bucket_metric":                               ResourceBucketMetric,
 		"aws_s3_bucket_notification":                         ResourceBucketNotification,
+		"aws_s3_bucket_object":                               ResourceBucketObject,
 		"aws_s3_bucket_object_lock_configuration":            ResourceBucketObjectLockConfiguration,
 		"aws_s3_bucket_ownership_controls":                   ResourceBucketOwnershipControls,
 		"aws_s3_bucket_policy":                               ResourceBucketPolicy,
