@@ -30,7 +30,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecr_lifecycle_policy":                ResourceLifecyclePolicy,
+		"aws_ecr_pull_through_cache_rule":         ResourcePullThroughCacheRule,
+		"aws_ecr_registry_policy":                 ResourceRegistryPolicy,
+		"aws_ecr_registry_scanning_configuration": ResourceRegistryScanningConfiguration,
+		"aws_ecr_replication_configuration":       ResourceReplicationConfiguration,
+		"aws_ecr_repository":                      ResourceRepository,
+		"aws_ecr_repository_policy":               ResourceRepositoryPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

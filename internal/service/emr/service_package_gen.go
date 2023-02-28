@@ -28,7 +28,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_emr_cluster":                ResourceCluster,
+		"aws_emr_instance_fleet":         ResourceInstanceFleet,
+		"aws_emr_instance_group":         ResourceInstanceGroup,
+		"aws_emr_managed_scaling_policy": ResourceManagedScalingPolicy,
+		"aws_emr_security_configuration": ResourceSecurityConfiguration,
+		"aws_emr_studio":                 ResourceStudio,
+		"aws_emr_studio_session_mapping": ResourceStudioSessionMapping,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

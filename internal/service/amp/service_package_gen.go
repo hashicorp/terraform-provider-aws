@@ -28,7 +28,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_prometheus_alert_manager_definition": ResourceAlertManagerDefinition,
+		"aws_prometheus_rule_group_namespace":     ResourceRuleGroupNamespace,
+		"aws_prometheus_workspace":                ResourceWorkspace,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

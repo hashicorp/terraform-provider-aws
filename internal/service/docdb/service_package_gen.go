@@ -29,7 +29,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_docdb_cluster":                 ResourceCluster,
+		"aws_docdb_cluster_instance":        ResourceClusterInstance,
+		"aws_docdb_cluster_parameter_group": ResourceClusterParameterGroup,
+		"aws_docdb_cluster_snapshot":        ResourceClusterSnapshot,
+		"aws_docdb_event_subscription":      ResourceEventSubscription,
+		"aws_docdb_global_cluster":          ResourceGlobalCluster,
+		"aws_docdb_subnet_group":            ResourceSubnetGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

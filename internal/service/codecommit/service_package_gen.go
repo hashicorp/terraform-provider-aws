@@ -29,7 +29,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codecommit_approval_rule_template":             ResourceApprovalRuleTemplate,
+		"aws_codecommit_approval_rule_template_association": ResourceApprovalRuleTemplateAssociation,
+		"aws_codecommit_repository":                         ResourceRepository,
+		"aws_codecommit_trigger":                            ResourceTrigger,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

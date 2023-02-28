@@ -29,7 +29,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_neptune_cluster":                 ResourceCluster,
+		"aws_neptune_cluster_endpoint":        ResourceClusterEndpoint,
+		"aws_neptune_cluster_instance":        ResourceClusterInstance,
+		"aws_neptune_cluster_parameter_group": ResourceClusterParameterGroup,
+		"aws_neptune_cluster_snapshot":        ResourceClusterSnapshot,
+		"aws_neptune_event_subscription":      ResourceEventSubscription,
+		"aws_neptune_global_cluster":          ResourceGlobalCluster,
+		"aws_neptune_parameter_group":         ResourceParameterGroup,
+		"aws_neptune_subnet_group":            ResourceSubnetGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

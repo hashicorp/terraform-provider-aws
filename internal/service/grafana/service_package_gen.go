@@ -28,7 +28,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_grafana_license_association":          ResourceLicenseAssociation,
+		"aws_grafana_role_association":             ResourceRoleAssociation,
+		"aws_grafana_workspace":                    ResourceWorkspace,
+		"aws_grafana_workspace_api_key":            ResourceWorkspaceAPIKey,
+		"aws_grafana_workspace_saml_configuration": ResourceWorkspaceSAMLConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -29,7 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_signer_signing_job":                ResourceSigningJob,
+		"aws_signer_signing_profile":            ResourceSigningProfile,
+		"aws_signer_signing_profile_permission": ResourceSigningProfilePermission,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -30,7 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudwatch_event_api_destination": ResourceAPIDestination,
+		"aws_cloudwatch_event_archive":         ResourceArchive,
+		"aws_cloudwatch_event_bus":             ResourceBus,
+		"aws_cloudwatch_event_bus_policy":      ResourceBusPolicy,
+		"aws_cloudwatch_event_connection":      ResourceConnection,
+		"aws_cloudwatch_event_permission":      ResourcePermission,
+		"aws_cloudwatch_event_rule":            ResourceRule,
+		"aws_cloudwatch_event_target":          ResourceTarget,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

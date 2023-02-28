@@ -34,7 +34,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_location_geofence_collection": ResourceGeofenceCollection,
+		"aws_location_map":                 ResourceMap,
+		"aws_location_place_index":         ResourcePlaceIndex,
+		"aws_location_route_calculator":    ResourceRouteCalculator,
+		"aws_location_tracker":             ResourceTracker,
+		"aws_location_tracker_association": ResourceTrackerAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -28,7 +28,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecrpublic_repository":        ResourceRepository,
+		"aws_ecrpublic_repository_policy": ResourceRepositoryPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

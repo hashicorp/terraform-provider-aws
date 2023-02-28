@@ -29,7 +29,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_acmpca_certificate":                       ResourceCertificate,
+		"aws_acmpca_certificate_authority":             ResourceCertificateAuthority,
+		"aws_acmpca_certificate_authority_certificate": ResourceCertificateAuthorityCertificate,
+		"aws_acmpca_permission":                        ResourcePermission,
+		"aws_acmpca_policy":                            ResourcePolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

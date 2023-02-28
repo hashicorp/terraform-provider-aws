@@ -29,7 +29,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_mq_broker":        ResourceBroker,
+		"aws_mq_configuration": ResourceConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

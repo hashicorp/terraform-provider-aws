@@ -32,7 +32,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_kendra_data_source":                  ResourceDataSource,
+		"aws_kendra_experience":                   ResourceExperience,
+		"aws_kendra_faq":                          ResourceFaq,
+		"aws_kendra_index":                        ResourceIndex,
+		"aws_kendra_query_suggestions_block_list": ResourceQuerySuggestionsBlockList,
+		"aws_kendra_thesaurus":                    ResourceThesaurus,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

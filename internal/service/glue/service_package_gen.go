@@ -31,7 +31,26 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_glue_catalog_database":                 ResourceCatalogDatabase,
+		"aws_glue_catalog_table":                    ResourceCatalogTable,
+		"aws_glue_classifier":                       ResourceClassifier,
+		"aws_glue_connection":                       ResourceConnection,
+		"aws_glue_crawler":                          ResourceCrawler,
+		"aws_glue_data_catalog_encryption_settings": ResourceDataCatalogEncryptionSettings,
+		"aws_glue_dev_endpoint":                     ResourceDevEndpoint,
+		"aws_glue_job":                              ResourceJob,
+		"aws_glue_ml_transform":                     ResourceMLTransform,
+		"aws_glue_partition":                        ResourcePartition,
+		"aws_glue_partition_index":                  ResourcePartitionIndex,
+		"aws_glue_registry":                         ResourceRegistry,
+		"aws_glue_resource_policy":                  ResourceResourcePolicy,
+		"aws_glue_schema":                           ResourceSchema,
+		"aws_glue_security_configuration":           ResourceSecurityConfiguration,
+		"aws_glue_trigger":                          ResourceTrigger,
+		"aws_glue_user_defined_function":            ResourceUserDefinedFunction,
+		"aws_glue_workflow":                         ResourceWorkflow,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

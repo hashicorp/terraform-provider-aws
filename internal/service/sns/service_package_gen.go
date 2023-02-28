@@ -28,7 +28,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_sns_platform_application": ResourcePlatformApplication,
+		"aws_sns_sms_preferences":      ResourceSMSPreferences,
+		"aws_sns_topic":                ResourceTopic,
+		"aws_sns_topic_policy":         ResourceTopicPolicy,
+		"aws_sns_topic_subscription":   ResourceTopicSubscription,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

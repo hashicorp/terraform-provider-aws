@@ -28,7 +28,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_opensearch_domain":                      ResourceDomain,
+		"aws_opensearch_domain_policy":               ResourceDomainPolicy,
+		"aws_opensearch_domain_saml_options":         ResourceDomainSAMLOptions,
+		"aws_opensearch_inbound_connection_accepter": ResourceInboundConnectionAccepter,
+		"aws_opensearch_outbound_connection":         ResourceOutboundConnection,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

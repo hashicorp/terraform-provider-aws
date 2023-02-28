@@ -30,7 +30,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_batch_compute_environment": ResourceComputeEnvironment,
+		"aws_batch_job_definition":      ResourceJobDefinition,
+		"aws_batch_job_queue":           ResourceJobQueue,
+		"aws_batch_scheduling_policy":   ResourceSchedulingPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -32,7 +32,18 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_backup_framework":                ResourceFramework,
+		"aws_backup_global_settings":          ResourceGlobalSettings,
+		"aws_backup_plan":                     ResourcePlan,
+		"aws_backup_region_settings":          ResourceRegionSettings,
+		"aws_backup_report_plan":              ResourceReportPlan,
+		"aws_backup_selection":                ResourceSelection,
+		"aws_backup_vault":                    ResourceVault,
+		"aws_backup_vault_lock_configuration": ResourceVaultLockConfiguration,
+		"aws_backup_vault_notifications":      ResourceVaultNotifications,
+		"aws_backup_vault_policy":             ResourceVaultPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

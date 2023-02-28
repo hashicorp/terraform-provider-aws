@@ -31,7 +31,18 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cognito_identity_provider":          ResourceIdentityProvider,
+		"aws_cognito_resource_server":            ResourceResourceServer,
+		"aws_cognito_risk_configuration":         ResourceRiskConfiguration,
+		"aws_cognito_user":                       ResourceUser,
+		"aws_cognito_user_group":                 ResourceUserGroup,
+		"aws_cognito_user_in_group":              ResourceUserInGroup,
+		"aws_cognito_user_pool":                  ResourceUserPool,
+		"aws_cognito_user_pool_client":           ResourceUserPoolClient,
+		"aws_cognito_user_pool_domain":           ResourceUserPoolDomain,
+		"aws_cognito_user_pool_ui_customization": ResourceUserPoolUICustomization,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

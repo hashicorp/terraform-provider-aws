@@ -41,7 +41,24 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_connect_bot_association":             ResourceBotAssociation,
+		"aws_connect_contact_flow":                ResourceContactFlow,
+		"aws_connect_contact_flow_module":         ResourceContactFlowModule,
+		"aws_connect_hours_of_operation":          ResourceHoursOfOperation,
+		"aws_connect_instance":                    ResourceInstance,
+		"aws_connect_instance_storage_config":     ResourceInstanceStorageConfig,
+		"aws_connect_lambda_function_association": ResourceLambdaFunctionAssociation,
+		"aws_connect_phone_number":                ResourcePhoneNumber,
+		"aws_connect_queue":                       ResourceQueue,
+		"aws_connect_quick_connect":               ResourceQuickConnect,
+		"aws_connect_routing_profile":             ResourceRoutingProfile,
+		"aws_connect_security_profile":            ResourceSecurityProfile,
+		"aws_connect_user":                        ResourceUser,
+		"aws_connect_user_hierarchy_group":        ResourceUserHierarchyGroup,
+		"aws_connect_user_hierarchy_structure":    ResourceUserHierarchyStructure,
+		"aws_connect_vocabulary":                  ResourceVocabulary,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

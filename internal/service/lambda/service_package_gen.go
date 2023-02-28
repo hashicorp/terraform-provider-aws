@@ -34,7 +34,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lambda_alias":                          ResourceAlias,
+		"aws_lambda_code_signing_config":            ResourceCodeSigningConfig,
+		"aws_lambda_event_source_mapping":           ResourceEventSourceMapping,
+		"aws_lambda_function":                       ResourceFunction,
+		"aws_lambda_function_event_invoke_config":   ResourceFunctionEventInvokeConfig,
+		"aws_lambda_function_url":                   ResourceFunctionURL,
+		"aws_lambda_invocation":                     ResourceInvocation,
+		"aws_lambda_layer_version":                  ResourceLayerVersion,
+		"aws_lambda_layer_version_permission":       ResourceLayerVersionPermission,
+		"aws_lambda_permission":                     ResourcePermission,
+		"aws_lambda_provisioned_concurrency_config": ResourceProvisionedConcurrencyConfig,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

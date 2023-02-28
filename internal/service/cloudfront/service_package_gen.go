@@ -36,7 +36,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudfront_cache_policy":                   ResourceCachePolicy,
+		"aws_cloudfront_distribution":                   ResourceDistribution,
+		"aws_cloudfront_field_level_encryption_config":  ResourceFieldLevelEncryptionConfig,
+		"aws_cloudfront_field_level_encryption_profile": ResourceFieldLevelEncryptionProfile,
+		"aws_cloudfront_function":                       ResourceFunction,
+		"aws_cloudfront_key_group":                      ResourceKeyGroup,
+		"aws_cloudfront_monitoring_subscription":        ResourceMonitoringSubscription,
+		"aws_cloudfront_origin_access_control":          ResourceOriginAccessControl,
+		"aws_cloudfront_origin_access_identity":         ResourceOriginAccessIdentity,
+		"aws_cloudfront_origin_request_policy":          ResourceOriginRequestPolicy,
+		"aws_cloudfront_public_key":                     ResourcePublicKey,
+		"aws_cloudfront_realtime_log_config":            ResourceRealtimeLogConfig,
+		"aws_cloudfront_response_headers_policy":        ResourceResponseHeadersPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

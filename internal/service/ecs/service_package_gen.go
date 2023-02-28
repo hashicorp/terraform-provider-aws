@@ -31,7 +31,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecs_account_setting_default":    ResourceAccountSettingDefault,
+		"aws_ecs_capacity_provider":          ResourceCapacityProvider,
+		"aws_ecs_cluster":                    ResourceCluster,
+		"aws_ecs_cluster_capacity_providers": ResourceClusterCapacityProviders,
+		"aws_ecs_service":                    ResourceService,
+		"aws_ecs_tag":                        ResourceTag,
+		"aws_ecs_task_definition":            ResourceTaskDefinition,
+		"aws_ecs_task_set":                   ResourceTaskSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

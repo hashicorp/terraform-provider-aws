@@ -29,7 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_identitystore_group":            ResourceGroup,
+		"aws_identitystore_group_membership": ResourceGroupMembership,
+		"aws_identitystore_user":             ResourceUser,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

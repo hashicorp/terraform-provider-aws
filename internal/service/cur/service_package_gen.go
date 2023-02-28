@@ -28,7 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cur_report_definition": ResourceReportDefinition,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

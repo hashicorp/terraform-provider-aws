@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_macie_member_account_association": ResourceMemberAccountAssociation,
+		"aws_macie_s3_bucket_association":      ResourceS3BucketAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

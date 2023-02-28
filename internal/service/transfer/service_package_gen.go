@@ -28,7 +28,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_transfer_access":   ResourceAccess,
+		"aws_transfer_server":   ResourceServer,
+		"aws_transfer_ssh_key":  ResourceSSHKey,
+		"aws_transfer_tag":      ResourceTag,
+		"aws_transfer_user":     ResourceUser,
+		"aws_transfer_workflow": ResourceWorkflow,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

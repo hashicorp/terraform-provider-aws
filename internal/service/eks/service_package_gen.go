@@ -34,7 +34,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_eks_addon":                    ResourceAddon,
+		"aws_eks_cluster":                  ResourceCluster,
+		"aws_eks_fargate_profile":          ResourceFargateProfile,
+		"aws_eks_identity_provider_config": ResourceIdentityProviderConfig,
+		"aws_eks_node_group":               ResourceNodeGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

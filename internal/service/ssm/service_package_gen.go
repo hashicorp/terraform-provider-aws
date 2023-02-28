@@ -33,7 +33,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssm_activation":                ResourceActivation,
+		"aws_ssm_association":               ResourceAssociation,
+		"aws_ssm_default_patch_baseline":    ResourceDefaultPatchBaseline,
+		"aws_ssm_document":                  ResourceDocument,
+		"aws_ssm_maintenance_window":        ResourceMaintenanceWindow,
+		"aws_ssm_maintenance_window_target": ResourceMaintenanceWindowTarget,
+		"aws_ssm_maintenance_window_task":   ResourceMaintenanceWindowTask,
+		"aws_ssm_parameter":                 ResourceParameter,
+		"aws_ssm_patch_baseline":            ResourcePatchBaseline,
+		"aws_ssm_patch_group":               ResourcePatchGroup,
+		"aws_ssm_resource_data_sync":        ResourceResourceDataSync,
+		"aws_ssm_service_setting":           ResourceServiceSetting,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

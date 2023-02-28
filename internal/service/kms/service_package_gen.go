@@ -34,7 +34,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_kms_alias":                ResourceAlias,
+		"aws_kms_ciphertext":           ResourceCiphertext,
+		"aws_kms_custom_key_store":     ResourceCustomKeyStore,
+		"aws_kms_external_key":         ResourceExternalKey,
+		"aws_kms_grant":                ResourceGrant,
+		"aws_kms_key":                  ResourceKey,
+		"aws_kms_replica_external_key": ResourceReplicaExternalKey,
+		"aws_kms_replica_key":          ResourceReplicaKey,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

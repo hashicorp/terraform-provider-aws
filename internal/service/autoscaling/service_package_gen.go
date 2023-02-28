@@ -30,7 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_autoscaling_attachment":     ResourceAttachment,
+		"aws_autoscaling_group":          ResourceGroup,
+		"aws_autoscaling_group_tag":      ResourceGroupTag,
+		"aws_autoscaling_lifecycle_hook": ResourceLifecycleHook,
+		"aws_autoscaling_notification":   ResourceNotification,
+		"aws_autoscaling_policy":         ResourcePolicy,
+		"aws_autoscaling_schedule":       ResourceSchedule,
+		"aws_launch_configuration":       ResourceLaunchConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

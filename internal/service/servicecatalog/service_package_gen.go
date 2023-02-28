@@ -32,7 +32,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_servicecatalog_budget_resource_association":     ResourceBudgetResourceAssociation,
+		"aws_servicecatalog_constraint":                      ResourceConstraint,
+		"aws_servicecatalog_organizations_access":            ResourceOrganizationsAccess,
+		"aws_servicecatalog_portfolio":                       ResourcePortfolio,
+		"aws_servicecatalog_portfolio_share":                 ResourcePortfolioShare,
+		"aws_servicecatalog_principal_portfolio_association": ResourcePrincipalPortfolioAssociation,
+		"aws_servicecatalog_product":                         ResourceProduct,
+		"aws_servicecatalog_product_portfolio_association":   ResourceProductPortfolioAssociation,
+		"aws_servicecatalog_provisioned_product":             ResourceProvisionedProduct,
+		"aws_servicecatalog_provisioning_artifact":           ResourceProvisioningArtifact,
+		"aws_servicecatalog_service_action":                  ResourceServiceAction,
+		"aws_servicecatalog_tag_option":                      ResourceTagOption,
+		"aws_servicecatalog_tag_option_resource_association": ResourceTagOptionResourceAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

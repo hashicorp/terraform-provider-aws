@@ -28,7 +28,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudtrail":                  ResourceCloudTrail,
+		"aws_cloudtrail_event_data_store": ResourceEventDataStore,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

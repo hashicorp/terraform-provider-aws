@@ -28,7 +28,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_acm_certificate":            ResourceCertificate,
+		"aws_acm_certificate_validation": ResourceCertificateValidation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

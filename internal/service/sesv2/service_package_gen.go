@@ -28,7 +28,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_sesv2_configuration_set":                   ResourceConfigurationSet,
+		"aws_sesv2_configuration_set_event_destination": ResourceConfigurationSetEventDestination,
+		"aws_sesv2_dedicated_ip_assignment":             ResourceDedicatedIPAssignment,
+		"aws_sesv2_dedicated_ip_pool":                   ResourceDedicatedIPPool,
+		"aws_sesv2_email_identity":                      ResourceEmailIdentity,
+		"aws_sesv2_email_identity_feedback_attributes":  ResourceEmailIdentityFeedbackAttributes,
+		"aws_sesv2_email_identity_mail_from_attributes": ResourceEmailIdentityMailFromAttributes,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

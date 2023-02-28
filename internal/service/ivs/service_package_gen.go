@@ -28,7 +28,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ivs_channel":                 ResourceChannel,
+		"aws_ivs_playback_key_pair":       ResourcePlaybackKeyPair,
+		"aws_ivs_recording_configuration": ResourceRecordingConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

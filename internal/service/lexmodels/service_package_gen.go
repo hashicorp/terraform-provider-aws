@@ -31,7 +31,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lex_bot":       ResourceBot,
+		"aws_lex_bot_alias": ResourceBotAlias,
+		"aws_lex_intent":    ResourceIntent,
+		"aws_lex_slot_type": ResourceSlotType,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

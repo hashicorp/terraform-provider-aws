@@ -35,7 +35,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53_resolver_config":                          ResourceConfig,
+		"aws_route53_resolver_dnssec_config":                   ResourceDNSSECConfig,
+		"aws_route53_resolver_endpoint":                        ResourceEndpoint,
+		"aws_route53_resolver_firewall_config":                 ResourceFirewallConfig,
+		"aws_route53_resolver_firewall_domain_list":            ResourceFirewallDomainList,
+		"aws_route53_resolver_firewall_rule":                   ResourceFirewallRule,
+		"aws_route53_resolver_firewall_rule_group":             ResourceFirewallRuleGroup,
+		"aws_route53_resolver_firewall_rule_group_association": ResourceFirewallRuleGroupAssociation,
+		"aws_route53_resolver_query_log_config":                ResourceQueryLogConfig,
+		"aws_route53_resolver_query_log_config_association":    ResourceQueryLogConfigAssociation,
+		"aws_route53_resolver_rule":                            ResourceRule,
+		"aws_route53_resolver_rule_association":                ResourceRuleAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

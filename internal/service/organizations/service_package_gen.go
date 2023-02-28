@@ -34,7 +34,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_organizations_account":                 ResourceAccount,
+		"aws_organizations_delegated_administrator": ResourceDelegatedAdministrator,
+		"aws_organizations_organization":            ResourceOrganization,
+		"aws_organizations_organizational_unit":     ResourceOrganizationalUnit,
+		"aws_organizations_policy":                  ResourcePolicy,
+		"aws_organizations_policy_attachment":       ResourcePolicyAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

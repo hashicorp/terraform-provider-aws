@@ -29,7 +29,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_kinesis_stream":          ResourceStream,
+		"aws_kinesis_stream_consumer": ResourceStreamConsumer,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

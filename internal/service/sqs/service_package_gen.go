@@ -29,7 +29,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_sqs_queue":                      ResourceQueue,
+		"aws_sqs_queue_policy":               ResourceQueuePolicy,
+		"aws_sqs_queue_redrive_allow_policy": ResourceQueueRedriveAllowPolicy,
+		"aws_sqs_queue_redrive_policy":       ResourceQueueRedrivePolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

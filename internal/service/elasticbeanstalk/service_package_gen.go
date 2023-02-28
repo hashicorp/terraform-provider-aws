@@ -30,7 +30,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elastic_beanstalk_application":            ResourceApplication,
+		"aws_elastic_beanstalk_application_version":    ResourceApplicationVersion,
+		"aws_elastic_beanstalk_configuration_template": ResourceConfigurationTemplate,
+		"aws_elastic_beanstalk_environment":            ResourceEnvironment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

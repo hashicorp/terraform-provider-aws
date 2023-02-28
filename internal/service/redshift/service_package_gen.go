@@ -32,7 +32,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_redshift_authentication_profile":        ResourceAuthenticationProfile,
+		"aws_redshift_cluster":                       ResourceCluster,
+		"aws_redshift_cluster_iam_roles":             ResourceClusterIAMRoles,
+		"aws_redshift_endpoint_access":               ResourceEndpointAccess,
+		"aws_redshift_endpoint_authorization":        ResourceEndpointAuthorization,
+		"aws_redshift_event_subscription":            ResourceEventSubscription,
+		"aws_redshift_hsm_client_certificate":        ResourceHSMClientCertificate,
+		"aws_redshift_hsm_configuration":             ResourceHSMConfiguration,
+		"aws_redshift_parameter_group":               ResourceParameterGroup,
+		"aws_redshift_partner":                       ResourcePartner,
+		"aws_redshift_scheduled_action":              ResourceScheduledAction,
+		"aws_redshift_security_group":                ResourceSecurityGroup,
+		"aws_redshift_snapshot_copy_grant":           ResourceSnapshotCopyGrant,
+		"aws_redshift_snapshot_schedule":             ResourceSnapshotSchedule,
+		"aws_redshift_snapshot_schedule_association": ResourceSnapshotScheduleAssociation,
+		"aws_redshift_subnet_group":                  ResourceSubnetGroup,
+		"aws_redshift_usage_limit":                   ResourceUsageLimit,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
