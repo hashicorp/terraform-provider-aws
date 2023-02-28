@@ -6953,3 +6953,30 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 
 	return instanceState, nil
 }
+
+func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VerifiedAccessTrustProvider, error) {
+	in := &ec2.DescribeVerifiedAccessTrustProvidersInput{
+		VerifiedAccessTrustProviderIds: aws.StringSlice([]string{id}),
+	}
+	out, err := conn.DescribeVerifiedAccessTrustProvidersWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	// if aws.StringValue(out.VerifiedAccessTrustProviders[0].VerifiedAccessTrustProviderId) != id {
+	// 	return nil, &resource.NotFoundError{
+	// 		LastRequest: in,
+	// 	}
+	// }
+
+	return out.VerifiedAccessTrustProviders[0], nil
+}
