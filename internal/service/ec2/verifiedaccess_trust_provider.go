@@ -137,7 +137,7 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			CustomizeDiffValidateOidcOptions,
+			CustomizeDiffValidateOIDCOptions,
 			CustomizeDiffValidateTrustProviderType,
 		),
 	}
@@ -168,7 +168,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.OidcOptions = expandCreateVerifiedAccessTrustProviderOidcOptions(v.([]interface{})[0].(map[string]interface{}))
+		in.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("user_trust_provider_type"); ok {
@@ -223,7 +223,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	d.Set("device_trust_provider_type", out.DeviceTrustProviderType)
 
 	if v := out.OidcOptions; v != nil {
-		if err := d.Set("oidc_options", flattenOidcOptions(v)); err != nil {
+		if err := d.Set("oidc_options", flattenOIDCOptions(v)); err != nil {
 			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
 		}
 	}
@@ -269,7 +269,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 
 		if d.HasChanges("oidc_options") {
 			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				in.OidcOptions = expandModifyVerifiedAccessTrustProviderOidcOptions(v.([]interface{})[0].(map[string]interface{}))
+				in.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
 				update = true
 			}
 		}
@@ -327,7 +327,7 @@ func flattenDeviceOptions(apiObject *ec2.DeviceOptions) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenOidcOptions(apiObject *ec2.OidcOptions) []interface{} {
+func flattenOIDCOptions(apiObject *ec2.OidcOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -373,7 +373,7 @@ func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]inter
 	return a
 }
 
-func expandCreateVerifiedAccessTrustProviderOidcOptions(tfMap map[string]interface{}) *ec2.CreateVerifiedAccessTrustProviderOidcOptions {
+func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interface{}) *ec2.CreateVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -405,7 +405,7 @@ func expandCreateVerifiedAccessTrustProviderOidcOptions(tfMap map[string]interfa
 	return a
 }
 
-func expandModifyVerifiedAccessTrustProviderOidcOptions(tfMap map[string]interface{}) *ec2.ModifyVerifiedAccessTrustProviderOidcOptions {
+func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interface{}) *ec2.ModifyVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -419,7 +419,7 @@ func expandModifyVerifiedAccessTrustProviderOidcOptions(tfMap map[string]interfa
 	return a
 }
 
-func CustomizeDiffValidateOidcOptions(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func CustomizeDiffValidateOIDCOptions(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// oidc_options were not specified, ignore logic
 	if _, ok := diff.GetOk("oidc_options"); !ok {
 		return nil
