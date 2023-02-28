@@ -21,6 +21,7 @@ const (
 	defaultACLRuleNumberIPv6 = 32768
 )
 
+// @SDKResource("aws_default_network_acl")
 func ResourceDefaultNetworkACL() *schema.Resource {
 	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,

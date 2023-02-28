@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_local_gateway_route_table_vpc_association")
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteTableVPCAssociationCreate,
