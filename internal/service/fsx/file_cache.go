@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_file_cache")
 func ResourceFileCache() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileCacheCreate,
