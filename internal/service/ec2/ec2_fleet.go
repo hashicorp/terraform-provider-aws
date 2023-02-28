@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -40,10 +39,12 @@ func ResourceFleet() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
+
 		CustomizeDiff: customdiff.All(
 			resourceFleetCustomizeDiff,
 			verify.SetTagsDiff,
 		),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -59,7 +60,7 @@ func ResourceFleet() *schema.Resource {
 				Default:      ec2.FleetExcessCapacityTerminationPolicyTermination,
 				ValidateFunc: validation.StringInSlice(ec2.FleetExcessCapacityTerminationPolicy_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("type") != "maintain"
+					return d.Get("type") != ec2.FleetTypeMaintain
 				},
 				DiffSuppressOnRefresh: true,
 			},
@@ -129,12 +130,9 @@ func ResourceFleet() *schema.Resource {
 										Optional: true,
 									},
 									"launch_template_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.StringLenBetween(3, 128),
-											validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\(\)\.\-/_]+`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidLaunchTemplateName,
 									},
 									"version": {
 										Type:     schema.TypeString,
@@ -153,11 +151,6 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									// Pending AWS to provide this attribute back in the `Describe` call
-									// "image_id": {
-									// 	Type:     schema.TypeString,
-									// 	Optional: true,
-									// },
 									"instance_requirements": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -229,15 +222,8 @@ func ResourceFleet() *schema.Resource {
 												"allowed_instance_types": {
 													Type:     schema.TypeSet,
 													Optional: true,
-													MinItems: 0,
 													MaxItems: 400,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-														ValidateFunc: validation.Any(
-															validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\(\)\.\-/_]+`), "must begin with a letter and contain only alphanumeric, period, wildcard, or hyphen characters"),
-															validation.StringLenBetween(1, 30),
-														),
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 												"bare_metal": {
 													Type:         schema.TypeString,
@@ -279,15 +265,8 @@ func ResourceFleet() *schema.Resource {
 												"excluded_instance_types": {
 													Type:     schema.TypeSet,
 													Optional: true,
-													MinItems: 0,
 													MaxItems: 400,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-														ValidateFunc: validation.Any(
-															validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\(\)\.\-/_]+`), "must begin with a letter and contain only alphanumeric, period, wildcard, or hyphen characters"),
-															validation.StringLenBetween(1, 30),
-														),
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 												"instance_generations": {
 													Type:     schema.TypeSet,
@@ -484,8 +463,8 @@ func ResourceFleet() *schema.Resource {
 			"on_demand_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				MaxItems:         1,
 				ForceNew:         true,
+				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -538,8 +517,8 @@ func ResourceFleet() *schema.Resource {
 			"spot_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				MaxItems:         1,
 				ForceNew:         true,
+				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -719,7 +698,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
@@ -733,8 +712,8 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Context = aws.String(v.(string))
 	}
 
-	// this argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check
-	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && fleetType == "maintain" {
+	// This argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check.
+	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && fleetType == ec2.FleetTypeMaintain {
 		input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
 	}
 
@@ -757,7 +736,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("valid_from"); ok {
 		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "parsing valid_from: %s", err)
 		}
 		input.ValidFrom = aws.Time(validFrom)
 	}
@@ -765,12 +744,11 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("valid_until"); ok {
 		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "parsing valid_until: %s", err)
 		}
 		input.ValidUntil = aws.Time(validUntil)
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
 	output, err := conn.CreateFleetWithContext(ctx, input)
 
 	if err != nil {
@@ -812,6 +790,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Fleet (%s): %s", d.Id(), err)
 	}
+
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -824,7 +803,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 	if fleet.Instances != nil {
 		if err := d.Set("fleet_instance_set", flattenFleetInstanceSet(fleet.Instances)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting fleet_instance_set: %s", err)
 		}
 	}
 	d.Set("fleet_state", fleet.FleetState)
@@ -857,18 +836,14 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
 	d.Set("type", fleet.Type)
-
 	if fleet.ValidFrom != nil && aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339) != "1970-01-01T00:00:00Z" {
-		d.Set("valid_from",
-			aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339))
+		d.Set("valid_from", aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339))
 	}
-
 	if fleet.ValidUntil != nil && aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339) != "1970-01-01T00:00:00Z" {
-		d.Set("valid_until",
-			aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
+		d.Set("valid_until", aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	tags := KeyValueTags(fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -894,8 +869,9 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if v, ok := d.GetOk("context"); ok {
 			input.Context = aws.String(v.(string))
 		}
-		// this argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check
-		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get("type") == "maintain" {
+
+		// This argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check.
+		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get("type") == ec2.FleetTypeMaintain {
 			input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
 		}
 
@@ -907,7 +883,6 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			TotalTargetCapacity: aws.Int64(int64(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
 		}
 
-		log.Printf("[DEBUG] Modifying EC2 Fleet: %s", input)
 		_, err := conn.ModifyFleetWithContext(ctx, input)
 
 		if err != nil {
@@ -952,8 +927,8 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Fleet (%s): %s", d.Id(), err)
 	}
 
-	// limiting waiter to non-instant fleet types.
-	// `instant` fleet state is eventually consistent and can take 48 hours to update
+	// Limiting waiter to non-instant fleet types.
+	// `instant` fleet state is eventually consistent and can take 48 hours to update.
 	if d.Get("type") != "instant" {
 		delay := 0 * time.Second
 		pendingStates := []string{ec2.FleetStateCodeActive}
@@ -971,6 +946,21 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" { // New resource.
+		if diff.Get("type").(string) != ec2.FleetTypeMaintain {
+			if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
+					return errors.New(`EC2 Fleet has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.`)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func expandCapacityReservationOptionsRequest(tfMap map[string]interface{}) *ec2.CapacityReservationOptionsRequest {
@@ -1098,17 +1088,10 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["image_id"].(string); ok && v != "" {
-		apiObject.ImageId = aws.String(v)
-	}
-
 	if v, ok := tfMap["max_price"].(string); ok && v != "" {
 		apiObject.MaxPrice = aws.String(v)
 	}
 
-	if v, ok := tfMap["placement"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Placement = expandPlacement(v.([]interface{})[0].(map[string]interface{}))
-	}
 	if v, ok := tfMap["priority"].(float64); ok && v != 0 {
 		apiObject.Priority = aws.Float64(v)
 	}
@@ -1411,8 +1394,7 @@ func flattenFleetLaunchTemplateSpecificationForFleet(apiObject *ec2.FleetLaunchT
 	return tfMap
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func flattenLaunchTemplatesAndOverridesResponse(apiObject *ec2.LaunchTemplateAndOverridesResponse) map[string]interface{} {
 // 	if apiObject == nil {
 // 		return nil
@@ -1464,20 +1446,12 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
 	}
 
-	if v := apiObject.ImageId; v != nil {
-		tfMap["image_id"] = aws.StringValue(v)
-	}
-
 	if v := apiObject.InstanceType; v != nil {
 		tfMap["instance_type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MaxPrice; v != nil {
 		tfMap["max_price"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Placement; v != nil {
-		tfMap["placement"] = []interface{}{flattenPlacement(v)}
 	}
 
 	if v := apiObject.Priority; v != nil {
@@ -1633,20 +1607,4 @@ func flattenTargetCapacitySpecification(apiObject *ec2.TargetCapacitySpecificati
 	}
 
 	return tfMap
-}
-
-func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	// input := &ec2.CreateFleetInput{}
-
-	if diff.Id() == "" {
-		if diff.Get("type").(string) != ec2.FleetTypeMaintain {
-			if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
-				if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
-					return errors.New(`EC2 Fleet has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.`)
-				}
-			}
-		}
-	}
-	return nil
 }

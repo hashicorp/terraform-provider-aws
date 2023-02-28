@@ -86,7 +86,7 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if peeringConnectionOptionsAllowsClassicLink(d) {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled`)

@@ -336,6 +336,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"allowed_instance_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bare_metal": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -411,6 +416,22 @@ func DataSourceLaunchTemplate() *schema.Resource {
 									},
 									"min": {
 										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_bandwidth_gbps": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"min": {
+										Type:     schema.TypeFloat,
 										Computed: true,
 									},
 								},
@@ -769,7 +790,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -808,7 +829,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): setting tags: %s", d.Id(), err)
 	}
 

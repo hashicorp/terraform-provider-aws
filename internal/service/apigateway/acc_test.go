@@ -37,7 +37,7 @@ var testAccProviderEdgeDomainNameConfigure sync.Once
 
 // testAccPreCheckEdgeDomainName verifies AWS credentials and that API Gateway Domain Name is supported
 func testAccPreCheckEdgeDomainName(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(apigateway.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, apigateway.EndpointsID)
 
 	region := testAccGetEdgeDomainNameRegion()
 

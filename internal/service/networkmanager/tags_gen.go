@@ -30,22 +30,22 @@ func Tags(tags tftags.KeyValueTags) []*networkmanager.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from networkmanager service tags.
-func KeyValueTags(tags []*networkmanager.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*networkmanager.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(ctx context.Context, conn networkmanageriface.NetworkManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &networkmanager.UntagResourceInput{

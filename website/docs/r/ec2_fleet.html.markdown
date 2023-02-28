@@ -88,16 +88,12 @@ resource "aws_ec2_fleet" "example" {
 ```
 
 * `availability_zone` - (Optional) Availability Zone in which to launch the instances.
-* `instance_requirements` - (Optional)The attributes for the instance types. When you specify instance attributes, Amazon EC2 will identify instance types with those attributes.
-    If you specify `InstanceRequirements`, you can't specify `InstanceType`.
-
+* `instance_requirements` - (Optional) Override the instance type in the Launch Template with instance types that satisfy the requirements.
 * `instance_type` - (Optional) Instance type.
-    If you specify `InstanceType`, you can't specify `InstanceRequirements`.
-
 * `max_price` - (Optional) Maximum price per unit hour that you are willing to pay for a Spot Instance.
-* `priority` - (Optional) The priority for the launch template override. The highest priority is launched first. If `on_demand_options` `allocation_strategy` is set to `prioritized`, EC2 Fleet uses priority to determine which launch template override to use first in fulfilling On-Demand capacity. The highest priority is launched first. If the On-Demand `AllocationStrategy` is set to `prioritized`, EC2 Fleet uses priority to determine which launch template override to use first in fulfilling On-Demand capacity. If the Spot `AllocationStrategy` is set to `capacity-optimized-prioritized`, EC2 Fleet uses priority on a best-effort basis to determine which launch template override to use in fulfilling Spot capacity, but optimizes for capacity first. Valid values are whole numbers starting at `0`. The lower the number, the higher the priority. If no number is set, the launch template override has the lowest priority. You can set the same priority for different launch template overrides.
-* `subnet_id` - (Optional) The IDs of the subnet in which to launch the instances. A request of type `instant` can have only one subnet ID.
-* `weighted_capacity` - (Optional) The number of units provided by the specified instance type.
+* `priority` - (Optional) Priority for the launch template override. If `on_demand_options` `allocation_strategy` is set to `prioritized`, EC2 Fleet uses priority to determine which launch template override to use first in fulfilling On-Demand capacity. The highest priority is launched first. The lower the number, the higher the priority. If no number is set, the launch template override has the lowest priority. Valid values are whole numbers starting at 0.
+* `subnet_id` - (Optional) ID of the subnet in which to launch the instances.
+* `weighted_capacity` - (Optional) Number of units provided by the specified instance type.
 
 ##### instance_requirements
 

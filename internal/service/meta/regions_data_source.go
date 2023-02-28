@@ -13,11 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceRegions)
-}
-
-// newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
+// @FrameworkDataSource
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
 	d.SetMigratedFromPluginSDK(true)

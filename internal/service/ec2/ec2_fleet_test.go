@@ -364,8 +364,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 	})
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func TestAccEC2Fleet_LaunchTemplateOverride_imageId(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	var fleet1 ec2.FleetData
@@ -865,7 +864,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
 	})
 }
 
-func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidthGbpsRequest(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleet ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -878,27 +877,21 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-					`memory_mib {
-						min = 500
-					}
-					network_bandwidth_gbps {
-						min = 1
-					}
-					vcpu_count {
-					  min = 1
-					}`),
+					`allowed_instance_types = ["m4.large"]
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.min", "500"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m4.large"),
 				),
 			},
 			{
@@ -909,17 +902,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 			},
 			{
 				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-					`memory_mib {
+					`allowed_instance_types = ["m4.large", "m5.*", "m6*"]
+                     memory_mib {
                        min = 500
-                       max = 24000
                      }
-					 network_bandwidth_gbps {
-						min = 1
-						max = 999999
-					}
                      vcpu_count {
                        min = 1
-                       max = 8
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
@@ -927,15 +915,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.min", "500"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.max", "24000"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "999999"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.max", "8"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m4.large"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m5.*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m6*"),
 				),
 			},
 			{
@@ -1671,6 +1654,104 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 	})
 }
 
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidthGbps(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+					   min = 1.5
+				    }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "1.5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+			{
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+                       max = 200
+                     }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "200"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+			{
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`network_bandwidth_gbps {
+                       min = 2.5
+                       max = 250
+                     }
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "2.5"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "250"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfaceCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleet ec2.FleetData
@@ -1807,34 +1888,6 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
 		},
 	})
 }
-
-// Pending AWS to provide this attribute back in the `Describe` call
-
-// func TestAccEC2Fleet_LaunchTemplateOverride_placement(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var fleet1 ec2.FleetData
-// 	resourceName := "aws_ec2_fleet.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccFleetConfig_launchTemplateOverridePlacement(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement.group_name", rName),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernateSupport(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2118,6 +2171,33 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 	})
 }
 
+// Pending AWS to provide this attribute back in the `Describe` call.
+// func TestAccEC2Fleet_LaunchTemplateOverride_placement(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var fleet1 ec2.FleetData
+// 	resourceName := "aws_ec2_fleet.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccFleetConfig_launchTemplateOverridePlacement(rName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement.group_name", rName),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
+
 func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleet1, fleet2 ec2.FleetData
@@ -2368,8 +2448,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	})
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	var fleet1 ec2.FleetData
@@ -3220,28 +3299,9 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_multipleNetworkInterfaces(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.0.0/24"
-  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -3272,7 +3332,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id       = aws_subnet.test.id
+  subnet_id       = aws_subnet.test[0].id
   security_groups = [aws_security_group.test.id]
 
   tags = {
@@ -3300,7 +3360,7 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     device_index          = 1
     delete_on_termination = true
-    subnet_id             = aws_subnet.test.id
+    subnet_id             = aws_subnet.test[0].id
   }
 }
 
@@ -3486,8 +3546,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, availabilityZoneIndex))
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func testAccFleetConfig_launchTemplateOverrideImageId(rName string) string {
 // 	return acctest.ConfigCompose(
 // 		testAccFleetConfig_BaseLaunchTemplate(rName),
@@ -3607,8 +3666,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, maxPrice))
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func testAccFleetConfig_launchTemplateOverridePlacement(rName string) string {
 // 	return acctest.ConfigCompose(
 // 		testAccFleetConfig_BaseLaunchTemplate(rName),
@@ -3704,26 +3762,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateOverrideSubnetID(rName string, subnetIndex int) string {
-	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  cidr_block = "10.1.${count.index}.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
@@ -3832,8 +3871,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call
-
+// Pending AWS to provide this attribute back in the `Describe` call.
 // func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
 // 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 // resource "aws_ec2_fleet" "test" {
@@ -3909,6 +3947,7 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "on-demand"
     total_target_capacity        = 0
   }
+
   terminate_instances = true
   type                = "instant"
 
@@ -3937,6 +3976,7 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "on-demand"
     total_target_capacity        = 0
   }
+
   terminate_instances = true
   type                = "instant"
 
@@ -3965,6 +4005,7 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "on-demand"
     total_target_capacity        = 0
   }
+
   terminate_instances = true
   type                = "instant"
 
@@ -4312,6 +4353,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   terminate_instances = %[3]t
+
   tags = {
     Name = %[1]q
   }
@@ -4322,8 +4364,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccFleetConfig_type(rName, fleetType string, excessCapacityTerminationPolicy string, terminateInstance bool) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  type = %[2]q
-
+  type                               = %[2]q
   excess_capacity_termination_policy = %[3]q
 
   launch_template_config {
@@ -4339,6 +4380,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   terminate_instances = %[4]t
+
   tags = {
     Name = %[1]q
   }
@@ -4349,8 +4391,6 @@ resource "aws_ec2_fleet" "test" {
 func testAccFleetConfig_validFrom(rName, validFrom string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-
-
   launch_template_config {
     launch_template_specification {
       launch_template_id = aws_launch_template.test.id
@@ -4375,8 +4415,6 @@ resource "aws_ec2_fleet" "test" {
 func testAccFleetConfig_validUntil(rName, validUntil string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-
-
   launch_template_config {
     launch_template_specification {
       launch_template_id = aws_launch_template.test.id
