@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appconfig_configuration_profile")
 func ResourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationProfileCreate,

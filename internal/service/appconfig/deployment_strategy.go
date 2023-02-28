@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appconfig_deployment_strategy")
 func ResourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
