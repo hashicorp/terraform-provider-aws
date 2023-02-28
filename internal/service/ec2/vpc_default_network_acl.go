@@ -34,7 +34,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
 		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
-		DeleteContext:        resourceDefaultNetworkACLDelete, // nosemgrep:ci.avoid-context-CRUD-handlers
+		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
