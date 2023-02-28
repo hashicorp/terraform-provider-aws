@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_rule_group")
 func ResourceFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleGroupCreate,
