@@ -264,6 +264,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			ds := v()
 
+			// Ensure that the correct CRUD handler variants are used.
+			if ds.Read != nil || ds.ReadContext != nil {
+				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				continue
+			}
+
 			if v := ds.ReadWithoutTimeout; v != nil {
 				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
 			}
@@ -278,6 +284,24 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			r := v()
+
+			// Ensure that the correct CRUD handler variants are used.
+			if r.Create != nil || r.CreateContext != nil {
+				errs = multierror.Append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
+				continue
+			}
+			if r.Read != nil || r.ReadContext != nil {
+				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				continue
+			}
+			if r.Update != nil || r.UpdateContext != nil {
+				errs = multierror.Append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
+				continue
+			}
+			if r.Delete != nil || r.DeleteContext != nil {
+				errs = multierror.Append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
+				continue
+			}
 
 			if v := r.CreateWithoutTimeout; v != nil {
 				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
