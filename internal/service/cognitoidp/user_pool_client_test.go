@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -446,6 +447,7 @@ func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckResourceAttr(resourceName, "generate_secret", "true"),
+					resource.TestMatchResourceAttr(resourceName, "client_secret", regexp.MustCompile(`\w+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "read_attributes.*", "email"),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "1"),

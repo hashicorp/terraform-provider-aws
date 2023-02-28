@@ -2,10 +2,11 @@ package flex
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -35,15 +36,18 @@ func ARNStringFromFramework(_ context.Context, v fwtypes.ARN) *string {
 	return aws.String(v.ValueARN().String())
 }
 
-func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) basetypes.StringValuable {
+func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) fwtypes.ARN {
 	if v == nil {
 		return fwtypes.ARNNull()
 	}
 
-	s := StringToFramework(ctx, v)
+	a, err := arn.Parse(aws.ToString(v))
+	if err != nil {
+		diags.AddError(
+			"Parsing Error",
+			fmt.Sprintf("String %s cannot be parsed as an ARN.", aws.ToString(v)),
+		)
+	}
 
-	x, d := fwtypes.ARNType.ValueFromString(ctx, s)
-	diags.Append(d...)
-
-	return x
+	return fwtypes.ARNValue(a)
 }
