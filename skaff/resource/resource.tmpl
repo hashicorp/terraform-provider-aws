@@ -81,7 +81,7 @@ import (
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 {{- end }}
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT
+// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("{{ .ProviderResourceName }}")
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
