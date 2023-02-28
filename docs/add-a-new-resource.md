@@ -49,6 +49,7 @@ func ResourceExample() *schema.Resource {
 	}
 }
 ```
+
 ### Write passing Acceptance Tests
 In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
