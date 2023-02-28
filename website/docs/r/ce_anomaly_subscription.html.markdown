@@ -37,7 +37,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 }
 ```
 
-### threshold_expression
+### Threshold Expression
 
 ```terraform
 resource "aws_ce_anomaly_subscription" "test" {
