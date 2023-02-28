@@ -20,6 +20,7 @@ import (
 
 const EmptyBasePathMappingValue = "(none)"
 
+// @SDKResource("aws_api_gateway_base_path_mapping")
 func ResourceBasePathMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBasePathMappingCreate,

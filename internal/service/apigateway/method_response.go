@@ -22,6 +22,7 @@ import (
 
 var resourceMethodResponseMutex = &sync.Mutex{}
 
+// @SDKResource("aws_api_gateway_method_response")
 func ResourceMethodResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMethodResponseCreate,
