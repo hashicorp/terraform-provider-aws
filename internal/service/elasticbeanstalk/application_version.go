@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elastic_beanstalk_application_version")
 func ResourceApplicationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationVersionCreate,
