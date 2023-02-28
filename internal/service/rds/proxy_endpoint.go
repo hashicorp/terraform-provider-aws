@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_db_proxy_endpoint")
 func ResourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,

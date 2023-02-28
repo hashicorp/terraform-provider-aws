@@ -33,6 +33,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_db_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
