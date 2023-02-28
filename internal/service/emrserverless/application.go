@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_emrserverless_application")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
