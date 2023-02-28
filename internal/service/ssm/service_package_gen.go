@@ -22,7 +22,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssm_document":            DataSourceDocument,
+		"aws_ssm_instances":           DataSourceInstances,
+		"aws_ssm_maintenance_windows": DataSourceMaintenanceWindows,
+		"aws_ssm_parameter":           DataSourceParameter,
+		"aws_ssm_parameters_by_path":  DataSourceParametersByPath,
+		"aws_ssm_patch_baseline":      DataSourcePatchBaseline,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

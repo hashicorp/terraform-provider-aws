@@ -22,7 +22,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_kms_alias":            DataSourceAlias,
+		"aws_kms_ciphertext":       DataSourceCiphertext,
+		"aws_kms_custom_key_store": DataSourceCustomKeyStore,
+		"aws_kms_key":              DataSourceKey,
+		"aws_kms_public_key":       DataSourcePublicKey,
+		"aws_kms_secret":           DataSourceSecret,
+		"aws_kms_secrets":          DataSourceSecrets,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

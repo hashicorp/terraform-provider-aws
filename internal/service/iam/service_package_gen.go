@@ -22,7 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_iam_account_alias":           DataSourceAccountAlias,
+		"aws_iam_group":                   DataSourceGroup,
+		"aws_iam_instance_profile":        DataSourceInstanceProfile,
+		"aws_iam_instance_profiles":       DataSourceInstanceProfiles,
+		"aws_iam_openid_connect_provider": DataSourceOpenIDConnectProvider,
+		"aws_iam_policy":                  DataSourcePolicy,
+		"aws_iam_policy_document":         DataSourcePolicyDocument,
+		"aws_iam_role":                    DataSourceRole,
+		"aws_iam_roles":                   DataSourceRoles,
+		"aws_iam_saml_provider":           DataSourceSAMLProvider,
+		"aws_iam_server_certificate":      DataSourceServerCertificate,
+		"aws_iam_session_context":         DataSourceSessionContext,
+		"aws_iam_user":                    DataSourceUser,
+		"aws_iam_user_ssh_key":            DataSourceUserSSHKey,
+		"aws_iam_users":                   DataSourceUsers,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

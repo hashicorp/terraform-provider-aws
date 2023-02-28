@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_service_discovery_dns_namespace":  DataSourceDNSNamespace,
+		"aws_service_discovery_http_namespace": DataSourceHTTPNamespace,
+		"aws_service_discovery_service":        DataSourceService,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

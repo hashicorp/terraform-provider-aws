@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_redshift_cluster":             DataSourceCluster,
+		"aws_redshift_cluster_credentials": DataSourceClusterCredentials,
+		"aws_redshift_orderable_cluster":   DataSourceOrderableCluster,
+		"aws_redshift_service_account":     DataSourceServiceAccount,
+		"aws_redshift_subnet_group":        DataSourceSubnetGroup,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

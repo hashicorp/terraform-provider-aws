@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudwatch_event_bus":        DataSourceBus,
+		"aws_cloudwatch_event_connection": DataSourceConnection,
+		"aws_cloudwatch_event_source":     DataSourceSource,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

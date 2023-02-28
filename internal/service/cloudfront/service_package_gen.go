@@ -22,7 +22,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudfront_cache_policy":                   DataSourceCachePolicy,
+		"aws_cloudfront_distribution":                   DataSourceDistribution,
+		"aws_cloudfront_function":                       DataSourceFunction,
+		"aws_cloudfront_log_delivery_canonical_user_id": DataSourceLogDeliveryCanonicalUserID,
+		"aws_cloudfront_origin_access_identities":       DataSourceOriginAccessIdentities,
+		"aws_cloudfront_origin_access_identity":         DataSourceOriginAccessIdentity,
+		"aws_cloudfront_origin_request_policy":          DataSourceOriginRequestPolicy,
+		"aws_cloudfront_realtime_log_config":            DataSourceRealtimeLogConfig,
+		"aws_cloudfront_response_headers_policy":        DataSourceResponseHeadersPolicy,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

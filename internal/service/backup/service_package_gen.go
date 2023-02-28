@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_backup_framework":   DataSourceFramework,
+		"aws_backup_plan":        DataSourcePlan,
+		"aws_backup_report_plan": DataSourceReportPlan,
+		"aws_backup_selection":   DataSourceSelection,
+		"aws_backup_vault":       DataSourceVault,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

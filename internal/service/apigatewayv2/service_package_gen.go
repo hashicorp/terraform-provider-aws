@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_apigatewayv2_api":    DataSourceAPI,
+		"aws_apigatewayv2_apis":   DataSourceAPIs,
+		"aws_apigatewayv2_export": DataSourceExport,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

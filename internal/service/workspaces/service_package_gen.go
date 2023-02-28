@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_workspaces_bundle":    DataSourceBundle,
+		"aws_workspaces_directory": DataSourceDirectory,
+		"aws_workspaces_image":     DataSourceImage,
+		"aws_workspaces_workspace": DataSourceWorkspace,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

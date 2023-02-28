@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_glue_catalog_table":                    DataSourceCatalogTable,
+		"aws_glue_connection":                       DataSourceConnection,
+		"aws_glue_data_catalog_encryption_settings": DataSourceDataCatalogEncryptionSettings,
+		"aws_glue_script":                           DataSourceScript,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

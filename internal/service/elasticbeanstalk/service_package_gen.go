@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elastic_beanstalk_application":    DataSourceApplication,
+		"aws_elastic_beanstalk_hosted_zone":    DataSourceHostedZone,
+		"aws_elastic_beanstalk_solution_stack": DataSourceSolutionStack,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

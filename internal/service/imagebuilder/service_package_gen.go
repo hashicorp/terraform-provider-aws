@@ -22,7 +22,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_imagebuilder_component":                     DataSourceComponent,
+		"aws_imagebuilder_components":                    DataSourceComponents,
+		"aws_imagebuilder_container_recipe":              DataSourceContainerRecipe,
+		"aws_imagebuilder_container_recipes":             DataSourceContainerRecipes,
+		"aws_imagebuilder_distribution_configuration":    DataSourceDistributionConfiguration,
+		"aws_imagebuilder_distribution_configurations":   DataSourceDistributionConfigurations,
+		"aws_imagebuilder_image":                         DataSourceImage,
+		"aws_imagebuilder_image_pipeline":                DataSourceImagePipeline,
+		"aws_imagebuilder_image_pipelines":               DataSourceImagePipelines,
+		"aws_imagebuilder_image_recipe":                  DataSourceImageRecipe,
+		"aws_imagebuilder_image_recipes":                 DataSourceImageRecipes,
+		"aws_imagebuilder_infrastructure_configuration":  DataSourceInfrastructureConfiguration,
+		"aws_imagebuilder_infrastructure_configurations": DataSourceInfrastructureConfigurations,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

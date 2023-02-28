@@ -22,7 +22,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkmanager_connection":                   DataSourceConnection,
+		"aws_networkmanager_connections":                  DataSourceConnections,
+		"aws_networkmanager_core_network_policy_document": DataSourceCoreNetworkPolicyDocument,
+		"aws_networkmanager_device":                       DataSourceDevice,
+		"aws_networkmanager_devices":                      DataSourceDevices,
+		"aws_networkmanager_global_network":               DataSourceGlobalNetwork,
+		"aws_networkmanager_global_networks":              DataSourceGlobalNetworks,
+		"aws_networkmanager_link":                         DataSourceLink,
+		"aws_networkmanager_links":                        DataSourceLinks,
+		"aws_networkmanager_site":                         DataSourceSite,
+		"aws_networkmanager_sites":                        DataSourceSites,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

@@ -22,7 +22,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53_resolver_endpoint":                        DataSourceEndpoint,
+		"aws_route53_resolver_firewall_config":                 DataSourceFirewallConfig,
+		"aws_route53_resolver_firewall_domain_list":            DataSourceFirewallDomainList,
+		"aws_route53_resolver_firewall_rule_group":             DataSourceFirewallRuleGroup,
+		"aws_route53_resolver_firewall_rule_group_association": DataSourceFirewallRuleGroupAssociation,
+		"aws_route53_resolver_firewall_rules":                  DataSourceResolverFirewallRules,
+		"aws_route53_resolver_rule":                            DataSourceRule,
+		"aws_route53_resolver_rules":                           DataSourceRules,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

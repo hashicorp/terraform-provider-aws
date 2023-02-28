@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_canonical_user_id": DataSourceCanonicalUserID,
+		"aws_s3_bucket":         DataSourceBucket,
+		"aws_s3_bucket_policy":  DataSourceBucketPolicy,
+		"aws_s3_object":         DataSourceObject,
+		"aws_s3_objects":        DataSourceObjects,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

@@ -22,7 +22,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_organizations_delegated_administrators":                DataSourceDelegatedAdministrators,
+		"aws_organizations_delegated_services":                      DataSourceDelegatedServices,
+		"aws_organizations_organization":                            DataSourceOrganization,
+		"aws_organizations_organizational_unit_child_accounts":      DataSourceOrganizationalUnitChildAccounts,
+		"aws_organizations_organizational_unit_descendant_accounts": DataSourceOrganizationalUnitDescendantAccounts,
+		"aws_organizations_organizational_units":                    DataSourceOrganizationalUnits,
+		"aws_organizations_resource_tags":                           DataSourceResourceTags,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

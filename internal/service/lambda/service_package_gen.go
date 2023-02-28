@@ -22,7 +22,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lambda_alias":               DataSourceAlias,
+		"aws_lambda_code_signing_config": DataSourceCodeSigningConfig,
+		"aws_lambda_function":            DataSourceFunction,
+		"aws_lambda_function_url":        DataSourceFunctionURL,
+		"aws_lambda_functions":           DataSourceFunctions,
+		"aws_lambda_invocation":          DataSourceInvocation,
+		"aws_lambda_layer_version":       DataSourceLayerVersion,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

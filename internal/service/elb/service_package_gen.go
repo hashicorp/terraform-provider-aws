@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elb":                 DataSourceLoadBalancer,
+		"aws_elb_hosted_zone_id":  DataSourceHostedZoneID,
+		"aws_elb_service_account": DataSourceServiceAccount,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

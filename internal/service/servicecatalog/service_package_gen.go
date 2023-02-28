@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_servicecatalog_constraint":            DataSourceConstraint,
+		"aws_servicecatalog_launch_paths":          DataSourceLaunchPaths,
+		"aws_servicecatalog_portfolio":             DataSourcePortfolio,
+		"aws_servicecatalog_portfolio_constraints": DataSourcePortfolioConstraints,
+		"aws_servicecatalog_product":               DataSourceProduct,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

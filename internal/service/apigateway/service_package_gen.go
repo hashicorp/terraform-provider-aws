@@ -22,7 +22,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_api_gateway_api_key":     DataSourceAPIKey,
+		"aws_api_gateway_domain_name": DataSourceDomainName,
+		"aws_api_gateway_export":      DataSourceExport,
+		"aws_api_gateway_resource":    DataSourceResource,
+		"aws_api_gateway_rest_api":    DataSourceRestAPI,
+		"aws_api_gateway_sdk":         DataSourceSdk,
+		"aws_api_gateway_vpc_link":    DataSourceVPCLink,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

@@ -25,7 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53_delegation_set":          DataSourceDelegationSet,
+		"aws_route53_traffic_policy_document": DataSourceTrafficPolicyDocument,
+		"aws_route53_zone":                    DataSourceZone,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

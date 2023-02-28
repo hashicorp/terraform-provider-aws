@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appconfig_configuration_profile":  DataSourceConfigurationProfile,
+		"aws_appconfig_configuration_profiles": DataSourceConfigurationProfiles,
+		"aws_appconfig_environment":            DataSourceEnvironment,
+		"aws_appconfig_environments":           DataSourceEnvironments,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

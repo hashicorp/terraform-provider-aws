@@ -24,7 +24,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_db_cluster_snapshot":            DataSourceClusterSnapshot,
+		"aws_db_event_categories":            DataSourceEventCategories,
+		"aws_db_instance":                    DataSourceInstance,
+		"aws_db_instances":                   DataSourceInstances,
+		"aws_db_proxy":                       DataSourceProxy,
+		"aws_db_snapshot":                    DataSourceSnapshot,
+		"aws_db_subnet_group":                DataSourceSubnetGroup,
+		"aws_rds_certificate":                DataSourceCertificate,
+		"aws_rds_cluster":                    DataSourceCluster,
+		"aws_rds_clusters":                   DataSourceClusters,
+		"aws_rds_engine_version":             DataSourceEngineVersion,
+		"aws_rds_orderable_db_instance":      DataSourceOrderableInstance,
+		"aws_rds_reserved_instance_offering": DataSourceReservedOffering,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

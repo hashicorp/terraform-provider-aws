@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_wafregional_ipset":                 DataSourceIPSet,
+		"aws_wafregional_rate_based_rule":       DataSourceRateBasedRule,
+		"aws_wafregional_rule":                  DataSourceRule,
+		"aws_wafregional_subscribed_rule_group": DataSourceSubscribedRuleGroup,
+		"aws_wafregional_web_acl":               DataSourceWebACL,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

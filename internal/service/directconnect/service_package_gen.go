@@ -22,7 +22,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dx_connection":           DataSourceConnection,
+		"aws_dx_gateway":              DataSourceGateway,
+		"aws_dx_location":             DataSourceLocation,
+		"aws_dx_locations":            DataSourceLocations,
+		"aws_dx_router_configuration": DataSourceRouterConfiguration,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

@@ -22,7 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ses_active_receipt_rule_set": DataSourceActiveReceiptRuleSet,
+		"aws_ses_domain_identity":         DataSourceDomainIdentity,
+		"aws_ses_email_identity":          DataSourceEmailIdentity,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

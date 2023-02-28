@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecs_cluster":              DataSourceCluster,
+		"aws_ecs_container_definition": DataSourceContainerDefinition,
+		"aws_ecs_service":              DataSourceService,
+		"aws_ecs_task_definition":      DataSourceTaskDefinition,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

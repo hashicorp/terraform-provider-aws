@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cognito_user_pool_client":              DataSourceUserPoolClient,
+		"aws_cognito_user_pool_clients":             DataSourceUserPoolClients,
+		"aws_cognito_user_pool_signing_certificate": DataSourceUserPoolSigningCertificate,
+		"aws_cognito_user_pools":                    DataSourceUserPools,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {

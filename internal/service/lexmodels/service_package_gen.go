@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lex_bot":       DataSourceBot,
+		"aws_lex_bot_alias": DataSourceBotAlias,
+		"aws_lex_intent":    DataSourceIntent,
+		"aws_lex_slot_type": DataSourceSlotType,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
