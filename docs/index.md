@@ -48,4 +48,6 @@ In addition to contributions, we welcome [bug reports](https://github.com/hashic
 
 ### Join the Contributors Slack
 
-For frequent contributors, it's useful to join the contributors Slack channel hosted within the HashiCorp Slack workspace. To do so, fill out the [request form](https://forms.gle/Gf9ZAmUYXuzafkct6) to request to be added. Please allow time for the request to be reviewed and processed.
+For frequent contributors, it's useful to join the contributors Slack channel hosted within the HashiCorp Slack workspace. This Slack channel is used to discuss topics such as general contribution questions, suggestions for improving the contribution process, coordinating on pair programming sessions, etc. The channel is not intended as a place to request status updates on open issues or pull requests. For prioritization questions, instead refer to the [prioritization guide](prioritization.md).
+
+To request to join, fill out the [request form](https://forms.gle/Gf9ZAmUYXuzafkct6) and allow time for the request to be reviewed and processed.
