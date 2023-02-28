@@ -3204,3 +3204,18 @@ rules:
           patterns:
             - pattern-regex: "(?i)Inspector2"
     severity: WARNING
+  - id: inspectorv2-in-func-name
+    languages:
+      - go
+    message: Do not use "inspectorv2" in func name inside inspector2 package
+    paths:
+      include:
+        - internal/service/inspector2
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)inspectorv2"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING

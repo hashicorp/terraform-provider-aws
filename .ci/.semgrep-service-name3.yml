@@ -2797,6 +2797,21 @@ rules:
             - pattern-not-regex: "^TestAccTransitGateway"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: verifiedaccess-in-test-name
+    languages:
+      - go
+    message: Include "VerfiedAccess" in test name
+    paths:
+      include:
+        - internal/service/ec2/verifiedaccess_*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccVerfiedAccess"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
   - id: vpc-in-test-name
     languages:
       - go
