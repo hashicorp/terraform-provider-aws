@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.5
