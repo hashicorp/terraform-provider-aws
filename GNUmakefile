@@ -138,6 +138,10 @@ gen:
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
+	# Generate service package data last as it may depend on output of earlier generators.
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
+	$(GO_VER) generate ./internal/generate/servicepackages
 
 gencheck:
 	@echo "==> Checking generated source code..."
