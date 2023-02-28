@@ -1,5 +1,5 @@
 ---
-subcategory: "Verfied Access"
+subcategory: "Verified Access"
 layout: "aws"
 page_title: "AWS: aws_verifiedaccess_trust_provider"
 description: |-
