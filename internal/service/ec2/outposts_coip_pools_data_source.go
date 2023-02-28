@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_coip_pools")
 func DataSourceCoIPPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCoIPPoolsRead,
