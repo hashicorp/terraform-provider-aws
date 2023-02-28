@@ -37,6 +37,18 @@ These will map planned Terraform state to the AWS API call, or an AWS API respon
 
 Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make servicepackages` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
+```
+package something
+
+import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+// @SDKResource("aws_something_example")
+func ResourceExample() *schema.Resource {
+	return &schema.Resource{
+	    // some configuration
+	}
+}
+```
 ### Write passing Acceptance Tests
 In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
