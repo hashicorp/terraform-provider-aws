@@ -218,9 +218,10 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"memory_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  128,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      128,
+				ValidateFunc: validation.IntBetween(128, 10240),
 			},
 			"package_type": {
 				Type:             schema.TypeString,
