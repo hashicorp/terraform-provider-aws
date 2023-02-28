@@ -12,7 +12,7 @@ Provides a DMS (Data Migration Service) endpoint resource. DMS endpoints can be 
 
 ~> **Note:** All arguments including the password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **Note:** The `s3_settings` argument is deprecated and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
+~> **Note:** The `s3_settings` argument is deprecated, may not be maintained, and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
 
 ## Example Usage
 
@@ -150,7 +150,7 @@ The following arguments are optional:
 
 ### s3_settings
 
-~> **Deprecated:** This argument is deprecated and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
+~> **Deprecated:** This argument is deprecated, may not be maintained, and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
 
 -> Additional information can be found in the [Using Amazon S3 as a Source for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.S3.html) and [Using Amazon S3 as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html).
 
