@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lambda_code_signing_config")
 func ResourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCodeSigningConfigCreate,
