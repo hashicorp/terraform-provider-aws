@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_backup_vault_policy")
 func ResourceVaultPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultPolicyPut,
