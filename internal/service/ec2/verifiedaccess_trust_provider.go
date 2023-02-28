@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_verifiedaccess_trust_provider")
 func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 
