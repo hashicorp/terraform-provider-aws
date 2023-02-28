@@ -10,6 +10,9 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `db2` engine ([#29380](https://github.com/hashicorp/terraform-provider-aws/issues/29380))
 * resource/aws_dms_endpoint: Add support for `azure-sql-managed-instance` `engine_name` value ([#28960](https://github.com/hashicorp/terraform-provider-aws/issues/28960))
 * resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.allowed_instance_types` and `launch_template_config.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_lambda_function: Add `skip_destroy` argument ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
+* resource/aws_lambda_function: Add configurable timeout for Delete ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
+* resource/aws_lambda_function: Retry (up to the configurable timeout) deletion of replicated Lambda@Edge functions ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 
