@@ -24,6 +24,7 @@ const (
 	AttrObjectPath = "object_path"
 )
 
+// @SDKResource("aws_appflow_flow")
 func ResourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
