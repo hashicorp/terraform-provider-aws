@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_policy")
 func DataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
