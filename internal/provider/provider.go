@@ -1304,7 +1304,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
 			"aws_dynamodb_table_replica":                 dynamodb.ResourceTableReplica(),
-			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
 
 			"aws_ami":                                              ec2.ResourceAMI(),
 			"aws_ami_copy":                                         ec2.ResourceAMICopy(),
@@ -1341,7 +1340,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
-			"aws_ec2_tag":                                          ec2.ResourceTag(),
 			"aws_ec2_traffic_mirror_filter":                        ec2.ResourceTrafficMirrorFilter(),
 			"aws_ec2_traffic_mirror_filter_rule":                   ec2.ResourceTrafficMirrorFilterRule(),
 			"aws_ec2_traffic_mirror_session":                       ec2.ResourceTrafficMirrorSession(),
@@ -1442,7 +1440,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ecs_cluster":                    ecs.ResourceCluster(),
 			"aws_ecs_cluster_capacity_providers": ecs.ResourceClusterCapacityProviders(),
 			"aws_ecs_service":                    ecs.ResourceService(),
-			"aws_ecs_tag":                        ecs.ResourceTag(),
 			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
 			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
@@ -2151,7 +2148,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
 			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
-			"aws_transfer_tag":      transfer.ResourceTag(),
 			"aws_transfer_user":     transfer.ResourceUser(),
 			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 

@@ -32,7 +32,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ec2_tag": ResourceTag,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

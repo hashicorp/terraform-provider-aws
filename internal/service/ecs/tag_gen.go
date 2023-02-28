@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
+// @SDKResource("aws_ecs_tag")
 func ResourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagCreate,
