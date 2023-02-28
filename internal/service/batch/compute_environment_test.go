@@ -694,7 +694,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/batch")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/batch")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -50,6 +50,7 @@ CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Logs
+CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact

@@ -2,6 +2,8 @@
 package s3
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,12 +28,12 @@ func Tags(tags tftags.KeyValueTags) []*s3.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from s3 service tags.
-func KeyValueTags(tags []*s3.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*s3.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }

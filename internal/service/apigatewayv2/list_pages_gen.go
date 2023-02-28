@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2/apigatewayv2iface"
 )
 
-func getAPIsPages(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput, fn func(*apigatewayv2.GetApisOutput, bool) bool) error {
+func getAPIsPages(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, input *apigatewayv2.GetApisInput, fn func(*apigatewayv2.GetApisOutput, bool) bool) error {
 	for {
 		output, err := conn.GetApisWithContext(ctx, input)
 		if err != nil {
@@ -25,7 +26,7 @@ func getAPIsPages(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *a
 	}
 	return nil
 }
-func getDomainNamesPages(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNamesInput, fn func(*apigatewayv2.GetDomainNamesOutput, bool) bool) error {
+func getDomainNamesPages(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, input *apigatewayv2.GetDomainNamesInput, fn func(*apigatewayv2.GetDomainNamesOutput, bool) bool) error {
 	for {
 		output, err := conn.GetDomainNamesWithContext(ctx, input)
 		if err != nil {
@@ -41,7 +42,7 @@ func getDomainNamesPages(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, i
 	}
 	return nil
 }
-func getVPCLinksPages(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetVpcLinksInput, fn func(*apigatewayv2.GetVpcLinksOutput, bool) bool) error {
+func getVPCLinksPages(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, input *apigatewayv2.GetVpcLinksInput, fn func(*apigatewayv2.GetVpcLinksOutput, bool) bool) error {
 	for {
 		output, err := conn.GetVpcLinksWithContext(ctx, input)
 		if err != nil {

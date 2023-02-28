@@ -1,20 +1,52 @@
-## 4.56.0 (Unreleased)
-
-FEATURES:
-
-* **New Resource:** `aws_networkmanager_connect_peer` ([#29296](https://github.com/hashicorp/terraform-provider-aws/issues/29296))
+## 4.57.0 (Unreleased)
 
 ENHANCEMENTS:
 
+* data-source/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` attributes ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_autoscaling_group: Add `auto_rollback` to the `instance_refresh.preferences` configuration block ([#29513](https://github.com/hashicorp/terraform-provider-aws/issues/29513))
+* resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.allowed_instance_types` and `mixed_instances_policy.launch_template.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_autoscaling_policy: Add `metrics` to the `target_tracking_configuration.customized_metric_specification` configuration block in support of [metric math](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-target-tracking-metric-math.html) ([#28560](https://github.com/hashicorp/terraform-provider-aws/issues/28560))
+* resource/aws_cloudtrail_event_data_store: Add `kms_key_id` argument ([#29224](https://github.com/hashicorp/terraform-provider-aws/issues/29224))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `db2` engine ([#29380](https://github.com/hashicorp/terraform-provider-aws/issues/29380))
+* resource/aws_dms_endpoint: Add support for `azure-sql-managed-instance` `engine_name` value ([#28960](https://github.com/hashicorp/terraform-provider-aws/issues/28960))
+* resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.allowed_instance_types` and `launch_template_config.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+
+## 4.56.0 (February 24, 2023)
+
+NOTES:
+
+* resource/aws_lambda_function: Updated to AWS SDK V2 ([#29615](https://github.com/hashicorp/terraform-provider-aws/issues/29615))
+
+FEATURES:
+
+* **New Data Source:** `aws_vpc_security_group_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+* **New Data Source:** `aws_vpc_security_group_rules` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+* **New Resource:** `aws_networkmanager_connect_peer` ([#29296](https://github.com/hashicorp/terraform-provider-aws/issues/29296))
+* **New Resource:** `aws_vpc_security_group_egress_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+* **New Resource:** `aws_vpc_security_group_ingress_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+
+ENHANCEMENTS:
+
+* data-source/aws_ecr_image: Add `most_recent` argument to return the most recently pushed image ([#26857](https://github.com/hashicorp/terraform-provider-aws/issues/26857))
+* data-source/aws_ecr_repository: Add `most_recent_image_tags` attribute containing the most recently pushed image tag(s) in an ECR repository ([#26857](https://github.com/hashicorp/terraform-provider-aws/issues/26857))
 * resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
 * resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_organizations_policy: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
+* resource/aws_organizations_policy_attachment: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
 * resource/aws_sns_topic: Add `signature_version` and `tracing_config` arguments ([#29462](https://github.com/hashicorp/terraform-provider-aws/issues/29462))
 
 BUG FIXES:
 
+* resource/aws_acmpca_certificate_authority: `revocation_configuration.crl_configuration.expiration_in_days` is Optional ([#29613](https://github.com/hashicorp/terraform-provider-aws/issues/29613))
+* resource/aws_default_vpc: Change `enable_network_address_usage_metrics` to Optional+Computed, matching the `aws_vpc` resource ([#29607](https://github.com/hashicorp/terraform-provider-aws/issues/29607))
+* resource/aws_lambda_function: Fix missing `ValidationException` message body ([#29615](https://github.com/hashicorp/terraform-provider-aws/issues/29615))
 * resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
 * resource/aws_resourceexplorer2_view: Fix `Unexpected Planned Resource State on Destroy` errors when using Terraform CLI v1.3 and above ([#29550](https://github.com/hashicorp/terraform-provider-aws/issues/29550))
+* resource/aws_servicecatalog_provisioned_product: Fix to allow `outputs` to be `Computed` when the resource changes ([#29559](https://github.com/hashicorp/terraform-provider-aws/issues/29559))
 * resource/aws_sns_topic_subscription: Fix `filter_policy_scope` update from `MessageAttributes` to `MessageBody` with nested objects in `filter_policy` ([#28572](https://github.com/hashicorp/terraform-provider-aws/issues/28572))
+* resource/aws_wafv2_web_acl: Prevent erroneous diffs and attempts to remove AWS-added rule when applying to CF distribution using AWS Shield to automatically mitigate DDoS ([#29575](https://github.com/hashicorp/terraform-provider-aws/issues/29575))
 
 ## 4.55.0 (February 16, 2023)
 

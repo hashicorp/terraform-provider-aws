@@ -211,6 +211,7 @@ variable "service_labels" {
     "networkfirewall",
     "networkmanager",
     "nimble",
+    "oam",
     "opensearch",
     "opensearchserverless",
     "opsworks",

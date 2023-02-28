@@ -27,7 +27,7 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(dynamodb.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, dynamodb.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,7 +67,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(dynamodb.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, dynamodb.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -104,7 +104,7 @@ func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(dynamodb.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, dynamodb.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

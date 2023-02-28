@@ -123,27 +123,27 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
+	d.Set("ipam_pools", flattenIPAMPools(ctx, pools, ignoreTagsConfig))
 
 	return diags
 }
 
-func flattenIPAMPools(c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	pools := []interface{}{}
 	for _, pool := range c {
-		pools = append(pools, flattenIPAMPool(pool, ignoreTagsConfig))
+		pools = append(pools, flattenIPAMPool(ctx, pool, ignoreTagsConfig))
 	}
 	return pools
 }
 
-func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	pool := make(map[string]interface{})
 
 	pool["address_family"] = aws.StringValue(p.AddressFamily)
 	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
 	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
-	pool["allocation_resource_tags"] = KeyValueTags(tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
+	pool["allocation_resource_tags"] = KeyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
 	pool["arn"] = aws.StringValue(p.IpamPoolArn)
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
@@ -157,7 +157,7 @@ func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map
 	pool["state"] = aws.StringValue(p.State)
 
 	if v := p.Tags; v != nil {
-		pool["tags"] = KeyValueTags(v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}
 
 	return pool

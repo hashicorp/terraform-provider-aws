@@ -85,6 +85,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z18D5FSROUN65G",
 }
 
+// @SDKDataSource("aws_lb_hosted_zone_id")
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,

@@ -151,7 +151,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error setting quick_connect_config: %s", err))
 	}
 
-	if err := d.Set("tags", KeyValueTags(quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

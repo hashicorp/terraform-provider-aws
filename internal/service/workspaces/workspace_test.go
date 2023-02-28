@@ -31,8 +31,8 @@ func testAccWorkspace_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,8 +81,8 @@ func testAccWorkspace_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -135,8 +135,8 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -202,8 +202,8 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -280,8 +280,8 @@ func testAccWorkspace_recreate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -316,8 +316,8 @@ func testAccWorkspace_timeout(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

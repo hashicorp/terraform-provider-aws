@@ -25,10 +25,7 @@ import (
 
 const reportCompletionTimeout = 5 * time.Minute
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessmentReport)
-}
-
+// @FrameworkResource
 func newResourceAssessmentReport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentReport{}, nil
 }

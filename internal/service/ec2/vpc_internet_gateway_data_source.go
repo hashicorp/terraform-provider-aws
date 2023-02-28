@@ -78,7 +78,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -109,7 +109,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
 	d.Set("owner_id", ownerID)
 
-	if err := d.Set("tags", KeyValueTags(igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
