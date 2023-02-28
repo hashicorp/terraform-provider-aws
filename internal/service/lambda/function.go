@@ -260,8 +260,9 @@ func ResourceFunction() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"runtime": {
 				Type:             schema.TypeString,
