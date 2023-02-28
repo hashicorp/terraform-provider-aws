@@ -1392,6 +1392,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_spot_fleet_request":                               ec2.ResourceSpotFleetRequest(),
 			"aws_spot_instance_request":                            ec2.ResourceSpotInstanceRequest(),
 			"aws_subnet":                                           ec2.ResourceSubnet(),
+			"aws_verifiedaccess_trust_provider":                    ec2.ResourceVerifiedAccessTrustProvider(),
 			"aws_volume_attachment":                                ec2.ResourceVolumeAttachment(),
 			"aws_vpc":                                              ec2.ResourceVPC(),
 			"aws_vpc_dhcp_options":                                 ec2.ResourceVPCDHCPOptions(),
