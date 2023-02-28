@@ -18,6 +18,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_signing_certificate")
 func ResourceSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningCertificateCreate,
