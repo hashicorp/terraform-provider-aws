@@ -1,5 +1,9 @@
 ## 4.57.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_lightsail_bucket_resource_access` ([#29460](https://github.com/hashicorp/terraform-provider-aws/issues/29460))
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` attributes ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
