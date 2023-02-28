@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_amplify_domain_association")
 func ResourceDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainAssociationCreate,
