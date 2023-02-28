@@ -304,17 +304,17 @@ func testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, t
 resource "aws_verifiedaccess_trust_provider" "test" {
   oidc_options {
     authorization_endpoint = %[4]q
-    client_id = %[5]q
-    client_secret = %[6]q
-    issuer = %[7]q
-    scope = %[8]q
-    token_endpoint = %[9]q
-    user_info_endpoint = %[10]q
+    client_id              = %[5]q
+    client_secret          = %[6]q
+    issuer                 = %[7]q
+    scope                  = %[8]q
+    token_endpoint         = %[9]q
+    user_info_endpoint     = %[10]q
   }
   policy_reference_name    = %[1]q
   trust_provider_type      = %[2]q
   user_trust_provider_type = %[3]q
-  }
+}
 `, policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint)
 }
 
