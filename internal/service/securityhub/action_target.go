@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_securityhub_action_target")
 func ResourceActionTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActionTargetCreate,

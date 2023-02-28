@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpn_gateway")
 func DataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPNGatewayRead,

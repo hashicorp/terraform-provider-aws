@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sfn_state_machine")
 func ResourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,

@@ -39,6 +39,7 @@ const (
 	listVersionsMaxItems  = 10000
 )
 
+// @SDKResource("aws_lambda_function")
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_customer_gateway")
 func ResourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayCreate,

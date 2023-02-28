@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_default_subnet")
 func ResourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

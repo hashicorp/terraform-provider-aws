@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_workgroup")
 func ResourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkgroupCreate,

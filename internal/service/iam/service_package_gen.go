@@ -22,11 +22,54 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_iam_account_alias":           DataSourceAccountAlias,
+		"aws_iam_group":                   DataSourceGroup,
+		"aws_iam_instance_profile":        DataSourceInstanceProfile,
+		"aws_iam_instance_profiles":       DataSourceInstanceProfiles,
+		"aws_iam_openid_connect_provider": DataSourceOpenIDConnectProvider,
+		"aws_iam_policy":                  DataSourcePolicy,
+		"aws_iam_policy_document":         DataSourcePolicyDocument,
+		"aws_iam_role":                    DataSourceRole,
+		"aws_iam_roles":                   DataSourceRoles,
+		"aws_iam_saml_provider":           DataSourceSAMLProvider,
+		"aws_iam_server_certificate":      DataSourceServerCertificate,
+		"aws_iam_session_context":         DataSourceSessionContext,
+		"aws_iam_user":                    DataSourceUser,
+		"aws_iam_user_ssh_key":            DataSourceUserSSHKey,
+		"aws_iam_users":                   DataSourceUsers,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_iam_access_key":                  ResourceAccessKey,
+		"aws_iam_account_alias":               ResourceAccountAlias,
+		"aws_iam_account_password_policy":     ResourceAccountPasswordPolicy,
+		"aws_iam_group":                       ResourceGroup,
+		"aws_iam_group_membership":            ResourceGroupMembership,
+		"aws_iam_group_policy":                ResourceGroupPolicy,
+		"aws_iam_group_policy_attachment":     ResourceGroupPolicyAttachment,
+		"aws_iam_instance_profile":            ResourceInstanceProfile,
+		"aws_iam_openid_connect_provider":     ResourceOpenIDConnectProvider,
+		"aws_iam_policy":                      ResourcePolicy,
+		"aws_iam_policy_attachment":           ResourcePolicyAttachment,
+		"aws_iam_role":                        ResourceRole,
+		"aws_iam_role_policy":                 ResourceRolePolicy,
+		"aws_iam_role_policy_attachment":      ResourceRolePolicyAttachment,
+		"aws_iam_saml_provider":               ResourceSAMLProvider,
+		"aws_iam_server_certificate":          ResourceServerCertificate,
+		"aws_iam_service_linked_role":         ResourceServiceLinkedRole,
+		"aws_iam_service_specific_credential": ResourceServiceSpecificCredential,
+		"aws_iam_signing_certificate":         ResourceSigningCertificate,
+		"aws_iam_user":                        ResourceUser,
+		"aws_iam_user_group_membership":       ResourceUserGroupMembership,
+		"aws_iam_user_login_profile":          ResourceUserLoginProfile,
+		"aws_iam_user_policy":                 ResourceUserPolicy,
+		"aws_iam_user_policy_attachment":      ResourceUserPolicyAttachment,
+		"aws_iam_user_ssh_key":                ResourceUserSSHKey,
+		"aws_iam_virtual_mfa_device":          ResourceVirtualMFADevice,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

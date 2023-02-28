@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_medialive_input_security_group")
 func ResourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,

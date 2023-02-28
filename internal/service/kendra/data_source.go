@@ -33,6 +33,7 @@ const (
 	validationExceptionMessageDataSourceSecrets = "Secrets Manager throws the exception"
 )
 
+// @SDKResource("aws_kendra_data_source")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,

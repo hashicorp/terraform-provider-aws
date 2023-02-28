@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_secretsmanager_secret_version")
 func DataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretVersionRead,

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpcs")
 func DataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCsRead,

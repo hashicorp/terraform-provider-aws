@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53recoveryreadiness_readiness_check")
 func ResourceReadinessCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReadinessCheckCreate,

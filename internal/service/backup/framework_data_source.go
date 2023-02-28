@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_framework")
 func DataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,

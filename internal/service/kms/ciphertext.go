@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_kms_ciphertext")
 func ResourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCiphertextCreate,

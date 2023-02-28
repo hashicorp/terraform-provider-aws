@@ -22,11 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_guardduty_detector": DataSourceDetector,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_guardduty_detector":                   ResourceDetector,
+		"aws_guardduty_filter":                     ResourceFilter,
+		"aws_guardduty_invite_accepter":            ResourceInviteAccepter,
+		"aws_guardduty_ipset":                      ResourceIPSet,
+		"aws_guardduty_member":                     ResourceMember,
+		"aws_guardduty_organization_admin_account": ResourceOrganizationAdminAccount,
+		"aws_guardduty_organization_configuration": ResourceOrganizationConfiguration,
+		"aws_guardduty_publishing_destination":     ResourcePublishingDestination,
+		"aws_guardduty_threatintelset":             ResourceThreatIntelSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

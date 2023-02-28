@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ecs_service")
 func DataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,

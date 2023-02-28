@@ -36,6 +36,7 @@ const (
 	GlobalReplicationGroupMemberRoleSecondary = "SECONDARY"
 )
 
+// @SDKResource("aws_elasticache_global_replication_group")
 func ResourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,

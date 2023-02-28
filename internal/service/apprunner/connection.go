@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_connection")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,

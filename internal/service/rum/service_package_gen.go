@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_rum_app_monitor":         ResourceAppMonitor,
+		"aws_rum_metrics_destination": ResourceMetricsDestination,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

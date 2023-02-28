@@ -21,6 +21,7 @@ const (
 	ResNameSharedDirectoryAccepter = "Shared Directory Accepter"
 )
 
+// @SDKResource("aws_directory_service_shared_directory_accepter")
 func ResourceSharedDirectoryAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharedDirectoryAccepterCreate,

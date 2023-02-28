@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_domain_name")
 func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,

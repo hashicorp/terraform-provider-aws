@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_comprehend_document_classifier": ResourceDocumentClassifier,
+		"aws_comprehend_entity_recognizer":   ResourceEntityRecognizer,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

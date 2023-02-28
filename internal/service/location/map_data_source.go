@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_location_map")
 func DataSourceMap() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMapRead,

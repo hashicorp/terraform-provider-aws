@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_shield_protection")
 func ResourceProtection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProtectionCreate,

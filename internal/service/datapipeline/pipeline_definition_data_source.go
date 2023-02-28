@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_datapipeline_pipeline_definition")
 func DataSourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineDefinitionRead,

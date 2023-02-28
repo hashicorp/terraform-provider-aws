@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_elb_attachment")
 func ResourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,

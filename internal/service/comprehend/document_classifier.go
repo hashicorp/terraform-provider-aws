@@ -37,6 +37,7 @@ const (
 	documentClassifierTagKey = "tf-aws_comprehend_document_classifier"
 )
 
+// @SDKResource("aws_comprehend_document_classifier")
 func ResourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,

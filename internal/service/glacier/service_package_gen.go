@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_glacier_vault":      ResourceVault,
+		"aws_glacier_vault_lock": ResourceVaultLock,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

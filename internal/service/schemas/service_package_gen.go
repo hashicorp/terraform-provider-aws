@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_schemas_discoverer":      ResourceDiscoverer,
+		"aws_schemas_registry":        ResourceRegistry,
+		"aws_schemas_registry_policy": ResourceRegistryPolicy,
+		"aws_schemas_schema":          ResourceSchema,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
