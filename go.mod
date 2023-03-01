@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.5
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.4
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.4
