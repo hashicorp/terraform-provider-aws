@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -292,7 +293,10 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	params := plan.createInput(ctx)
+	params := plan.createInput(ctx, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	resp, err := conn.CreateUserPoolClientWithContext(ctx, params)
 	if err != nil {
@@ -352,7 +356,11 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 
 	conn := r.Meta().CognitoIDPConn()
 
-	params := plan.updateInput(ctx)
+	params := plan.updateInput(ctx, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateUserPoolClientWithContext(ctx, params)
 	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
@@ -416,30 +424,30 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 }
 
 type resourceUserPoolClientData struct {
-	AccessTokenValidity                      types.Int64               `tfsdk:"access_token_validity"`
-	AllowedOauthFlows                        types.Set                 `tfsdk:"allowed_oauth_flows"`
-	AllowedOauthFlowsUserPoolClient          types.Bool                `tfsdk:"allowed_oauth_flows_user_pool_client"`
-	AllowedOauthScopes                       types.Set                 `tfsdk:"allowed_oauth_scopes"`
-	AnalyticsConfiguration                   []*analyticsConfiguration `tfsdk:"analytics_configuration"`
-	AuthSessionValidity                      types.Int64               `tfsdk:"auth_session_validity"`
-	CallbackUrls                             types.Set                 `tfsdk:"callback_urls"`
-	ClientSecret                             types.String              `tfsdk:"client_secret"`
-	DefaultRedirectUri                       types.String              `tfsdk:"default_redirect_uri"`
-	EnablePropagateAdditionalUserContextData types.Bool                `tfsdk:"enable_propagate_additional_user_context_data"`
-	EnableTokenRevocation                    types.Bool                `tfsdk:"enable_token_revocation"`
-	ExplicitAuthFlows                        types.Set                 `tfsdk:"explicit_auth_flows"`
-	GenerateSecret                           types.Bool                `tfsdk:"generate_secret"`
-	ID                                       types.String              `tfsdk:"id"`
-	IdTokenValidity                          types.Int64               `tfsdk:"id_token_validity"`
-	LogoutUrls                               types.Set                 `tfsdk:"logout_urls"`
-	Name                                     types.String              `tfsdk:"name"`
-	PreventUserExistenceErrors               types.String              `tfsdk:"prevent_user_existence_errors"`
-	ReadAttributes                           types.Set                 `tfsdk:"read_attributes"`
-	RefreshTokenValidity                     types.Int64               `tfsdk:"refresh_token_validity"`
-	SupportedIdentityProviders               types.Set                 `tfsdk:"supported_identity_providers"`
-	TokenValidityUnits                       []*tokenValidityUnits     `tfsdk:"token_validity_units"`
-	UserPoolID                               types.String              `tfsdk:"user_pool_id"`
-	WriteAttributes                          types.Set                 `tfsdk:"write_attributes"`
+	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity"`
+	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
+	AllowedOauthFlowsUserPoolClient          types.Bool   `tfsdk:"allowed_oauth_flows_user_pool_client"`
+	AllowedOauthScopes                       types.Set    `tfsdk:"allowed_oauth_scopes"`
+	AnalyticsConfiguration                   types.List   `tfsdk:"analytics_configuration"`
+	AuthSessionValidity                      types.Int64  `tfsdk:"auth_session_validity"`
+	CallbackUrls                             types.Set    `tfsdk:"callback_urls"`
+	ClientSecret                             types.String `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri"`
+	EnablePropagateAdditionalUserContextData types.Bool   `tfsdk:"enable_propagate_additional_user_context_data"`
+	EnableTokenRevocation                    types.Bool   `tfsdk:"enable_token_revocation"`
+	ExplicitAuthFlows                        types.Set    `tfsdk:"explicit_auth_flows"`
+	GenerateSecret                           types.Bool   `tfsdk:"generate_secret"`
+	ID                                       types.String `tfsdk:"id"`
+	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity"`
+	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
+	Name                                     types.String `tfsdk:"name"`
+	PreventUserExistenceErrors               types.String `tfsdk:"prevent_user_existence_errors"`
+	ReadAttributes                           types.Set    `tfsdk:"read_attributes"`
+	RefreshTokenValidity                     types.Int64  `tfsdk:"refresh_token_validity"`
+	SupportedIdentityProviders               types.Set    `tfsdk:"supported_identity_providers"`
+	TokenValidityUnits                       types.List   `tfsdk:"token_validity_units"`
+	UserPoolID                               types.String `tfsdk:"user_pool_id"`
+	WriteAttributes                          types.Set    `tfsdk:"write_attributes"`
 }
 
 func newUserPoolClientData(ctx context.Context, plan resourceUserPoolClientData, in *cognitoidentityprovider.UserPoolClientType, diags *diag.Diagnostics) resourceUserPoolClientData {
@@ -471,13 +479,13 @@ func newUserPoolClientData(ctx context.Context, plan resourceUserPoolClientData,
 	}
 }
 
-func (data resourceUserPoolClientData) createInput(ctx context.Context) *cognitoidentityprovider.CreateUserPoolClientInput {
+func (data resourceUserPoolClientData) createInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.CreateUserPoolClientInput {
 	return &cognitoidentityprovider.CreateUserPoolClientInput{
 		AccessTokenValidity:                      flex.Int64FromFramework(ctx, data.AccessTokenValidity),
 		AllowedOAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthFlows),
 		AllowedOAuthFlowsUserPoolClient:          flex.BoolFromFramework(ctx, data.AllowedOauthFlowsUserPoolClient),
 		AllowedOAuthScopes:                       flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthScopes),
-		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration, diags),
 		AuthSessionValidity:                      flex.Int64FromFramework(ctx, data.AuthSessionValidity),
 		CallbackURLs:                             flex.ExpandFrameworkStringSet(ctx, data.CallbackUrls),
 		ClientName:                               flex.StringFromFramework(ctx, data.Name),
@@ -492,19 +500,19 @@ func (data resourceUserPoolClientData) createInput(ctx context.Context) *cognito
 		ReadAttributes:                           flex.ExpandFrameworkStringSet(ctx, data.ReadAttributes),
 		RefreshTokenValidity:                     flex.Int64FromFramework(ctx, data.RefreshTokenValidity),
 		SupportedIdentityProviders:               flex.ExpandFrameworkStringSet(ctx, data.SupportedIdentityProviders),
-		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, diags),
 		UserPoolId:                               flex.StringFromFramework(ctx, data.UserPoolID),
 		WriteAttributes:                          flex.ExpandFrameworkStringSet(ctx, data.WriteAttributes),
 	}
 }
 
-func (data resourceUserPoolClientData) updateInput(ctx context.Context) *cognitoidentityprovider.UpdateUserPoolClientInput {
+func (data resourceUserPoolClientData) updateInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.UpdateUserPoolClientInput {
 	return &cognitoidentityprovider.UpdateUserPoolClientInput{
 		AccessTokenValidity:                      flex.Int64FromFramework(ctx, data.AccessTokenValidity),
 		AllowedOAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthFlows),
 		AllowedOAuthFlowsUserPoolClient:          flex.BoolFromFramework(ctx, data.AllowedOauthFlowsUserPoolClient),
 		AllowedOAuthScopes:                       flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthScopes),
-		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration, diags),
 		AuthSessionValidity:                      flex.Int64FromFramework(ctx, data.AuthSessionValidity),
 		CallbackURLs:                             flex.ExpandFrameworkStringSet(ctx, data.CallbackUrls),
 		ClientId:                                 flex.StringFromFramework(ctx, data.ID),
@@ -519,7 +527,7 @@ func (data resourceUserPoolClientData) updateInput(ctx context.Context) *cognito
 		ReadAttributes:                           flex.ExpandFrameworkStringSet(ctx, data.ReadAttributes),
 		RefreshTokenValidity:                     flex.Int64FromFramework(ctx, data.RefreshTokenValidity),
 		SupportedIdentityProviders:               flex.ExpandFrameworkStringSet(ctx, data.SupportedIdentityProviders),
-		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, diags),
 		UserPoolId:                               flex.StringFromFramework(ctx, data.UserPoolID),
 		WriteAttributes:                          flex.ExpandFrameworkStringSet(ctx, data.WriteAttributes),
 	}
@@ -555,27 +563,37 @@ func (ac *analyticsConfiguration) expand(ctx context.Context) *cognitoidentitypr
 	return result
 }
 
-func expandAnaylticsConfiguration(ctx context.Context, list []*analyticsConfiguration) *cognitoidentityprovider.AnalyticsConfigurationType {
-	if len(list) == 1 {
-		return list[0].expand(ctx)
+func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.AnalyticsConfigurationType {
+	var analytics []analyticsConfiguration
+	diags.Append(list.ElementsAs(ctx, &analytics, false)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	if len(analytics) == 1 {
+		return analytics[0].expand(ctx)
 	}
 	return nil
 }
 
-func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType, diags *diag.Diagnostics) []*analyticsConfiguration {
+func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType, diags *diag.Diagnostics) types.List {
+	attributeTypes := framework.AttributeTypesMust[analyticsConfiguration](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
+
 	if ac == nil {
-		return []*analyticsConfiguration{}
+		return types.ListNull(elemType)
 	}
 
-	val := &analyticsConfiguration{
-		ApplicationARN: flex.StringToFrameworkARN(ctx, ac.ApplicationArn, diags),
-		ApplicationID:  flex.StringToFramework(ctx, ac.ApplicationId),
-		ExternalID:     flex.StringToFramework(ctx, ac.ExternalId),
-		RoleARN:        flex.StringToFrameworkARN(ctx, ac.RoleArn, diags),
-		UserDataShared: flex.BoolToFramework(ctx, ac.UserDataShared),
-	}
+	attrs := map[string]attr.Value{}
+	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn, diags)
+	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
+	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
+	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn, diags)
+	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
-	return []*analyticsConfiguration{val}
+	val := types.ObjectValueMust(attributeTypes, attrs)
+
+	return types.ListValueMust(elemType, []attr.Value{val})
 }
 
 type tokenValidityUnits struct {
@@ -595,23 +613,33 @@ func (tvu *tokenValidityUnits) expand(ctx context.Context) *cognitoidentityprovi
 	}
 }
 
-func expandTokenValidityUnits(ctx context.Context, list []*tokenValidityUnits) *cognitoidentityprovider.TokenValidityUnitsType {
-	if len(list) == 1 {
-		return list[0].expand(ctx)
+func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.TokenValidityUnitsType {
+	var units []tokenValidityUnits
+	diags.Append(list.ElementsAs(ctx, &units, false)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	if len(units) == 1 {
+		return units[0].expand(ctx)
 	}
 	return nil
 }
 
-func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) []*tokenValidityUnits {
+func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
+	attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
+
 	if tvu == nil || (tvu.AccessToken == nil && tvu.IdToken == nil && tvu.RefreshToken == nil) {
-		return []*tokenValidityUnits{}
+		return types.ListNull(elemType)
 	}
 
-	val := &tokenValidityUnits{
-		AccessToken:  flex.StringToFramework(ctx, tvu.AccessToken),
-		IdToken:      flex.StringToFramework(ctx, tvu.IdToken),
-		RefreshToken: flex.StringToFramework(ctx, tvu.RefreshToken),
-	}
+	attrs := map[string]attr.Value{}
+	attrs["access_token"] = flex.StringToFramework(ctx, tvu.AccessToken)
+	attrs["id_token"] = flex.StringToFramework(ctx, tvu.IdToken)
+	attrs["refresh_token"] = flex.StringToFramework(ctx, tvu.RefreshToken)
 
-	return []*tokenValidityUnits{val}
+	val := types.ObjectValueMust(attributeTypes, attrs)
+
+	return types.ListValueMust(elemType, []attr.Value{val})
 }
