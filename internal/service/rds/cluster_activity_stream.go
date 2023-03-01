@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rds_cluster_activity_stream")
 func ResourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterActivityStreamCreate,

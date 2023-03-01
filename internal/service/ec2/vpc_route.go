@@ -44,6 +44,7 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
+// @SDKResource("aws_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,

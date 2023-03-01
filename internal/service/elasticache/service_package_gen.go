@@ -22,11 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elasticache_cluster":           DataSourceCluster,
+		"aws_elasticache_replication_group": DataSourceReplicationGroup,
+		"aws_elasticache_subnet_group":      DataSourceSubnetGroup,
+		"aws_elasticache_user":              DataSourceUser,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elasticache_cluster":                  ResourceCluster,
+		"aws_elasticache_global_replication_group": ResourceGlobalReplicationGroup,
+		"aws_elasticache_parameter_group":          ResourceParameterGroup,
+		"aws_elasticache_replication_group":        ResourceReplicationGroup,
+		"aws_elasticache_security_group":           ResourceSecurityGroup,
+		"aws_elasticache_subnet_group":             ResourceSubnetGroup,
+		"aws_elasticache_user":                     ResourceUser,
+		"aws_elasticache_user_group":               ResourceUserGroup,
+		"aws_elasticache_user_group_association":   ResourceUserGroupAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_load_balancer_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,

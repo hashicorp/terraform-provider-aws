@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_gateway_route")
 func ResourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayRouteCreate,

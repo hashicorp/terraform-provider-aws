@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_connect_peer")
 func ResourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerCreate,

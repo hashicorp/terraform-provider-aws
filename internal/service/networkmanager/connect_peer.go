@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_connect_peer")
 func ResourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,

@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_keyspaces_keyspace": ResourceKeyspace,
+		"aws_keyspaces_table":    ResourceTable,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

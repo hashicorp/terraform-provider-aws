@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_virtual_service")
 func ResourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,

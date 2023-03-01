@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_db_event_categories")
 func DataSourceEventCategories() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventCategoriesRead,

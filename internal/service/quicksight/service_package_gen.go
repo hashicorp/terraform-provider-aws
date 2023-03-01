@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_quicksight_data_source":      ResourceDataSource,
+		"aws_quicksight_group":            ResourceGroup,
+		"aws_quicksight_group_membership": ResourceGroupMembership,
+		"aws_quicksight_user":             ResourceUser,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

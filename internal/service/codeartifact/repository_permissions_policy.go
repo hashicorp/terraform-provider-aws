@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codeartifact_repository_permissions_policy")
 func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPermissionsPolicyPut,

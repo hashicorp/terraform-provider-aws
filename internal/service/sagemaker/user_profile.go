@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_user_profile")
 func ResourceUserProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserProfileCreate,

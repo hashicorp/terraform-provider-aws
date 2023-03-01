@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_lambda_function")
 func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftdata_statement")
 func ResourceStatement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStatementCreate,

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_codecommit_repository")
 func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,

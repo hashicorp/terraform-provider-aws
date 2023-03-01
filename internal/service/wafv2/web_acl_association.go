@@ -22,6 +22,7 @@ const (
 	webACLAssociationCreateTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_web_acl_association")
 func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,

@@ -22,11 +22,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codestarconnections_connection": DataSourceConnection,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codestarconnections_connection": ResourceConnection,
+		"aws_codestarconnections_host":       ResourceHost,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

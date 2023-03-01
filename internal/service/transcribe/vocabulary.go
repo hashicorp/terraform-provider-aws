@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_vocabulary")
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,

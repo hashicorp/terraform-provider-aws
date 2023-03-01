@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudsearch_domain")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_docdb_orderable_db_instance")
 func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,

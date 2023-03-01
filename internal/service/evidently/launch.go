@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_evidently_launch")
 func ResourceLaunch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchCreate,

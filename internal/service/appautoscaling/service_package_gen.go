@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appautoscaling_policy":           ResourcePolicy,
+		"aws_appautoscaling_scheduled_action": ResourceScheduledAction,
+		"aws_appautoscaling_target":           ResourceTarget,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

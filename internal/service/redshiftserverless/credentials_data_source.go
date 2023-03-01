@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_redshiftserverless_credentials")
 func DataSourceCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCredentialsRead,

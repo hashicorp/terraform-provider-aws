@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_elasticsearch_domain")
 func DataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_chime_voice_connector_termination")
 func ResourceVoiceConnectorTermination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorTerminationCreate,

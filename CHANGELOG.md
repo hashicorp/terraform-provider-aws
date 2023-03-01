@@ -1,5 +1,13 @@
 ## 4.57.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dms_endpoint: The `s3_settings` argument has been deprecated. All configurations using `aws_dms_endpoint.*.s3_settings` should be updated to use the `aws_dms_s3_endpoint` resource instead ([#29728](https://github.com/hashicorp/terraform-provider-aws/issues/29728))
+
+FEATURES:
+
+* **New Resource:** `aws_lightsail_bucket_resource_access` ([#29460](https://github.com/hashicorp/terraform-provider-aws/issues/29460))
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` attributes ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
@@ -9,7 +17,11 @@ ENHANCEMENTS:
 * resource/aws_cloudtrail_event_data_store: Add `kms_key_id` argument ([#29224](https://github.com/hashicorp/terraform-provider-aws/issues/29224))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `db2` engine ([#29380](https://github.com/hashicorp/terraform-provider-aws/issues/29380))
 * resource/aws_dms_endpoint: Add support for `azure-sql-managed-instance` `engine_name` value ([#28960](https://github.com/hashicorp/terraform-provider-aws/issues/28960))
+* resource/aws_ec2_fleet: Add `fleet_instance_set`, `fleet_state`, `fulfilled_capacity`, and `fulfilled_on_demand_capacity` attributes ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
 * resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.allowed_instance_types` and `launch_template_config.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_ec2_fleet: Add `on_demand_options.capacity_reservation_options`,`on_demand_options.max_total_price`, `on_demand_options.min_target_capacity`, `on_demand_options.single_availability_zone` and `on_demand_options.single_instance_type` arguments ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
+* resource/aws_ec2_fleet: Add `spot_options.maintenance_strategies.capacity_rebalance.termination_delay` argument ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
+* resource/aws_ec2_fleet: Add `valid_from` and `valid_until` arguments ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
 * resource/aws_lambda_function: Add `skip_destroy` argument ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_lambda_function: Add configurable timeout for Delete ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_lambda_function: Retry (up to the configurable timeout) deletion of replicated Lambda@Edge functions ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))

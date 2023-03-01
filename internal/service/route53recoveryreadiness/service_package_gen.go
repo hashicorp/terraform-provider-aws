@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53recoveryreadiness_cell":            ResourceCell,
+		"aws_route53recoveryreadiness_readiness_check": ResourceReadinessCheck,
+		"aws_route53recoveryreadiness_recovery_group":  ResourceRecoveryGroup,
+		"aws_route53recoveryreadiness_resource_set":    ResourceResourceSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

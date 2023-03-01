@@ -22,11 +22,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elasticsearch_domain": DataSourceDomain,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elasticsearch_domain":              ResourceDomain,
+		"aws_elasticsearch_domain_policy":       ResourceDomainPolicy,
+		"aws_elasticsearch_domain_saml_options": ResourceDomainSAMLOptions,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

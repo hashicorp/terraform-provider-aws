@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_connect_lambda_function_association")
 func DataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,

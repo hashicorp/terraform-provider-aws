@@ -22,11 +22,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appmesh_mesh":            DataSourceMesh,
+		"aws_appmesh_virtual_service": DataSourceVirtualService,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appmesh_gateway_route":   ResourceGatewayRoute,
+		"aws_appmesh_mesh":            ResourceMesh,
+		"aws_appmesh_route":           ResourceRoute,
+		"aws_appmesh_virtual_gateway": ResourceVirtualGateway,
+		"aws_appmesh_virtual_node":    ResourceVirtualNode,
+		"aws_appmesh_virtual_router":  ResourceVirtualRouter,
+		"aws_appmesh_virtual_service": ResourceVirtualService,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

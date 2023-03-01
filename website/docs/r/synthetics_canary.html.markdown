@@ -46,7 +46,7 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
-* `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. Specify the full bucket name including s3:// as the start of the bucket name. **Conflicts with `zip_file`.**
+* `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `start_canary` - (Optional) Whether to run or stop the canary.

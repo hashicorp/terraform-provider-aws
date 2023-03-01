@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_workspaces_ip_group")
 func ResourceIPGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPGroupCreate,

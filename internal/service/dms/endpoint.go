@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_endpoint")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -417,6 +418,7 @@ func ResourceEndpoint() *schema.Resource {
 				},
 			},
 			"s3_settings": {
+				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,

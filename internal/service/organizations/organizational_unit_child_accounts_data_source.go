@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_organizations_organizational_unit_child_accounts")
 func DataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitChildAccountsRead,

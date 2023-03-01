@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkfirewall_firewall_policy")
 func ResourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallPolicyCreate,

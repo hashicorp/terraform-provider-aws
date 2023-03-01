@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_vocabulary_filter")
 func ResourceVocabularyFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyFilterCreate,

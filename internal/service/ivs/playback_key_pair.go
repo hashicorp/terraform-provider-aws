@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivs_playback_key_pair")
 func ResourcePlaybackKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaybackKeyPairCreate,
