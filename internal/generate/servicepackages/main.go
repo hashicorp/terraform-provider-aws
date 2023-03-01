@@ -153,8 +153,8 @@ var spsTmpl string
 var (
 	frameworkDataSourceAnnotation = regexp.MustCompile(`^//\s*@FrameworkDataSource\s*$`)
 	frameworkResourceAnnotation   = regexp.MustCompile(`^//\s*@FrameworkResource\s*$`)
-	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
-	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
+	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(([^)]+)\)\s*$`)
+	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(([^)]+)\)\s*$`)
 )
 
 type visitor struct {
@@ -226,7 +226,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.frameworkResources = append(v.frameworkResources, v.functionName)
 			}
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			name := m[1]
+			args := common.ParseArgs(m[1])
+			name := args.Positional[0]
 
 			if _, ok := v.sdkDataSources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -234,7 +235,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.sdkDataSources[name] = v.functionName
 			}
 		} else if m := sdkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			name := m[1]
+			args := common.ParseArgs(m[1])
+			name := args.Positional[0]
 
 			if _, ok := v.sdkResources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
