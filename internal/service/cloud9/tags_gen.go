@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloud9/cloud9iface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -91,4 +92,8 @@ func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier stri
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier, oldTags, newTags)
 }

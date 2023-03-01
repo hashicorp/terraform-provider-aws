@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/aws/aws-sdk-go/service/detective/detectiveiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -74,4 +75,8 @@ func UpdateTags(ctx context.Context, conn detectiveiface.DetectiveAPI, identifie
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).DetectiveConn(), identifier, oldTags, newTags)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -260,4 +261,8 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType, oldTags, newTags)
 }
