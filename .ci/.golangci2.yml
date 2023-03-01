@@ -12,7 +12,6 @@ issues:
     - path: _test\.go
       linters:
         - contextcheck
-        - errorlint
   max-per-linter: 0
   max-same-issues: 0
 
