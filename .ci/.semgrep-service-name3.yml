@@ -2800,7 +2800,7 @@ rules:
   - id: verifiedaccess-in-test-name
     languages:
       - go
-    message: Include "VerfiedAccess" in test name
+    message: Include "VerifiedAccess" in test name
     paths:
       include:
         - internal/service/ec2/verifiedaccess_*_test.go
@@ -2809,7 +2809,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-not-regex: "^TestAccVerfiedAccess"
+            - pattern-not-regex: "^TestAccVerifiedAccess"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
   - id: vpc-in-test-name
