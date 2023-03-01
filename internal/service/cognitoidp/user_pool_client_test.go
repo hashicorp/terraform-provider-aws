@@ -838,58 +838,70 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolClientConfig_basic(rName string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                = %[1]q
   user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserPoolClientConfig_revocation(rName string, revoke bool) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                    = %[1]q
   user_pool_id            = aws_cognito_user_pool.test.id
   explicit_auth_flows     = ["ADMIN_NO_SRP_AUTH"]
   enable_token_revocation = %[2]t
 }
-`, rName, revoke)
+`, rName, revoke))
 }
 
 func testAccUserPoolClientConfig_refreshTokenValidity(rName string, refreshTokenValidity int) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                   = %[1]q
   refresh_token_validity = %[2]d
   user_pool_id           = aws_cognito_user_pool.test.id
 }
-`, rName, refreshTokenValidity)
+`, rName, refreshTokenValidity))
 }
 
 func testAccUserPoolClientConfig_accessTokenValidity(rName string, validity int) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                  = %[1]q
   access_token_validity = %[2]d
   user_pool_id          = aws_cognito_user_pool.test.id
 }
-`, rName, validity)
+`, rName, validity))
 }
 
 func testAccUserPoolClientConfig_idTokenValidity(rName string, validity int) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name              = %[1]q
   id_token_validity = %[2]d
   user_pool_id      = aws_cognito_user_pool.test.id
 }
-`, rName, validity)
+`, rName, validity))
 }
 
 func testAccUserPoolClientConfig_tokenValidityUnits(rName, value string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -900,11 +912,13 @@ resource "aws_cognito_user_pool_client" "test" {
     refresh_token = %[2]q
   }
 }
-`, rName, value)
+`, rName, value))
 }
 
 func testAccUserPoolClientConfig_tokenValidityUnits_Unit(rName, unit, value string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -913,11 +927,13 @@ resource "aws_cognito_user_pool_client" "test" {
     %[2]s = %[3]q
   }
 }
-`, rName, unit, value)
+`, rName, unit, value))
 }
 
 func testAccUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, units string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name              = %[1]q
   user_pool_id      = aws_cognito_user_pool.test.id
@@ -929,20 +945,24 @@ resource "aws_cognito_user_pool_client" "test" {
     refresh_token = %[2]q
   }
 }
-`, rName, units)
+`, rName, units))
 }
 
 func testAccUserPoolClientConfig_name(rName, name string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
 }
-`, name)
+`, name))
 }
 
 func testAccUserPoolClientConfig_allFields(rName string, refreshTokenValidity int) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name = %[1]q
 
@@ -965,20 +985,22 @@ resource "aws_cognito_user_pool_client" "test" {
   default_redirect_uri = "https://www.example.com/redirect"
   logout_urls          = ["https://www.example.com/login"]
 }
-`, rName, refreshTokenValidity)
+`, rName, refreshTokenValidity))
 }
 
 func testAccUserPoolClientAnalyticsBaseConfig(rName string) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
-resource "aws_pinpoint_app" "test" {
+resource "aws_pinpoint_app" "analytics" {
   name = %[1]q
 }
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "analytics" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -1012,17 +1034,19 @@ resource "aws_iam_role_policy" "test" {
         "mobiletargeting:PutItems"
       ],
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.analytics.application_id}*"
     }
   ]
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserPoolClientConfig_analyticsApplicationID(rName string) string {
-	return testAccUserPoolClientAnalyticsBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientAnalyticsBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -1033,11 +1057,13 @@ resource "aws_cognito_user_pool_client" "test" {
     role_arn       = aws_iam_role.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserPoolClientConfig_analyticsShareData(rName string, share bool) string {
-	return testAccUserPoolClientAnalyticsBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientAnalyticsBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -1049,11 +1075,13 @@ resource "aws_cognito_user_pool_client" "test" {
     user_data_shared = %[2]t
   }
 }
-`, rName, share)
+`, rName, share))
 }
 
 func testAccUserPoolClientConfig_analyticsARN(rName string) string {
-	return testAccUserPoolClientAnalyticsBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientAnalyticsBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -1062,11 +1090,13 @@ resource "aws_cognito_user_pool_client" "test" {
     application_arn = aws_pinpoint_app.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserPoolClientConfig_analyticsARNShareData(rName string, share bool) string {
-	return testAccUserPoolClientAnalyticsBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientAnalyticsBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name         = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
@@ -1076,18 +1106,20 @@ resource "aws_cognito_user_pool_client" "test" {
     user_data_shared = %[2]t
   }
 }
-`, rName, share)
+`, rName, share))
 }
 
 func testAccUserPoolClientConfig_authSessionValidity(rName string, validity int) string {
-	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                  = %[1]q
   auth_session_validity = %[2]d
   user_pool_id          = aws_cognito_user_pool.test.id
   explicit_auth_flows   = ["ADMIN_NO_SRP_AUTH"]
 }
-`, rName, validity)
+`, rName, validity))
 }
 
 func testAccPreCheckPinpointApp(ctx context.Context, t *testing.T) {
