@@ -19,7 +19,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2VerifiedAccessTrustProvider_basic(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccesstrustprovider ec2.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
@@ -56,7 +56,7 @@ func TestAccEC2VerifiedAccessTrustProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccesstrustprovider ec2.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
@@ -94,7 +94,7 @@ func TestAccEC2VerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccesstrustprovider ec2.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
@@ -144,7 +144,7 @@ func TestAccEC2VerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessTrustProvider_tags(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccesstrustprovider ec2.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
@@ -196,7 +196,7 @@ func TestAccEC2VerifiedAccessTrustProvider_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessTrustProvider_disappears(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	ctx := context.Background()
 	var verifiedaccesstrustprovider ec2.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"

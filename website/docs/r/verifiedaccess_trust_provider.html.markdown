@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Trust Provider.
 
-### Basic Usage
+### Example Usage
 
 ```terraform
 resource "aws_verifiedaccess_trust_provider" "example" {
