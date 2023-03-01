@@ -1,5 +1,9 @@
 ## 4.57.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dms_endpoint: The `s3_settings` argument has been deprecated. All configurations using `aws_dms_endpoint.*.s3_settings` should be updated to use the `aws_dms_s3_endpoint` resource instead ([#29728](https://github.com/hashicorp/terraform-provider-aws/issues/29728))
+
 FEATURES:
 
 * **New Resource:** `aws_lightsail_bucket_resource_access` ([#29460](https://github.com/hashicorp/terraform-provider-aws/issues/29460))
