@@ -23,7 +23,7 @@ jobs:
     outputs:
       goreleaser: ${{ steps.filter.outputs.goreleaser }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -37,7 +37,7 @@ jobs:
     if: ${{ needs.changes.outputs.goreleaser == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
           go-version-file: go.mod
@@ -57,7 +57,7 @@ jobs:
     # Ref: https://github.com/hashicorp/terraform-provider-aws/issues/8988
     runs-on: [custom, linux, small]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
           go-version-file: go.mod

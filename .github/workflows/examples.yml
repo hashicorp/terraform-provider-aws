@@ -18,7 +18,7 @@ jobs:
   tflint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           fetch-depth: 0
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
@@ -67,7 +67,7 @@ jobs:
     env:
       TF_IN_AUTOMATION: "1"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           fetch-depth: 0
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
