@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2 (Elastic Compute Cloud)"
+subcategory: "Verified Access"
 layout: "aws"
 page_title: "AWS: aws_verifiedaccess_instance"
 description: |-
