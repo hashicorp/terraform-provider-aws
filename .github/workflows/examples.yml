@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/cache@v3
+      - uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -32,7 +32,7 @@ jobs:
       - name: install tflint
         run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -70,7 +70,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/cache@v3
+      - uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}

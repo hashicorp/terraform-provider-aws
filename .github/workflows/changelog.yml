@@ -62,7 +62,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - uses: actions/cache@v3
+      - uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
         continue-on-error: true
         timeout-minutes: 2
         with:
