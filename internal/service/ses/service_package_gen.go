@@ -22,11 +22,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ses_active_receipt_rule_set": DataSourceActiveReceiptRuleSet,
+		"aws_ses_domain_identity":         DataSourceDomainIdentity,
+		"aws_ses_email_identity":          DataSourceEmailIdentity,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ses_active_receipt_rule_set":      ResourceActiveReceiptRuleSet,
+		"aws_ses_configuration_set":            ResourceConfigurationSet,
+		"aws_ses_domain_dkim":                  ResourceDomainDKIM,
+		"aws_ses_domain_identity":              ResourceDomainIdentity,
+		"aws_ses_domain_identity_verification": ResourceDomainIdentityVerification,
+		"aws_ses_domain_mail_from":             ResourceDomainMailFrom,
+		"aws_ses_email_identity":               ResourceEmailIdentity,
+		"aws_ses_event_destination":            ResourceEventDestination,
+		"aws_ses_identity_notification_topic":  ResourceIdentityNotificationTopic,
+		"aws_ses_identity_policy":              ResourceIdentityPolicy,
+		"aws_ses_receipt_filter":               ResourceReceiptFilter,
+		"aws_ses_receipt_rule":                 ResourceReceiptRule,
+		"aws_ses_receipt_rule_set":             ResourceReceiptRuleSet,
+		"aws_ses_template":                     ResourceTemplate,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

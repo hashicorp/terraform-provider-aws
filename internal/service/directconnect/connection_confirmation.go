@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_dx_connection_confirmation")
 func ResourceConnectionConfirmation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionConfirmationCreate,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_elastictranscoder_preset")
 func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePresetCreate,

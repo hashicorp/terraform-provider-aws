@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_glue_catalog_database")
 func ResourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogDatabaseCreate,

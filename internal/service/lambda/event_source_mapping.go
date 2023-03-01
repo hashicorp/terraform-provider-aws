@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lambda_event_source_mapping")
 func ResourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,

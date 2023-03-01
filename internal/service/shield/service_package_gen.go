@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_shield_protection":                          ResourceProtection,
+		"aws_shield_protection_group":                    ResourceProtectionGroup,
+		"aws_shield_protection_health_check_association": ResourceProtectionHealthCheckAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

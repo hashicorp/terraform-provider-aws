@@ -22,11 +22,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ivs_stream_key": DataSourceStreamKey,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ivs_channel":                 ResourceChannel,
+		"aws_ivs_playback_key_pair":       ResourcePlaybackKeyPair,
+		"aws_ivs_recording_configuration": ResourceRecordingConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

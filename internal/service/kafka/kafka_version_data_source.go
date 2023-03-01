@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_msk_kafka_version")
 func DataSourceVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVersionRead,

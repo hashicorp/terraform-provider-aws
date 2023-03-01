@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_category")
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostCategoryCreate,

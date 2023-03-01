@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_phone_number")
 func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePhoneNumberCreate,

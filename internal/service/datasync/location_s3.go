@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_s3")
 func ResourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,

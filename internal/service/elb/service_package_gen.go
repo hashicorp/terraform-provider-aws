@@ -22,11 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elb":                 DataSourceLoadBalancer,
+		"aws_elb_hosted_zone_id":  DataSourceHostedZoneID,
+		"aws_elb_service_account": DataSourceServiceAccount,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_app_cookie_stickiness_policy":        ResourceAppCookieStickinessPolicy,
+		"aws_elb":                                 ResourceLoadBalancer,
+		"aws_elb_attachment":                      ResourceAttachment,
+		"aws_lb_cookie_stickiness_policy":         ResourceCookieStickinessPolicy,
+		"aws_lb_ssl_negotiation_policy":           ResourceSSLNegotiationPolicy,
+		"aws_load_balancer_backend_server_policy": ResourceBackendServerPolicy,
+		"aws_load_balancer_listener_policy":       ResourceListenerPolicy,
+		"aws_load_balancer_policy":                ResourcePolicy,
+		"aws_proxy_protocol_policy":               ResourceProxyProtocolPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

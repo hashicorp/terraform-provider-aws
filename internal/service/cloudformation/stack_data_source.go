@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_cloudformation_stack")
 func DataSourceStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStackRead,

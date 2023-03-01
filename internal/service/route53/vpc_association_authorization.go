@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53_vpc_association_authorization")
 func ResourceVPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAssociationAuthorizationCreate,

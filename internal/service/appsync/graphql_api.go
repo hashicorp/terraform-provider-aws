@@ -23,6 +23,7 @@ var validateAuthorizerResultTTLInSeconds = validation.IntBetween(0, 3600)
 
 const DefaultAuthorizerResultTTLInSeconds = 300
 
+// @SDKResource("aws_appsync_graphql_api")
 func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphQLAPICreate,

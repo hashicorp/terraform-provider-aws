@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_baidu_channel")
 func ResourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBaiduChannelUpsert,

@@ -36,6 +36,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
+// @SDKResource("aws_s3_bucket_object")
 func ResourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,

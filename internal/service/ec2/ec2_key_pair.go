@@ -23,6 +23,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// @SDKResource("aws_key_pair")
 func ResourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
