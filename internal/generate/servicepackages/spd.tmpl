@@ -18,6 +18,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 {{- range .FrameworkDataSources }}
 		{
 			Factory: {{ .FactoryName }},
+			{{- if ne .TagsIDAttribute "" }}
+			Tags: types.ServicePackageTags {
+				IDAttribute: "{{ .TagsIDAttribute }}",
+			},
+			{{- end }}
 		},
 {{- end }}
 	}
@@ -28,6 +33,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 {{- range .FrameworkResources }}
 		{
 			Factory: {{ .FactoryName }},
+			{{- if ne .TagsIDAttribute "" }}
+			Tags: types.ServicePackageTags {
+				IDAttribute: "{{ .TagsIDAttribute }}",
+			},
+			{{- end }}
 		},
 {{- end }}
 	}
@@ -39,6 +49,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
+			{{- if ne $value.TagsIDAttribute "" }}
+			Tags: types.ServicePackageTags {
+				IDAttribute: "{{ $value.TagsIDAttribute }}",
+			},
+			{{- end }}
 		},
 {{- end }}
 	}
@@ -50,6 +65,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
+			{{- if ne $value.TagsIDAttribute "" }}
+			Tags: types.ServicePackageTags {
+				IDAttribute: "{{ $value.TagsIDAttribute }}",
+			},
+			{{- end }}
 		},
 {{- end }}
 	}

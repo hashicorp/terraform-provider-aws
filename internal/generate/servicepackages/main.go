@@ -131,7 +131,8 @@ func main() {
 }
 
 type ResourceDatum struct {
-	FactoryName string
+	FactoryName     string
+	TagsIDAttribute string
 }
 
 type ServiceDatum struct {
@@ -159,6 +160,7 @@ var (
 	frameworkResourceAnnotation   = regexp.MustCompile(`^//\s*@FrameworkResource\s*$`)
 	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(([^)]+)\)\s*$`)
 	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(([^)]+)\)\s*$`)
+	tagsAnnotation                = regexp.MustCompile(`^//\s*@Tags\(([^)]+)\)\s*$`)
 )
 
 type visitor struct {
@@ -214,6 +216,24 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
+	// Look first for tagging annotations.
+	d := ResourceDatum{}
+
+	for _, line := range funcDecl.Doc.List {
+		line := line.Text
+
+		if m := tagsAnnotation.FindStringSubmatch(line); len(m) > 0 {
+			args := common.ParseArgs(m[1])
+
+			if attr, ok := args.Keyword["idAttribute"]; ok {
+				d.TagsIDAttribute = attr
+			} else {
+				v.err = multierror.Append(v.err, fmt.Errorf("no Tags(idAttribute): %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+		}
+	}
+
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -221,42 +241,46 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				d := ResourceDatum{
-					FactoryName: v.functionName,
-				}
+				d.FactoryName = v.functionName
 				v.frameworkDataSources = append(v.frameworkDataSources, d)
 			}
 		} else if m := frameworkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				d := ResourceDatum{
-					FactoryName: v.functionName,
-				}
+				d.FactoryName = v.functionName
 				v.frameworkResources = append(v.frameworkResources, d)
 			}
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			args := common.ParseArgs(m[1])
+
+			if len(args.Positional) == 0 {
+				v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
 			name := args.Positional[0]
 
 			if _, ok := v.sdkDataSources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				d := ResourceDatum{
-					FactoryName: v.functionName,
-				}
+				d.FactoryName = v.functionName
 				v.sdkDataSources[name] = d
 			}
 		} else if m := sdkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			args := common.ParseArgs(m[1])
+
+			if len(args.Positional) == 0 {
+				v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				continue
+			}
+
 			name := args.Positional[0]
 
 			if _, ok := v.sdkResources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				d := ResourceDatum{
-					FactoryName: v.functionName,
-				}
+				d.FactoryName = v.functionName
 				v.sdkResources[name] = d
 			}
 		}
