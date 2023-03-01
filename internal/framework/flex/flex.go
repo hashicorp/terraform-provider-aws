@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -50,4 +51,30 @@ func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostic
 	}
 
 	return fwtypes.ARNValue(a)
+}
+
+func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	i := v.ValueInt64()
+	if i == 0 {
+		return nil
+	}
+
+	return aws.Int64(i)
+}
+
+func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	s := v.ValueString()
+	if s == "" {
+		return nil
+	}
+
+	return aws.String(s)
 }
