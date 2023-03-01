@@ -193,9 +193,9 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, id string) (*licensemanager.Grant, error) {
+func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, arn string) (*licensemanager.Grant, error) {
 	in := &licensemanager.GetGrantInput{
-		GrantArn: aws.String(id),
+		GrantArn: aws.String(arn),
 	}
 
 	out, err := conn.GetGrantWithContext(ctx, in)

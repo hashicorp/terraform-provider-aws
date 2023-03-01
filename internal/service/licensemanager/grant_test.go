@@ -193,7 +193,7 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 		}
 
 		if out == nil {
-			return fmt.Errorf("Bucket %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("Grant %q does not exist", rs.Primary.ID)
 		}
 
 		return nil
