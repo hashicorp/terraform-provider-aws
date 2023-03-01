@@ -17,7 +17,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 	return []*types.ServicePackageFrameworkDataSource {
 {{- range .FrameworkDataSources }}
 		{
-			Factory: {{ . }},
+			Factory: {{ .FactoryName }},
 		},
 {{- end }}
 	}
@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource {
 {{- range .FrameworkResources }}
 		{
-			Factory: {{ . }},
+			Factory: {{ .FactoryName }},
 		},
 {{- end }}
 	}
@@ -37,7 +37,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 	return []*types.ServicePackageSDKDataSource {
 {{- range $key, $value := .SDKDataSources }}
 		{
-			Factory:  {{ $value }},
+			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 		},
 {{- end }}
@@ -48,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 	return []*types.ServicePackageSDKResource {
 {{- range $key, $value := .SDKResources }}
 		{
-			Factory:  {{ $value }},
+			Factory:  {{ $value.FactoryName }},
 			TypeName: "{{ $key }}",
 		},
 {{- end }}
