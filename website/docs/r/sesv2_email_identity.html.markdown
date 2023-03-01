@@ -71,6 +71,7 @@ The following arguments are supported:
 ### dkim_signing_attributes
 
 * `domain_signing_private_key` - (Optional) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature. The private key must use 1024 or 2048-bit RSA encryption, and must be encoded using base64 encoding.
+-> **NOTE:** You have to delete the first and last lines ('-----BEGIN PRIVATE KEY-----' and '-----END PRIVATE KEY-----', respectively) of the generated private key. Additionally, you have to remove the line breaks in the generated private key. The resulting value is a string of characters with no spaces or line breaks.
 * `domain_signing_selector` - (Optional) [Bring Your Own DKIM] A string that's used to identify a public key in the DNS configuration for a domain.
 * `next_signing_key_length` - (Optional) [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day. Valid values: `RSA_1024_BIT`, `RSA_2048_BIT`.
 
