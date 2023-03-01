@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "test" {
 
     actions = [
       "mobiletargeting:UpdateEndpoint",
-      "mobiletargeting:PutItems",
+      "mobiletargeting:PutEvents",
     ]
 
     resources = ["arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"]

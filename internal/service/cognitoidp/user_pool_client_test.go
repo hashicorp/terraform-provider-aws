@@ -1031,7 +1031,7 @@ resource "aws_iam_role_policy" "test" {
     {
       "Action": [
         "mobiletargeting:UpdateEndpoint",
-        "mobiletargeting:PutItems"
+        "mobiletargeting:PutEvents"
       ],
       "Effect": "Allow",
       "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.analytics.application_id}*"
