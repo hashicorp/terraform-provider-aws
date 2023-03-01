@@ -134,3 +134,7 @@ oldTagsMap interface{}, newTagsMap interface{}) error {
 
 	return nil
 }
+
+func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags interface{}, newTags interface{}) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+}
