@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VerifiedAccessInstance_basic(t *testing.T) {
+func TestAccVerifiedAccessInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccessinstance ec2.VerifiedAccessInstance
 	description := sdkacctest.RandString(100)
@@ -50,7 +50,7 @@ func TestAccEC2VerifiedAccessInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessInstance_tags(t *testing.T) {
+func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccessinstance ec2.VerifiedAccessInstance
 	description := sdkacctest.RandString(100)
@@ -99,7 +99,7 @@ func TestAccEC2VerifiedAccessInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedAccessInstance_disappears(t *testing.T) {
+func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
 	ctx := context.Background()
 	var verifiedaccessinstance ec2.VerifiedAccessInstance
 	description := sdkacctest.RandString(100)
