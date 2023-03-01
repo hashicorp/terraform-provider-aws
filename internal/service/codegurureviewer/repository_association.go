@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codegurureviewer_repository_association")
 func ResourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 
