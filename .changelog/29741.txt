@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_licensemanager_grant
 ```
+
+```release-note:new-resource
+aws_licensemanager_grant_accepter
+```
