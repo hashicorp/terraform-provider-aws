@@ -112,7 +112,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get("name").(string), err)
 	}
 
-	d.SetId(*out.GrantArn)
+	d.SetId(aws.StringValue(out.GrantArn))
 
 	return resourceGrantRead(ctx, d, meta)
 }
