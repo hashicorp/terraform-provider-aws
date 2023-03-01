@@ -21,6 +21,7 @@ const (
 	ResGrant = "Grant"
 )
 
+// @SDKResource("aws_licensemanager_grant")
 func ResourceGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGrantCreate,
