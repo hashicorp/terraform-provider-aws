@@ -13,10 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
