@@ -226,6 +226,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			args := common.ParseArgs(m[1])
 
 			if attr, ok := args.Keyword["idAttribute"]; ok {
+				if d.TagsIDAttribute != "" {
+					v.err = multierror.Append(v.err, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 				d.TagsIDAttribute = attr
 			} else {
 				v.err = multierror.Append(v.err, fmt.Errorf("no Tags(idAttribute): %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
