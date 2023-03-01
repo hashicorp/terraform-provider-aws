@@ -225,16 +225,16 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccGrantConfig_basic(rName string, licenseArn string, principal string, homeRegion string) string {
 	return fmt.Sprintf(`
 resource "aws_licensemanager_grant" "test" {
-  name                  = %[1]q
+  name = %[1]q
   allowed_operations = [
-	"ListPurchasedLicenses",
-	"CheckoutLicense",
-	"CheckInLicense",
-	"ExtendConsumptionLicense",
-	"CreateToken"
+    "ListPurchasedLicenses",
+    "CheckoutLicense",
+    "CheckInLicense",
+    "ExtendConsumptionLicense",
+    "CreateToken"
   ]
   license_arn = %[2]q
-  principal = %[3]q
+  principal   = %[3]q
   home_region = %[4]q
 }
 `, rName, licenseArn, principal, homeRegion)
