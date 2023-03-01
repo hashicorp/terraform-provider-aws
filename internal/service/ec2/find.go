@@ -6971,12 +6971,5 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.EC2, id 
 		return nil, err
 	}
 
-	// Eventual consistency check.
-	// if aws.StringValue(out.VerifiedAccessTrustProviders[0].VerifiedAccessTrustProviderId) != id {
-	// 	return nil, &resource.NotFoundError{
-	// 		LastRequest: in,
-	// 	}
-	// }
-
 	return out.VerifiedAccessTrustProviders[0], nil
 }
