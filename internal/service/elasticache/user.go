@@ -41,6 +41,7 @@ func ResourceUser() *schema.Resource {
 			"authentication_mode": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -251,6 +252,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
 				Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
 			}
+			hasChange = true
 		}
 
 		if d.HasChange("no_password_required") {

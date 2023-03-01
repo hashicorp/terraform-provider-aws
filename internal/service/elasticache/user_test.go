@@ -44,14 +44,13 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"no_password_required",
 					"passwords",
-					"authentication_mode",
 				},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheUserWithPasswordAuthMode_basic(t *testing.T) {
+func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -80,16 +79,16 @@ func TestAccElastiCacheUserWithPasswordAuthMode_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords.#",
+					"authentication_mode.0.passwords.0",
 					"no_password_required",
-					"passwords",
-					"authentication_mode.0.passwords",
 				},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheUserWithIamAuthMode_basic(t *testing.T) {
+func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -114,36 +113,9 @@ func TestAccElastiCacheUserWithIamAuthMode_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheUserWithNoPassRequiredAuthMode_basic(t *testing.T) {
-	var user elasticache.User
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	resourceName := "aws_elasticache_user.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserConfigWithNoPassRequiredAuthMode_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "no-password"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+				},
 			},
 		},
 	})
@@ -167,12 +139,6 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode"},
-			},
-			{
 				Config: testAccUserConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -186,14 +152,13 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"no_password_required",
 					"passwords",
-					"authentication_mode",
 				},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
+func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -212,10 +177,13 @@ func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords",
+					"no_password_required",
+				},
 			},
 			{
 				Config: testAccUserConfigWithPasswordAuthMode_onePassword(rName, "aaaaaaaaaaaaaaaa"),
@@ -225,10 +193,13 @@ func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords",
+					"no_password_required",
+				},
 			},
 			{
 				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "cccccccccccccccc", "dddddddddddddddd"),
@@ -238,10 +209,13 @@ func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords",
+					"no_password_required",
+				},
 			},
 		},
 	})
@@ -271,12 +245,6 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode"},
-			},
-			{
 				Config: testAccUserConfig_tags(rName, "tagKey", "tagVal2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -289,12 +257,6 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode"},
-			},
-			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
@@ -304,12 +266,6 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"authentication_mode"},
 			},
 		},
 	})

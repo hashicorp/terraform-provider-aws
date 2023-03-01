@@ -19,6 +19,22 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"authentication_mode": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"password_count": {
+							Optional: true,
+							Type:     schema.TypeInt,
+						},
+						"type": {
+							Optional: true,
+							Type:     schema.TypeString,
+						},
+					},
+				},
+			},
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -68,6 +84,18 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(user.UserId))
 
 	d.Set("access_string", user.AccessString)
+
+	if v := user.Authentication; v != nil {
+		authenticationMode := map[string]interface{}{
+			"password_count": aws.Int64Value(v.PasswordCount),
+			"type":           aws.StringValue(v.Type),
+		}
+
+		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
+			return fmt.Errorf("failed to set authentication_mode of ElastiCache User (%s): %s", d.Id(), err)
+		}
+	}
+
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
