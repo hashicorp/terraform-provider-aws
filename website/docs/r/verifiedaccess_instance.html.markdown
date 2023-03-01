@@ -43,5 +43,5 @@ In addition to all arguments above, the following attributes are exported:
 EC2 (Elastic Compute Cloud) Verified Access Instance can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_ec2_verifiedaccess_instance.example vai-8012925589
+$ terraform import aws_verifiedaccess_instance.example vai-8012925589
 ```

@@ -146,6 +146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_ec2_network_insights_path":                        ResourceNetworkInsightsPath,
 		"aws_ec2_serial_console_access":                        ResourceSerialConsoleAccess,
 		"aws_ec2_subnet_cidr_reservation":                      ResourceSubnetCIDRReservation,
+		"aws_ec2_tag":                                          ResourceTag,
 		"aws_ec2_traffic_mirror_filter":                        ResourceTrafficMirrorFilter,
 		"aws_ec2_traffic_mirror_filter_rule":                   ResourceTrafficMirrorFilterRule,
 		"aws_ec2_traffic_mirror_session":                       ResourceTrafficMirrorSession,
