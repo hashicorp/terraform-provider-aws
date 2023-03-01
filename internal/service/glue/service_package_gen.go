@@ -5,51 +5,115 @@ package glue
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_glue_catalog_table":                    DataSourceCatalogTable,
-		"aws_glue_connection":                       DataSourceConnection,
-		"aws_glue_data_catalog_encryption_settings": DataSourceDataCatalogEncryptionSettings,
-		"aws_glue_script":                           DataSourceScript,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  DataSourceConnection,
+			TypeName: "aws_glue_connection",
+		},
+		{
+			Factory:  DataSourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  DataSourceScript,
+			TypeName: "aws_glue_script",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_glue_catalog_database":                 ResourceCatalogDatabase,
-		"aws_glue_catalog_table":                    ResourceCatalogTable,
-		"aws_glue_classifier":                       ResourceClassifier,
-		"aws_glue_connection":                       ResourceConnection,
-		"aws_glue_crawler":                          ResourceCrawler,
-		"aws_glue_data_catalog_encryption_settings": ResourceDataCatalogEncryptionSettings,
-		"aws_glue_dev_endpoint":                     ResourceDevEndpoint,
-		"aws_glue_job":                              ResourceJob,
-		"aws_glue_ml_transform":                     ResourceMLTransform,
-		"aws_glue_partition":                        ResourcePartition,
-		"aws_glue_partition_index":                  ResourcePartitionIndex,
-		"aws_glue_registry":                         ResourceRegistry,
-		"aws_glue_resource_policy":                  ResourceResourcePolicy,
-		"aws_glue_schema":                           ResourceSchema,
-		"aws_glue_security_configuration":           ResourceSecurityConfiguration,
-		"aws_glue_trigger":                          ResourceTrigger,
-		"aws_glue_user_defined_function":            ResourceUserDefinedFunction,
-		"aws_glue_workflow":                         ResourceWorkflow,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCatalogDatabase,
+			TypeName: "aws_glue_catalog_database",
+		},
+		{
+			Factory:  ResourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  ResourceClassifier,
+			TypeName: "aws_glue_classifier",
+		},
+		{
+			Factory:  ResourceConnection,
+			TypeName: "aws_glue_connection",
+		},
+		{
+			Factory:  ResourceCrawler,
+			TypeName: "aws_glue_crawler",
+		},
+		{
+			Factory:  ResourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  ResourceDevEndpoint,
+			TypeName: "aws_glue_dev_endpoint",
+		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_glue_job",
+		},
+		{
+			Factory:  ResourceMLTransform,
+			TypeName: "aws_glue_ml_transform",
+		},
+		{
+			Factory:  ResourcePartition,
+			TypeName: "aws_glue_partition",
+		},
+		{
+			Factory:  ResourcePartitionIndex,
+			TypeName: "aws_glue_partition_index",
+		},
+		{
+			Factory:  ResourceRegistry,
+			TypeName: "aws_glue_registry",
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_glue_resource_policy",
+		},
+		{
+			Factory:  ResourceSchema,
+			TypeName: "aws_glue_schema",
+		},
+		{
+			Factory:  ResourceSecurityConfiguration,
+			TypeName: "aws_glue_security_configuration",
+		},
+		{
+			Factory:  ResourceTrigger,
+			TypeName: "aws_glue_trigger",
+		},
+		{
+			Factory:  ResourceUserDefinedFunction,
+			TypeName: "aws_glue_user_defined_function",
+		},
+		{
+			Factory:  ResourceWorkflow,
+			TypeName: "aws_glue_workflow",
+		},
 	}
 }
 

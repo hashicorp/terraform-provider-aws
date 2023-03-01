@@ -5,45 +5,91 @@ package iot
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_iot_endpoint": DataSourceEndpoint,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceEndpoint,
+			TypeName: "aws_iot_endpoint",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_iot_authorizer":                 ResourceAuthorizer,
-		"aws_iot_certificate":                ResourceCertificate,
-		"aws_iot_indexing_configuration":     ResourceIndexingConfiguration,
-		"aws_iot_logging_options":            ResourceLoggingOptions,
-		"aws_iot_policy":                     ResourcePolicy,
-		"aws_iot_policy_attachment":          ResourcePolicyAttachment,
-		"aws_iot_provisioning_template":      ResourceProvisioningTemplate,
-		"aws_iot_role_alias":                 ResourceRoleAlias,
-		"aws_iot_thing":                      ResourceThing,
-		"aws_iot_thing_group":                ResourceThingGroup,
-		"aws_iot_thing_group_membership":     ResourceThingGroupMembership,
-		"aws_iot_thing_principal_attachment": ResourceThingPrincipalAttachment,
-		"aws_iot_thing_type":                 ResourceThingType,
-		"aws_iot_topic_rule":                 ResourceTopicRule,
-		"aws_iot_topic_rule_destination":     ResourceTopicRuleDestination,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAuthorizer,
+			TypeName: "aws_iot_authorizer",
+		},
+		{
+			Factory:  ResourceCertificate,
+			TypeName: "aws_iot_certificate",
+		},
+		{
+			Factory:  ResourceIndexingConfiguration,
+			TypeName: "aws_iot_indexing_configuration",
+		},
+		{
+			Factory:  ResourceLoggingOptions,
+			TypeName: "aws_iot_logging_options",
+		},
+		{
+			Factory:  ResourcePolicy,
+			TypeName: "aws_iot_policy",
+		},
+		{
+			Factory:  ResourcePolicyAttachment,
+			TypeName: "aws_iot_policy_attachment",
+		},
+		{
+			Factory:  ResourceProvisioningTemplate,
+			TypeName: "aws_iot_provisioning_template",
+		},
+		{
+			Factory:  ResourceRoleAlias,
+			TypeName: "aws_iot_role_alias",
+		},
+		{
+			Factory:  ResourceThing,
+			TypeName: "aws_iot_thing",
+		},
+		{
+			Factory:  ResourceThingGroup,
+			TypeName: "aws_iot_thing_group",
+		},
+		{
+			Factory:  ResourceThingGroupMembership,
+			TypeName: "aws_iot_thing_group_membership",
+		},
+		{
+			Factory:  ResourceThingPrincipalAttachment,
+			TypeName: "aws_iot_thing_principal_attachment",
+		},
+		{
+			Factory:  ResourceThingType,
+			TypeName: "aws_iot_thing_type",
+		},
+		{
+			Factory:  ResourceTopicRule,
+			TypeName: "aws_iot_topic_rule",
+		},
+		{
+			Factory:  ResourceTopicRuleDestination,
+			TypeName: "aws_iot_topic_rule_destination",
+		},
 	}
 }
 

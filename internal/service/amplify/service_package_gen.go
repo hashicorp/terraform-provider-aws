@@ -5,33 +5,46 @@ package amplify
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_amplify_app":                 ResourceApp,
-		"aws_amplify_backend_environment": ResourceBackendEnvironment,
-		"aws_amplify_branch":              ResourceBranch,
-		"aws_amplify_domain_association":  ResourceDomainAssociation,
-		"aws_amplify_webhook":             ResourceWebhook,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceApp,
+			TypeName: "aws_amplify_app",
+		},
+		{
+			Factory:  ResourceBackendEnvironment,
+			TypeName: "aws_amplify_backend_environment",
+		},
+		{
+			Factory:  ResourceBranch,
+			TypeName: "aws_amplify_branch",
+		},
+		{
+			Factory:  ResourceDomainAssociation,
+			TypeName: "aws_amplify_domain_association",
+		},
+		{
+			Factory:  ResourceWebhook,
+			TypeName: "aws_amplify_webhook",
+		},
 	}
 }
 

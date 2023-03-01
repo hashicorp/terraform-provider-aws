@@ -5,46 +5,95 @@ package ses
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_ses_active_receipt_rule_set": DataSourceActiveReceiptRuleSet,
-		"aws_ses_domain_identity":         DataSourceDomainIdentity,
-		"aws_ses_email_identity":          DataSourceEmailIdentity,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceActiveReceiptRuleSet,
+			TypeName: "aws_ses_active_receipt_rule_set",
+		},
+		{
+			Factory:  DataSourceDomainIdentity,
+			TypeName: "aws_ses_domain_identity",
+		},
+		{
+			Factory:  DataSourceEmailIdentity,
+			TypeName: "aws_ses_email_identity",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_ses_active_receipt_rule_set":      ResourceActiveReceiptRuleSet,
-		"aws_ses_configuration_set":            ResourceConfigurationSet,
-		"aws_ses_domain_dkim":                  ResourceDomainDKIM,
-		"aws_ses_domain_identity":              ResourceDomainIdentity,
-		"aws_ses_domain_identity_verification": ResourceDomainIdentityVerification,
-		"aws_ses_domain_mail_from":             ResourceDomainMailFrom,
-		"aws_ses_email_identity":               ResourceEmailIdentity,
-		"aws_ses_event_destination":            ResourceEventDestination,
-		"aws_ses_identity_notification_topic":  ResourceIdentityNotificationTopic,
-		"aws_ses_identity_policy":              ResourceIdentityPolicy,
-		"aws_ses_receipt_filter":               ResourceReceiptFilter,
-		"aws_ses_receipt_rule":                 ResourceReceiptRule,
-		"aws_ses_receipt_rule_set":             ResourceReceiptRuleSet,
-		"aws_ses_template":                     ResourceTemplate,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceActiveReceiptRuleSet,
+			TypeName: "aws_ses_active_receipt_rule_set",
+		},
+		{
+			Factory:  ResourceConfigurationSet,
+			TypeName: "aws_ses_configuration_set",
+		},
+		{
+			Factory:  ResourceDomainDKIM,
+			TypeName: "aws_ses_domain_dkim",
+		},
+		{
+			Factory:  ResourceDomainIdentity,
+			TypeName: "aws_ses_domain_identity",
+		},
+		{
+			Factory:  ResourceDomainIdentityVerification,
+			TypeName: "aws_ses_domain_identity_verification",
+		},
+		{
+			Factory:  ResourceDomainMailFrom,
+			TypeName: "aws_ses_domain_mail_from",
+		},
+		{
+			Factory:  ResourceEmailIdentity,
+			TypeName: "aws_ses_email_identity",
+		},
+		{
+			Factory:  ResourceEventDestination,
+			TypeName: "aws_ses_event_destination",
+		},
+		{
+			Factory:  ResourceIdentityNotificationTopic,
+			TypeName: "aws_ses_identity_notification_topic",
+		},
+		{
+			Factory:  ResourceIdentityPolicy,
+			TypeName: "aws_ses_identity_policy",
+		},
+		{
+			Factory:  ResourceReceiptFilter,
+			TypeName: "aws_ses_receipt_filter",
+		},
+		{
+			Factory:  ResourceReceiptRule,
+			TypeName: "aws_ses_receipt_rule",
+		},
+		{
+			Factory:  ResourceReceiptRuleSet,
+			TypeName: "aws_ses_receipt_rule_set",
+		},
+		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_ses_template",
+		},
 	}
 }
 

@@ -5,44 +5,87 @@ package apigatewayv2
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_apigatewayv2_api":    DataSourceAPI,
-		"aws_apigatewayv2_apis":   DataSourceAPIs,
-		"aws_apigatewayv2_export": DataSourceExport,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAPI,
+			TypeName: "aws_apigatewayv2_api",
+		},
+		{
+			Factory:  DataSourceAPIs,
+			TypeName: "aws_apigatewayv2_apis",
+		},
+		{
+			Factory:  DataSourceExport,
+			TypeName: "aws_apigatewayv2_export",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_apigatewayv2_api":                  ResourceAPI,
-		"aws_apigatewayv2_api_mapping":          ResourceAPIMapping,
-		"aws_apigatewayv2_authorizer":           ResourceAuthorizer,
-		"aws_apigatewayv2_deployment":           ResourceDeployment,
-		"aws_apigatewayv2_domain_name":          ResourceDomainName,
-		"aws_apigatewayv2_integration":          ResourceIntegration,
-		"aws_apigatewayv2_integration_response": ResourceIntegrationResponse,
-		"aws_apigatewayv2_model":                ResourceModel,
-		"aws_apigatewayv2_route":                ResourceRoute,
-		"aws_apigatewayv2_route_response":       ResourceRouteResponse,
-		"aws_apigatewayv2_stage":                ResourceStage,
-		"aws_apigatewayv2_vpc_link":             ResourceVPCLink,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAPI,
+			TypeName: "aws_apigatewayv2_api",
+		},
+		{
+			Factory:  ResourceAPIMapping,
+			TypeName: "aws_apigatewayv2_api_mapping",
+		},
+		{
+			Factory:  ResourceAuthorizer,
+			TypeName: "aws_apigatewayv2_authorizer",
+		},
+		{
+			Factory:  ResourceDeployment,
+			TypeName: "aws_apigatewayv2_deployment",
+		},
+		{
+			Factory:  ResourceDomainName,
+			TypeName: "aws_apigatewayv2_domain_name",
+		},
+		{
+			Factory:  ResourceIntegration,
+			TypeName: "aws_apigatewayv2_integration",
+		},
+		{
+			Factory:  ResourceIntegrationResponse,
+			TypeName: "aws_apigatewayv2_integration_response",
+		},
+		{
+			Factory:  ResourceModel,
+			TypeName: "aws_apigatewayv2_model",
+		},
+		{
+			Factory:  ResourceRoute,
+			TypeName: "aws_apigatewayv2_route",
+		},
+		{
+			Factory:  ResourceRouteResponse,
+			TypeName: "aws_apigatewayv2_route_response",
+		},
+		{
+			Factory:  ResourceStage,
+			TypeName: "aws_apigatewayv2_stage",
+		},
+		{
+			Factory:  ResourceVPCLink,
+			TypeName: "aws_apigatewayv2_vpc_link",
+		},
 	}
 }
 

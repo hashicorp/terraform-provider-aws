@@ -5,41 +5,75 @@ package memorydb
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_memorydb_acl":             DataSourceACL,
-		"aws_memorydb_cluster":         DataSourceCluster,
-		"aws_memorydb_parameter_group": DataSourceParameterGroup,
-		"aws_memorydb_snapshot":        DataSourceSnapshot,
-		"aws_memorydb_subnet_group":    DataSourceSubnetGroup,
-		"aws_memorydb_user":            DataSourceUser,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceACL,
+			TypeName: "aws_memorydb_acl",
+		},
+		{
+			Factory:  DataSourceCluster,
+			TypeName: "aws_memorydb_cluster",
+		},
+		{
+			Factory:  DataSourceParameterGroup,
+			TypeName: "aws_memorydb_parameter_group",
+		},
+		{
+			Factory:  DataSourceSnapshot,
+			TypeName: "aws_memorydb_snapshot",
+		},
+		{
+			Factory:  DataSourceSubnetGroup,
+			TypeName: "aws_memorydb_subnet_group",
+		},
+		{
+			Factory:  DataSourceUser,
+			TypeName: "aws_memorydb_user",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_memorydb_acl":             ResourceACL,
-		"aws_memorydb_cluster":         ResourceCluster,
-		"aws_memorydb_parameter_group": ResourceParameterGroup,
-		"aws_memorydb_snapshot":        ResourceSnapshot,
-		"aws_memorydb_subnet_group":    ResourceSubnetGroup,
-		"aws_memorydb_user":            ResourceUser,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceACL,
+			TypeName: "aws_memorydb_acl",
+		},
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_memorydb_cluster",
+		},
+		{
+			Factory:  ResourceParameterGroup,
+			TypeName: "aws_memorydb_parameter_group",
+		},
+		{
+			Factory:  ResourceSnapshot,
+			TypeName: "aws_memorydb_snapshot",
+		},
+		{
+			Factory:  ResourceSubnetGroup,
+			TypeName: "aws_memorydb_subnet_group",
+		},
+		{
+			Factory:  ResourceUser,
+			TypeName: "aws_memorydb_user",
+		},
 	}
 }
 

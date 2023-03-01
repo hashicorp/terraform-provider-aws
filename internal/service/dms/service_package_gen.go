@@ -5,35 +5,54 @@ package dms
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_dms_certificate":              ResourceCertificate,
-		"aws_dms_endpoint":                 ResourceEndpoint,
-		"aws_dms_event_subscription":       ResourceEventSubscription,
-		"aws_dms_replication_instance":     ResourceReplicationInstance,
-		"aws_dms_replication_subnet_group": ResourceReplicationSubnetGroup,
-		"aws_dms_replication_task":         ResourceReplicationTask,
-		"aws_dms_s3_endpoint":              ResourceS3Endpoint,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCertificate,
+			TypeName: "aws_dms_certificate",
+		},
+		{
+			Factory:  ResourceEndpoint,
+			TypeName: "aws_dms_endpoint",
+		},
+		{
+			Factory:  ResourceEventSubscription,
+			TypeName: "aws_dms_event_subscription",
+		},
+		{
+			Factory:  ResourceReplicationInstance,
+			TypeName: "aws_dms_replication_instance",
+		},
+		{
+			Factory:  ResourceReplicationSubnetGroup,
+			TypeName: "aws_dms_replication_subnet_group",
+		},
+		{
+			Factory:  ResourceReplicationTask,
+			TypeName: "aws_dms_replication_task",
+		},
+		{
+			Factory:  ResourceS3Endpoint,
+			TypeName: "aws_dms_s3_endpoint",
+		},
 	}
 }
 

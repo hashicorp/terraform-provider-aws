@@ -5,34 +5,47 @@ package signer
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_signer_signing_job":     DataSourceSigningJob,
-		"aws_signer_signing_profile": DataSourceSigningProfile,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceSigningJob,
+			TypeName: "aws_signer_signing_job",
+		},
+		{
+			Factory:  DataSourceSigningProfile,
+			TypeName: "aws_signer_signing_profile",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_signer_signing_job":                ResourceSigningJob,
-		"aws_signer_signing_profile":            ResourceSigningProfile,
-		"aws_signer_signing_profile_permission": ResourceSigningProfilePermission,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceSigningJob,
+			TypeName: "aws_signer_signing_job",
+		},
+		{
+			Factory:  ResourceSigningProfile,
+			TypeName: "aws_signer_signing_profile",
+		},
+		{
+			Factory:  ResourceSigningProfilePermission,
+			TypeName: "aws_signer_signing_profile_permission",
+		},
 	}
 }
 

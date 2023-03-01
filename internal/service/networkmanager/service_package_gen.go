@@ -5,58 +5,143 @@ package networkmanager
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_networkmanager_connection":                   DataSourceConnection,
-		"aws_networkmanager_connections":                  DataSourceConnections,
-		"aws_networkmanager_core_network_policy_document": DataSourceCoreNetworkPolicyDocument,
-		"aws_networkmanager_device":                       DataSourceDevice,
-		"aws_networkmanager_devices":                      DataSourceDevices,
-		"aws_networkmanager_global_network":               DataSourceGlobalNetwork,
-		"aws_networkmanager_global_networks":              DataSourceGlobalNetworks,
-		"aws_networkmanager_link":                         DataSourceLink,
-		"aws_networkmanager_links":                        DataSourceLinks,
-		"aws_networkmanager_site":                         DataSourceSite,
-		"aws_networkmanager_sites":                        DataSourceSites,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceConnection,
+			TypeName: "aws_networkmanager_connection",
+		},
+		{
+			Factory:  DataSourceConnections,
+			TypeName: "aws_networkmanager_connections",
+		},
+		{
+			Factory:  DataSourceCoreNetworkPolicyDocument,
+			TypeName: "aws_networkmanager_core_network_policy_document",
+		},
+		{
+			Factory:  DataSourceDevice,
+			TypeName: "aws_networkmanager_device",
+		},
+		{
+			Factory:  DataSourceDevices,
+			TypeName: "aws_networkmanager_devices",
+		},
+		{
+			Factory:  DataSourceGlobalNetwork,
+			TypeName: "aws_networkmanager_global_network",
+		},
+		{
+			Factory:  DataSourceGlobalNetworks,
+			TypeName: "aws_networkmanager_global_networks",
+		},
+		{
+			Factory:  DataSourceLink,
+			TypeName: "aws_networkmanager_link",
+		},
+		{
+			Factory:  DataSourceLinks,
+			TypeName: "aws_networkmanager_links",
+		},
+		{
+			Factory:  DataSourceSite,
+			TypeName: "aws_networkmanager_site",
+		},
+		{
+			Factory:  DataSourceSites,
+			TypeName: "aws_networkmanager_sites",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_networkmanager_attachment_accepter":                      ResourceAttachmentAccepter,
-		"aws_networkmanager_connect_attachment":                       ResourceConnectAttachment,
-		"aws_networkmanager_connect_peer":                             ResourceConnectPeer,
-		"aws_networkmanager_connection":                               ResourceConnection,
-		"aws_networkmanager_core_network":                             ResourceCoreNetwork,
-		"aws_networkmanager_core_network_policy_attachment":           ResourceCoreNetworkPolicyAttachment,
-		"aws_networkmanager_customer_gateway_association":             ResourceCustomerGatewayAssociation,
-		"aws_networkmanager_device":                                   ResourceDevice,
-		"aws_networkmanager_global_network":                           ResourceGlobalNetwork,
-		"aws_networkmanager_link":                                     ResourceLink,
-		"aws_networkmanager_link_association":                         ResourceLinkAssociation,
-		"aws_networkmanager_site":                                     ResourceSite,
-		"aws_networkmanager_site_to_site_vpn_attachment":              ResourceSiteToSiteVPNAttachment,
-		"aws_networkmanager_transit_gateway_connect_peer_association": ResourceTransitGatewayConnectPeerAssociation,
-		"aws_networkmanager_transit_gateway_peering":                  ResourceTransitGatewayPeering,
-		"aws_networkmanager_transit_gateway_registration":             ResourceTransitGatewayRegistration,
-		"aws_networkmanager_transit_gateway_route_table_attachment":   ResourceTransitGatewayRouteTableAttachment,
-		"aws_networkmanager_vpc_attachment":                           ResourceVPCAttachment,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAttachmentAccepter,
+			TypeName: "aws_networkmanager_attachment_accepter",
+		},
+		{
+			Factory:  ResourceConnectAttachment,
+			TypeName: "aws_networkmanager_connect_attachment",
+		},
+		{
+			Factory:  ResourceConnectPeer,
+			TypeName: "aws_networkmanager_connect_peer",
+		},
+		{
+			Factory:  ResourceConnection,
+			TypeName: "aws_networkmanager_connection",
+		},
+		{
+			Factory:  ResourceCoreNetwork,
+			TypeName: "aws_networkmanager_core_network",
+		},
+		{
+			Factory:  ResourceCoreNetworkPolicyAttachment,
+			TypeName: "aws_networkmanager_core_network_policy_attachment",
+		},
+		{
+			Factory:  ResourceCustomerGatewayAssociation,
+			TypeName: "aws_networkmanager_customer_gateway_association",
+		},
+		{
+			Factory:  ResourceDevice,
+			TypeName: "aws_networkmanager_device",
+		},
+		{
+			Factory:  ResourceGlobalNetwork,
+			TypeName: "aws_networkmanager_global_network",
+		},
+		{
+			Factory:  ResourceLink,
+			TypeName: "aws_networkmanager_link",
+		},
+		{
+			Factory:  ResourceLinkAssociation,
+			TypeName: "aws_networkmanager_link_association",
+		},
+		{
+			Factory:  ResourceSite,
+			TypeName: "aws_networkmanager_site",
+		},
+		{
+			Factory:  ResourceSiteToSiteVPNAttachment,
+			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
+		},
+		{
+			Factory:  ResourceTransitGatewayConnectPeerAssociation,
+			TypeName: "aws_networkmanager_transit_gateway_connect_peer_association",
+		},
+		{
+			Factory:  ResourceTransitGatewayPeering,
+			TypeName: "aws_networkmanager_transit_gateway_peering",
+		},
+		{
+			Factory:  ResourceTransitGatewayRegistration,
+			TypeName: "aws_networkmanager_transit_gateway_registration",
+		},
+		{
+			Factory:  ResourceTransitGatewayRouteTableAttachment,
+			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
+		},
+		{
+			Factory:  ResourceVPCAttachment,
+			TypeName: "aws_networkmanager_vpc_attachment",
+		},
 	}
 }
 
