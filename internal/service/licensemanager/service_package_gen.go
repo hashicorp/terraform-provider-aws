@@ -29,6 +29,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 	return map[string]func() *schema.Resource{
 		"aws_licensemanager_association":           ResourceAssociation,
 		"aws_licensemanager_grant":                 ResourceGrant,
+		"aws_licensemanager_grant_accepter":        ResourceGrantAccepter,
 		"aws_licensemanager_license_configuration": ResourceLicenseConfiguration,
 	}
 }
