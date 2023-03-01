@@ -22,16 +22,16 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"grant": {
-			"basic":      testAccLicenseManagerGrant_basic,
-			"disappears": testAccLicenseManagerGrant_disappears,
-			"name":       testAccLicenseManagerGrant_name,
+			"basic":      testAccGrant_basic,
+			"disappears": testAccGrant_disappears,
+			"name":       testAccGrant_name,
 		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func testAccLicenseManagerGrant_basic(t *testing.T) {
+func testAccGrant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
@@ -85,7 +85,7 @@ func testAccLicenseManagerGrant_basic(t *testing.T) {
 	})
 }
 
-func testAccLicenseManagerGrant_disappears(t *testing.T) {
+func testAccGrant_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
@@ -123,7 +123,7 @@ func testAccLicenseManagerGrant_disappears(t *testing.T) {
 	})
 }
 
-func testAccLicenseManagerGrant_name(t *testing.T) {
+func testAccGrant_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
@@ -186,10 +186,14 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
-		_, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
+		out, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
+		}
+
+		if out == nil {
+			return fmt.Errorf("Bucket %q does not exist", rs.Primary.ID)
 		}
 
 		return nil
