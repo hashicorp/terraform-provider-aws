@@ -18,10 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	routeDestinationCIDRBlock     = "destination_cidr_block"
+	routeDestinationIPv6CIDRBlock = "destination_ipv6_cidr_block"
+	routeDestinationPrefixListID  = "destination_prefix_list_id"
+)
+
 var routeValidDestinations = []string{
-	"destination_cidr_block",
-	"destination_ipv6_cidr_block",
-	"destination_prefix_list_id",
+	routeDestinationCIDRBlock,
+	routeDestinationIPv6CIDRBlock,
+	routeDestinationPrefixListID,
 }
 
 var routeValidTargets = []string{
@@ -38,6 +44,7 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
+// @SDKResource("aws_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -64,26 +71,26 @@ func ResourceRoute() *schema.Resource {
 			///
 			// Destinations.
 			///
-			"destination_cidr_block": {
+			routeDestinationCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
+				ExactlyOneOf: routeValidDestinations,
 			},
-			"destination_ipv6_cidr_block": {
+			routeDestinationIPv6CIDRBlock: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
 				ValidateFunc:     verify.ValidIPv6CIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
-				ExactlyOneOf:     []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
+				ExactlyOneOf:     routeValidDestinations,
 			},
-			"destination_prefix_list_id": {
+			routeDestinationPrefixListID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
+				ExactlyOneOf: routeValidDestinations,
 			},
 
 			//
@@ -93,7 +100,7 @@ func ResourceRoute() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+				ConflictsWith: []string{routeDestinationIPv6CIDRBlock}, // IPv4 destinations only.
 			},
 			"core_network_arn": {
 				Type:         schema.TypeString,
@@ -104,7 +111,7 @@ func ResourceRoute() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{"destination_cidr_block"}, // IPv6 destinations only.
+				ConflictsWith: []string{routeDestinationCIDRBlock}, // IPv6 destinations only.
 			},
 			"gateway_id": {
 				Type:         schema.TypeString,
@@ -144,8 +151,8 @@ func ResourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 				ConflictsWith: []string{
-					"destination_ipv6_cidr_block", // IPv4 destinations only.
-					"destination_prefix_list_id",  // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
+					routeDestinationIPv6CIDRBlock, // IPv4 destinations only.
+					routeDestinationPrefixListID,  // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
 				},
 			},
 			"vpc_peering_connection_id": {
@@ -197,13 +204,13 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
-	case "destination_cidr_block":
+	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
 		routeFinder = FindRouteByIPv4Destination
-	case "destination_ipv6_cidr_block":
+	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = FindRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
@@ -274,11 +281,11 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var routeFinder RouteFinder
 
 	switch destinationAttributeKey {
-	case "destination_cidr_block":
+	case routeDestinationCIDRBlock:
 		routeFinder = FindRouteByIPv4Destination
-	case "destination_ipv6_cidr_block":
+	case routeDestinationIPv6CIDRBlock:
 		routeFinder = FindRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
@@ -300,9 +307,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
-	d.Set("destination_cidr_block", route.DestinationCidrBlock)
-	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
-	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
+	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
+	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
+	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
 	// VPC Endpoint ID is returned in Gateway ID field
 	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
 		d.Set("gateway_id", "")
@@ -349,13 +356,13 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
-	case "destination_cidr_block":
+	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
 		routeFinder = FindRouteByIPv4Destination
-	case "destination_ipv6_cidr_block":
+	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = FindRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
@@ -423,13 +430,13 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
-	case "destination_cidr_block":
+	case routeDestinationCIDRBlock:
 		input.DestinationCidrBlock = destination
 		routeFinder = FindRouteByIPv4Destination
-	case "destination_ipv6_cidr_block":
+	case routeDestinationIPv6CIDRBlock:
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = FindRouteByIPv6Destination
-	case "destination_prefix_list_id":
+	case routeDestinationPrefixListID:
 		input.DestinationPrefixListId = destination
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
@@ -476,11 +483,11 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	destination := idParts[1]
 	d.Set("route_table_id", routeTableID)
 	if strings.Contains(destination, ":") {
-		d.Set("destination_ipv6_cidr_block", destination)
+		d.Set(routeDestinationIPv6CIDRBlock, destination)
 	} else if strings.Contains(destination, ".") {
-		d.Set("destination_cidr_block", destination)
+		d.Set(routeDestinationCIDRBlock, destination)
 	} else {
-		d.Set("destination_prefix_list_id", destination)
+		d.Set(routeDestinationPrefixListID, destination)
 	}
 
 	d.SetId(RouteCreateID(routeTableID, destination))

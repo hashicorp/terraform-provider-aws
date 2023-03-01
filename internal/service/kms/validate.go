@@ -9,7 +9,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const AliasNameRegexPattern = `alias/[a-zA-Z0-9/_-]+`
+const (
+	aliasNameRegexPattern   = `alias/[a-zA-Z0-9/_-]+`
+	multiRegionKeyIdPattern = `mrk-[a-f0-9]{32}`
+)
+
+var (
+	aliasNameRegex     = regexp.MustCompile(`^` + aliasNameRegexPattern + `$`)
+	keyIdRegex         = regexp.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
+	keyIdResourceRegex = regexp.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
+)
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
@@ -28,7 +37,7 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile("^" + AliasNameRegexPattern + "$").MatchString(value) {
+	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
 	}
@@ -42,7 +51,7 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
-	if !regexp.MustCompile("^" + AliasNameRegexPattern + "$").MatchString(value) {
+	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
 	}
@@ -61,7 +70,7 @@ var ValidateKeyOrAlias = validation.Any(
 	validateKeyAliasARN,
 )
 
-var validateKeyId = validation.StringMatch(regexp.MustCompile("^"+verify.UUIDRegexPattern+"$"), "must be a KMS Key ID")
+var validateKeyId = validation.StringMatch(keyIdRegex, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
@@ -87,7 +96,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validateKeyAliasName = validation.StringMatch(regexp.MustCompile("^"+AliasNameRegexPattern+"$"), "must be a KMS Key Alias")
+var validateKeyAliasName = validation.StringMatch(aliasNameRegex, "must be a KMS Key Alias")
 
 func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

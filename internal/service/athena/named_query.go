@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_athena_named_query")
 func ResourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamedQueryCreate,

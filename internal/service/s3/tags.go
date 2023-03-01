@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	ErrCodeNoSuchTagSet = "NoSuchTagSet"
+	ErrCodeNoSuchTagSet      = "NoSuchTagSet"
+	ErrCodeNoSuchTagSetError = "NoSuchTagSetError"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -34,22 +35,22 @@ func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
-		return tftags.New(nil), nil
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // BucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
 func BucketUpdateTags(ctx context.Context, conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := BucketListTags(ctx, conn, identifier)
@@ -115,21 +116,21 @@ func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftag
 		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
-		return tftags.New(nil), nil
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // ObjectUpdateTags updates S3 object tags.
 func ObjectUpdateTags(ctx context.Context, conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := ObjectListTags(ctx, conn, bucket, key)

@@ -27,6 +27,7 @@ const (
 	targetSubscriptionTimeout = 30 * time.Second
 )
 
+// @SDKResource("aws_codestarnotifications_notification_rule")
 func ResourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,
@@ -134,7 +135,7 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	params := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   aws.String(d.Get("detail_type").(string)),
@@ -191,7 +192,7 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	tags := tftags.New(rule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.New(ctx, rule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

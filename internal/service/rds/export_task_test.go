@@ -28,7 +28,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(rdsv1.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,7 +65,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(rdsv1.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

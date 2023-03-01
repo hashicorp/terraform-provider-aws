@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_hdfs")
 func ResourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationHDFSCreate,
@@ -154,7 +155,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationHdfsInput{
 		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
@@ -319,7 +320,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
 		}
 
-		if d.HasChange("name_noode") {
+		if d.HasChange("name_node") {
 			input.NameNodes = expandHDFSNameNodes(d.Get("name_node").(*schema.Set))
 		}
 

@@ -20,6 +20,7 @@ import (
 
 const policyTypeStatusDisabled = "DISABLED"
 
+// @SDKResource("aws_organizations_organization")
 func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,

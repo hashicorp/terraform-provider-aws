@@ -523,11 +523,10 @@ func testAccCreateRandomRecordsInZoneIdProvider(ctx context.Context, providerF f
 			},
 		}
 		log.Printf("[DEBUG] Change set: %s\n", *req)
-		resp, err := tfroute53.ChangeRecordSet(ctx, conn, req)
+		changeInfo, err := tfroute53.ChangeResourceRecordSets(ctx, conn, req)
 		if err != nil {
 			return err
 		}
-		changeInfo := resp.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
 		err = tfroute53.WaitForRecordSetToSync(ctx, conn, tfroute53.CleanChangeID(*changeInfo.Id))
 		return err
 	}

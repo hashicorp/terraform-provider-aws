@@ -37,7 +37,7 @@ func GetTag(ctx context.Context, conn ec2iface.EC2API, identifier string, key st
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.Tags)
+	listTags := KeyValueTags(ctx, output.Tags)
 
 	if !listTags.KeyExists(key) {
 		return nil, tfresource.NewEmptyResultError(nil)
@@ -62,10 +62,10 @@ func ListTags(ctx context.Context, conn ec2iface.EC2API, identifier string) (tft
 	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // []*SERVICE.Tag handling
@@ -91,7 +91,7 @@ func Tags(tags tftags.KeyValueTags) []*ec2.Tag {
 // Accepts the following types:
 //   - []*ec2.Tag
 //   - []*ec2.TagDescription
-func KeyValueTags(tags interface{}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags interface{}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*ec2.Tag:
 		m := make(map[string]*string, len(tags))
@@ -100,7 +100,7 @@ func KeyValueTags(tags interface{}) tftags.KeyValueTags {
 			m[aws.StringValue(tag.Key)] = tag.Value
 		}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	case []*ec2.TagDescription:
 		m := make(map[string]*string, len(tags))
 
@@ -108,9 +108,9 @@ func KeyValueTags(tags interface{}) tftags.KeyValueTags {
 			m[aws.StringValue(tag.Key)] = tag.Value
 		}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	default:
-		return tftags.New(nil)
+		return tftags.New(ctx, nil)
 	}
 }
 
@@ -118,8 +118,8 @@ func KeyValueTags(tags interface{}) tftags.KeyValueTags {
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ec2.DeleteTagsInput{

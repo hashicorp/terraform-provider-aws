@@ -19,7 +19,7 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(iam.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,7 +48,7 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(iam.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

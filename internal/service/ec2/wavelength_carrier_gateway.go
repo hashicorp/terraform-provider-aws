@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_carrier_gateway")
 func ResourceCarrierGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCarrierGatewayCreate,
@@ -55,7 +56,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCarrierGatewayInput{
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCarrierGateway),
@@ -109,7 +110,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
-	tags := KeyValueTags(carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

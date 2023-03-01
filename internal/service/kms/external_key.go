@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_external_key")
 func ResourceExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExternalKeyCreate,
@@ -118,7 +119,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
@@ -321,7 +322,7 @@ func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating KMS External Key (%s) tags: %s", d.Id(), err)
 		}
 
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(n)); err != nil {
+		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, n)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}

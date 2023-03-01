@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_service_discovery_http_namespace")
 func ResourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHTTPNamespaceCreate,
@@ -59,7 +60,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
