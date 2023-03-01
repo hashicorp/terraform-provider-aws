@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Instance.
 ---
 
-# Resource: aws_ec2_verifiedaccess_instance
+# Resource: aws_verifiedaccess_instance
 
 Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Instance.
 
