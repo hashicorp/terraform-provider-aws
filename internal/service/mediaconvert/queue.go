@@ -102,7 +102,7 @@ func ResourceQueue() *schema.Resource {
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -137,7 +137,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -191,7 +191,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -229,7 +229,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -249,7 +249,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
+func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
 	const mutexKey = `mediaconvertaccountconn`
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -262,7 +262,7 @@ func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, e
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn().DescribeEndpoints(input)
+	output, err := awsClient.MediaConvertConn().DescribeEndpointsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
