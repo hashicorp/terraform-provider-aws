@@ -42,7 +42,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // UpdateTags updates resourceexplorer2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 

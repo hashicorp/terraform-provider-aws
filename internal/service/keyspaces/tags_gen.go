@@ -61,7 +61,8 @@ func KeyValueTags(ctx context.Context, tags []*keyspaces.Tag) tftags.KeyValueTag
 // UpdateTags updates keyspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,6 +95,6 @@ func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifie
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(), identifier, oldTags, newTags)
 }

@@ -61,7 +61,8 @@ func KeyValueTags(ctx context.Context, tags []*kinesisanalyticsv2.Tag) tftags.Ke
 // UpdateTags updates kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,6 +95,6 @@ func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyti
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(), identifier, oldTags, newTags)
 }

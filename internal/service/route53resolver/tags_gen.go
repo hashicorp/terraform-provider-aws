@@ -18,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier, key string) (*string, error) {
 	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
@@ -81,7 +81,8 @@ func KeyValueTags(ctx context.Context, tags []*route53resolver.Tag) tftags.KeyVa
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -114,6 +115,6 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier, oldTags, newTags)
 }

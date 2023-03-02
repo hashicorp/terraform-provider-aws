@@ -18,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn ec2iface.EC2API, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn ec2iface.EC2API, identifier, key string) (*string, error) {
 	input := &ec2.DescribeTagsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -92,7 +92,7 @@ func Tags(tags tftags.KeyValueTags) []*ec2.Tag {
 // Accepts the following types:
 //   - []*ec2.Tag
 //   - []*ec2.TagDescription
-func KeyValueTags(ctx context.Context, tags interface{}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*ec2.Tag:
 		m := make(map[string]*string, len(tags))
@@ -118,7 +118,8 @@ func KeyValueTags(ctx context.Context, tags interface{}) tftags.KeyValueTags {
 // UpdateTags updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -151,6 +152,6 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).EC2Conn(), identifier, oldTags, newTags)
 }
