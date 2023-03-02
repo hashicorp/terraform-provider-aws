@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -25,15 +25,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53_delegation_set":          DataSourceDelegationSet,
+		"aws_route53_traffic_policy_document": DataSourceTrafficPolicyDocument,
+		"aws_route53_zone":                    DataSourceZone,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53_delegation_set":                ResourceDelegationSet,
+		"aws_route53_health_check":                  ResourceHealthCheck,
+		"aws_route53_hosted_zone_dnssec":            ResourceHostedZoneDNSSEC,
+		"aws_route53_key_signing_key":               ResourceKeySigningKey,
+		"aws_route53_query_log":                     ResourceQueryLog,
+		"aws_route53_record":                        ResourceRecord,
+		"aws_route53_traffic_policy":                ResourceTrafficPolicy,
+		"aws_route53_traffic_policy_instance":       ResourceTrafficPolicyInstance,
+		"aws_route53_vpc_association_authorization": ResourceVPCAssociationAuthorization,
+		"aws_route53_zone":                          ResourceZone,
+		"aws_route53_zone_association":              ResourceZoneAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "route53"
+	return names.Route53
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

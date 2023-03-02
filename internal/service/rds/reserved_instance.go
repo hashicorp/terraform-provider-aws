@@ -22,6 +22,7 @@ const (
 	ResNameReservedInstance = "Reserved Instance"
 )
 
+// @SDKResource("aws_rds_reserved_instance")
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReservedInstanceCreate,

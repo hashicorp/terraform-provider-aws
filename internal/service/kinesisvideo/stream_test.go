@@ -26,7 +26,7 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 	rInt2 := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
@@ -69,7 +69,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 	rName2 := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
@@ -112,7 +112,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
@@ -159,7 +159,7 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),

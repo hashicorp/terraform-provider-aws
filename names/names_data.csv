@@ -205,7 +205,7 @@ kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kines
 kinesis-video-signaling,kinesisvideosignaling,kinesisvideosignalingchannels,kinesisvideosignaling,,kinesisvideosignaling,,kinesisvideosignalingchannels,KinesisVideoSignaling,KinesisVideoSignalingChannels,,1,,,aws_kinesisvideosignaling_,,kinesisvideosignaling_,Kinesis Video Signaling,Amazon,,,,,
 kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,
 lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,1,,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,
-lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,,,aws_lambda_,,lambda_,Lambda,AWS,,,,,
+lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,
 ,,,,,,,,,,,,,,,,,Launch Wizard,AWS,x,,,,No SDK support
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,
 lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexmodelsv2,,lexv2models,LexModelsV2,LexModelsV2,,1,,,aws_lexmodelsv2_,,lexmodelsv2_,Lex Models V2,Amazon,,,,,
@@ -351,6 +351,7 @@ transfer,transfer,transfer,transfer,,transfer,,,Transfer,Transfer,,1,,,aws_trans
 ,,,,,transitgateway,ec2,,TransitGateway,,,,,aws_ec2_transit_gateway,aws_transitgateway_,transitgateway_,ec2_transit_gateway,Transit Gateway,AWS,x,x,,,Part of EC2
 translate,translate,translate,translate,,translate,,,Translate,Translate,,1,,,aws_translate_,,translate_,Translate,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Trusted Advisor,AWS,x,,,,Part of Support
+,,,,,verifiedaccess,ec2,,VerifiedAccess,,,,,aws_verifiedaccess,aws_verifiedaccess_,verifiedaccess_,verifiedaccess,Verified Access,AWS,x,x,,,Part of EC2
 ,,,,,vpc,ec2,,VPC,,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_network_performance;vpc_peering_;vpc_security_group_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,x,,,Part of EC2
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,x,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,x,,,Part of EC2

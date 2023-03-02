@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appsync_api_cache":                   ResourceAPICache,
+		"aws_appsync_api_key":                     ResourceAPIKey,
+		"aws_appsync_datasource":                  ResourceDataSource,
+		"aws_appsync_domain_name":                 ResourceDomainName,
+		"aws_appsync_domain_name_api_association": ResourceDomainNameAPIAssociation,
+		"aws_appsync_function":                    ResourceFunction,
+		"aws_appsync_graphql_api":                 ResourceGraphQLAPI,
+		"aws_appsync_resolver":                    ResourceResolver,
+		"aws_appsync_type":                        ResourceType,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "appsync"
+	return names.AppSync
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

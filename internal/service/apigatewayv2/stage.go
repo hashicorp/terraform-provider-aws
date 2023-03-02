@@ -24,6 +24,7 @@ const (
 	defaultStageName = "$default"
 )
 
+// @SDKResource("aws_apigatewayv2_stage")
 func ResourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,

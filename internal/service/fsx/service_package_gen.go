@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_fsx_openzfs_snapshot": DataSourceOpenzfsSnapshot,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_fsx_backup":                        ResourceBackup,
+		"aws_fsx_data_repository_association":   ResourceDataRepositoryAssociation,
+		"aws_fsx_file_cache":                    ResourceFileCache,
+		"aws_fsx_lustre_file_system":            ResourceLustreFileSystem,
+		"aws_fsx_ontap_file_system":             ResourceOntapFileSystem,
+		"aws_fsx_ontap_storage_virtual_machine": ResourceOntapStorageVirtualMachine,
+		"aws_fsx_ontap_volume":                  ResourceOntapVolume,
+		"aws_fsx_openzfs_file_system":           ResourceOpenzfsFileSystem,
+		"aws_fsx_openzfs_snapshot":              ResourceOpenzfsSnapshot,
+		"aws_fsx_openzfs_volume":                ResourceOpenzfsVolume,
+		"aws_fsx_windows_file_system":           ResourceWindowsFileSystem,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "fsx"
+	return names.FSx
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

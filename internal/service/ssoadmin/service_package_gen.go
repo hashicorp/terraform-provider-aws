@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssoadmin_instances":      DataSourceInstances,
+		"aws_ssoadmin_permission_set": DataSourcePermissionSet,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssoadmin_account_assignment":                 ResourceAccountAssignment,
+		"aws_ssoadmin_customer_managed_policy_attachment": ResourceCustomerManagedPolicyAttachment,
+		"aws_ssoadmin_instance_access_control_attributes": ResourceAccessControlAttributes,
+		"aws_ssoadmin_managed_policy_attachment":          ResourceManagedPolicyAttachment,
+		"aws_ssoadmin_permission_set":                     ResourcePermissionSet,
+		"aws_ssoadmin_permission_set_inline_policy":       ResourcePermissionSetInlinePolicy,
+		"aws_ssoadmin_permissions_boundary_attachment":    ResourcePermissionsBoundaryAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ssoadmin"
+	return names.SSOAdmin
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

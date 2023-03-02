@@ -23,6 +23,7 @@ const (
 	permissionsBoundaryAttachmentTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_ssoadmin_permissions_boundary_attachment")
 func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,

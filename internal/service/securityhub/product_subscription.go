@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_product_subscription")
 func ResourceProductSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductSubscriptionCreate,

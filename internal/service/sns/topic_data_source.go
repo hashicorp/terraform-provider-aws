@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_sns_topic")
 func DataSourceTopic() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTopicRead,

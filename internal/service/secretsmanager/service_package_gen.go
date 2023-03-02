@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_secretsmanager_random_password": DataSourceRandomPassword,
+		"aws_secretsmanager_secret":          DataSourceSecret,
+		"aws_secretsmanager_secret_rotation": DataSourceSecretRotation,
+		"aws_secretsmanager_secret_version":  DataSourceSecretVersion,
+		"aws_secretsmanager_secrets":         DataSourceSecrets,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_secretsmanager_secret":          ResourceSecret,
+		"aws_secretsmanager_secret_policy":   ResourceSecretPolicy,
+		"aws_secretsmanager_secret_rotation": ResourceSecretRotation,
+		"aws_secretsmanager_secret_version":  ResourceSecretVersion,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "secretsmanager"
+	return names.SecretsManager
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

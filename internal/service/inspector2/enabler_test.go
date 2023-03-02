@@ -36,7 +36,7 @@ func testAccEnabler_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -65,7 +65,7 @@ func testAccEnabler_accountID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -95,7 +95,7 @@ func testAccEnabler_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},

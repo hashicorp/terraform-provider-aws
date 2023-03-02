@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_waf_ipset":                 DataSourceIPSet,
+		"aws_waf_rate_based_rule":       DataSourceRateBasedRule,
+		"aws_waf_rule":                  DataSourceRule,
+		"aws_waf_subscribed_rule_group": DataSourceSubscribedRuleGroup,
+		"aws_waf_web_acl":               DataSourceWebACL,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_waf_byte_match_set":          ResourceByteMatchSet,
+		"aws_waf_geo_match_set":           ResourceGeoMatchSet,
+		"aws_waf_ipset":                   ResourceIPSet,
+		"aws_waf_rate_based_rule":         ResourceRateBasedRule,
+		"aws_waf_regex_match_set":         ResourceRegexMatchSet,
+		"aws_waf_regex_pattern_set":       ResourceRegexPatternSet,
+		"aws_waf_rule":                    ResourceRule,
+		"aws_waf_rule_group":              ResourceRuleGroup,
+		"aws_waf_size_constraint_set":     ResourceSizeConstraintSet,
+		"aws_waf_sql_injection_match_set": ResourceSQLInjectionMatchSet,
+		"aws_waf_web_acl":                 ResourceWebACL,
+		"aws_waf_xss_match_set":           ResourceXSSMatchSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "waf"
+	return names.WAF
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_codebuild_source_credential")
 func ResourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,

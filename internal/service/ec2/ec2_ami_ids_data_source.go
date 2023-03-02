@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ami_ids")
 func DataSourceAMIIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIIDsRead,

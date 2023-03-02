@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_directory_service_conditional_forwarder")
 func ResourceConditionalForwarder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConditionalForwarderCreate,

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_s3_endpoint")
 func ResourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,

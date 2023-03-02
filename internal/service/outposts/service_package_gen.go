@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,7 +22,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_outposts_asset":                  DataSourceOutpostAsset,
+		"aws_outposts_assets":                 DataSourceOutpostAssets,
+		"aws_outposts_outpost":                DataSourceOutpost,
+		"aws_outposts_outpost_instance_type":  DataSourceOutpostInstanceType,
+		"aws_outposts_outpost_instance_types": DataSourceOutpostInstanceTypes,
+		"aws_outposts_outposts":               DataSourceOutposts,
+		"aws_outposts_site":                   DataSourceSite,
+		"aws_outposts_sites":                  DataSourceSites,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
@@ -30,7 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "outposts"
+	return names.Outposts
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

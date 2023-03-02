@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ssoadmin_account_assignment")
 func ResourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountAssignmentCreate,

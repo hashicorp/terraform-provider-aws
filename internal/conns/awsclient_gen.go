@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -319,7 +320,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -332,13 +332,14 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []intf.ServicePackage
+	ServicePackages         []ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
 	httpClient *http.Client
 
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
+	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
 	rdsClient       lazyClient[*rds_sdkv2.Client]
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
@@ -1319,6 +1320,10 @@ func (client *AWSClient) LakeFormationConn() *lakeformation.LakeFormation {
 
 func (client *AWSClient) LambdaConn() *lambda.Lambda {
 	return client.lambdaConn
+}
+
+func (client *AWSClient) LambdaClient() *lambda_sdkv2.Client {
+	return client.lambdaClient.Client()
 }
 
 func (client *AWSClient) LexModelsConn() *lexmodelbuildingservice.LexModelBuildingService {

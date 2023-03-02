@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_gamelift_game_session_queue")
 func ResourceGameSessionQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGameSessionQueueCreate,

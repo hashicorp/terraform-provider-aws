@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ebs_volumes")
 func DataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumesRead,

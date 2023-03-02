@@ -25,6 +25,7 @@ const (
 	deleteLedgerTimeout = 15 * time.Minute
 )
 
+// @SDKResource("aws_qldb_ledger")
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLedgerCreate,

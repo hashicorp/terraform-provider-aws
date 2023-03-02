@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_appsync_type")
 func ResourceType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTypeCreate,

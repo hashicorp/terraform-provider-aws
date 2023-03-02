@@ -24,6 +24,7 @@ const (
 	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_role_policy")
 func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutRolePolicy API is idempotent, so these can be the same.

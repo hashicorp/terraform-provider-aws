@@ -19,6 +19,7 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
+// @SDKDataSource("aws_api_gateway_domain_name")
 func DataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainNameRead,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_sesv2_dedicated_ip_pool")
 func DataSourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,

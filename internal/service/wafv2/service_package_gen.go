@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_wafv2_ip_set":            DataSourceIPSet,
+		"aws_wafv2_regex_pattern_set": DataSourceRegexPatternSet,
+		"aws_wafv2_rule_group":        DataSourceRuleGroup,
+		"aws_wafv2_web_acl":           DataSourceWebACL,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_wafv2_ip_set":                        ResourceIPSet,
+		"aws_wafv2_regex_pattern_set":             ResourceRegexPatternSet,
+		"aws_wafv2_rule_group":                    ResourceRuleGroup,
+		"aws_wafv2_web_acl":                       ResourceWebACL,
+		"aws_wafv2_web_acl_association":           ResourceWebACLAssociation,
+		"aws_wafv2_web_acl_logging_configuration": ResourceWebACLLoggingConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "wafv2"
+	return names.WAFV2
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

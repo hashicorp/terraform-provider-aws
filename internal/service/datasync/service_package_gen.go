@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,23 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_datasync_agent":                            ResourceAgent,
+		"aws_datasync_location_efs":                     ResourceLocationEFS,
+		"aws_datasync_location_fsx_lustre_file_system":  ResourceLocationFSxLustreFileSystem,
+		"aws_datasync_location_fsx_openzfs_file_system": ResourceLocationFSxOpenZFSFileSystem,
+		"aws_datasync_location_fsx_windows_file_system": ResourceLocationFSxWindowsFileSystem,
+		"aws_datasync_location_hdfs":                    ResourceLocationHDFS,
+		"aws_datasync_location_nfs":                     ResourceLocationNFS,
+		"aws_datasync_location_object_storage":          ResourceLocationObjectStorage,
+		"aws_datasync_location_s3":                      ResourceLocationS3,
+		"aws_datasync_location_smb":                     ResourceLocationSMB,
+		"aws_datasync_task":                             ResourceTask,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "datasync"
+	return names.DataSync
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

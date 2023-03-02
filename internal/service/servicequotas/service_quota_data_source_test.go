@@ -17,7 +17,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
 			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
@@ -48,7 +48,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
 			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
@@ -100,7 +100,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
 			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
@@ -131,7 +131,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
 			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpn_gateway_route_propagation")
 func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayRoutePropagationEnable,

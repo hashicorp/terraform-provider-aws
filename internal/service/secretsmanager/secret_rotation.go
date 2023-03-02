@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_secretsmanager_secret_rotation")
 func ResourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretRotationCreate,

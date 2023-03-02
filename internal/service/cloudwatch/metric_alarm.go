@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudwatch_metric_alarm")
 func ResourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

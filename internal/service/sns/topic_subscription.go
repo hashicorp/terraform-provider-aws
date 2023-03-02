@@ -127,6 +127,7 @@ var (
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic_subscription")
 func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,

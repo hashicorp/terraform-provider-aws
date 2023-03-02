@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_prefix_list")
 func DataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrefixListRead,
