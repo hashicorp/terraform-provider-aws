@@ -230,7 +230,7 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:        *sdkVersion == sdkV1 && *updateTags,
+		ConnsPkg:        *sdkVersion == sdkV1 && (*listTags || *updateTags),
 		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
