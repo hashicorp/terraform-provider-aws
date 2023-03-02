@@ -270,7 +270,7 @@ func testAccCheckUserExists(ctx context.Context, n string, res *transfer.Describ
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
-		output, err := tftransfer.FindUserByServerIDAndUserName(ctx, conn, serverID, userName)
+		output, err := tftransfer.FindUserByTwoPartKey(ctx, conn, serverID, userName)
 
 		if err != nil {
 			return err
@@ -294,7 +294,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 			userName := rs.Primary.Attributes["user_name"]
 			serverID := rs.Primary.Attributes["server_id"]
 
-			_, err := tftransfer.FindUserByServerIDAndUserName(ctx, conn, serverID, userName)
+			_, err := tftransfer.FindUserByTwoPartKey(ctx, conn, serverID, userName)
 
 			if tfresource.NotFound(err) {
 				continue
