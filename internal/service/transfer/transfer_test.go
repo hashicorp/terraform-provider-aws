@@ -22,6 +22,9 @@ func TestAccTransfer_serial(t *testing.T) {
 			"APIGateway":                    testAccServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":    testAccServer_authenticationLoginBanners,
+			"DataSourceBasic":               testAccServerDataSource_basic,
+			"DataSourceServiceManaged":      testAccServerDataSource_Service_managed,
+			"DataSourceAPIGateway":          testAccServerDataSource_apigateway,
 			"DirectoryService":              testAccServer_directoryService,
 			"Domain":                        testAccServer_domain,
 			"ForceDestroy":                  testAccServer_forceDestroy,
@@ -45,9 +48,16 @@ func TestAccTransfer_serial(t *testing.T) {
 		"SSHKey": {
 			"basic": testAccSSHKey_basic,
 		},
+		"Tag": {
+			"basic":      testAccTag_basic,
+			"disappears": testAccTag_disappears,
+			"Value":      testAccTag_value,
+			"System":     testAccTag_system,
+		},
 		"User": {
 			"basic":                 testAccUser_basic,
 			"disappears":            testAccUser_disappears,
+			"tags":                  testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,
