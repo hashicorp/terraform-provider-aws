@@ -35,20 +35,19 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "client_secret", ""),
 					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_secret", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "0"),
@@ -56,6 +55,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "0"),
 				),
@@ -103,20 +103,6 @@ func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "false"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccUserPoolClientConfig_revocation(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
 				),
 			},
 			{
@@ -293,6 +279,12 @@ func TestAccCognitoIDPUserPoolClient_tokenValidityUnits(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -334,6 +326,12 @@ func TestAccCognitoIDPUserPoolClient_tokenValidityUnits_AccessToken(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -378,6 +376,12 @@ func TestAccCognitoIDPUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -473,11 +477,13 @@ func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"generate_secret"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"generate_secret",
+				},
 			},
 		},
 	})
@@ -533,11 +539,13 @@ func TestAccCognitoIDPUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"generate_secret"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"generate_secret",
+				},
 			},
 		},
 	})
@@ -548,7 +556,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsApplicationID(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_client.test"
-	pinpointResourceName := "aws_pinpoint_app.test"
+	pinpointResourceName := "aws_pinpoint_app.analytics"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -567,7 +575,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsApplicationID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.analytics", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_arn"),
 				),
@@ -616,6 +624,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_client.test"
+	pinpointResourceName := "aws_pinpoint_app.analytics"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -632,7 +641,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", "aws_pinpoint_app.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, "arn"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
@@ -650,7 +659,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", "aws_pinpoint_app.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, "arn"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
@@ -1020,9 +1029,9 @@ resource "aws_iam_role" "analytics" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test" {
+resource "aws_iam_role_policy" "analytics" {
   name = %[1]q
-  role = aws_iam_role.test.id
+  role = aws_iam_role.analytics.id
 
   policy = <<-EOF
 {
@@ -1052,9 +1061,9 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_id = aws_pinpoint_app.test.application_id
+    application_id = aws_pinpoint_app.analytics.application_id
     external_id    = %[1]q
-    role_arn       = aws_iam_role.test.arn
+    role_arn       = aws_iam_role.analytics.arn
   }
 }
 `, rName))
@@ -1069,9 +1078,9 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_id   = aws_pinpoint_app.test.application_id
+    application_id   = aws_pinpoint_app.analytics.application_id
     external_id      = %[1]q
-    role_arn         = aws_iam_role.test.arn
+    role_arn         = aws_iam_role.analytics.arn
     user_data_shared = %[2]t
   }
 }
@@ -1087,7 +1096,7 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_arn = aws_pinpoint_app.test.arn
+    application_arn = aws_pinpoint_app.analytics.arn
   }
 }
 `, rName))
@@ -1102,7 +1111,7 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_arn  = aws_pinpoint_app.test.arn
+    application_arn  = aws_pinpoint_app.analytics.arn
     user_data_shared = %[2]t
   }
 }

@@ -3,7 +3,6 @@ package cognitoidp
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -150,11 +149,8 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 				Computed: true,
 			},
 			"name_prefix": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexp.MustCompile(`[\w\s+=,.@-]+`), "XXX"),
-				},
+				Optional:   true,
+				Validators: userPoolClientNameValidator,
 			},
 			"prevent_user_existence_errors": schema.StringAttribute{
 				Optional: true,
@@ -456,21 +452,49 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 }
 
 func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceManagedUserPoolClientData
+	var state, config, plan resourceManagedUserPoolClientData
 
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPConn()
+
+	params := plan.updateInput(ctx, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.UpdateUserPoolClientWithContext(ctx, params)
+	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
+	if err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
+
+	data := newManagedUserPoolClientData(ctx, plan, poolClient, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
