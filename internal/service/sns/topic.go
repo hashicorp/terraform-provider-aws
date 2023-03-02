@@ -211,7 +211,7 @@ var (
 )
 
 // @SDKResource("aws_sns_topic")
-// @Tags(idAttribute="id")
+// @Tags(identifierAttribute="id")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,

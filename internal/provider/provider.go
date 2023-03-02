@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -294,11 +293,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			var idAttribute *string
-			if v.Tags != (types.ServicePackageTags{}) {
-				idAttribute = &v.Tags.IDAttribute
-			}
 			r := v.Factory()
+
+			var identifierAttribute *string
+			if v.Tags != nil {
+				identifierAttribute = &v.Tags.IdentifierAttribute
+
+				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
+			}
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
@@ -325,7 +327,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
 			}
 			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v, idAttribute, update)
+				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v, identifierAttribute, update)
 			}
 			if v := r.DeleteWithoutTimeout; v != nil {
 				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)

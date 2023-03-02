@@ -29,7 +29,7 @@ const (
 )
 
 // @SDKResource("aws_vpc")
-// @Tags(idAttribute="id")
+// @Tags(identifierAttribute="id")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

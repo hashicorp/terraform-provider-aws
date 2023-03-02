@@ -41,8 +41,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTopic,
 			TypeName: "aws_sns_topic",
-			Tags: types.ServicePackageTags{
-				IDAttribute: "id",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
 			},
 		},
 		{

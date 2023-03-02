@@ -8,23 +8,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ServicePackageTags represents resource-level tagging information.
-type ServicePackageTags struct {
-	IDAttribute string // The attribute used in UpdateTags etc.
+// ServicePackageResourceTags represents resource-level tagging information.
+type ServicePackageResourceTags struct {
+	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source
 // implemented by a service package.
 type ServicePackageFrameworkDataSource struct {
 	Factory func(context.Context) (datasource.DataSourceWithConfigure, error)
-	Tags    ServicePackageTags
+	Tags    *ServicePackageResourceTags
 }
 
 // ServicePackageFrameworkResource represents a Terraform Plugin Framework resource
 // implemented by a service package.
 type ServicePackageFrameworkResource struct {
 	Factory func(context.Context) (resource.ResourceWithConfigure, error)
-	Tags    ServicePackageTags
+	Tags    *ServicePackageResourceTags
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -32,7 +32,7 @@ type ServicePackageFrameworkResource struct {
 type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
-	Tags     ServicePackageTags
+	Tags     *ServicePackageResourceTags
 }
 
 // ServicePackageSDKResource represents a Terraform Plugin SDK resource
@@ -40,5 +40,5 @@ type ServicePackageSDKDataSource struct {
 type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
-	Tags     ServicePackageTags
+	Tags     *ServicePackageResourceTags
 }
