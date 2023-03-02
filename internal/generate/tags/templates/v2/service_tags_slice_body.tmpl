@@ -8,11 +8,11 @@
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
 // Use (tftags.KeyValueTags).ListOfMap() for full tag information.
-func ListOfMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
+func ListOfMap(tags tftags.KeyValueTags) []any {
+	var result []any
 
 	for _, key := range tags.Keys() {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"key":                   key,
 			"value":                 aws.ToString(tags.KeyValue(key)),
 			{{ if .TagTypeAddBoolElem }}
@@ -32,8 +32,8 @@ func ListOfMap(tags tftags.KeyValueTags) []interface{} {
 //
 // Compatible with setting Terraform state for legacy []map[string]string schema.
 // Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
+func ListOfStringMap(tags tftags.KeyValueTags) []any {
+	var result []any
 
 	for _, key := range tags.Keys() {
 		m := map[string]string{
@@ -115,10 +115,10 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 //   - []types.{{ .TagType2 }}
 {{- end }}
 {{- if .TagTypeAddBoolElem }}
-//   - []interface{} (Terraform TypeList configuration block compatible)
+//   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
 {{- end }}
-func KeyValueTags(ctx context.Context, tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []types.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
@@ -189,11 +189,11 @@ func KeyValueTags(ctx context.Context, tags interface{}{{ if .TagTypeIDElem }}, 
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
 		return KeyValueTags(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
-	case []interface{}:
+	case []any:
 		result := make(map[string]*tftags.TagData)
 
 		for _, tfMapRaw := range tags {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
