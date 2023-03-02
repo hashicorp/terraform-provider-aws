@@ -634,41 +634,30 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document
 func buildCoreNetworkBasePolicyDocument(regions []interface{}) (string, error) {
-	mergedDoc := &CoreNetworkPolicyDoc{
-		Version: "2021.12",
-	}
-
-	networkConfiguration := &CoreNetworkPolicyCoreNetworkConfiguration{}
-	networkConfiguration.AsnRanges = CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"})
-
 	edgeLocations := make([]*CoreNetworkEdgeLocation, len(regions))
-
 	for i, location := range regions {
-		edgeLocation := &CoreNetworkEdgeLocation{}
-		edgeLocation.Location = location.(string)
-		edgeLocations[i] = edgeLocation
+		edgeLocations[i] = &CoreNetworkEdgeLocation{Location: location.(string)}
 	}
 
-	networkConfiguration.EdgeLocations = edgeLocations
-	mergedDoc.CoreNetworkConfiguration = networkConfiguration
-
-	segments := make([]*CoreNetworkPolicySegment, 1)
-	segment := &CoreNetworkPolicySegment{
-		Name:        "segment",
-		Description: "base-policy",
+	basePolicy := &CoreNetworkPolicyDoc{
+		Version: "2021.12",
+		CoreNetworkConfiguration: &CoreNetworkPolicyCoreNetworkConfiguration{
+			AsnRanges:     CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"}),
+			EdgeLocations: edgeLocations,
+		},
+		Segments: []*CoreNetworkPolicySegment{
+			{
+				Name:        "segment",
+				Description: "base-policy",
+			},
+		},
 	}
 
-	segments[0] = segment
-
-	mergedDoc.Segments = segments
-
-	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
+	b, err := json.MarshalIndent(basePolicy, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return "", fmt.Errorf("writing Network Manager Core Network Policy Document: formatting JSON: %s", err)
+		return "", fmt.Errorf("building base policy document: %s", err)
 	}
 
-	jsonString := string(jsonDoc)
-
-	return jsonString, nil
+	return string(b), nil
 }
