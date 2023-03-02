@@ -52,3 +52,7 @@ func {{ if .ContextOnly }}{{ .ListTagsFunc }}{{ else }}{{ .ListTagsFunc }}WithCo
 
 	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
+
+func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+	return  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+}
