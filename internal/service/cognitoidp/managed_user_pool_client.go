@@ -148,6 +148,17 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 			"name": schema.StringAttribute{
 				Computed: true,
 			},
+			"name_pattern": schema.StringAttribute{
+				CustomType: fwtypes.RegexpType,
+				Optional:   true,
+				Validators: append(
+					userPoolClientNameValidator,
+					stringvalidator.ExactlyOneOf(
+						path.MatchRelative().AtParent().AtName("name_prefix"),
+						path.MatchRelative().AtParent().AtName("name_pattern"),
+					),
+				),
+			},
 			"name_prefix": schema.StringAttribute{
 				Optional:   true,
 				Validators: userPoolClientNameValidator,
@@ -294,6 +305,11 @@ func (r *resourceManagedUserPoolClient) Create(ctx context.Context, request reso
 	userPoolId := plan.UserPoolID.ValueString()
 
 	var nameMatcher cognitoUserPoolClientDescriptionNameFilter
+	if namePattern := plan.NamePattern; !namePattern.IsUnknown() && !namePattern.IsNull() {
+		nameMatcher = func(name string) (bool, error) {
+			return namePattern.ValueRegexp().MatchString(name), nil
+		}
+	}
 	if namePrefix := plan.NamePrefix; !namePrefix.IsUnknown() && !namePrefix.IsNull() {
 		nameMatcher = func(name string) (bool, error) {
 			return strings.HasPrefix(name, namePrefix.ValueString()), nil
@@ -527,30 +543,31 @@ func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request
 }
 
 type resourceManagedUserPoolClientData struct {
-	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity"`
-	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
-	AllowedOauthFlowsUserPoolClient          types.Bool   `tfsdk:"allowed_oauth_flows_user_pool_client"`
-	AllowedOauthScopes                       types.Set    `tfsdk:"allowed_oauth_scopes"`
-	AnalyticsConfiguration                   types.List   `tfsdk:"analytics_configuration"`
-	AuthSessionValidity                      types.Int64  `tfsdk:"auth_session_validity"`
-	CallbackUrls                             types.Set    `tfsdk:"callback_urls"`
-	ClientSecret                             types.String `tfsdk:"client_secret"`
-	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri"`
-	EnablePropagateAdditionalUserContextData types.Bool   `tfsdk:"enable_propagate_additional_user_context_data"`
-	EnableTokenRevocation                    types.Bool   `tfsdk:"enable_token_revocation"`
-	ExplicitAuthFlows                        types.Set    `tfsdk:"explicit_auth_flows"`
-	ID                                       types.String `tfsdk:"id"`
-	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity"`
-	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
-	Name                                     types.String `tfsdk:"name"`
-	NamePrefix                               types.String `tfsdk:"name_prefix"`
-	PreventUserExistenceErrors               types.String `tfsdk:"prevent_user_existence_errors"`
-	ReadAttributes                           types.Set    `tfsdk:"read_attributes"`
-	RefreshTokenValidity                     types.Int64  `tfsdk:"refresh_token_validity"`
-	SupportedIdentityProviders               types.Set    `tfsdk:"supported_identity_providers"`
-	TokenValidityUnits                       types.List   `tfsdk:"token_validity_units"`
-	UserPoolID                               types.String `tfsdk:"user_pool_id"`
-	WriteAttributes                          types.Set    `tfsdk:"write_attributes"`
+	AccessTokenValidity                      types.Int64    `tfsdk:"access_token_validity"`
+	AllowedOauthFlows                        types.Set      `tfsdk:"allowed_oauth_flows"`
+	AllowedOauthFlowsUserPoolClient          types.Bool     `tfsdk:"allowed_oauth_flows_user_pool_client"`
+	AllowedOauthScopes                       types.Set      `tfsdk:"allowed_oauth_scopes"`
+	AnalyticsConfiguration                   types.List     `tfsdk:"analytics_configuration"`
+	AuthSessionValidity                      types.Int64    `tfsdk:"auth_session_validity"`
+	CallbackUrls                             types.Set      `tfsdk:"callback_urls"`
+	ClientSecret                             types.String   `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String   `tfsdk:"default_redirect_uri"`
+	EnablePropagateAdditionalUserContextData types.Bool     `tfsdk:"enable_propagate_additional_user_context_data"`
+	EnableTokenRevocation                    types.Bool     `tfsdk:"enable_token_revocation"`
+	ExplicitAuthFlows                        types.Set      `tfsdk:"explicit_auth_flows"`
+	ID                                       types.String   `tfsdk:"id"`
+	IdTokenValidity                          types.Int64    `tfsdk:"id_token_validity"`
+	LogoutUrls                               types.Set      `tfsdk:"logout_urls"`
+	Name                                     types.String   `tfsdk:"name"`
+	NamePattern                              fwtypes.Regexp `tfsdk:"name_pattern"`
+	NamePrefix                               types.String   `tfsdk:"name_prefix"`
+	PreventUserExistenceErrors               types.String   `tfsdk:"prevent_user_existence_errors"`
+	ReadAttributes                           types.Set      `tfsdk:"read_attributes"`
+	RefreshTokenValidity                     types.Int64    `tfsdk:"refresh_token_validity"`
+	SupportedIdentityProviders               types.Set      `tfsdk:"supported_identity_providers"`
+	TokenValidityUnits                       types.List     `tfsdk:"token_validity_units"`
+	UserPoolID                               types.String   `tfsdk:"user_pool_id"`
+	WriteAttributes                          types.Set      `tfsdk:"write_attributes"`
 }
 
 func newManagedUserPoolClientData(ctx context.Context, plan resourceManagedUserPoolClientData, in *cognitoidentityprovider.UserPoolClientType, diags *diag.Diagnostics) resourceManagedUserPoolClientData {
@@ -571,6 +588,7 @@ func newManagedUserPoolClientData(ctx context.Context, plan resourceManagedUserP
 		IdTokenValidity:                          flex.Int64ToFrameworkLegacy(ctx, in.IdTokenValidity),
 		LogoutUrls:                               flex.FlattenFrameworkStringSet(ctx, in.LogoutURLs),
 		Name:                                     flex.StringToFramework(ctx, in.ClientName),
+		NamePattern:                              plan.NamePattern,
 		NamePrefix:                               plan.NamePrefix,
 		PreventUserExistenceErrors:               flex.StringToFrameworkLegacy(ctx, in.PreventUserExistenceErrors),
 		ReadAttributes:                           flex.FlattenFrameworkStringSet(ctx, in.ReadAttributes),

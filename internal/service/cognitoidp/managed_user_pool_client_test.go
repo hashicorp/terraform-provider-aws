@@ -111,7 +111,7 @@ func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					"name_pattern",
 				},
 			},
 		},
