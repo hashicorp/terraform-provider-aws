@@ -19,6 +19,7 @@ func TestAccTransfer_serial(t *testing.T) {
 		"Server": {
 			"basic":                         testAccServer_basic,
 			"disappears":                    testAccServer_disappears,
+			"tags":                          testAccServer_tags,
 			"APIGateway":                    testAccServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":    testAccServer_authenticationLoginBanners,
