@@ -29,6 +29,10 @@ func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLo
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+}
+
 // UpdateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

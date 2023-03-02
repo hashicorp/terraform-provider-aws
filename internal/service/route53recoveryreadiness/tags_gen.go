@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn route53recoveryreadinessiface.Route53Rec
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns route53recoveryreadiness service tags.

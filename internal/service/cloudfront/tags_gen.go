@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identifie
 	return KeyValueTags(ctx, output.Tags.Items), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns cloudfront service tags.

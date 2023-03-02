@@ -49,6 +49,10 @@ func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns batch service tags.

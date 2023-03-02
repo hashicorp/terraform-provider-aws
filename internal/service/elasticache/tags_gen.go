@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identif
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns elasticache service tags.

@@ -30,6 +30,10 @@ func ListTags(ctx context.Context, conn route53iface.Route53API, identifier, res
 	return KeyValueTags(ctx, output.ResourceTagSet.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Route53Conn(), identifier, resourceType)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns route53 service tags.

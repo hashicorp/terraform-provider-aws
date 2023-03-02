@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ident
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).KinesisVideoConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns kinesisvideo service tags.

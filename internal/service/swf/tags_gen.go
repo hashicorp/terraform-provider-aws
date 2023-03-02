@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn swfiface.SWFAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).SWFConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns swf service tags.

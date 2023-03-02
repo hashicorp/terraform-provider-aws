@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) 
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns wafv2 service tags.

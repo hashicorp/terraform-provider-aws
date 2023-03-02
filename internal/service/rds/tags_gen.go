@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn rdsiface.RDSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).RDSConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns rds service tags.

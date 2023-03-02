@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn eventbridgeiface.EventBridgeAPI, identif
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).EventsConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns events service tags.

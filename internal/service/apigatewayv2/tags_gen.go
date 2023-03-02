@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, ident
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).APIGatewayV2Conn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns apigatewayv2 service tags.

@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn eksiface.EKSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).EKSConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns eks service tags.

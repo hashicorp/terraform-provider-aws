@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn ecriface.ECRAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ECRConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ecr service tags.

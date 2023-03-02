@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn codecommitiface.CodeCommitAPI, identifie
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).CodeCommitConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns codecommit service tags.

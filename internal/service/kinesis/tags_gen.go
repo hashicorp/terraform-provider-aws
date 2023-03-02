@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier stri
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).KinesisConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns kinesis service tags.

@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, ident
 	return KeyValueTags(ctx, output.ResourceTags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).CEConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ce service tags.

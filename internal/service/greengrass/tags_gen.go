@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn greengrassiface.GreengrassAPI, identifie
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).GreengrassConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns greengrass service tags.

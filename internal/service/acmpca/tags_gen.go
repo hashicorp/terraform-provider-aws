@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn acmpcaiface.ACMPCAAPI, identifier string
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ACMPCAConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns acmpca service tags.

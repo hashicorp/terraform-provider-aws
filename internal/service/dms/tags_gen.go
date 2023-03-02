@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn databasemigrationserviceiface.DatabaseMi
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DMSConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns dms service tags.

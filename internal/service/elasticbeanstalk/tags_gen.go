@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAP
 	return KeyValueTags(ctx, output.ResourceTags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns elasticbeanstalk service tags.

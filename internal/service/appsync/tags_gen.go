@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier stri
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).AppSyncConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns appsync service tags.

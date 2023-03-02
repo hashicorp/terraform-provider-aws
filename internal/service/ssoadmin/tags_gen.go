@@ -30,6 +30,10 @@ func ListTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier, r
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).SSOAdminConn(), identifier, resourceType)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ssoadmin service tags.

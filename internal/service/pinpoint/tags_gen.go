@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier st
 	return KeyValueTags(ctx, output.TagsModel.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).PinpointConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns pinpoint service tags.

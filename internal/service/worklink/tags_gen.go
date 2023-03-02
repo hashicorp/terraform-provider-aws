@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn worklinkiface.WorkLinkAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WorkLinkConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns worklink service tags.

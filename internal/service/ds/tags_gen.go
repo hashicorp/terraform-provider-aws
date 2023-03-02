@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAP
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DSConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ds service tags.

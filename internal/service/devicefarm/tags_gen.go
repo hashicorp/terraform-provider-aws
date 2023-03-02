@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identifie
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DeviceFarmConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns devicefarm service tags.

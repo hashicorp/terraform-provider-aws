@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string) 
 	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns elbv2 service tags.

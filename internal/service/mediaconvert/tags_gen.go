@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn mediaconvertiface.MediaConvertAPI, ident
 	return KeyValueTags(ctx, output.ResourceTags.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).MediaConvertConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns mediaconvert service tags.

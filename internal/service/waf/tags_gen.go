@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn wafiface.WAFAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WAFConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns waf service tags.

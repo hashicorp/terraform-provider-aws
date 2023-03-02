@@ -71,6 +71,10 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 	return KeyValueTags(ctx, output.Tags, identifier, resourceType), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType)
+}
+
 // []*SERVICE.Tag handling
 
 // ListOfMap returns a list of autoscaling in flattened map.

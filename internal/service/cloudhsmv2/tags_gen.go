@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identifie
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).CloudHSMV2Conn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns cloudhsmv2 service tags.

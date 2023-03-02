@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, ide
 	return KeyValueTags(ctx, output.ResourceTags[0].Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DirectConnectConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns directconnect service tags.

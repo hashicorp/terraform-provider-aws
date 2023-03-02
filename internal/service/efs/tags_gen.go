@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn efsiface.EFSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).EFSConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns efs service tags.

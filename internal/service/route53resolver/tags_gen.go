@@ -49,6 +49,10 @@ func ListTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI,
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns route53resolver service tags.

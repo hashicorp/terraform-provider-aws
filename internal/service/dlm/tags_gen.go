@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn dlmiface.DLMAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DLMConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns dlm service tags.

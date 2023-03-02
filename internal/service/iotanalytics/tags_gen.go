@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ident
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns iotanalytics service tags.

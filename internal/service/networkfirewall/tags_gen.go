@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn networkfirewalliface.NetworkFirewallAPI,
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).NetworkFirewallConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns networkfirewall service tags.

@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn elasticsearchserviceiface.ElasticsearchS
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ElasticsearchConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns elasticsearch service tags.

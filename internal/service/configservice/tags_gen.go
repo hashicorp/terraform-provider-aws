@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn configserviceiface.ConfigServiceAPI, ide
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ConfigServiceConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns configservice service tags.

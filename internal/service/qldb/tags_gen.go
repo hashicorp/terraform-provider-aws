@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (t
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).QLDBConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns qldb service tags.

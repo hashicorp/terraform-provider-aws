@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identif
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns wafregional service tags.

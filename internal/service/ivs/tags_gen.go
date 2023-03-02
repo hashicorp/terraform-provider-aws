@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn ivsiface.IVSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).IVSConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns ivs service tags.

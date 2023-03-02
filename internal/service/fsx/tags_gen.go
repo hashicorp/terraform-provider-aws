@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn fsxiface.FSxAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).FSxConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns fsx service tags.

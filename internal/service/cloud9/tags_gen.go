@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns cloud9 service tags.

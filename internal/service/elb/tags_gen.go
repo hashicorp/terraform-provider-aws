@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ELBConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // TagKeys returns elb service tag keys.

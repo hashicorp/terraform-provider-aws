@@ -49,6 +49,10 @@ func ListTags(ctx context.Context, conn transferiface.TransferAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).TransferConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns transfer service tags.

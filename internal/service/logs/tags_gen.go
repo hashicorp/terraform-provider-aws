@@ -29,6 +29,10 @@ func ListTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, i
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns logs service tags.

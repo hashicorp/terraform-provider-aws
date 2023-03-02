@@ -30,6 +30,10 @@ func ListTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceTyp
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).SSMConn(), identifier, resourceType)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ssm service tags.
