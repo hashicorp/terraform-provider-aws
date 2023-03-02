@@ -27,6 +27,7 @@ const (
 	ResNameExperimentTemplate = "Experiment Template"
 )
 
+// @SDKResource("aws_fis_experiment_template")
 func ResourceExperimentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperimentTemplateCreate,
@@ -35,7 +36,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 		DeleteWithoutTimeout: resourceExperimentTemplateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -231,9 +232,9 @@ func ResourceExperimentTemplate() *schema.Resource {
 }
 
 func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISConn
+	conn := meta.(*conns.AWSClient).FISClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fis.CreateExperimentTemplateInput{
 		Actions:        expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
@@ -264,7 +265,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISConn
+	conn := meta.(*conns.AWSClient).FISClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -309,7 +310,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
-	tags := KeyValueTags(experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -324,7 +325,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISConn
+	conn := meta.(*conns.AWSClient).FISClient()
 
 	input := &fis.UpdateExperimentTemplateInput{
 		Id: aws.String(d.Id()),
@@ -363,7 +364,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISConn
+	conn := meta.(*conns.AWSClient).FISClient()
 	_, err := conn.DeleteExperimentTemplate(ctx, &fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
 	})

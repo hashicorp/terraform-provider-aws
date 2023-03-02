@@ -1,6 +1,7 @@
 package athena_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,18 +16,19 @@ import (
 )
 
 func TestAccAthenaNamedQuery_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamedQueryDestroy,
+		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(ctx, resourceName),
 				),
 			},
 			{
@@ -39,18 +41,19 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 }
 
 func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamedQueryDestroy,
+		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamedQueryConfig_workGroup(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(resourceName),
+					testAccCheckNamedQueryExists(ctx, resourceName),
 				),
 			},
 			{
@@ -62,45 +65,47 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckNamedQueryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_athena_named_query" {
-			continue
-		}
-
-		input := &athena.GetNamedQueryInput{
-			NamedQueryId: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.GetNamedQuery(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
-				return nil
+func testAccCheckNamedQueryDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_athena_named_query" {
+				continue
 			}
-			return err
+
+			input := &athena.GetNamedQueryInput{
+				NamedQueryId: aws.String(rs.Primary.ID),
+			}
+
+			resp, err := conn.GetNamedQueryWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
+					return nil
+				}
+				return err
+			}
+			if resp.NamedQuery != nil {
+				return fmt.Errorf("Athena Named Query (%s) found", rs.Primary.ID)
+			}
 		}
-		if resp.NamedQuery != nil {
-			return fmt.Errorf("Athena Named Query (%s) found", rs.Primary.ID)
-		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
+func testAccCheckNamedQueryExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.GetNamedQueryInput{
 			NamedQueryId: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetNamedQuery(input)
+		_, err := conn.GetNamedQueryWithContext(ctx, input)
 		return err
 	}
 }

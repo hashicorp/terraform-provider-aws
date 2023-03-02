@@ -1,6 +1,7 @@
 package outposts_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,10 +13,11 @@ import (
 )
 
 func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_sites.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -45,12 +47,12 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheckSites(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn
+func testAccPreCheckSites(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListSitesInput{}
 
-	output, err := conn.ListSites(input)
+	output, err := conn.ListSitesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

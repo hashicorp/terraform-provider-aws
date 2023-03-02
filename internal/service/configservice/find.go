@@ -1,6 +1,8 @@
 package configservice
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConfigRule(conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
+func FindConfigRule(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
 	input := &configservice.DescribeConfigRulesInput{
 		ConfigRuleNames: []*string{aws.String(name)},
 	}
 
-	output, err := conn.DescribeConfigRules(input)
+	output, err := conn.DescribeConfigRulesWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,

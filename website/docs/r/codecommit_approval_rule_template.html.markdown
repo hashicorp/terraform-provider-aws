@@ -17,17 +17,15 @@ resource "aws_codecommit_approval_rule_template" "example" {
   name        = "MyExampleApprovalRuleTemplate"
   description = "This is an example approval rule template"
 
-  content = <<EOF
-{
-    "Version": "2018-11-08",
-    "DestinationReferences": ["refs/heads/master"],
-    "Statements": [{
-        "Type": "Approvers",
-        "NumberOfApprovalsNeeded": 2,
-        "ApprovalPoolMembers": ["arn:aws:sts::123456789012:assumed-role/CodeCommitReview/*"]
+  content = jsonencode({
+    Version               = "2018-11-08"
+    DestinationReferences = ["refs/heads/master"]
+    Statements = [{
+      Type                    = "Approvers"
+      NumberOfApprovalsNeeded = 2
+      ApprovalPoolMembers     = ["arn:aws:sts::123456789012:assumed-role/CodeCommitReview/*"]
     }]
-}
-EOF
+  })
 }
 ```
 

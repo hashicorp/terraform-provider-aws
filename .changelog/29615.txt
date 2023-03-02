@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lambda_function: Fix missing `ValidationException` message body
+```
+
+```release-note:note
+resource/aws_lambda_function: Updated to AWS SDK V2
+```

@@ -1,6 +1,7 @@
 package inspector_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccInspectorResourceGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 inspector.ResourceGroup
 	resourceName := "aws_inspector_resource_group.test"
 
@@ -26,7 +28,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 			{
 				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v1),
+					testAccCheckResourceGroupExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
@@ -34,7 +36,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 			{
 				Config: testAccResourceGroupConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v2),
+					testAccCheckResourceGroupExists(ctx, resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
 					testAccCheckResourceGroupRecreated(&v1, &v2),
@@ -44,9 +46,9 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -56,7 +58,7 @@ func testAccCheckResourceGroupExists(name string, rg *inspector.ResourceGroup) r
 			return fmt.Errorf("No ID is set")
 		}
 
-		output, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
+		output, err := conn.DescribeResourceGroupsWithContext(ctx, &inspector.DescribeResourceGroupsInput{
 			ResourceGroupArns: aws.StringSlice([]string{rs.Primary.ID}),
 		})
 		if err != nil {

@@ -6,24 +6,22 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceARN)
-}
-
-// newDataSourceARN instantiates a new DataSource for the aws_arn data source.
+// @FrameworkDataSource
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceARN{}, nil
+	d := &dataSourceARN{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceARN struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -32,51 +30,34 @@ func (d *dataSourceARN) Metadata(_ context.Context, request datasource.MetadataR
 	response.TypeName = "aws_arn"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"account": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceARN) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": {
-				Type:     fwtypes.ARNType,
-				Required: true,
+			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"partition": {
-				Type:     types.StringType,
+			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": {
-				Type:     types.StringType,
+			"region": schema.StringAttribute{
 				Computed: true,
 			},
-			"resource": {
-				Type:     types.StringType,
+			"resource": schema.StringAttribute{
 				Computed: true,
 			},
-			"service": {
-				Type:     types.StringType,
+			"service": schema.StringAttribute{
 				Computed: true,
 			},
 		},
-	}
-
-	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
 	}
 }
 
@@ -91,14 +72,14 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 		return
 	}
 
-	arn := &data.ARN.Value
+	arn := data.ARN.ValueARN()
 
-	data.Account = types.String{Value: arn.AccountID}
-	data.ID = types.String{Value: arn.String()}
-	data.Partition = types.String{Value: arn.Partition}
-	data.Region = types.String{Value: arn.Region}
-	data.Resource = types.String{Value: arn.Resource}
-	data.Service = types.String{Value: arn.Service}
+	data.Account = types.StringValue(arn.AccountID)
+	data.ID = types.StringValue(arn.String())
+	data.Partition = types.StringValue(arn.Partition)
+	data.Region = types.StringValue(arn.Region)
+	data.Resource = types.StringValue(arn.Resource)
+	data.Service = types.StringValue(arn.Service)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

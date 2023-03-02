@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
@@ -11,10 +12,11 @@ import (
 )
 
 func TestAccRDSCertificateDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccCertificatePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccCertificatePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -30,10 +32,11 @@ func TestAccRDSCertificateDataSource_id(t *testing.T) {
 }
 
 func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccCertificatePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccCertificatePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -55,12 +58,12 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 	})
 }
 
-func testAccCertificatePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeCertificatesInput{}
 
-	_, err := conn.DescribeCertificates(input)
+	_, err := conn.DescribeCertificatesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

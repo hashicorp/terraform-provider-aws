@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccEMRStudio_sso(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func TestAccEMRStudio_sso(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy,
+		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
@@ -53,6 +55,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 }
 
 func TestAccEMRStudio_iam(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,12 +64,12 @@ func TestAccEMRStudio_iam(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy,
+		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_iam(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
@@ -88,6 +91,7 @@ func TestAccEMRStudio_iam(t *testing.T) {
 }
 
 func TestAccEMRStudio_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,14 +100,14 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy,
+		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudio(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,6 +116,7 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 }
 
 func TestAccEMRStudio_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -120,12 +125,12 @@ func TestAccEMRStudio_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy,
+		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -138,7 +143,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -147,7 +152,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(resourceName, &studio),
+					testAccCheckStudioExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -156,16 +161,16 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioExists(resourceName string, studio *emr.Studio) resource.TestCheckFunc {
+func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *emr.Studio) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-		output, err := tfemr.FindStudioByID(conn, rs.Primary.ID)
+		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -180,26 +185,28 @@ func testAccCheckStudioExists(resourceName string, studio *emr.Studio) resource.
 	}
 }
 
-func testAccCheckStudioDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_studio" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emr_studio" {
+				continue
+			}
+
+			_, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfemr.FindStudioByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
 func testAccStudioConfigBase(rName string) string {

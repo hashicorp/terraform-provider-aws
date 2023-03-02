@@ -1,6 +1,7 @@
 package codebuild
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/codebuild"
@@ -13,15 +14,15 @@ const (
 )
 
 // waitReportGroupDeleted waits for an ReportGroup to return Deleted
-func waitReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
+func waitReportGroupDeleted(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{codebuild.ReportGroupStatusTypeDeleting},
 		Target:  []string{},
-		Refresh: statusReportGroup(conn, arn),
+		Refresh: statusReportGroup(ctx, conn, arn),
 		Timeout: reportGroupDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*codebuild.ReportGroup); ok {
 		return output, err

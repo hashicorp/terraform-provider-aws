@@ -9,6 +9,8 @@ import (
 )
 
 func TestSuppressEquivalentRoundedTime(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		old        string
 		new        string
@@ -59,48 +61,9 @@ func TestSuppressEquivalentRoundedTime(t *testing.T) {
 	}
 }
 
-func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
-	testCases := []struct {
-		old        string
-		new        string
-		equivalent bool
-	}{
-		{
-			old:        "false",
-			new:        "0",
-			equivalent: true,
-		},
-		{
-			old:        "true",
-			new:        "1",
-			equivalent: true,
-		},
-		{
-			old:        "",
-			new:        "0",
-			equivalent: false,
-		},
-		{
-			old:        "",
-			new:        "1",
-			equivalent: false,
-		},
-	}
-
-	for i, tc := range testCases {
-		value := SuppressEquivalentTypeStringBoolean("test_property", tc.old, tc.new, nil)
-
-		if tc.equivalent && !value {
-			t.Fatalf("expected test case %d to be equivalent", i)
-		}
-
-		if !tc.equivalent && value {
-			t.Fatalf("expected test case %d to not be equivalent", i)
-		}
-	}
-}
-
 func TestDiffStringMaps(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Old, New                  map[string]interface{}
 		Create, Remove, Unchanged map[string]interface{}

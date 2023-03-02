@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_global_networks")
 func DataSourceGlobalNetworks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalNetworksRead,
@@ -27,9 +28,9 @@ func DataSourceGlobalNetworks() *schema.Resource {
 }
 
 func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	output, err := FindGlobalNetworks(ctx, conn, &networkmanager.DescribeGlobalNetworksInput{})
 
@@ -41,7 +42,7 @@ func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, m
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(v.Tags).ContainsAll(tagsToMatch) {
+			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

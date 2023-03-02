@@ -21,44 +21,37 @@ resource "aws_transfer_server" "foo" {
   }
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+    principals {
+      type        = "Service"
+      identifiers = ["transfer.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "foo" {
+  name               = "tf-test-transfer-user-iam-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "foo" {
+  statement {
+    sid       = "AllowFullAccesstoS3"
+    effect    = "Allow"
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy"
-  role = aws_iam_role.foo.id
-
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowFullAccesstoS3",
-			"Effect": "Allow",
-			"Action": [
-				"s3:*"
-			],
-			"Resource": "*"
-		}
-	]
-}
-POLICY
+  name   = "tf-test-transfer-user-iam-policy"
+  role   = aws_iam_role.foo.id
+  policy = data.aws_iam_role_policy.foo.json
 }
 
 resource "aws_transfer_user" "foo" {

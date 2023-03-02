@@ -45,7 +45,7 @@ func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_globalaccelerator_endpoint_group")
 func ResourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
@@ -25,7 +26,7 @@ func ResourceEndpointGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -135,7 +136,7 @@ func ResourceEndpointGroup() *schema.Resource {
 }
 
 func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region),
@@ -201,7 +202,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	endpointGroup, err := FindEndpointGroupByARN(ctx, conn, d.Id())
 
@@ -241,7 +242,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	input := &globalaccelerator.UpdateEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -303,7 +304,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Endpoint Group: %s", d.Id())
 	_, err := conn.DeleteEndpointGroupWithContext(ctx, &globalaccelerator.DeleteEndpointGroupInput{

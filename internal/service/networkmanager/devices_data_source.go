@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_devices")
 func DataSourceDevices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDevicesRead,
@@ -35,9 +36,9 @@ func DataSourceDevices() *schema.Resource {
 }
 
 func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -57,7 +58,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(v.Tags).ContainsAll(tagsToMatch) {
+			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

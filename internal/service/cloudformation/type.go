@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudformation_type")
 func ResourceType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTypeCreate,
@@ -132,7 +133,7 @@ func ResourceType() *schema.Resource {
 }
 
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -176,7 +177,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	output, err := FindTypeByARN(ctx, conn, d.Id())
 
@@ -223,7 +224,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),

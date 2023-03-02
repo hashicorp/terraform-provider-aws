@@ -1,21 +1,22 @@
 
+{{- if not ( .ContextOnly ) }}
 func {{ .Name }}Pages(conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
 	return {{ .Name }}PagesWithContext(context.Background(), conn, input, fn)
 }
-
-func {{ .Name }}PagesWithContext(ctx context.Context, conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
+{{ end }}
+func {{ if .ContextOnly }}{{ .Name }}Pages{{ else }}{{ .Name }}PagesWithContext{{ end }}(ctx context.Context, conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
 	for {
 		output, err := conn.{{ .AWSName }}WithContext(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.{{ .Paginator }}) == ""
+		lastPage := aws.StringValue(output.{{ .OutputPaginator }}) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
-		input.{{ .Paginator }} = output.{{ .Paginator }}
+		input.{{ .InputPaginator }} = output.{{ .OutputPaginator }}
 	}
 	return nil
 }

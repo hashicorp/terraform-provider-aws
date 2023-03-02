@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,6 +18,7 @@ import (
 // add sweeper to delete known test servicecat tag option resource associations
 
 func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -24,12 +26,12 @@ func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionResourceAssociationDestroy,
+		CheckDestroy:             testAccCheckTagOptionResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagOptionResourceAssociationExists(resourceName),
+					testAccCheckTagOptionResourceAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", "id"),
 				),
@@ -44,6 +46,7 @@ func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -51,13 +54,13 @@ func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionResourceAssociationDestroy,
+		CheckDestroy:             testAccCheckTagOptionResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagOptionResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
+					testAccCheckTagOptionResourceAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,35 +68,37 @@ func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) 
 	})
 }
 
-func testAccCheckTagOptionResourceAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckTagOptionResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_tag_option_resource_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_tag_option_resource_association" {
+				continue
+			}
+
+			tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(rs.Primary.ID)
+
+			if err != nil {
+				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			err = tfservicecatalog.WaitTagOptionResourceAssociationDeleted(ctx, conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationDeleteTimeout)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("waiting for Service Catalog Tag Option Resource Association to be destroyed (%s): %w", rs.Primary.ID, err)
+			}
 		}
 
-		tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfservicecatalog.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationDeleteTimeout)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("waiting for Service Catalog Tag Option Resource Association to be destroyed (%s): %w", rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTagOptionResourceAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTagOptionResourceAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -107,9 +112,9 @@ func testAccCheckTagOptionResourceAssociationExists(resourceName string) resourc
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-		_, err = tfservicecatalog.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationReadyTimeout)
+		_, err = tfservicecatalog.WaitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Tag Option Resource Association existence (%s): %w", rs.Primary.ID, err)

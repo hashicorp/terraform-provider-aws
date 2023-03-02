@@ -10,18 +10,19 @@ import (
 )
 
 func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainIdentityDestroy,
+		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityDataSourceConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainIdentityExists("aws_ses_domain_identity.test"),
+					testAccCheckDomainIdentityExists(ctx, "aws_ses_domain_identity.test"),
 					testAccCheckDomainIdentityARN("data.aws_ses_domain_identity.test", domain),
 				),
 			},

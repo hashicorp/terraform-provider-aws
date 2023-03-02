@@ -1,6 +1,7 @@
 package organizations
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,19 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_organizations_policy_attachment")
 func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyAttachmentCreate,
-		Read:   resourcePolicyAttachmentRead,
-		Delete: resourcePolicyAttachmentDelete,
+		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
+		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
+		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,6 +34,10 @@ func ResourcePolicyAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"target_id": {
 				Type:     schema.TypeString,
@@ -39,8 +48,9 @@ func ResourcePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
@@ -50,68 +60,81 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		TargetId: aws.String(targetID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute, func() (interface{}, error) {
-		return conn.AttachPolicy(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
+		return conn.AttachPolicyWithContext(ctx, input)
 	}, organizations.ErrCodeFinalizingOrganizationException)
 
 	if err != nil {
-		return fmt.Errorf("creating Organizations Policy Attachment (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Policy Attachment (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourcePolicyAttachmentRead(d, meta)
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	_, err = FindPolicyAttachmentByTwoPartKey(conn, targetID, policyID)
+	_, err = FindPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organizations Policy Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Organizations Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy_id", policyID)
 	d.Set("target_id", targetID)
 
-	return nil
+	return diags
 }
 
-func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Update is just a pass-through to allow skip_destroy to be updated in-place
+	var diags diag.Diagnostics
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
+}
+
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
+		return nil
+	}
+
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())
-	_, err = conn.DetachPolicy(&organizations.DetachPolicyInput{
+	_, err = conn.DetachPolicyWithContext(ctx, &organizations.DetachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException, organizations.ErrCodePolicyNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Organizations Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodePolicyAttachmentID(id string) (string, string, error) {

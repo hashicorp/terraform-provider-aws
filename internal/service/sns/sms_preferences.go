@@ -125,6 +125,7 @@ var (
 	}, smsPreferencesSchema).WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_sms_preferences")
 func ResourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMSPreferencesSet,
@@ -137,7 +138,7 @@ func ResourceSMSPreferences() *schema.Resource {
 }
 
 func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -161,7 +162,7 @@ func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	output, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
 
@@ -173,7 +174,7 @@ func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)

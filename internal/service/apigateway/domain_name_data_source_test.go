@@ -10,18 +10,19 @@ import (
 )
 
 func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_domain_name.test"
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),

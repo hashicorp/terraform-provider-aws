@@ -1,6 +1,7 @@
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updated := "test"
 	resourceName := "aws_glue_user_defined_function.test"
@@ -24,12 +26,12 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUDFDestroy,
+		CheckDestroy:             testAccCheckUDFDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
@@ -45,7 +47,7 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 			{
 				Config: testAccUserDefinedFunctionConfig_basic(rName, updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", updated),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", updated),
@@ -57,6 +59,7 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 }
 
 func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_user_defined_function.test"
 
@@ -64,12 +67,12 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUDFDestroy,
+		CheckDestroy:             testAccCheckUDFDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -81,14 +84,14 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 			{
 				Config: testAccUserDefinedFunctionConfig_resourceURI2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
 				),
 			},
 			{
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -97,6 +100,7 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 }
 
 func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_user_defined_function.test"
 
@@ -104,13 +108,13 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUDFDestroy,
+		CheckDestroy:             testAccCheckUDFDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDefinedFunctionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
+					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -118,38 +122,40 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUDFDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+func testAccCheckUDFDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_user_defined_function" {
-			continue
-		}
-
-		catalogId, dbName, funcName, err := tfglue.ReadUDFID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &glue.GetUserDefinedFunctionInput{
-			CatalogId:    aws.String(catalogId),
-			DatabaseName: aws.String(dbName),
-			FunctionName: aws.String(funcName),
-		}
-		if _, err := conn.GetUserDefinedFunction(input); err != nil {
-			//Verify the error is what we want
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_user_defined_function" {
 				continue
 			}
 
-			return err
+			catalogId, dbName, funcName, err := tfglue.ReadUDFID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &glue.GetUserDefinedFunctionInput{
+				CatalogId:    aws.String(catalogId),
+				DatabaseName: aws.String(dbName),
+				FunctionName: aws.String(funcName),
+			}
+			if _, err := conn.GetUserDefinedFunctionWithContext(ctx, input); err != nil {
+				//Verify the error is what we want
+				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+					continue
+				}
+
+				return err
+			}
+			return fmt.Errorf("still exists")
 		}
-		return fmt.Errorf("still exists")
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckUserDefinedFunctionExists(name string) resource.TestCheckFunc {
+func testAccCheckUserDefinedFunctionExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -165,8 +171,8 @@ func testAccCheckUserDefinedFunctionExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		out, err := conn.GetUserDefinedFunctionWithContext(ctx, &glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),
 			FunctionName: aws.String(funcName),

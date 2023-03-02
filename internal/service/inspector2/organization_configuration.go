@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_inspector2_organization_configuration")
 func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationCreate,
@@ -69,7 +70,7 @@ func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Conn
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
@@ -93,7 +94,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Conn
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	update := false
 
@@ -125,7 +126,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Conn
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
 	defer conns.GlobalMutexKV.Unlock(orgConfigMutex)

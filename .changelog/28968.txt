@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lb_listener_certificate: Show errors in certain cases where they were previously only logged and resource was removed from state
+```
+
+```release-note:bug
+resource/aws_iam_server_certificate: Avoid errors on delete when no error occurred
+```

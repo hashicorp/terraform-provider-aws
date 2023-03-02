@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_docdb_global_cluster")
 func ResourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
@@ -112,7 +113,7 @@ func ResourceGlobalCluster() *schema.Resource {
 }
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -157,7 +158,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
 
@@ -201,7 +202,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -234,7 +235,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
@@ -337,7 +338,7 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 		return err
 	}
 	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		err := waitForClusterUpdate(conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
+		err := waitForClusterUpdate(ctx, conn, findGlobalClusterIDByARN(ctx, conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

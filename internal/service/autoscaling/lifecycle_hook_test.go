@@ -1,6 +1,7 @@
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_lifecycle_hook.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -22,12 +24,12 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecycleHookDestroy,
+		CheckDestroy:             testAccCheckLifecycleHookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecycleHookExists(resourceName),
+					testAccCheckLifecycleHookExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_result", "CONTINUE"),
 					resource.TestCheckResourceAttr(resourceName, "heartbeat_timeout", "2000"),
@@ -45,6 +47,7 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_lifecycle_hook.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,13 +55,13 @@ func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecycleHookDestroy,
+		CheckDestroy:             testAccCheckLifecycleHookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecycleHookExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
+					testAccCheckLifecycleHookExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,6 +70,7 @@ func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
 }
 
 func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_lifecycle_hook.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -74,12 +78,12 @@ func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecycleHookDestroy,
+		CheckDestroy:             testAccCheckLifecycleHookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecycleHookConfig_omitDefaultResult(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecycleHookExists(resourceName),
+					testAccCheckLifecycleHookExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_result", "ABANDON"),
 				),
 			},
@@ -87,7 +91,7 @@ func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
 	})
 }
 
-func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
+func testAccCheckLifecycleHookExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -98,36 +102,38 @@ func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Auto Scaling Lifecycle Hook ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		_, err := tfautoscaling.FindLifecycleHook(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		_, err := tfautoscaling.FindLifecycleHook(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckLifecycleHookDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+func testAccCheckLifecycleHookDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_lifecycle_hook" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_lifecycle_hook" {
+				continue
+			}
+
+			_, err := tfautoscaling.FindLifecycleHook(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Auto Scaling Lifecycle Hook %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfautoscaling.FindLifecycleHook(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Auto Scaling Lifecycle Hook %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

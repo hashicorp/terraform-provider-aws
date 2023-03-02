@@ -23,6 +23,9 @@ const (
 
 	ObservabilityConfigurationCreateTimeout = 2 * time.Minute
 	ObservabilityConfigurationDeleteTimeout = 2 * time.Minute
+
+	VPCIngressConnectionCreateTimeout = 2 * time.Minute
+	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
 
 func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -33,7 +36,7 @@ func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.App
 		Timeout: AutoScalingConfigurationCreateTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -46,7 +49,7 @@ func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.A
 		Timeout: AutoScalingConfigurationDeleteTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -59,7 +62,7 @@ func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name 
 		Timeout: ConnectionDeleteTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -72,7 +75,7 @@ func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.App
 		Timeout: CustomDomainAssociationCreateTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -85,7 +88,7 @@ func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.App
 		Timeout: CustomDomainAssociationDeleteTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -98,7 +101,7 @@ func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.A
 		Timeout: ObservabilityConfigurationCreateTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -111,7 +114,33 @@ func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner
 		Timeout: ObservabilityConfigurationDeleteTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{VPCIngressConnectionStatusActive},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{VPCIngressConnectionStatusActive, VPCIngressConnectionStatusPendingDeletion},
+		Target:  []string{VPCIngressConnectionStatusDeleted},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -124,7 +153,7 @@ func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 		Timeout: ServiceCreateTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -137,7 +166,7 @@ func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 		Timeout: ServiceUpdateTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -150,7 +179,7 @@ func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceA
 		Timeout: ServiceDeleteTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

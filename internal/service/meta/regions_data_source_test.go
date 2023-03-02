@@ -63,6 +63,24 @@ func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
 	})
 }
 
+func TestAccMetaRegionsDataSource_nonExistentRegion(t *testing.T) {
+	dataSourceName := "data.aws_regions.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionsDataSourceConfig_nonExistentRegion(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccRegionsDataSourceConfig_empty() string {
 	return `
 data "aws_regions" "test" {}
@@ -86,4 +104,15 @@ data "aws_regions" "test" {
   }
 }
 `, filter)
+}
+
+func testAccRegionsDataSourceConfig_nonExistentRegion() string {
+	return `
+data "aws_regions" "test" {
+  filter {
+    name   = "region-name"
+    values = ["us-east-4"]
+  }
+}
+`
 }

@@ -1,6 +1,8 @@
 package efs
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func FindBackupPolicyByID(ctx context.Context, conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	input := &efs.DescribeBackupPolicyInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := conn.DescribeBackupPolicy(input)
+	output, err := conn.DescribeBackupPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 		return nil, &resource.NotFoundError{
@@ -33,37 +35,12 @@ func FindBackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	return output.BackupPolicy, nil
 }
 
-func FindFileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
-	input := &efs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(id),
-	}
-
-	output, err := conn.DescribeFileSystems(input)
-
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.FileSystems == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.FileSystems[0], nil
-}
-
-func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
+func FindFileSystemPolicyByID(ctx context.Context, conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
 	input := &efs.DescribeFileSystemPolicyInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := conn.DescribeFileSystemPolicy(input)
+	output, err := conn.DescribeFileSystemPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, efs.ErrCodePolicyNotFound) {
 		return nil, &resource.NotFoundError{
@@ -83,12 +60,12 @@ func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystem
 	return output, nil
 }
 
-func FindReplicationConfigurationByID(conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
+func FindReplicationConfigurationByID(ctx context.Context, conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
 	input := &efs.DescribeReplicationConfigurationsInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := conn.DescribeReplicationConfigurations(input)
+	output, err := conn.DescribeReplicationConfigurationsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, efs.ErrCodeReplicationNotFound) {
 		return nil, &resource.NotFoundError{
