@@ -23,9 +23,6 @@ import (
 // Repository types of "BitBucket and GitHubEnterpriseServer cannot be tested, as they require their CodeStar Connection to be in "AVAILABLE" status vs "PENDING", requiring console interaction
 // However, this has been manually tested successfully
 func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var repositoryassociation codegurureviewer.DescribeRepositoryAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,9 +58,6 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 }
 
 func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var repositoryassociation codegurureviewer.DescribeRepositoryAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,9 +93,6 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 }
 
 func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var repositoryassociation codegurureviewer.DescribeRepositoryAssociationOutput
 	rName := "codeguru-reviewer-" + sdkacctest.RandString(10)
@@ -183,9 +174,6 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 }
 
 func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var repositoryassociation codegurureviewer.DescribeRepositoryAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
