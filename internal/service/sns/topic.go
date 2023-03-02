@@ -211,6 +211,7 @@ var (
 )
 
 // @SDKResource("aws_sns_topic")
+// @Tags(idAttribute="id")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -386,21 +387,21 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// ISO partitions may not support tagging, giving error
-			log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
-			return resourceTopicRead(ctx, d, meta)
-		}
-
-		if err != nil {
-			return diag.Errorf("updating tags for SNS Topic (%s): %s", d.Id(), err)
-		}
-	}
+	//if d.HasChange("tags_all") {
+	//	o, n := d.GetChange("tags_all")
+	//
+	//	err := UpdateTags(ctx, conn, d.Id(), o, n)
+	//
+	//	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	//		// ISO partitions may not support tagging, giving error
+	//		log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
+	//		return resourceTopicRead(ctx, d, meta)
+	//	}
+	//
+	//	if err != nil {
+	//		return diag.Errorf("updating tags for SNS Topic (%s): %s", d.Id(), err)
+	//	}
+	//}
 
 	return resourceTopicRead(ctx, d, meta)
 }

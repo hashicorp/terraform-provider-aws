@@ -22,6 +22,11 @@ type ServicePackage interface {
 	ServicePackageName() string
 }
 
+type ServicePackageWithUpdateTags interface {
+	ServicePackage
+	UpdateTags(context.Context, any, string, any, any) error
+}
+
 func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
 	session, err := session.NewSession(cfg)
 

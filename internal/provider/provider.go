@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -279,6 +281,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			provider.DataSourcesMap[typeName] = ds
 		}
 
+		var update func(context.Context, any, string, any, any) error
+		if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
+			update = v.UpdateTags
+		}
+
 		for _, v := range sp.SDKResources(ctx) {
 			typeName := v.TypeName
 
@@ -287,6 +294,10 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			var idAttribute *string
+			if v.Tags != (types.ServicePackageTags{}) {
+				idAttribute = &v.Tags.IDAttribute
+			}
 			r := v.Factory()
 
 			// Ensure that the correct CRUD handler variants are used.
@@ -314,7 +325,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
 			}
 			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v)
+				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v, idAttribute, update)
 			}
 			if v := r.DeleteWithoutTimeout; v != nil {
 				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
@@ -811,9 +822,33 @@ func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
 	}
 }
 
-func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
+func wrappedUpdateContextFunc(f schema.UpdateContextFunc, idAttribute *string, update func(context.Context, any, string, any, any) error) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		if idAttribute != nil && update != nil {
+			var identifier string
+			if *idAttribute == "id" {
+				identifier = d.Id()
+			} else {
+				identifier = d.Get(*idAttribute).(string)
+			}
+
+			if d.HasChange("tags_all") {
+				o, n := d.GetChange("tags_all")
+				err := update(ctx, meta, identifier, o, n)
+
+				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
+					return f(ctx, d, meta)
+				}
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diag.Diagnostics{}, err.Error())
+				}
+			}
+		}
 
 		return f(ctx, d, meta)
 	}
