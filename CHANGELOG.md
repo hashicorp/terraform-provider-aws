@@ -27,6 +27,12 @@ ENHANCEMENTS:
 * resource/aws_lambda_function: Retry (up to the configurable timeout) deletion of replicated Lambda@Edge functions ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_transfer_user: Add configurable timeout for Delete ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
+
+BUG FIXES:
+
+* resource/aws_instance: When encountering `InsufficientInstanceCapacity` errors, do not retry in order to fail faster, as this error is typically not resolvable in the near future ([#21293](https://github.com/hashicorp/terraform-provider-aws/issues/21293))
+* resource/aws_transfer_user: Fix bug preventing removal of all `home_directory_mappings` due to empty list validation error ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
 
 ## 4.56.0 (February 24, 2023)
 
