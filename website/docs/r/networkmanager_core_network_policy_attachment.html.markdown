@@ -29,7 +29,7 @@ resource "aws_networkmanager_core_network_policy_attachment" "example" {
 }
 ```
 
-### With VPC Attachment single region
+### With VPC Attachment (Single Region)
 
 The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `create_base_policy` argument of the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `LIVE` policies (e.g. this is the first `terraform apply` with the core network resource), since a `LIVE` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `LIVE` policy, you may exclude the `create_base_policy` argument.
 
@@ -78,9 +78,9 @@ resource "aws_networkmanager_vpc_attachment" "example" {
 }
 ```
 
-### With VPC Attachment multi region
+### With VPC Attachment (Multi-Region)
 
-The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `create_base_policy` argument of the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `LIVE` policies (e.g. this is the first `terraform apply` with the core network resource), since a `LIVE` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `LIVE` policy, you may exclude the `create_base_policy` argument. For multi-region in a core network that does not yet have a `LIVE` policy, pass a list of regions to the `aws_networkmanager_core_network` base policy. This is specified using the `aws_networkmanager_core_network` `base_policy_regions` argument. In the example below, `us-west-2` and `us-east-1` are specified in the base policy.
+The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `create_base_policy` argument of the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `LIVE` policies (e.g. this is the first `terraform apply` with the core network resource), since a `LIVE` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `LIVE` policy, you may exclude the `create_base_policy` argument. For multi-region in a core network that does not yet have a `LIVE` policy, pass a list of regions to the `aws_networkmanager_core_network` `base_policy_regions` argument. In the example below, `us-west-2` and `us-east-1` are specified in the base policy.
 
 ```terraform
 resource "aws_networkmanager_global_network" "example" {}
