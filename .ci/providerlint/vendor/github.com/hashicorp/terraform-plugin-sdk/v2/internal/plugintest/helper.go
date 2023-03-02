@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -70,7 +69,7 @@ func AutoInitHelper(ctx context.Context, sourceDir string) (*Helper, error) {
 // automatically clean those up.
 func InitHelper(ctx context.Context, config *Config) (*Helper, error) {
 	tempDir := os.Getenv(EnvTfAccTempDir)
-	baseDir, err := ioutil.TempDir(tempDir, "plugintest")
+	baseDir, err := os.MkdirTemp(tempDir, "plugintest")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temporary directory for test helper: %s", err)
 	}
@@ -105,7 +104,7 @@ func (h *Helper) Close() error {
 // program exits, the Close method on the helper itself will attempt to
 // delete it.
 func (h *Helper) NewWorkingDir(ctx context.Context, t TestControl) (*WorkingDir, error) {
-	dir, err := ioutil.TempDir(h.baseDir, "work")
+	dir, err := os.MkdirTemp(h.baseDir, "work")
 	if err != nil {
 		return nil, err
 	}

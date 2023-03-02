@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -69,11 +70,12 @@ func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckLocalZoneAvailable(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckLocalZoneAvailable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -125,11 +127,12 @@ func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
 }
 
 func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -180,8 +183,8 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 	})
 }
 
-func testAccPreCheckLocalZoneAvailable(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(map[string]string{
@@ -190,7 +193,7 @@ func testAccPreCheckLocalZoneAvailable(t *testing.T) {
 		}),
 	}
 
-	output, err := tfec2.FindAvailabilityZones(conn, input)
+	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|\d{12})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
@@ -84,10 +84,10 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-// validateCIDRBlock validates that the specified CIDR block is valid:
+// ValidateCIDRBlock validates that the specified CIDR block is valid:
 // - The CIDR block parses to an IP address and network
 // - The CIDR block is the CIDR block for the network
-func validateCIDRBlock(cidr string) error {
+func ValidateCIDRBlock(cidr string) error {
 	_, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
@@ -103,7 +103,7 @@ func validateCIDRBlock(cidr string) error {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := validateCIDRBlock(v.(string)); err != nil {
+	if err := ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -305,28 +305,6 @@ func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []err
 			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %s", k, err))
 		}
 	}
-	return
-}
-
-// ValidTypeStringNullableBoolean provides custom error messaging for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified).
-// This ValidateFunc returns a custom message since the message with
-// validation.StringInSlice([]string{"", "false", "true"}, false) is confusing:
-// to be one of [ false true], got 1
-func ValidTypeStringNullableBoolean(v interface{}, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	for _, str := range []string{"", "0", "1", "false", "true"} {
-		if value == str {
-			return
-		}
-	}
-
-	es = append(es, fmt.Errorf("expected %s to be one of [\"\", false, true], got %s", k, value))
 	return
 }
 

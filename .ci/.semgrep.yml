@@ -10,6 +10,7 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -28,10 +29,10 @@ rules:
           import ("$X")
           import ("$Y")
       - metavariable-regex:
-          metavariable: '$X'
+          metavariable: "$X"
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
       - metavariable-regex:
-          metavariable: '$Y'
+          metavariable: "$Y"
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
       # wafregional uses a number of resources from waf
       - pattern-not: |
@@ -48,8 +49,8 @@ rules:
       exclude:
         - "internal/service/**/*_test.go"
     patterns:
-      - pattern: '$LHS = *$RHS'
-      - pattern-not: '*$LHS2 = *$RHS'
+      - pattern: "$LHS = *$RHS"
+      - pattern-not: "*$LHS2 = *$RHS"
     severity: WARNING
 
   - id: prefer-aws-go-sdk-pointer-conversion-conditional
@@ -62,18 +63,18 @@ rules:
         - "internal/service/**/*_test.go"
     patterns:
       - pattern-either:
-          - pattern: '$LHS == *$RHS'
-          - pattern: '$LHS != *$RHS'
-          - pattern: '$LHS > *$RHS'
-          - pattern: '$LHS < *$RHS'
-          - pattern: '$LHS >= *$RHS'
-          - pattern: '$LHS <= *$RHS'
-          - pattern: '*$LHS == $RHS'
-          - pattern: '*$LHS != $RHS'
-          - pattern: '*$LHS > $RHS'
-          - pattern: '*$LHS < $RHS'
-          - pattern: '*$LHS >= $RHS'
-          - pattern: '*$LHS <= $RHS'
+          - pattern: "$LHS == *$RHS"
+          - pattern: "$LHS != *$RHS"
+          - pattern: "$LHS > *$RHS"
+          - pattern: "$LHS < *$RHS"
+          - pattern: "$LHS >= *$RHS"
+          - pattern: "$LHS <= *$RHS"
+          - pattern: "*$LHS == $RHS"
+          - pattern: "*$LHS != $RHS"
+          - pattern: "*$LHS > $RHS"
+          - pattern: "*$LHS < $RHS"
+          - pattern: "*$LHS >= $RHS"
+          - pattern: "*$LHS <= $RHS"
     severity: WARNING
 
   - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
@@ -83,7 +84,7 @@ rules:
     paths:
       include:
         - internal/
-    pattern: 'd.SetId(*$VALUE)'
+    pattern: "d.SetId(*$VALUE)"
     severity: WARNING
 
   - id: aws-go-sdk-pointer-conversion-immediate-dereference
@@ -95,11 +96,11 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - pattern: '*aws.Bool($VALUE)'
-          - pattern: '*aws.Float64($VALUE)'
-          - pattern: '*aws.Int64($VALUE)'
-          - pattern: '*aws.String($VALUE)'
-          - pattern: '*aws.Time($VALUE)'
+          - pattern: "*aws.Bool($VALUE)"
+          - pattern: "*aws.Float64($VALUE)"
+          - pattern: "*aws.Int64($VALUE)"
+          - pattern: "*aws.String($VALUE)"
+          - pattern: "*aws.Time($VALUE)"
     severity: WARNING
 
   - id: data-source-with-resource-read
@@ -109,7 +110,7 @@ rules:
       include:
         - internal/service/**/*_data_source.go
     patterns:
-      - pattern-regex: '(resource.+Read|flatten.+Resource)'
+      - pattern-regex: "(resource.+Read|flatten.+Resource)"
       - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
       - pattern-not-inside: |
           d.Set(..., []interface{}{ ... })
@@ -219,6 +220,40 @@ rules:
           - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
     severity: WARNING
 
+  - id: helper-schema-ResourceData-Set-extraneous-nil-check
+    languages: [go]
+    message: Nil value check before `d.Set()` is extraneous
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $APIOBJECT)
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                if $ERROR := d.Set($ATTRIBUTE, $APIOBJECT); err != nil { $BODY }
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR := d.Set($ATTRIBUTE, $APIOBJECT)
+                ...
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR = d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+                ...
+              }
+    severity: WARNING
+
   # Not sure why this isn't working
   # - id: helper-schema-ResourceData-DataSource-Set-tags
   #   languages: [go]
@@ -236,7 +271,7 @@ rules:
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
         - internal/service/**/*.go
@@ -253,11 +288,6 @@ rules:
               tags = $TAGS
               ...
               if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-          - pattern: |
-              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
-              ...
-              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
       - pattern-not: |
           tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
           ...
@@ -265,13 +295,7 @@ rules:
           tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
       - pattern-not: |
-          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
     severity: WARNING
 
@@ -434,7 +458,7 @@ rules:
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the resource.Retry(), resource.RetryContext(), or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -464,7 +488,7 @@ rules:
                   ...
                   if isResourceTimeoutError($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -493,7 +517,7 @@ rules:
                   ...
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -572,8 +596,8 @@ rules:
             ...
           })
       - metavariable-regex:
-          metavariable: '$Z'
-          regex: '.*Pages$'
+          metavariable: "$Z"
+          regex: ".*Pages$"
     severity: WARNING
 
   - id: calling-fmt.Print-and-variants
@@ -619,7 +643,7 @@ rules:
     patterns:
       - patterns:
           - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
-      - pattern-inside: '($X : string)'
+      - pattern-inside: "($X : string)"
       - pattern-not-regex: 'amazonaws\.com'
       - pattern-not-regex: 'awsapps\.com'
       - pattern-not-regex: '@(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b' # exclude domain names in email addresses
@@ -637,8 +661,8 @@ rules:
       - pattern-not-regex: 'awsglobalaccelerator\.com'
       - pattern-not-regex: 'cloudfront\.net'
       - pattern-not-regex: 'http://json-schema\.org/draft-0\d/schema'
-      - pattern-not-regex: 'http://activemq.apache.org/schema/core'
-      - pattern-not-regex: 'mcr.microsoft.com'
+      - pattern-not-regex: "http://activemq.apache.org/schema/core"
+      - pattern-not-regex: "mcr.microsoft.com"
     severity: WARNING
 
   - id: email-address
@@ -652,7 +676,7 @@ rules:
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
-      - pattern-inside: '($X : string)'
+      - pattern-inside: "($X : string)"
     severity: WARNING
 
   - id: ssh-key
@@ -666,8 +690,8 @@ rules:
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.
-      - pattern-regex: 'ssh-rsa [A-Za-z0-9/]+'
-      - pattern-inside: '($X : string)'
+      - pattern-regex: "ssh-rsa [A-Za-z0-9/]+"
+      - pattern-inside: "($X : string)"
     severity: WARNING
 
   - id: non-tags-change-detection
@@ -798,21 +822,6 @@ rules:
     pattern: int(*$VALUE)
     severity: WARNING
 
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: 'Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
-    severity: WARNING
-
   - id: fmt-Errorf-awserr-Error-Code
     languages: [go]
     message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
@@ -835,12 +844,29 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO-in-tests
+  - id: avoid-context-CRUD-handlers
     languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
+    message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
     paths:
       include:
-        - "internal/**/*_test.go"
+        - internal/service
     patterns:
-      - pattern: context.TODO
+      - pattern-regex: "(Create|Read|Update|Delete)Context:"
+    severity: ERROR
+
+  - id: bare-error-returns
+    languages: [go]
+    message: API errors should be wrapped with the CRUD info
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: return $ERR
+      - pattern-inside: |
+          func $FUNC($D *schema.ResourceData, ...) error {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $ERR
+          regex: "[Ee]rr(?!ors\\.)"
     severity: ERROR

@@ -40,7 +40,6 @@ The following arguments are supported:
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
-* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 * `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#rsession-app-settings) below.
 * `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas-app-settings) below.
 
@@ -66,6 +65,7 @@ The following arguments are supported:
 
 #### Jupyter Server App Settings
 
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
@@ -73,6 +73,10 @@ The following arguments are supported:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+
+##### Code Repository
+
+* `repository_url` - (Optional) The URL of the Git repository.
 
 ##### Default Resource Spec
 
@@ -103,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Code User Profiles can be imported using the `arn`, e.g.,
+SageMaker User Profiles can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name

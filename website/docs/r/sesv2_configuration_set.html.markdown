@@ -26,7 +26,7 @@ resource "aws_sesv2_configuration_set" "example" {
     reputation_metrics_enabled = false
   }
 
-  sendig_options {
+  sending_options {
     sending_enabled = true
   }
 

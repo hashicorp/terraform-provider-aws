@@ -1,6 +1,8 @@
 package acmpca
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,33 +10,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindCertificateAuthorityByARN returns the certificate authority corresponding to the specified ARN.
-// Returns nil if no certificate authority is found.
-func FindCertificateAuthorityByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
-	input := &acmpca.DescribeCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeCertificateAuthority(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.CertificateAuthority, nil
-}
-
 // FindCertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
 // Returns a resource.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
-func FindCertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
+func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
 	input := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(arn),
 	}
 
-	output, err := conn.GetCertificateAuthorityCertificate(input)
+	output, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -55,12 +38,12 @@ func FindCertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (
 	return output, nil
 }
 
-func FindPolicyByARN(conn *acmpca.ACMPCA, arn string) (string, error) {
+func FindPolicyByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (string, error) {
 	input := &acmpca.GetPolicyInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetPolicy(input)
+	output, err := conn.GetPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		return "", &resource.NotFoundError{
@@ -80,13 +63,13 @@ func FindPolicyByARN(conn *acmpca.ACMPCA, arn string) (string, error) {
 	return aws.StringValue(output.Policy), nil
 }
 
-func FindPermission(conn *acmpca.ACMPCA, certificateAuthorityARN, principal, sourceAccount string) (*acmpca.Permission, error) {
+func FindPermission(ctx context.Context, conn *acmpca.ACMPCA, certificateAuthorityARN, principal, sourceAccount string) (*acmpca.Permission, error) {
 	input := &acmpca.ListPermissionsInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 	var output []*acmpca.Permission
 
-	err := conn.ListPermissionsPages(input, func(page *acmpca.ListPermissionsOutput, lastPage bool) bool {
+	err := conn.ListPermissionsPagesWithContext(ctx, input, func(page *acmpca.ListPermissionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

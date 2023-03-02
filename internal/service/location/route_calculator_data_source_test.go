@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLocationRouteCalculatorDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_location_route_calculator.test"
 	resourceName := "aws_location_route_calculator.test"
@@ -19,12 +20,12 @@ func TestAccLocationRouteCalculatorDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(dataSourceName),
+					testAccCheckRouteCalculatorExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "calculator_arn", resourceName, "calculator_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "calculator_name", resourceName, "calculator_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),

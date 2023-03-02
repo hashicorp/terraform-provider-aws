@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_phone_number")
 func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePhoneNumberCreate,
-		ReadContext:   resourcePhoneNumberRead,
-		UpdateContext: resourcePhoneNumberUpdate,
-		DeleteContext: resourcePhoneNumberDelete,
+		CreateWithoutTimeout: resourcePhoneNumberCreate,
+		ReadWithoutTimeout:   resourcePhoneNumberRead,
+		UpdateWithoutTimeout: resourcePhoneNumberUpdate,
+		DeleteWithoutTimeout: resourcePhoneNumberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -92,9 +93,9 @@ func ResourcePhoneNumber() *schema.Resource {
 }
 
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	targetArn := d.Get("target_arn").(string)
 	phoneNumberType := d.Get("type").(string)
@@ -164,7 +165,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -201,7 +202,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting status: %s", err)
 	}
 
-	tags := KeyValueTags(phoneNumberSummary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, phoneNumberSummary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -216,7 +217,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	phoneNumberId := d.Id()
 
@@ -239,7 +240,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -252,7 +253,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	phoneNumberId := d.Id()
 

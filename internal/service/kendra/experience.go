@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kendra_experience")
 func ResourceExperience() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperienceCreate,
@@ -172,7 +173,7 @@ func ResourceExperience() *schema.Resource {
 }
 
 func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	in := &kendra.CreateExperienceInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -211,7 +212,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -258,7 +259,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -300,7 +301,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	log.Printf("[INFO] Deleting Kendra Experience %s", d.Id())
 

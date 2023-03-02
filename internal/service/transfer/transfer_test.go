@@ -2,9 +2,13 @@ package transfer_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccTransfer_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Access": {
 			"disappears": testAccAccess_disappears,
@@ -18,6 +22,9 @@ func TestAccTransfer_serial(t *testing.T) {
 			"APIGateway":                    testAccServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":    testAccServer_authenticationLoginBanners,
+			"DataSourceBasic":               testAccServerDataSource_basic,
+			"DataSourceServiceManaged":      testAccServerDataSource_Service_managed,
+			"DataSourceAPIGateway":          testAccServerDataSource_apigateway,
 			"DirectoryService":              testAccServer_directoryService,
 			"Domain":                        testAccServer_domain,
 			"ForceDestroy":                  testAccServer_forceDestroy,
@@ -41,9 +48,16 @@ func TestAccTransfer_serial(t *testing.T) {
 		"SSHKey": {
 			"basic": testAccSSHKey_basic,
 		},
+		"Tag": {
+			"basic":      testAccTag_basic,
+			"disappears": testAccTag_disappears,
+			"Value":      testAccTag_value,
+			"System":     testAccTag_system,
+		},
 		"User": {
 			"basic":                 testAccUser_basic,
 			"disappears":            testAccUser_disappears,
+			"tags":                  testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,
@@ -51,15 +65,5 @@ func TestAccTransfer_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

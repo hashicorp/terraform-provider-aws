@@ -7,6 +7,8 @@ import (
 )
 
 func TestSubdirectoryFromLocationURI(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName             string
 		InputURI             string
@@ -153,10 +155,18 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
+		{
+			TestName:             "Object storage one level",
+			InputURI:             "object-storage://tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
+			ExpectedSubdirectory: "/tf-acc-test-5815577519131245008/",
+		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfdatasync.SubdirectoryFromLocationURI(testCase.InputURI)
 
 			if err == nil && testCase.ExpectedError {

@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_connect_bot_association")
 func ResourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBotAssociationCreate,
-		ReadContext:   resourceBotAssociationRead,
-		DeleteContext: resourceBotAssociationDelete,
+		CreateWithoutTimeout: resourceBotAssociationCreate,
+		ReadWithoutTimeout:   resourceBotAssociationRead,
+		DeleteWithoutTimeout: resourceBotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -75,7 +76,7 @@ func ResourceBotAssociation() *schema.Resource {
 }
 
 func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceId := d.Get("instance_id").(string)
 
@@ -97,8 +98,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	*/
 
-	_, err := tfresource.RetryWhen(
-		botAssociationCreateTimeout,
+	_, err := tfresource.RetryWhen(ctx, botAssociationCreateTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateBotWithContext(ctx, input)
 		},
@@ -123,7 +123,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceId, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
@@ -156,7 +156,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 

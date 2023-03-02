@@ -1,6 +1,7 @@
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -15,19 +16,20 @@ import (
 )
 
 func TestAccSESEmailIdentity_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(resourceName),
+					testAccCheckEmailIdentityExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
 				),
 			},
@@ -41,19 +43,20 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 }
 
 func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(resourceName),
+					testAccCheckEmailIdentityExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
 				),
 			},
@@ -66,35 +69,37 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 	})
 }
 
-func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_email_identity" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_email_identity" {
+				continue
+			}
+
+			email := rs.Primary.ID
+			params := &ses.GetIdentityVerificationAttributesInput{
+				Identities: []*string{
+					aws.String(email),
+				},
+			}
+
+			response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+			if err != nil {
+				return err
+			}
+
+			if response.VerificationAttributes[email] != nil {
+				return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
+			}
 		}
 
-		email := rs.Primary.ID
-		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(email),
-			},
-		}
-
-		response, err := conn.GetIdentityVerificationAttributes(params)
-		if err != nil {
-			return err
-		}
-
-		if response.VerificationAttributes[email] != nil {
-			return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -106,7 +111,7 @@ func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 		}
 
 		email := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -114,7 +119,7 @@ func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 			},
 		}
 
-		response, err := conn.GetIdentityVerificationAttributes(params)
+		response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
 		if err != nil {
 			return err
 		}

@@ -24,6 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// @SDKResource("aws_budgets_budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -32,7 +33,7 @@ func ResourceBudget() *schema.Resource {
 		DeleteWithoutTimeout: resourceBudgetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -294,7 +295,7 @@ func ResourceBudget() *schema.Resource {
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	budget, err := expandBudgetUnmarshal(d)
 
@@ -334,7 +335,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -460,7 +461,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
@@ -493,7 +494,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 

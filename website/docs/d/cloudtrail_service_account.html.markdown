@@ -21,33 +21,37 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = true
 }
 
+data "aws_iam_policy_document" "allow_cloudtrail_logging" {
+  statement {
+    sid    = "Put bucket policy needed for trails"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_cloudtrail_service_account.main.arn]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.bucket.arn}/*"]
+  }
+
+  statement {
+    sid    = "Get bucket policy needed for trails"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_cloudtrail_service_account.main.arn]
+    }
+
+    actions   = ["s3:GetBucketAcl"]
+    resources = [aws_s3_bucket.bucket.arn]
+  }
+}
+
 resource "aws_s3_bucket_policy" "allow_cloudtrail_logging" {
   bucket = aws_s3_bucket.bucket.id
-  policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "Put bucket policy needed for trails",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_cloudtrail_service_account.main.arn}"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::tf-cloudtrail-logging-test-bucket/*"
-    },
-    {
-      "Sid": "Get bucket policy needed for trails",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_cloudtrail_service_account.main.arn}"
-      },
-      "Action": "s3:GetBucketAcl",
-      "Resource": "arn:aws:s3:::tf-cloudtrail-logging-test-bucket"
-    }
-  ]
-}
-EOF
+  policy = data.aws_iam_policy_document.allow_cloudtrail_logging.json
 }
 ```
 

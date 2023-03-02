@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument
+```

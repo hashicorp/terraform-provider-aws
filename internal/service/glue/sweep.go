@@ -80,14 +80,18 @@ func init() {
 }
 
 func sweepCatalogDatabases(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetDatabasesInput{}
-	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
+	err = conn.GetDatabasesPagesWithContext(ctx, input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
 		if len(page.DatabaseList) == 0 {
 			log.Printf("[INFO] No Glue Catalog Databases to sweep")
 			return false
@@ -99,14 +103,11 @@ func sweepCatalogDatabases(region string) error {
 
 			r := ResourceCatalogDatabase()
 			d := r.Data(nil)
-			d.SetId("???")
+			d.SetId("unused")
 			d.Set("name", name)
 			d.Set("catalog_id", database.CatalogId)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Catalog Database %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -118,18 +119,26 @@ func sweepCatalogDatabases(region string) error {
 		return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Catalog Databases: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepClassifiers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetClassifiersInput{}
-	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
+	err = conn.GetClassifiersPagesWithContext(ctx, input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
 		if len(page.Classifiers) == 0 {
 			log.Printf("[INFO] No Glue Classifiers to sweep")
 			return false
@@ -151,10 +160,11 @@ func sweepClassifiers(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := DeleteClassifier(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
-			}
+			r := ResourceClassifier()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -166,21 +176,29 @@ func sweepClassifiers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Classifiers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepConnections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	catalogID := client.(*conns.AWSClient).AccountID
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
 	}
-	err = conn.GetConnectionsPages(input, func(page *glue.GetConnectionsOutput, lastPage bool) bool {
+	err = conn.GetConnectionsPagesWithContext(ctx, input, func(page *glue.GetConnectionsOutput, lastPage bool) bool {
 		if len(page.ConnectionList) == 0 {
 			log.Printf("[INFO] No Glue Connections to sweep")
 			return false
@@ -193,10 +211,7 @@ func sweepConnections(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -208,18 +223,26 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("Error retrieving Glue Connections: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepCrawlers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetCrawlersInput{}
-	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
+	err = conn.GetCrawlersPagesWithContext(ctx, input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
 		if len(page.Crawlers) == 0 {
 			log.Printf("[INFO] No Glue Crawlers to sweep")
 			return false
@@ -231,10 +254,7 @@ func sweepCrawlers(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Crawler %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -246,19 +266,24 @@ func sweepCrawlers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepDevEndpoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetDevEndpointsInput{}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
+	err = conn.GetDevEndpointsPagesWithContext(ctx, input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -289,7 +314,7 @@ func sweepDevEndpoints(region string) error {
 		return fmt.Errorf("error listing Glue Dev Endpoints (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Glue Dev Endpoints (%s): %w", region, err)
@@ -299,15 +324,16 @@ func sweepDevEndpoints(region string) error {
 }
 
 func sweepJobs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetJobsInput{}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
+	err = conn.GetJobsPagesWithContext(ctx, input, func(page *glue.GetJobsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -332,7 +358,7 @@ func sweepJobs(region string) error {
 		return fmt.Errorf("error listing Glue Jobs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Glue Jobs (%s): %w", region, err)
@@ -342,15 +368,18 @@ func sweepJobs(region string) error {
 }
 
 func sweepMLTransforms(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &glue.GetMLTransformsInput{}
-	err = conn.GetMLTransformsPages(input, func(page *glue.GetMLTransformsOutput, lastPage bool) bool {
+	err = conn.GetMLTransformsPagesWithContext(ctx, input, func(page *glue.GetMLTransformsOutput, lastPage bool) bool {
 		if len(page.Transforms) == 0 {
 			log.Printf("[INFO] No Glue ML Transforms to sweep")
 			return false
@@ -362,13 +391,8 @@ func sweepMLTransforms(region string) error {
 			r := ResourceMLTransform()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -376,22 +400,29 @@ func sweepMLTransforms(region string) error {
 		log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue ML Transforms: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepRegistry(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
-	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	listOutput, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
 		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -406,22 +437,28 @@ func sweepRegistry(region string) error {
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Registry %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Registry: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSchema(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
-	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	listOutput, err := conn.ListSchemasWithContext(ctx, &glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
 		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -436,25 +473,28 @@ func sweepSchema(region string) error {
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Schema %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSecurityConfigurations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetSecurityConfigurationsInput{}
 
 	for {
-		output, err := conn.GetSecurityConfigurations(input)
+		output, err := conn.GetSecurityConfigurationsWithContext(ctx, input)
 
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
@@ -469,7 +509,7 @@ func sweepSecurityConfigurations(region string) error {
 			name := aws.StringValue(securityConfiguration.Name)
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
-			err := DeleteSecurityConfiguration(conn, name)
+			err := DeleteSecurityConfiguration(ctx, conn, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Security Configuration %s: %s", name, err)
 			}
@@ -486,14 +526,18 @@ func sweepSecurityConfigurations(region string) error {
 }
 
 func sweepTriggers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetTriggersInput{}
-	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
+	err = conn.GetTriggersPagesWithContext(ctx, input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
 		if page == nil || len(page.Triggers) == 0 {
 			log.Printf("[INFO] No Glue Triggers to sweep")
 			return false
@@ -505,10 +549,8 @@ func sweepTriggers(region string) error {
 			r := ResourceTrigger()
 			d := r.Data(nil)
 			d.SetId(name)
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Trigger %s: %s", name, err)
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -520,17 +562,22 @@ func sweepTriggers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Triggers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepWorkflow(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
-	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
+	listOutput, err := conn.ListWorkflowsWithContext(ctx, &glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
 		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -540,7 +587,7 @@ func sweepWorkflow(region string) error {
 		return fmt.Errorf("Error retrieving Glue Workflow: %s", err)
 	}
 	for _, workflowName := range listOutput.Workflows {
-		err := DeleteWorkflow(conn, *workflowName)
+		err := DeleteWorkflow(ctx, conn, *workflowName)
 		if err != nil {
 			log.Printf("[ERROR] Failed to delete Glue Workflow %s: %s", *workflowName, err)
 		}

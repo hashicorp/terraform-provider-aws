@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidReportPlanName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		strings.Repeat("W", 256), // <= 256
 	}
@@ -29,6 +31,8 @@ func TestValidReportPlanName(t *testing.T) {
 }
 
 func TestValidFrameworkName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		strings.Repeat("W", 256), // <= 256
 	}

@@ -43,7 +43,7 @@ There are valid use cases for passthrough attribute values such as these (see th
 
 To expand on the data handling that occurs specifically within the Terraform AWS Provider resource implementations, the above resource creation items become the below in practice given our current usage of the Terraform Plugin SDK:
 
-- The `Create`/`CreateContext` function of a `schema.Resource` is invoked with `*schema.ResourceData` containing the planned new state data (conventionally named `d`) and an AWS API client (conventionally named `meta`).
+- The `Create`/`CreateWithoutTimeout` function of a `schema.Resource` is invoked with `*schema.ResourceData` containing the planned new state data (conventionally named `d`) and an AWS API client (conventionally named `meta`).
     - Note: Before reaching this point, the `ResourceData` was already translated from the Terraform Plugin Protocol data types by the Terraform Plugin SDK so values can be read by invoking `d.Get()` and `d.GetOk()` receiver methods with Attribute and Block names from the `Schema` of the `schema.Resource`.
 - An AWS Go SDK operation input type (e.g., `*ec2.CreateVpcInput`) is initialized
 - For each necessary field to configure in the operation input type, the data is read from the `ResourceData` (e.g., `d.Get()`, `d.GetOk()`) and converted into the AWS Go SDK type for the field (e.g., `*string`)
@@ -65,7 +65,7 @@ To further understand the necessary data conversions used throughout the Terrafo
 | `list` | `[]*T` | `TypeList` (`[]interface{}` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
 | `map` | `map[T1]*T2` | `TypeMap` (`map[string]interface{}`) | `map(any)` |
 | `string` | `*string` | `TypeString` (`string`) | `string` |
-| `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) | `list(object(any))` |
+| `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) with `MaxItems: 1` | `list(object(any))` |
 | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
 
 <!-- markdownlint-enable no-inline-html --->
@@ -282,7 +282,7 @@ To write:
 
 ```go
 if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeName)); err != nil {
-    return fmt.Errorf("error setting attribute_name: %w", err)
+    return fmt.Errorf("setting attribute_name: %w", err)
 }
 ```
 
@@ -303,7 +303,7 @@ To write (_likely to have helper function introduced soon_):
 ```go
 if output.Thing.AttributeName != nil {
     if err := d.Set("attribute_name", []interface{}{flattenStructure(output.Thing.AttributeName)}); err != nil {
-        return fmt.Errorf("error setting attribute_name: %w", err)
+        return fmt.Errorf("setting attribute_name: %w", err)
     }
 } else {
     d.Set("attribute_name", nil)
@@ -362,7 +362,7 @@ To write:
 
 ```go
 if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeNames)); err != nil {
-    return fmt.Errorf("error setting attribute_name: %w", err)
+    return fmt.Errorf("setting attribute_name: %w", err)
 }
 ```
 

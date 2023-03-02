@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccRDSSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -28,12 +30,12 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBSnapshotDestroy,
+		CheckDestroy:             testAccCheckDBSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
 				),
@@ -48,6 +50,7 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 }
 
 func TestAccRDSSnapshot_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -60,12 +63,12 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBSnapshotDestroy,
+		CheckDestroy:             testAccCheckDBSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -78,7 +81,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -87,7 +90,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -97,6 +100,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 }
 
 func TestAccRDSSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -109,13 +113,13 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBSnapshotDestroy,
+		CheckDestroy:             testAccCheckDBSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
-					testAccCheckDBSnapshotDisappears(&v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
+					testAccCheckDBSnapshotDisappears(ctx, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,39 +127,41 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDBSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckDBSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_snapshot" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_snapshot" {
+				continue
+			}
 
-		request := &rds.DescribeDBSnapshotsInput{
-			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
+			request := &rds.DescribeDBSnapshotsInput{
+				DBSnapshotIdentifier: aws.String(rs.Primary.ID),
+			}
 
-		resp, err := conn.DescribeDBSnapshots(request)
+			resp, err := conn.DescribeDBSnapshotsWithContext(ctx, request)
 
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-			continue
-		}
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+				continue
+			}
 
-		if err == nil {
-			for _, dbSnapshot := range resp.DBSnapshots {
-				if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) == rs.Primary.ID {
-					return fmt.Errorf("AWS DB Snapshot is still exist: %s", rs.Primary.ID)
+			if err == nil {
+				for _, dbSnapshot := range resp.DBSnapshots {
+					if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) == rs.Primary.ID {
+						return fmt.Errorf("AWS DB Snapshot is still exist: %s", rs.Primary.ID)
+					}
 				}
 			}
+
+			return err
 		}
 
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDBSnapshotExists(n string, v *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -166,13 +172,13 @@ func testAccCheckDBSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		request := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
 		}
 
-		response, err := conn.DescribeDBSnapshots(request)
+		response, err := conn.DescribeDBSnapshotsWithContext(ctx, request)
 		if err == nil {
 			if response.DBSnapshots != nil && len(response.DBSnapshots) > 0 {
 				*v = *response.DBSnapshots[0]
@@ -183,11 +189,11 @@ func testAccCheckDBSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 	}
 }
 
-func testAccCheckDBSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckDBSnapshotDisappears(ctx context.Context, snapshot *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		if _, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
+		if _, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
 			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,
 		}); err != nil {
 			return err

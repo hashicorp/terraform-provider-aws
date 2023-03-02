@@ -1,6 +1,7 @@
 package imagebuilder_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
@@ -25,12 +27,12 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_last_run", ""),
@@ -61,6 +63,7 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -68,13 +71,13 @@ func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceImagePipeline(), resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,6 +86,7 @@ func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -90,12 +94,12 @@ func TestAccImageBuilderImagePipeline_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -107,7 +111,7 @@ func TestAccImageBuilderImagePipeline_description(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -116,6 +120,7 @@ func TestAccImageBuilderImagePipeline_description(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_distributionARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
@@ -124,12 +129,12 @@ func TestAccImageBuilderImagePipeline_distributionARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_distributionConfigurationARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution_configuration_arn", distributionConfigurationResourceName, "arn"),
 				),
 			},
@@ -141,7 +146,7 @@ func TestAccImageBuilderImagePipeline_distributionARN(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_distributionConfigurationARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution_configuration_arn", distributionConfigurationResourceName, "arn"),
 				),
 			},
@@ -150,6 +155,7 @@ func TestAccImageBuilderImagePipeline_distributionARN(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -157,12 +163,12 @@ func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_enhancedMetadataEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "false"),
 				),
 			},
@@ -174,7 +180,7 @@ func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T)
 			{
 				Config: testAccImagePipelineConfig_enhancedMetadataEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
 				),
 			},
@@ -183,6 +189,7 @@ func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T)
 }
 
 func TestAccImageBuilderImagePipeline_imageRecipeARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	imageRecipeResourceName2 := "aws_imagebuilder_image_recipe.test2"
@@ -192,12 +199,12 @@ func TestAccImageBuilderImagePipeline_imageRecipeARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, "arn"),
 				),
 			},
@@ -209,7 +216,7 @@ func TestAccImageBuilderImagePipeline_imageRecipeARN(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_recipeARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName2, "arn"),
 				),
 			},
@@ -218,6 +225,7 @@ func TestAccImageBuilderImagePipeline_imageRecipeARN(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_containerRecipeARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerRecipeResourceName := "aws_imagebuilder_container_recipe.test"
 	containerRecipeResourceName2 := "aws_imagebuilder_container_recipe.test2"
@@ -227,12 +235,12 @@ func TestAccImageBuilderImagePipeline_containerRecipeARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_containerRecipeARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "container_recipe_arn", containerRecipeResourceName, "arn"),
 				),
 			},
@@ -244,7 +252,7 @@ func TestAccImageBuilderImagePipeline_containerRecipeARN(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_containerRecipeARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "container_recipe_arn", containerRecipeResourceName2, "arn"),
 				),
 			},
@@ -253,6 +261,7 @@ func TestAccImageBuilderImagePipeline_containerRecipeARN(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -260,12 +269,12 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "false"),
 				),
@@ -278,7 +287,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 			{
 				Config: testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
 				),
@@ -288,6 +297,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 }
 
 func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -295,12 +305,12 @@ func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_testsConfigurationTimeoutMinutes(rName, 721),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "721"),
 				),
@@ -313,7 +323,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_testsConfigurationTimeoutMinutes(rName, 722),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "722"),
 				),
@@ -323,6 +333,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_infrastructureARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	infrastructureConfigurationResourceName2 := "aws_imagebuilder_infrastructure_configuration.test2"
@@ -332,12 +343,12 @@ func TestAccImageBuilderImagePipeline_infrastructureARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, "arn"),
 				),
 			},
@@ -349,7 +360,7 @@ func TestAccImageBuilderImagePipeline_infrastructureARN(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_infrastructureConfigurationARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName2, "arn"),
 				),
 			},
@@ -358,6 +369,7 @@ func TestAccImageBuilderImagePipeline_infrastructureARN(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -365,12 +377,12 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable),
 				),
@@ -383,7 +395,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 			{
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, imagebuilder.PipelineExecutionStartConditionExpressionMatchOnly),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", imagebuilder.PipelineExecutionStartConditionExpressionMatchOnly),
 				),
@@ -393,6 +405,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 }
 
 func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -400,12 +413,12 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(1 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 				),
@@ -418,7 +431,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 			{
 				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(2 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(2 0 * * ? *)"),
 				),
@@ -428,6 +441,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 }
 
 func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -435,12 +449,12 @@ func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_scheduleTimezone(rName, "cron(1 0 * * ? *)", "Etc/UTC"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "Etc/UTC"),
@@ -454,7 +468,7 @@ func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_scheduleTimezone(rName, "cron(1 0 * * ? *)", "America/Los_Angeles"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "America/Los_Angeles"),
@@ -465,6 +479,7 @@ func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -472,12 +487,12 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_status(rName, imagebuilder.PipelineStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", imagebuilder.PipelineStatusDisabled),
 				),
 			},
@@ -489,7 +504,7 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_status(rName, imagebuilder.PipelineStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", imagebuilder.PipelineStatusEnabled),
 				),
 			},
@@ -498,6 +513,7 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
@@ -505,12 +521,12 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -523,7 +539,7 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -532,7 +548,7 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 			{
 				Config: testAccImagePipelineConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImagePipelineExists(resourceName),
+					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -541,50 +557,52 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckImagePipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_imagebuilder_image_pipeline" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_imagebuilder_image_pipeline" {
+				continue
+			}
+
+			input := &imagebuilder.GetImagePipelineInput{
+				ImagePipelineArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetImagePipelineWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Image Builder Image Pipeline (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Image Builder Image Pipeline (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &imagebuilder.GetImagePipelineInput{
-			ImagePipelineArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetImagePipeline(input)
-
-		if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Image Pipeline (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Image Builder Image Pipeline (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckImagePipelineExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckImagePipelineExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 		input := &imagebuilder.GetImagePipelineInput{
 			ImagePipelineArn: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetImagePipeline(input)
+		_, err := conn.GetImagePipelineWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Image Builder Image Pipeline (%s): %w", rs.Primary.ID, err)

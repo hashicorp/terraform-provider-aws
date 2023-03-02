@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_device")
 func ResourceDevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceCreate,
@@ -148,9 +149,9 @@ func ResourceDevice() *schema.Resource {
 }
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
@@ -211,7 +212,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -251,7 +252,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	tags := KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -266,7 +267,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -304,7 +305,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Device (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -313,7 +314,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 

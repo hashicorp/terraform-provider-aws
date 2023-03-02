@@ -1,6 +1,8 @@
 package kinesisanalyticsv2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -9,18 +11,18 @@ import (
 
 // FindApplicationDetailByName returns the application corresponding to the specified name.
 // Returns NotFoundError if no application is found.
-func FindApplicationDetailByName(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
+func FindApplicationDetailByName(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
 	input := &kinesisanalyticsv2.DescribeApplicationInput{
 		ApplicationName: aws.String(name),
 	}
 
-	return FindApplicationDetail(conn, input)
+	return FindApplicationDetail(ctx, conn, input)
 }
 
 // FindApplicationDetail returns the application details corresponding to the specified input.
 // Returns NotFoundError if no application is found.
-func FindApplicationDetail(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.DescribeApplicationInput) (*kinesisanalyticsv2.ApplicationDetail, error) {
-	output, err := conn.DescribeApplication(input)
+func FindApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.DescribeApplicationInput) (*kinesisanalyticsv2.ApplicationDetail, error) {
+	output, err := conn.DescribeApplicationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -45,19 +47,19 @@ func FindApplicationDetail(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *k
 
 // FindSnapshotDetailsByApplicationAndSnapshotNames returns the application snapshot details corresponding to the specified application and snapshot names.
 // Returns NotFoundError if no application snapshot is found.
-func FindSnapshotDetailsByApplicationAndSnapshotNames(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string) (*kinesisanalyticsv2.SnapshotDetails, error) {
+func FindSnapshotDetailsByApplicationAndSnapshotNames(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string) (*kinesisanalyticsv2.SnapshotDetails, error) {
 	input := &kinesisanalyticsv2.DescribeApplicationSnapshotInput{
 		ApplicationName: aws.String(applicationName),
 		SnapshotName:    aws.String(snapshotName),
 	}
 
-	return FindSnapshotDetails(conn, input)
+	return FindSnapshotDetails(ctx, conn, input)
 }
 
 // FindSnapshotDetails returns the application snapshot details corresponding to the specified input.
 // Returns NotFoundError if no application snapshot is found.
-func FindSnapshotDetails(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.DescribeApplicationSnapshotInput) (*kinesisanalyticsv2.SnapshotDetails, error) {
-	output, err := conn.DescribeApplicationSnapshot(input)
+func FindSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.DescribeApplicationSnapshotInput) (*kinesisanalyticsv2.SnapshotDetails, error) {
+	output, err := conn.DescribeApplicationSnapshotWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{

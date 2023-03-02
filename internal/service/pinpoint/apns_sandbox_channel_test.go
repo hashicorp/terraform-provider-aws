@@ -1,6 +1,7 @@
 package pinpoint_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -91,21 +92,22 @@ func testAccAPNSSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testAccAP
 }
 
 func TestAccPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var channel pinpoint.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
 
 	configuration := testAccAPNSSandboxChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSSandboxChannelDestroy,
+		CheckDestroy:             testAccCheckAPNSSandboxChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(ctx, resourceName, &channel),
 				),
 			},
 			{
@@ -117,7 +119,7 @@ func TestAccPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
 			{
 				Config: testAccAPNSSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(ctx, resourceName, &channel),
 				),
 			},
 		},
@@ -125,21 +127,22 @@ func TestAccPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
 }
 
 func TestAccPinpointAPNSSandboxChannel_basicToken(t *testing.T) {
+	ctx := acctest.Context(t)
 	var channel pinpoint.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
 
 	configuration := testAccAPNSSandboxChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSSandboxChannelDestroy,
+		CheckDestroy:             testAccCheckAPNSSandboxChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(ctx, resourceName, &channel),
 				),
 			},
 			{
@@ -151,14 +154,14 @@ func TestAccPinpointAPNSSandboxChannel_basicToken(t *testing.T) {
 			{
 				Config: testAccAPNSSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(ctx, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAPNSSandboxChannelExists(n string, channel *pinpoint.APNSSandboxChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSSandboxChannelExists(ctx context.Context, n string, channel *pinpoint.APNSSandboxChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -169,13 +172,13 @@ func testAccCheckAPNSSandboxChannelExists(n string, channel *pinpoint.APNSSandbo
 			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetApnsSandboxChannelInput{
 			ApplicationId: aws.String(rs.Primary.ID),
 		}
-		output, err := conn.GetApnsSandboxChannel(params)
+		output, err := conn.GetApnsSandboxChannelWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -219,27 +222,29 @@ resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
-func testAccCheckAPNSSandboxChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+func testAccCheckAPNSSandboxChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_pinpoint_apns_sandbox_channel" {
-			continue
-		}
-
-		// Check if the channel exists
-		params := &pinpoint.GetApnsSandboxChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.GetApnsSandboxChannel(params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_apns_sandbox_channel" {
 				continue
 			}
-			return err
-		}
-		return fmt.Errorf("APNs Sandbox Channel exists when it should be destroyed!")
-	}
 
-	return nil
+			// Check if the channel exists
+			params := &pinpoint.GetApnsSandboxChannelInput{
+				ApplicationId: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.GetApnsSandboxChannelWithContext(ctx, params)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+					continue
+				}
+				return err
+			}
+			return fmt.Errorf("APNs Sandbox Channel exists when it should be destroyed!")
+		}
+
+		return nil
+	}
 }

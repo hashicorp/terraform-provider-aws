@@ -1,18 +1,21 @@
 package docdb
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_docdb_engine_version")
 func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEngineVersionRead,
+		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
 			"engine": {
 				Type:     schema.TypeString,
@@ -72,8 +75,9 @@ func DataSourceEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.DescribeDBEngineVersionsInput{}
 
@@ -100,7 +104,7 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading DocumentDB engine versions: %v", input)
 	var engineVersions []*docdb.DBEngineVersion
 
-	err := conn.DescribeDBEngineVersionsPages(input, func(resp *docdb.DescribeDBEngineVersionsOutput, lastPage bool) bool {
+	err := conn.DescribeDBEngineVersionsPagesWithContext(ctx, input, func(resp *docdb.DescribeDBEngineVersionsOutput, lastPage bool) bool {
 		for _, engineVersion := range resp.DBEngineVersions {
 			if engineVersion == nil {
 				continue
@@ -112,11 +116,11 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading DocumentDB engine versions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB engine versions: %s", err)
 	}
 
 	if len(engineVersions) == 0 {
-		return fmt.Errorf("no DocumentDB engine versions found")
+		return sdkdiag.AppendErrorf(diags, "no DocumentDB engine versions found")
 	}
 
 	// preferred versions
@@ -143,7 +147,7 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if found == nil && len(engineVersions) > 1 {
-		return fmt.Errorf("multiple DocumentDB engine versions (%v) match the criteria", engineVersions)
+		return sdkdiag.AppendErrorf(diags, "multiple DocumentDB engine versions (%v) match the criteria", engineVersions)
 	}
 
 	if found == nil && len(engineVersions) == 1 {
@@ -151,7 +155,7 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if found == nil {
-		return fmt.Errorf("no DocumentDB engine versions match the criteria")
+		return sdkdiag.AppendErrorf(diags, "no DocumentDB engine versions match the criteria")
 	}
 
 	d.SetId(aws.StringValue(found.EngineVersion))
@@ -171,5 +175,5 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("version", found.EngineVersion)
 	d.Set("version_description", found.DBEngineVersionDescription)
 
-	return nil
+	return diags
 }

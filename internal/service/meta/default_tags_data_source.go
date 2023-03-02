@@ -6,25 +6,23 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
-}
-
-// newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.
+// @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDefaultTags{}, nil
+	d := &dataSourceDefaultTags{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceDefaultTags struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -33,28 +31,16 @@ func (d *dataSourceDefaultTags) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "aws_default_tags"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceDefaultTags) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceDefaultTags) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputed(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 		},
-	}
-
-	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceDefaultTags) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
 	}
 }
 
@@ -69,12 +55,12 @@ func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.meta.DefaultTagsConfig
-	ignoreTagsConfig := d.meta.IgnoreTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.GetTags()
 
-	data.ID = types.String{Value: d.meta.Partition}
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.ID = types.StringValue(d.Meta().Partition)
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

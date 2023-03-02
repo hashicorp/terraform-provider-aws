@@ -49,8 +49,8 @@ With the `disallowed_cidrs` attribute:
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
-  ipam_pool_id  = aws_vpc_ipam_pool.example.id
-  netmaskLength = 28
+  ipam_pool_id   = aws_vpc_ipam_pool.example.id
+  netmask_length = 28
 
   disallowed_cidrs = [
     "172.2.0.0/28"
@@ -87,7 +87,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for the allocation.
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
-* `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-32`.
+* `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
 
 ## Attributes Reference
 
@@ -100,8 +100,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IPAMs can be imported using the `allocation id`, e.g.
+IPAM allocations can be imported using the `allocation id` and `pool id`, separated by `_`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_pool_cidr_allocation.example
+$ terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```

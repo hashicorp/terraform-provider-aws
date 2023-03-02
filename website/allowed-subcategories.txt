@@ -50,6 +50,7 @@ CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Logs
+CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -121,6 +122,8 @@ Elemental MediaStore
 Elemental MediaStore Data
 Elemental MediaTailor
 EventBridge
+EventBridge Pipes
+EventBridge Scheduler
 EventBridge Schemas
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
@@ -142,6 +145,7 @@ Honeycode
 IAM (Identity & Access Management)
 IAM Access Analyzer
 IVS (Interactive Video)
+IVS (Interactive Video) Chat
 Inspector
 Inspector V2
 IoT 1-Click Devices
@@ -210,6 +214,7 @@ Network Firewall
 Network Manager
 Nimble Studio
 OpenSearch
+OpenSearch Serverless
 OpsWorks
 OpsWorks CM
 Organizations
@@ -238,6 +243,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resource Explorer
 Resource Groups
 Resource Groups Tagging
 RoboMaker
@@ -298,6 +304,7 @@ VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPN (Client)
 VPN (Site-to-Site)
+Verified Access
 WAF
 WAF Classic
 WAF Classic Regional

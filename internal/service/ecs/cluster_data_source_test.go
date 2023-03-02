@@ -27,6 +27,7 @@ func TestAccECSClusterDataSource_ecsCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "service_connect_defaults.#", resourceName, "service_connect_defaults.#"),
 					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 				),
 			},

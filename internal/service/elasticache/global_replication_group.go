@@ -36,6 +36,7 @@ const (
 	GlobalReplicationGroupMemberRoleSecondary = "SECONDARY"
 )
 
+// @SDKResource("aws_elasticache_global_replication_group")
 func ResourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -43,7 +44,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGlobalReplicationGroupUpdate,
 		DeleteWithoutTimeout: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
@@ -267,7 +268,7 @@ func paramGroupNameRequiresMajorVersionUpgrade(diff changeDiffer) error {
 }
 
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
@@ -380,7 +381,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -426,7 +427,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
 
 func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	// Only one field can be changed per request
 	if d.HasChange("cache_node_type") {
@@ -550,7 +551,7 @@ func updateGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 }
 
 func resourceGlobalReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
 	err := deleteGlobalReplicationGroup(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), d.Timeout(schema.TimeoutDelete))

@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_inspector2_enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
@@ -66,7 +67,7 @@ const (
 )
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.EnableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
@@ -95,7 +96,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	s, err := FindAccountStatuses(ctx, conn, d.Id())
 	if err != nil {
@@ -124,7 +125,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.DisableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),

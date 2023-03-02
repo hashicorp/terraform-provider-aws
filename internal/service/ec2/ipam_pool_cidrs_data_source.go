@@ -1,18 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_vpc_ipam_pool_cidrs")
 func DataSourceIPAMPoolCIDRs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPAMPoolCIDRsRead,
+		ReadWithoutTimeout: dataSourceIPAMPoolCIDRsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(1 * time.Minute),
@@ -44,8 +47,9 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.GetIpamPoolCidrsInput{
@@ -60,16 +64,16 @@ func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = nil
 	}
 
-	output, err := FindIPAMPoolCIDRs(conn, input)
+	output, err := FindIPAMPoolCIDRs(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading IPAM Pool CIDRs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDRs: %s", err)
 	}
 
 	d.SetId(poolID)
 	d.Set("ipam_pool_cidrs", flattenIPAMPoolCIDRs(output))
 
-	return nil
+	return diags
 }
 
 func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {

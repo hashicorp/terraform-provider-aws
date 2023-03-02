@@ -1,6 +1,7 @@
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,18 +16,19 @@ import (
 )
 
 func TestAccAutoScalingGroupTag_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupTagDestroy,
+		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
@@ -41,19 +43,20 @@ func TestAccAutoScalingGroupTag_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupTagDestroy,
+		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupTagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
+					testAccCheckGroupTagExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,18 +65,19 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 }
 
 func TestAccAutoScalingGroupTag_value(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupTagDestroy,
+		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
@@ -86,7 +90,7 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupTagExists(resourceName),
+					testAccCheckGroupTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1updated"),
 				),
@@ -95,37 +99,39 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+func testAccCheckGroupTagDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_group_tag" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_group_tag" {
+				continue
+			}
+
+			identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfautoscaling.GetTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Auto Scaling Group (%s) tag (%s) still exists", identifier, key)
 		}
 
-		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfautoscaling.GetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("AutoScaling Group (%s) tag (%s) still exists", identifier, key)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
+func testAccCheckGroupTagExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -142,9 +148,9 @@ func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		_, err = tfautoscaling.GetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
+		_, err = tfautoscaling.GetTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
 		return err
 	}

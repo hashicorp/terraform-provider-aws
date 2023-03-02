@@ -15,9 +15,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kendra_index")
 func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceIndexRead,
+		ReadWithoutTimeout: dataSourceIndexRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -278,7 +279,7 @@ func DataSourceIndex() *schema.Resource {
 }
 
 func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)

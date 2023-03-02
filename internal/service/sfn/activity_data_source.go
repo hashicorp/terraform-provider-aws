@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_sfn_activity")
 func DataSourceActivity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActivityRead,
@@ -43,7 +44,7 @@ func DataSourceActivity() *schema.Resource {
 }
 
 func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	if v, ok := d.GetOk("name"); ok {
 		name := v.(string)

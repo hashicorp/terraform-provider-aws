@@ -30,25 +30,22 @@ func Tags(tags tftags.KeyValueTags) []*secretsmanager.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from secretsmanager service tags.
-func KeyValueTags(tags []*secretsmanager.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*secretsmanager.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates secretsmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &secretsmanager.UntagResourceInput{

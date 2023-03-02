@@ -1,19 +1,22 @@
 package ram
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ram_resource_share")
 func DataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResourceShareRead,
+		ReadWithoutTimeout: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -71,8 +74,9 @@ func DataSourceResourceShare() *schema.Resource {
 	}
 }
 
-func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -94,18 +98,18 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for {
-		resp, err := conn.GetResourceShares(params)
+		resp, err := conn.GetResourceSharesWithContext(ctx, params)
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving resource share: empty response for: %s", params)
+			return sdkdiag.AppendErrorf(diags, "retrieving resource share: empty response for: %s", params)
 		}
 
 		if len(resp.ResourceShares) > 1 {
-			return fmt.Errorf("Multiple resource shares found for: %s", name)
+			return sdkdiag.AppendErrorf(diags, "Multiple resource shares found for: %s", name)
 		}
 
 		if resp == nil || len(resp.ResourceShares) == 0 {
-			return fmt.Errorf("No matching resource found: %w", err)
+			return sdkdiag.AppendErrorf(diags, "No matching resource found: %s", err)
 		}
 
 		for _, r := range resp.ResourceShares {
@@ -115,8 +119,8 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("owning_account_id", r.OwningAccountId)
 				d.Set("status", r.Status)
 
-				if err := d.Set("tags", KeyValueTags(r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-					return fmt.Errorf("error setting tags: %w", err)
+				if err := d.Set("tags", KeyValueTags(ctx, r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 				}
 
 				break
@@ -130,7 +134,7 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 		params.NextToken = resp.NextToken
 	}
 
-	return nil
+	return diags
 }
 
 func buildTagFilters(set *schema.Set) []*ram.TagFilter {
