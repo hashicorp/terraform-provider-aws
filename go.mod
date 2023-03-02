@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.87.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.4
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4
