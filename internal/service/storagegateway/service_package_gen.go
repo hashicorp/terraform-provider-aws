@@ -22,11 +22,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_storagegateway_local_disk": DataSourceLocalDisk,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_storagegateway_cache":                   ResourceCache,
+		"aws_storagegateway_cached_iscsi_volume":     ResourceCachediSCSIVolume,
+		"aws_storagegateway_file_system_association": ResourceFileSystemAssociation,
+		"aws_storagegateway_gateway":                 ResourceGateway,
+		"aws_storagegateway_nfs_file_share":          ResourceNFSFileShare,
+		"aws_storagegateway_smb_file_share":          ResourceSMBFileShare,
+		"aws_storagegateway_stored_iscsi_volume":     ResourceStorediSCSIVolume,
+		"aws_storagegateway_tape_pool":               ResourceTapePool,
+		"aws_storagegateway_upload_buffer":           ResourceUploadBuffer,
+		"aws_storagegateway_working_storage":         ResourceWorkingStorage,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

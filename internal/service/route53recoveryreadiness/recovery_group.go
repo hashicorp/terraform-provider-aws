@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53recoveryreadiness_recovery_group")
 func ResourceRecoveryGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecoveryGroupCreate,

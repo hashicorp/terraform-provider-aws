@@ -22,11 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_location_geofence_collection":  DataSourceGeofenceCollection,
+		"aws_location_map":                  DataSourceMap,
+		"aws_location_place_index":          DataSourcePlaceIndex,
+		"aws_location_route_calculator":     DataSourceRouteCalculator,
+		"aws_location_tracker":              DataSourceTracker,
+		"aws_location_tracker_association":  DataSourceTrackerAssociation,
+		"aws_location_tracker_associations": DataSourceTrackerAssociations,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_location_geofence_collection": ResourceGeofenceCollection,
+		"aws_location_map":                 ResourceMap,
+		"aws_location_place_index":         ResourcePlaceIndex,
+		"aws_location_route_calculator":    ResourceRouteCalculator,
+		"aws_location_tracker":             ResourceTracker,
+		"aws_location_tracker_association": ResourceTrackerAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

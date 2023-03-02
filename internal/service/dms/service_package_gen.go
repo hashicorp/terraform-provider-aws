@@ -26,7 +26,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dms_certificate":              ResourceCertificate,
+		"aws_dms_endpoint":                 ResourceEndpoint,
+		"aws_dms_event_subscription":       ResourceEventSubscription,
+		"aws_dms_replication_instance":     ResourceReplicationInstance,
+		"aws_dms_replication_subnet_group": ResourceReplicationSubnetGroup,
+		"aws_dms_replication_task":         ResourceReplicationTask,
+		"aws_dms_s3_endpoint":              ResourceS3Endpoint,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

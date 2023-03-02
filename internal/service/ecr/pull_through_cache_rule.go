@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ecr_pull_through_cache_rule")
 func ResourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePullThroughCacheRuleCreate,

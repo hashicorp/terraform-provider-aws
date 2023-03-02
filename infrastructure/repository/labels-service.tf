@@ -302,6 +302,7 @@ variable "service_labels" {
     "transfer",
     "transitgateway",
     "translate",
+    "verifiedaccess",
     "voiceid",
     "vpc",
     "vpnclient",

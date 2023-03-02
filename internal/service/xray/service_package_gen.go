@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_xray_encryption_config": ResourceEncryptionConfig,
+		"aws_xray_group":             ResourceGroup,
+		"aws_xray_sampling_rule":     ResourceSamplingRule,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

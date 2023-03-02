@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudwatch_event_connection")
 func ResourceConnection() *schema.Resource {
 	connectionHttpParameters := &schema.Resource{
 		Schema: map[string]*schema.Schema{

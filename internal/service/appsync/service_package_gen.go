@@ -26,7 +26,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appsync_api_cache":                   ResourceAPICache,
+		"aws_appsync_api_key":                     ResourceAPIKey,
+		"aws_appsync_datasource":                  ResourceDataSource,
+		"aws_appsync_domain_name":                 ResourceDomainName,
+		"aws_appsync_domain_name_api_association": ResourceDomainNameAPIAssociation,
+		"aws_appsync_function":                    ResourceFunction,
+		"aws_appsync_graphql_api":                 ResourceGraphQLAPI,
+		"aws_appsync_resolver":                    ResourceResolver,
+		"aws_appsync_type":                        ResourceType,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

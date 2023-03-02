@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kendra_query_suggestions_block_list")
 func ResourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuerySuggestionsBlockListCreate,

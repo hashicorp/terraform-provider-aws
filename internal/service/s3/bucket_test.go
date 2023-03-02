@@ -244,7 +244,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -22,11 +22,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_mskconnect_connector":            DataSourceConnector,
+		"aws_mskconnect_custom_plugin":        DataSourceCustomPlugin,
+		"aws_mskconnect_worker_configuration": DataSourceWorkerConfiguration,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_mskconnect_connector":            ResourceConnector,
+		"aws_mskconnect_custom_plugin":        ResourceCustomPlugin,
+		"aws_mskconnect_worker_configuration": ResourceWorkerConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

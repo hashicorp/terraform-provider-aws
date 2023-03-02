@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eks_node_group")
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,

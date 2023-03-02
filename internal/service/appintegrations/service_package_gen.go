@@ -26,7 +26,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appintegrations_event_integration": ResourceEventIntegration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

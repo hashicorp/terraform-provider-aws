@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_worklink_fleet": ResourceFleet,
+		"aws_worklink_website_certificate_authority_association": ResourceWebsiteCertificateAuthorityAssociation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

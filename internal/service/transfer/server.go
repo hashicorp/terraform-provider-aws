@@ -25,12 +25,14 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transfer_server")
 func ResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,
 		UpdateWithoutTimeout: resourceServerUpdate,
 		DeleteWithoutTimeout: resourceServerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -688,7 +690,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			for _, user := range page.Users {
-				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName))
+				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName), d.Timeout(schema.TimeoutDelete))
 
 				if err != nil {
 					deletionErrs = multierror.Append(deletionErrs, err)

@@ -24,6 +24,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_mwaa_environment")
 func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,

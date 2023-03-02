@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_controltower_controls")
 func DataSourceControls() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceControlsRead,

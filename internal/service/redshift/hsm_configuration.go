@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_hsm_configuration")
 func ResourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,

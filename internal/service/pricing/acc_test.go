@@ -32,7 +32,7 @@ var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheck verifies AWS credentials and that Pricing is supported
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, pricing.EndpointsID)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.

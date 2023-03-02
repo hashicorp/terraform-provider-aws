@@ -23,6 +23,7 @@ const (
 	localGatewayRouteEventualConsistencyTimeout = 1 * time.Minute
 )
 
+// @SDKResource("aws_ec2_local_gateway_route")
 func ResourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteCreate,

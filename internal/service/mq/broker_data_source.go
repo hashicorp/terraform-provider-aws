@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_mq_broker")
 func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerRead,

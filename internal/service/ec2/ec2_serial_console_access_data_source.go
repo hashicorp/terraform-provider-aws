@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_ec2_serial_console_access")
 func DataSourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSerialConsoleAccessRead,

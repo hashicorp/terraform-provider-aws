@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_parameters_by_path")
 func DataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParametersReadByPath,

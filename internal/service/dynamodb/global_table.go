@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dynamodb_global_table")
 func ResourceGlobalTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalTableCreate,

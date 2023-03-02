@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ami_copy")
 func ResourceAMICopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICopyCreate,

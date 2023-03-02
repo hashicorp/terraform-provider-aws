@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codecommit_approval_rule_template")
 func ResourceApprovalRuleTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApprovalRuleTemplateCreate,

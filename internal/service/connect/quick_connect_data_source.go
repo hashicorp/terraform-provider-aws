@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_quick_connect")
 func DataSourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQuickConnectRead,

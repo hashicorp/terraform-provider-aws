@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_registry")
 func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,

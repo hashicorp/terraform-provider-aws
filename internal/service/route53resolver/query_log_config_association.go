@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_query_log_config_association")
 func ResourceQueryLogConfigAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogConfigAssociationCreate,

@@ -44,6 +44,7 @@ var AccountIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:    "797873946194",
 }
 
+// @SDKDataSource("aws_elb_service_account")
 func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,

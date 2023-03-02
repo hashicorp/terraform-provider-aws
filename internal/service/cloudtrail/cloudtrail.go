@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudtrail")
 func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-name
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCloudTrailCreate,

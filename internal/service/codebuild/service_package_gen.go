@@ -26,7 +26,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codebuild_project":           ResourceProject,
+		"aws_codebuild_report_group":      ResourceReportGroup,
+		"aws_codebuild_resource_policy":   ResourceResourcePolicy,
+		"aws_codebuild_source_credential": ResourceSourceCredential,
+		"aws_codebuild_webhook":           ResourceWebhook,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

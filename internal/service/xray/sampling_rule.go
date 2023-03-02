@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_xray_sampling_rule")
 func ResourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,

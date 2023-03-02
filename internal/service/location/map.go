@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_location_map")
 func ResourceMap() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMapCreate,

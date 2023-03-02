@@ -27,6 +27,7 @@ const (
 	securityGroupsDeletedSleepTime = 30 * time.Second
 )
 
+// @SDKResource("aws_opsworks_stack")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
