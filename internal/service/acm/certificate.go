@@ -138,27 +138,18 @@ func ResourceCertificate() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ForceNew:      true,
 							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateFunc:  validation.StringInSlice(acm.CertificateTransparencyLoggingPreference_Values(), false),
 							ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 						},
 					},
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if _, ok := d.GetOk("private_key"); ok {
-						// ignore diffs for imported certs; they have a different logging preference
-						// default to requested certs which can't be changed by the ImportCertificate API
-						return true
-					}
-					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
-					return old == "1" && new == "0"
 				},
 			},
 			"pending_renewal": {
@@ -543,6 +534,19 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err = WaitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout)
 		if err != nil {
 			return diag.Errorf("waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("options") {
+		_, n := d.GetChange("options")
+
+		log.Printf("[INFO] Updating Certificate Options (%s)", d.Id())
+		_, err := conn.UpdateCertificateOptionsWithContext(ctx, &acm.UpdateCertificateOptionsInput{
+			CertificateArn: aws.String(d.Get("arn").(string)),
+			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
+		})
+		if err != nil {
+			return diag.Errorf("updating certificate options (%s): %s", d.Id(), err)
 		}
 	}
 

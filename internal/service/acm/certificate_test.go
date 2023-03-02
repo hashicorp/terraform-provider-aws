@@ -1391,6 +1391,97 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, acm.ValidationMethodDns, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", acm.CertificateTransparencyLoggingPreferenceEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, acm.ValidationMethodDns, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", acm.CertificateTransparencyLoggingPreferenceDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, acm.ValidationMethodDns, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", acm.CertificateTransparencyLoggingPreferenceEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1916,6 +2007,58 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, domainName, validationMethod)
+}
+
+func testAccCertificateConfig_optionsWithValidation(domainName, validationMethod, loggingPreference string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[1]q
+  validation_method = %[2]q
+
+  options {
+    certificate_transparency_logging_preference = %[3]q
+  }
+}
+
+data "aws_route53_zone" "test" {
+	name         = %[1]q
+	private_zone = false
+}
+
+# for_each acceptance testing requires SDKv2
+#
+# resource "aws_route53_record" "test" {
+# 	for_each = {
+# 	  for dvo in aws_acm_certificate.test.domain_validation_options : dvo.domain_name => {
+# 		name   = dvo.resource_record_name
+# 		record = dvo.resource_record_value
+# 		type   = dvo.resource_record_type
+# 	  }
+# 	}
+
+# 	allow_overwrite = true
+# 	name            = each.value.name
+# 	records         = [each.value.record]
+# 	ttl             = 60
+# 	type            = each.value.type
+# 	zone_id         = data.aws_route53_zone.test.zone_id
+# }
+
+resource "aws_route53_record" "test" {
+	allow_overwrite = true
+	name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+	records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+	ttl             = 60
+	type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+	zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+	depends_on = [aws_route53_record.test]
+
+	certificate_arn = aws_acm_certificate.test.arn
+}
+`, domainName, validationMethod, loggingPreference)
 }
 
 func testAccCertificateConfig_keyAlgorithm(domainName, validationMethod, keyAlgorithm string) string {
