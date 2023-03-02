@@ -3,6 +3,7 @@
 NOTES:
 
 * resource/aws_dms_endpoint: The `s3_settings` argument has been deprecated. All configurations using `aws_dms_endpoint.*.s3_settings` should be updated to use the `aws_dms_s3_endpoint` resource instead ([#29728](https://github.com/hashicorp/terraform-provider-aws/issues/29728))
+* resource/aws_networkmanager_core_network: The `base_policy_region` argument is being deprecated in favor of the new `base_policy_regions` argument. ([#29623](https://github.com/hashicorp/terraform-provider-aws/issues/29623))
 
 FEATURES:
 
@@ -24,8 +25,10 @@ ENHANCEMENTS:
 * resource/aws_ec2_fleet: Add `valid_from` and `valid_until` arguments ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
 * resource/aws_lambda_function: Add `skip_destroy` argument ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_lambda_function: Add configurable timeout for Delete ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
+* resource/aws_lambda_function: Add plan time validators for `memory_size`, `role`, and `timeout` ([#29721](https://github.com/hashicorp/terraform-provider-aws/issues/29721))
 * resource/aws_lambda_function: Retry (up to the configurable timeout) deletion of replicated Lambda@Edge functions ([#29646](https://github.com/hashicorp/terraform-provider-aws/issues/29646))
 * resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_networkmanager_core_network: Add `base_policy_regions` argument ([#29623](https://github.com/hashicorp/terraform-provider-aws/issues/29623))
 * resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_transfer_user: Add configurable timeout for Delete ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
 
