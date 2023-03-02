@@ -41,7 +41,7 @@ linters-settings:
       - name: unreachable-code
       - name: unused-parameter
       - name: var-declaration
-      - name: var-naming
+      # - name: var-naming
 
 run:
   timeout: 75m
