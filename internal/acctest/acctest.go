@@ -220,10 +220,12 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		err := sdkdiag.DiagnosticsError(Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)))
+		// TODO: take `ctx` as a parameter instead
+		ctx := Context(t)
 
-		if err != nil {
-			t.Fatal(err)
+		diags := Provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+		if err := sdkdiag.DiagnosticsError(diags); err != nil {
+			t.Fatalf("configuring provider: %s", err)
 		}
 	})
 }
@@ -1129,9 +1131,9 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 		var diags diag.Diagnostics
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(ctx, d, meta)
+			diags = resource.DeleteContext(ctx, d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 		} else {
-			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 		}
 
 		for i := range diags {
@@ -1143,7 +1145,7 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 		return nil
 	}
 
-	return resource.Delete(d, meta)
+	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
 func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
