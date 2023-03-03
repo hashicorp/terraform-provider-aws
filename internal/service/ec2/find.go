@@ -6953,3 +6953,22 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 
 	return instanceState, nil
 }
+
+func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VerifiedAccessGroup, error) {
+	in := &ec2.DescribeVerifiedAccessGroupsInput{
+		VerifiedAccessGroupIds: aws.StringSlice([]string{id}),
+	}
+	out, err := conn.DescribeVerifiedAccessGroupsWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, errInvalidVerifiedAccessGroupIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VerifiedAccessGroups[0], nil
+}
