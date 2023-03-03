@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_evidently_feature": ResourceFeature,
+		"aws_evidently_launch":  ResourceLaunch,
+		"aws_evidently_project": ResourceProject,
+		"aws_evidently_segment": ResourceSegment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

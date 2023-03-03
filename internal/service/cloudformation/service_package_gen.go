@@ -22,11 +22,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudformation_export": DataSourceExport,
+		"aws_cloudformation_stack":  DataSourceStack,
+		"aws_cloudformation_type":   DataSourceType,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudformation_stack":              ResourceStack,
+		"aws_cloudformation_stack_set":          ResourceStackSet,
+		"aws_cloudformation_stack_set_instance": ResourceStackSetInstance,
+		"aws_cloudformation_type":               ResourceType,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -32,6 +32,7 @@ const (
 	GlobalClusterClusterDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_rds_global_cluster")
 func ResourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
@@ -157,7 +158,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -472,7 +472,7 @@ type AWSClient struct {
 	groundstationConn                *groundstation.GroundStation
 	guarddutyConn                    *guardduty.GuardDuty
 	healthConn                       *health.Health
-	healthlakeConn                   *healthlake.HealthLake
+	healthlakeClient                 *healthlake.Client
 	honeycodeConn                    *honeycode.Honeycode
 	iamConn                          *iam.IAM
 	ivsConn                          *ivs.IVS
@@ -1170,8 +1170,8 @@ func (client *AWSClient) HealthConn() *health.Health {
 	return client.healthConn
 }
 
-func (client *AWSClient) HealthLakeConn() *healthlake.HealthLake {
-	return client.healthlakeConn
+func (client *AWSClient) HealthLakeClient() *healthlake.Client {
+	return client.healthlakeClient
 }
 
 func (client *AWSClient) HoneycodeConn() *honeycode.Honeycode {

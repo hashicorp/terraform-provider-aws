@@ -22,11 +22,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codeartifact_authorization_token": DataSourceAuthorizationToken,
+		"aws_codeartifact_repository_endpoint": DataSourceRepositoryEndpoint,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codeartifact_domain":                        ResourceDomain,
+		"aws_codeartifact_domain_permissions_policy":     ResourceDomainPermissionsPolicy,
+		"aws_codeartifact_repository":                    ResourceRepository,
+		"aws_codeartifact_repository_permissions_policy": ResourceRepositoryPermissionsPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

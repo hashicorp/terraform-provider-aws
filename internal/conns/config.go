@@ -394,6 +394,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
+
+		case "RunInstances":
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
+			if tfawserr.ErrCodeEquals(err, "InsufficientInstanceCapacity") {
+				r.Retryable = aws.Bool(false)
+			}
 		}
 	})
 

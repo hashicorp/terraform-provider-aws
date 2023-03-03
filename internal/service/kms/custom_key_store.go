@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_kms_custom_key_store")
 func ResourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomKeyStoreCreate,

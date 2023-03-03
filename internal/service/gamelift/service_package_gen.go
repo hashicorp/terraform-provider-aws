@@ -26,7 +26,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_gamelift_alias":              ResourceAlias,
+		"aws_gamelift_build":              ResourceBuild,
+		"aws_gamelift_fleet":              ResourceFleet,
+		"aws_gamelift_game_server_group":  ResourceGameServerGroup,
+		"aws_gamelift_game_session_queue": ResourceGameSessionQueue,
+		"aws_gamelift_script":             ResourceScript,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

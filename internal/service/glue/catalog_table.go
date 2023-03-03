@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_catalog_table")
 func ResourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,

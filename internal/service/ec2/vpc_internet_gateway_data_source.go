@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_internet_gateway")
 func DataSourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInternetGatewayRead,

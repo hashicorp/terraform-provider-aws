@@ -26,7 +26,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_datasync_agent":                            ResourceAgent,
+		"aws_datasync_location_efs":                     ResourceLocationEFS,
+		"aws_datasync_location_fsx_lustre_file_system":  ResourceLocationFSxLustreFileSystem,
+		"aws_datasync_location_fsx_openzfs_file_system": ResourceLocationFSxOpenZFSFileSystem,
+		"aws_datasync_location_fsx_windows_file_system": ResourceLocationFSxWindowsFileSystem,
+		"aws_datasync_location_hdfs":                    ResourceLocationHDFS,
+		"aws_datasync_location_nfs":                     ResourceLocationNFS,
+		"aws_datasync_location_object_storage":          ResourceLocationObjectStorage,
+		"aws_datasync_location_s3":                      ResourceLocationS3,
+		"aws_datasync_location_smb":                     ResourceLocationSMB,
+		"aws_datasync_task":                             ResourceTask,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -28,6 +28,7 @@ func provisioningHookPayloadVersion_Values() []string {
 	}
 }
 
+// @SDKResource("aws_iot_provisioning_template")
 func ResourceProvisioningTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningTemplateCreate,

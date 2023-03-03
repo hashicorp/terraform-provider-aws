@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloud9_environment_ec2":        ResourceEnvironmentEC2,
+		"aws_cloud9_environment_membership": ResourceEnvironmentMembership,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -26,7 +26,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53domains_registered_domain": ResourceRegisteredDomain,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -26,7 +26,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_chime_voice_connector":                         ResourceVoiceConnector,
+		"aws_chime_voice_connector_group":                   ResourceVoiceConnectorGroup,
+		"aws_chime_voice_connector_logging":                 ResourceVoiceConnectorLogging,
+		"aws_chime_voice_connector_origination":             ResourceVoiceConnectorOrigination,
+		"aws_chime_voice_connector_streaming":               ResourceVoiceConnectorStreaming,
+		"aws_chime_voice_connector_termination":             ResourceVoiceConnectorTermination,
+		"aws_chime_voice_connector_termination_credentials": ResourceVoiceConnectorTerminationCredentials,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

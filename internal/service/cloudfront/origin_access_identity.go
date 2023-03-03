@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_origin_access_identity")
 func ResourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginAccessIdentityCreate,

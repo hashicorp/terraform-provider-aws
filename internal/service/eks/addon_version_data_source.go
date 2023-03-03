@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_eks_addon_version")
 func DataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,

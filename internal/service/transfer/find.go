@@ -61,32 +61,6 @@ func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*t
 	return output.Server, nil
 }
 
-func FindUserByServerIDAndUserName(ctx context.Context, conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
-	input := &transfer.DescribeUserInput{
-		ServerId: aws.String(serverID),
-		UserName: aws.String(userName),
-	}
-
-	output, err := conn.DescribeUserWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.User, nil
-}
-
 func FindWorkflowByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedWorkflow, error) {
 	input := &transfer.DescribeWorkflowInput{
 		WorkflowId: aws.String(id),
