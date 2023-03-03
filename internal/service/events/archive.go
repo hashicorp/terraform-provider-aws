@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_event_archive")
 func ResourceArchive() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveCreate,

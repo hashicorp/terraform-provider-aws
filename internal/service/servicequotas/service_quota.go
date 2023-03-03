@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicequotas_service_quota")
 func ResourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceQuotaCreate,

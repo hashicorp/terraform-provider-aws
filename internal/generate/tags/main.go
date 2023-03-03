@@ -221,7 +221,7 @@ func main() {
 		ClientType:             clientType,
 		ServicePackage:         servicePackage,
 
-		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *updateTags),
+		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
 		SkipTypesImp:    *skipTypesImp,

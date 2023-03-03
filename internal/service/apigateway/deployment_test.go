@@ -271,6 +271,30 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/28997.
+func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var deployment apigateway.Deployment
+	resourceName := "aws_api_gateway_deployment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_conflictingConnectionType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDeploymentExists(ctx context.Context, n string, res *apigateway.Deployment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -369,7 +393,7 @@ func testAccDeploymentImportStateIdFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccDeploymentBaseConfig(uri string) string {
+func testAccDeploymentConfig_base(uri string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-deployment"
@@ -401,7 +425,7 @@ resource "aws_api_gateway_integration" "test" {
   http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
-  uri                     = "%s"
+  uri                     = %[1]q
   integration_http_method = "GET"
 }
 
@@ -415,7 +439,7 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 func testAccDeploymentConfig_triggers(description string, url string) string {
-	return testAccDeploymentBaseConfig(url) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDeploymentConfig_base(url), fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   description       = %[1]q
   rest_api_id       = aws_api_gateway_rest_api.test.id
@@ -430,63 +454,115 @@ resource "aws_api_gateway_deployment" "test" {
     create_before_destroy = true
   }
 }
-`, description)
+`, description))
 }
 
 func testAccDeploymentConfig_description(description string) string {
-	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDeploymentConfig_base("http://example.com"), fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  description = %q
+  description = %[1]q
   rest_api_id = aws_api_gateway_rest_api.test.id
 }
-`, description)
+`, description))
 }
 
 func testAccDeploymentConfig_required() string {
-	return testAccDeploymentBaseConfig("http://example.com") + `
+	return acctest.ConfigCompose(testAccDeploymentConfig_base("http://example.com"), `
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
 }
-`
+`)
 }
 
 func testAccDeploymentConfig_stageDescription(stageDescription string) string {
-	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDeploymentConfig_base("http://example.com"), fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_description = %q
+  stage_description = %[1]q
   stage_name        = "tf-acc-test"
 }
-`, stageDescription)
+`, stageDescription))
 }
 
 func testAccDeploymentConfig_stageName(stageName string) string {
-	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDeploymentConfig_base("http://example.com"), fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = %q
+  stage_name  = %[1]q
 }
-`, stageName)
+`, stageName))
 }
 
 func testAccDeploymentConfig_variables(key1, value1 string) string {
-	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDeploymentConfig_base("http://example.com"), fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
 
   variables = {
-    %q = %q
+    %[1]q = %[2]q
   }
 }
-`, key1, value1)
+`, key1, value1))
+}
+
+func testAccDeploymentConfig_conflictingConnectionType(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+resource "aws_api_gateway_deployment" "test" {
+  description = "The deployment"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  triggers = {
+    redeployment = sha1(join(",", tolist([
+      jsonencode(aws_api_gateway_integration.test),
+    ])))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.test.invoke_arn
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs16.x"
+}
+`, rName))
 }

@@ -123,6 +123,7 @@ The following arguments are optional:
 * `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Default is `false`. (Ignored for source endpoints.)
 * `date_partition_sequence` - (Optional) Date format to use during folder partitioning. Use this parameter when `date_partition_enabled` is set to true. Valid values are `YYYYMMDD`, `YYYYMMDDHH`, `YYYYMM`, `MMYYYYDD`, and `DDMMYYYY`. (AWS default is `YYYYMMDD`.) (Ignored for source endpoints.)
 * `date_partition_timezone` - (Optional) Convert the current UTC time to a timezone. The conversion occurs when a date partition folder is created and a CDC filename is generated. The timezone format is Area/Location (_e.g._, `Europe/Paris`). Use this when `date_partition_enabled` is `true`. (Ignored for source endpoints.)
+* `detach_target_on_lob_lookup_failure_parquet` - (Optional) Undocumented argument for use as directed by AWS Support.
 * `dict_page_size_limit` - (Optional) Maximum size in bytes of an encoded dictionary page of a column. (AWS default is 1 MiB, _i.e._, `1048576`.)
 * `enable_statistics` - (Optional) Whether to enable statistics for Parquet pages and row groups. Default is `true`.
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)

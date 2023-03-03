@@ -33,6 +33,7 @@ const (
 	zoneChangeSyncMaxPollInterval = 30
 )
 
+// @SDKResource("aws_route53_zone")
 func ResourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
@@ -123,7 +124,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
 	input := &route53.CreateHostedZoneInput{
@@ -428,7 +429,7 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := tfresource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, 3*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSECWithContext(ctx, input)
@@ -484,7 +485,7 @@ func disableDNSSECForZone(ctx context.Context, conn *route53.Route53, hostedZone
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = tfresource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = tfresource.Retry(ctx, 5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSECWithContext(ctx, input)

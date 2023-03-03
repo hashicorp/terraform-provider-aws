@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_servicecatalog_provisioned_product")
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -252,8 +254,21 @@ func ResourceProvisionedProduct() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			refreshOutputsDiff,
+			verify.SetTagsDiff,
+		),
 	}
+}
+
+func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.HasChanges("provisioning_parameters", "provisioning_artifact_id", "provisioning_artifact_name") {
+		if err := diff.SetNewComputed("outputs"); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -261,7 +276,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(resource.UniqueId()),
@@ -466,7 +481,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
 	// tags are only available from the record tied to the provisioned product
-	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -521,7 +536,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChanges("tags", "tags_all") {
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+		tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 		if len(tags) > 0 {
 			input.Tags = Tags(tags.IgnoreAWS())

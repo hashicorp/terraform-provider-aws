@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshift_scheduled_action")
 func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduledActionCreate,
@@ -174,7 +175,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateScheduledActionWithContext(ctx, input)
 		},

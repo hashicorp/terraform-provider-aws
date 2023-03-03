@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_s3_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`)
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`)
+```

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_emr_release_labels")
 func DataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,

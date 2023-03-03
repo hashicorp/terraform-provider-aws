@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_connect_bot_association")
 func ResourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotAssociationCreate,
@@ -97,7 +98,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	*/
 
-	_, err := tfresource.RetryWhenContext(ctx, botAssociationCreateTimeout,
+	_, err := tfresource.RetryWhen(ctx, botAssociationCreateTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateBotWithContext(ctx, input)
 		},

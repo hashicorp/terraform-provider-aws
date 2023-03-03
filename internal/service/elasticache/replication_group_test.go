@@ -47,13 +47,11 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					testCheckEngineStuffDefault(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
@@ -123,7 +121,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_uppercase(strings.ToUpper(rName)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "replication_group_id", rName),
 				),
@@ -156,7 +154,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "3.2.6"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.6"),
@@ -170,7 +168,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "3.2.4"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
 					testAccCheckReplicationGroupRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.4"),
@@ -179,7 +177,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "3.2.10"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v3),
 					testAccCheckReplicationGroupNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.10"),
@@ -188,7 +186,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.0"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v4),
 					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
@@ -197,7 +195,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v5),
 					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
@@ -212,7 +210,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "5.0.6"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v6),
 					testAccCheckReplicationGroupRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
@@ -221,7 +219,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.x"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v7),
 					testAccCheckReplicationGroupNotRecreated(&v6, &v7),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
@@ -230,7 +228,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.0"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v8),
 					testAccCheckReplicationGroupRecreated(&v7, &v8),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
@@ -458,20 +456,23 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_parameterName(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName1, "name"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 			{
 				Config: testAccReplicationGroupConfig_parameterName(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName2, "name"),
 				),
@@ -498,7 +499,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
 				),
@@ -511,7 +512,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
 			},
@@ -537,7 +538,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_inVPC(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "1"),
@@ -571,7 +572,7 @@ func TestAccElastiCacheReplicationGroup_depecatedAvailabilityZones_vpc(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_inVPCDeprecatedAvailabilityZones(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
@@ -605,7 +606,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_multiAZNotInVPCPreferredCacheClusterAZsNotRepeated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
@@ -644,7 +645,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_multiAZNotInVPCPreferredCacheClusterAZsRepeated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
@@ -685,7 +686,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotIn
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_multiAZNotInVPCBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
@@ -700,7 +701,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotIn
 			},
 			{
 				Config: testAccReplicationGroupConfig_multiAZNotInVPCDeprecatedAvailabilityZones(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
 					testAccCheckReplicationGroupRecreated(&rg1, &rg2),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
@@ -740,7 +741,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_multiAZInVPC(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
@@ -785,7 +786,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_multiAZInVPC(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
@@ -848,10 +849,9 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
@@ -861,6 +861,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
@@ -891,7 +892,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisClusterNonClusteredParameter(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
@@ -905,10 +906,13 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 		},
 	})
@@ -937,13 +941,13 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 4, []kvp{
 						{"key", "value"},
 					}),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
@@ -951,7 +955,6 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
@@ -960,6 +963,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 6, []kvp{
 						{"key", "value"},
 					}),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 		},
@@ -984,28 +988,28 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 3, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 		},
@@ -1030,41 +1034,41 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "3"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "8"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "8"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "2"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 		},
@@ -1089,28 +1093,28 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 3, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "2"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "9"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "9"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 		},
@@ -1135,28 +1139,28 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 3, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "2"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "9"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "9"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisCluster(rName, 2, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
 			},
 		},
@@ -1181,7 +1185,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_nativeRedisClusterSingleNode(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
@@ -1195,10 +1199,13 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 		},
 	})
@@ -1280,7 +1287,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
 				),
@@ -1313,7 +1320,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_enableAtRestEncryption(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", "true"),
 				),
@@ -1345,7 +1352,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_useCMKKMSKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 				),
@@ -1441,7 +1448,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1466,7 +1473,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					}
 				},
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 2, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1499,7 +1506,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1529,7 +1536,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					}
 				},
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 2, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1562,7 +1569,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1592,7 +1599,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 					}
 				},
 				Config: testAccReplicationGroupConfig_failoverMultiAZ(rName, 2, autoFailoverEnabled, multiAZEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
@@ -1622,7 +1629,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
@@ -1645,7 +1652,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 					}
 				},
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
@@ -1673,7 +1680,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
@@ -1696,7 +1703,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 					}
 				},
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 4),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
@@ -1724,7 +1731,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
@@ -1747,7 +1754,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 					}
 				},
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
@@ -1775,7 +1782,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 4),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
@@ -1798,7 +1805,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 					}
 				},
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
@@ -1922,7 +1929,7 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_finalSnapshot(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
 				),
@@ -1983,7 +1990,7 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -2008,7 +2015,7 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -2037,7 +2044,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx, &pg),
@@ -2089,7 +2096,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx, &pg1),
@@ -2154,7 +2161,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -2187,7 +2194,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx, &pg1),
@@ -2249,7 +2256,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -2266,7 +2273,10 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var (
+		rg      elasticache.ReplicationGroup
+		version elasticache.CacheEngineVersion
+	)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2280,8 +2290,11 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Config: testAccReplicationGroupConfig_dataTiering(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					testCheckRedisEngineVersionLatest(ctx, &version),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
 				),
 			},
@@ -2313,7 +2326,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
@@ -2328,14 +2341,17 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
@@ -2351,7 +2367,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
@@ -2366,7 +2382,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, false, "", "", false, "", ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
@@ -2381,10 +2397,13 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 		},
 	})
@@ -2408,7 +2427,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
@@ -2425,14 +2444,17 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
@@ -2450,7 +2472,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
@@ -2468,7 +2490,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 			},
 			{
 				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, false, "", "", false, "", ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
@@ -2484,10 +2506,13 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+				},
 			},
 		},
 	})
@@ -2621,6 +2646,112 @@ func testAccCheckReplicationGroupNotRecreated(i, j *elasticache.ReplicationGroup
 	}
 }
 
+func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	var (
+		version        elasticache.CacheEngineVersion
+		parameterGroup elasticache.CacheParameterGroup
+	)
+
+	checks := []resource.TestCheckFunc{
+		testCheckRedisEngineVersionLatest(ctx, &version),
+		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
+		},
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+func testCheckRedisEngineVersionLatest(ctx context.Context, v *elasticache.CacheEngineVersion) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		versions, err := conn.DescribeCacheEngineVersionsWithContext(ctx, &elasticache.DescribeCacheEngineVersionsInput{
+			Engine:      aws.String("redis"),
+			DefaultOnly: aws.Bool(true),
+		})
+		if err != nil {
+			return err
+		}
+		if versions == nil || len(versions.CacheEngineVersions) == 0 {
+			return errors.New("empty result")
+		}
+		if l := len(versions.CacheEngineVersions); l > 1 {
+			return fmt.Errorf("too many results: %d", l)
+		}
+
+		*v = *(versions.CacheEngineVersions[0])
+
+		return nil
+	}
+}
+
+func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
+			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
+			tfelasticache.FilterRedisParameterGroupNameDefault,
+		)
+		if err != nil {
+			return err
+		}
+
+		*v = *parameterGroup
+
+		return nil
+	}
+}
+
+func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	var (
+		version        elasticache.CacheEngineVersion
+		parameterGroup elasticache.CacheParameterGroup
+	)
+
+	checks := []resource.TestCheckFunc{
+		testCheckRedisEngineVersionLatest(ctx, &version),
+		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
+		},
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
+			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
+			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
+		)
+		if err != nil {
+			return err
+		}
+
+		*v = *parameterGroup
+
+		return nil
+	}
+}
+
 type kvp struct {
 	key   string
 	value string
@@ -2745,6 +2876,7 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
+  engine_version                = "6.x"
   parameter_group_name          = aws_elasticache_parameter_group.test[%[2]d].name
   replication_group_description = "test description"
   replication_group_id          = %[1]q
@@ -3143,6 +3275,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.medium"
   automatic_failover_enabled    = false
 
+  engine_version       = "6.x"
   parameter_group_name = "default.redis6.x"
   cluster_mode {
     num_node_groups         = 1
@@ -3163,6 +3296,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.medium"
   automatic_failover_enabled    = true
 
+  engine_version       = "6.x"
   parameter_group_name = "default.redis6.x.cluster.on"
   cluster_mode {
     num_node_groups         = 1
@@ -3818,6 +3952,7 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
+  engine_version                = "6.x"
   parameter_group_name          = tobool("%[2]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
   automatic_failover_enabled    = tobool("%[2]t")
   dynamic "cluster_mode" {

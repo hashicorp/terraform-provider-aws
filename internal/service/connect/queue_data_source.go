@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_queue")
 func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
@@ -130,7 +131,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting outbound_caller_config: %s", err))
 	}
 
-	if err := d.Set("tags", KeyValueTags(queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

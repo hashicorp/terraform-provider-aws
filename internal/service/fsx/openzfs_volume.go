@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_openzfs_volume")
 func ResourceOpenzfsVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOepnzfsVolumeCreate,
@@ -191,7 +192,7 @@ func resourceOepnzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateVolumeInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),

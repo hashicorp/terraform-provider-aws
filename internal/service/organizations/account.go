@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_account")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -107,7 +108,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var iamUserAccessToBilling *string
 
@@ -304,7 +305,7 @@ func createAccount(ctx context.Context, conn *organizations.Organizations, name,
 		}
 
 		log.Printf("[DEBUG] Creating AWS Organizations Account with GovCloud Account: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 4*time.Minute,
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute,
 			func() (interface{}, error) {
 				return conn.CreateGovCloudAccountWithContext(ctx, input)
 			},
@@ -336,7 +337,7 @@ func createAccount(ctx context.Context, conn *organizations.Organizations, name,
 	}
 
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 4*time.Minute,
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute,
 		func() (interface{}, error) {
 			return conn.CreateAccountWithContext(ctx, input)
 		},
@@ -460,7 +461,7 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Organizations,
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.Account, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{organizations.AccountStatusPendingClosure},
+		Pending:      []string{organizations.AccountStatusPendingClosure, organizations.AccountStatusActive},
 		Target:       []string{},
 		Refresh:      statusAccountStatus(ctx, conn, id),
 		PollInterval: 10 * time.Second,

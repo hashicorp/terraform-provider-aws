@@ -23,6 +23,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// @SDKResource("aws_key_pair")
 func ResourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -95,7 +96,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 
@@ -148,7 +149,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("key_type", keyPair.KeyType)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 
-	tags := KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

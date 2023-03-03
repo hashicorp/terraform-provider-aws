@@ -21,21 +21,20 @@ resource "aws_resourcegroups_group" "example" {
   name = "example"
 
   resource_query {
-    query = <<JSON
-	{
-		"ResourceTypeFilters": [
-		  "AWS::EC2::Instance"
-		],
-		"TagFilters": [
-		  {
-			"Key": "Stage",
-			"Values": [
-			  "Test"
-			]
-		  }
-		]
-	  }
-JSON
+    query = jsonencode({
+      ResourceTypeFilters = [
+        "AWS::EC2::Instance"
+      ]
+
+      TagFilters = [
+        {
+          Key = "Stage"
+          Values = [
+            "Test"
+          ]
+        }
+      ]
+    })
   }
 }
 ```

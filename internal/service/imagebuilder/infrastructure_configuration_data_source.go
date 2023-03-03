@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_infrastructure_configuration")
 func DataSourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationRead,
@@ -159,11 +160,11 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 		d.Set("logging", nil)
 	}
 	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(infrastructureConfiguration.ResourceTags).Map())
+	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
 	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
-	d.Set("tags", KeyValueTags(infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	return diags

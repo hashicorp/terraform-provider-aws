@@ -22,10 +22,10 @@ func ListTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, ident
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.ResourceTags), nil
+	return KeyValueTags(ctx, output.ResourceTags), nil
 }
 
 // []*SERVICE.Tag handling
@@ -47,22 +47,22 @@ func Tags(tags tftags.KeyValueTags) []*costexplorer.ResourceTag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from costexplorer service tags.
-func KeyValueTags(tags []*costexplorer.ResourceTag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*costexplorer.ResourceTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &costexplorer.UntagResourceInput{

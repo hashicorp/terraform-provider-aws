@@ -25,6 +25,7 @@ const (
 	ipSetDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_ip_set")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -118,7 +119,7 @@ func ResourceIPSet() *schema.Resource {
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateIPSetInput{
@@ -249,7 +250,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteIPSetWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException)
 

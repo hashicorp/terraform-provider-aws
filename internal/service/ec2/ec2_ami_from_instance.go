@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ami_from_instance")
 func ResourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMIFromInstanceCreate,
@@ -248,7 +249,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("source_instance_id").(string)
 	name := d.Get("name").(string)

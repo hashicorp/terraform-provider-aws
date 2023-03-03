@@ -20,6 +20,7 @@ const (
 	specifiedRegions          = "SPECIFIED_REGIONS"
 )
 
+// @SDKResource("aws_securityhub_finding_aggregator")
 func ResourceFindingAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingAggregatorCreate,

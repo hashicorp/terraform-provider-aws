@@ -34,6 +34,8 @@ const (
 	loadBalancerTagPropagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_alb")
+// @SDKResource("aws_lb")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -306,7 +308,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -869,7 +871,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 
 	errAttached := errors.New("attached")
 
-	_, err = tfresource.RetryWhenContext(ctx, loadBalancerNetworkInterfaceDetachTimeout,
+	_, err = tfresource.RetryWhen(ctx, loadBalancerNetworkInterfaceDetachTimeout,
 		func() (interface{}, error) {
 			networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
 
@@ -990,7 +992,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	for _, attr := range attributesResp.Attributes {
 		switch aws.StringValue(attr.Key) {
 		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = aws.StringValue(attr.Value) == "true"
+			accessLogMap["enabled"] = flex.StringToBoolValue(attr.Value)
 		case "access_logs.s3.bucket":
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
@@ -1003,27 +1005,27 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] Setting ALB Timeout Seconds: %d", timeout)
 			d.Set("idle_timeout", timeout)
 		case "routing.http.drop_invalid_header_fields.enabled":
-			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
+			dropInvalidHeaderFieldsEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
 		case "routing.http.preserve_host_header.enabled":
-			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			preserveHostHeaderEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Preserve Host Header Enabled: %t", preserveHostHeaderEnabled)
 			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
-			protectionEnabled := aws.StringValue(attr.Value) == "true"
+			protectionEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
 			d.Set("enable_deletion_protection", protectionEnabled)
 		case "routing.http2.enabled":
-			http2Enabled := aws.StringValue(attr.Value) == "true"
+			http2Enabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB HTTP/2 Enabled: %t", http2Enabled)
 			d.Set("enable_http2", http2Enabled)
 		case "waf.fail_open.enabled":
-			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			wafFailOpenEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB WAF fail open Enabled: %t", wafFailOpenEnabled)
 			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
-			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
+			crossZoneLbEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		case "routing.http.desync_mitigation_mode":

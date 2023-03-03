@@ -40,7 +40,7 @@ Currently available standards (remember to replace `${var.region}` as appropriat
 |------------------------------------------|-------------------------------------------------------------------------------------------------|
 | AWS Foundational Security Best Practices | `arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
 | CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
-| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::ruleset/cis-aws-foundations-benchmark/v/1.4.0`              |
+| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
 | PCI DSS                                  | `arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
 ## Attributes Reference

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ssm_patch_group")
 func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchGroupCreate,

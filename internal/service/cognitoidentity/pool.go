@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_pool")
 func ResourcePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolCreate,
@@ -125,7 +126,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating Cognito Identity Pool")
 
 	params := &cognitoidentity.CreateIdentityPoolInput{
@@ -201,7 +202,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

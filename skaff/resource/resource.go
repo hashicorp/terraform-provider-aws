@@ -36,6 +36,7 @@ type TemplateData struct {
 	AWSServiceName       string
 	AWSGoSDKV2           bool
 	HumanResourceName    string
+	ProviderResourceName string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -56,6 +57,10 @@ func HumanResName(upper string) string {
 
 	re2 := regexp.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
+}
+
+func ProviderResourceName(servicePackage, snakeName string) string {
+	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
 }
 
 func Create(resName, snakeName string, comments, force, v2 bool) error {
@@ -107,6 +112,7 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		HumanResourceName:    HumanResName(resName),
+		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
 	}
 
 	f := fmt.Sprintf("%s.go", snakeName)

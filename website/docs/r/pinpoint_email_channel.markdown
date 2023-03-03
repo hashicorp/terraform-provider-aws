@@ -25,43 +25,40 @@ resource "aws_ses_domain_identity" "identity" {
   domain = "example.com"
 }
 
-resource "aws_iam_role" "role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "pinpoint.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["pinpoint.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "mobileanalytics:PutEvents",
+      "mobileanalytics:PutItems",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "role_policy" {
-  name = "role_policy"
-  role = aws_iam_role.role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Action": [
-      "mobileanalytics:PutEvents",
-      "mobileanalytics:PutItems"
-    ],
-    "Effect": "Allow",
-    "Resource": [
-      "*"
-    ]
-  }
-}
-EOF
+  name   = "role_policy"
+  role   = aws_iam_role.role.id
+  policy = data.aws_iam_policy_document.role_policy.json
 }
 ```
 

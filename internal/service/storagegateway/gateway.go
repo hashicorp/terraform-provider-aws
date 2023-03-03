@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_gateway")
 func ResourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
@@ -271,7 +273,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
 	activationKey := d.Get("activation_key").(string)
@@ -303,13 +305,13 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 			response, err = client.Do(request)
 
 			if err != nil {
-				if err, ok := err.(net.Error); ok {
-					errMessage := fmt.Errorf("error making HTTP request: %s", err)
+				if errs.IsA[net.Error](err) {
+					errMessage := fmt.Errorf("making HTTP request: %s", err)
 					log.Printf("[DEBUG] retryable %s", errMessage)
 					return resource.RetryableError(errMessage)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
+				return resource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			for _, retryableStatusCode := range []int{504} {
@@ -498,7 +500,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Gateway (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

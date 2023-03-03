@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_workspaces_directory")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
@@ -209,7 +210,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	directoryID := d.Get("directory_id").(string)
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
@@ -225,7 +226,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectoryWithContext(ctx, input)
 		},
@@ -454,7 +455,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectoryWithContext(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),

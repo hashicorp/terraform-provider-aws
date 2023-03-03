@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_keyspaces_keyspace")
 func ResourceKeyspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyspaceCreate,
@@ -62,7 +63,7 @@ func ResourceKeyspace() *schema.Resource {
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &keyspaces.CreateKeyspaceInput{
@@ -83,7 +84,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindKeyspaceByName(ctx, conn, d.Id())
 	})
 
@@ -152,7 +153,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteKeyspaceWithContext(ctx, &keyspaces.DeleteKeyspaceInput{
 				KeyspaceName: aws.String(d.Id()),
@@ -168,7 +169,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return FindKeyspaceByName(ctx, conn, d.Id())
 	})
 

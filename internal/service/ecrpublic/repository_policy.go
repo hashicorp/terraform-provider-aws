@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecrpublic_repository_policy")
 func ResourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPolicyPut,
@@ -75,7 +76,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Setting ECR Public Repository Policy: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, policyPutTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
 		func() (interface{}, error) {
 			return conn.SetRepositoryPolicyWithContext(ctx, input)
 		},

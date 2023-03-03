@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ebs_volume")
 func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
@@ -122,7 +123,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
@@ -218,7 +219,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("throughput", volume.Throughput)
 	d.Set("type", volume.VolumeType)
 
-	tags := KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -296,12 +297,12 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{
-			TagSpecifications: tagSpecificationsFromMap(d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
 			VolumeId:          aws.String(d.Id()),
 		}
 
 		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 1*time.Minute,
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 			func() (interface{}, error) {
 				return conn.CreateSnapshotWithContext(ctx, input)
 			},
@@ -313,7 +314,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
 
-		_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
 				return nil, conn.WaitUntilSnapshotCompletedWithContext(ctx, &ec2.DescribeSnapshotsInput{
 					SnapshotIds: aws.StringSlice([]string{snapshotID}),
@@ -327,7 +328,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteVolumeWithContext(ctx, &ec2.DeleteVolumeInput{
 				VolumeId: aws.String(d.Id()),

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_apigatewayv2_integration_response")
 func ResourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationResponseCreate,

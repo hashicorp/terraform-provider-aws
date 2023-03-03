@@ -23,6 +23,7 @@ const (
 	ResNameAssessmentTemplate = "Assessment Template"
 )
 
+// @SDKResource("aws_inspector_assessment_template")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,
@@ -90,7 +91,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),

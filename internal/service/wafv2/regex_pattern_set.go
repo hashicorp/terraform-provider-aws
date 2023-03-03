@@ -24,6 +24,7 @@ const (
 	regexPatternSetDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_regex_pattern_set")
 func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,
@@ -101,7 +102,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateRegexPatternSetInput{
@@ -232,7 +233,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, regexPatternSetDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, regexPatternSetDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteRegexPatternSetWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException)
 
