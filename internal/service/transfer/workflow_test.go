@@ -56,7 +56,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferWorkflow_onExecution(t *testing.T) {
+func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -69,20 +69,28 @@ func TestAccTransferWorkflow_onExecution(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowConfig_onExec(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccWorkflowConfig_onExceptionSteps(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`workflow/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "steps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "steps.0.type", "DELETE"),
-					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.source_file_location", "${original.file}"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.copy_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.custom_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.decrypt_step_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.type", "DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.delete_step_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.delete_step_details.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.delete_step_details.0.source_file_location", "${original.file}"),
+					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.tag_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.copy_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.custom_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.decrypt_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.source_file_location", "${original.file}"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.tag_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.type", "DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -108,10 +116,10 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowConfig_desc(rName),
+				Config: testAccWorkflowConfig_description(rName, "testing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
 			{
@@ -258,10 +266,10 @@ resource "aws_transfer_workflow" "test" {
 `, rName)
 }
 
-func testAccWorkflowConfig_desc(rName string) string {
+func testAccWorkflowConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
-  description = %[1]q
+  description = %[2]q
 
   steps {
     delete_step_details {
@@ -271,10 +279,10 @@ resource "aws_transfer_workflow" "test" {
     type = "DELETE"
   }
 }
-`, rName)
+`, rName, description)
 }
 
-func testAccWorkflowConfig_onExec(rName string) string {
+func testAccWorkflowConfig_onExceptionSteps(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   steps {
