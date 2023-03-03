@@ -35,6 +35,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_existing", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -42,7 +43,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing"},
 			},
 		},
 	})
@@ -71,7 +72,7 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing"},
 			},
 		},
 	})
@@ -100,7 +101,7 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing", "name_prefix"},
 			},
 		},
 	})
@@ -154,7 +155,7 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing"},
 			},
 			{
 				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -202,7 +203,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing"},
 			},
 			{
 				Config: testAccGroupConfig_kmsKey(rName, 1),
@@ -252,7 +253,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "skip_existing"},
 			},
 			{
 				Config: testAccGroupConfig_retentionPolicy(rName, 0),
@@ -308,6 +309,52 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsGroup_skipExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v cloudwatchlogs.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupNoDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// 1. create cloudwatch_log_group (with skip_destroy = true)
+			{
+				Config: testAccGroupConfig_skipExisting(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_existing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			// 2. destroy cloudwatch_log_group
+			{
+				Config: testAccGroupConfig_skipExisting(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupNoDestroy(ctx, t),
+				),
+				Destroy: true,
+			},
+			// 3. create cloudwatch_log_group (with same name)
+			{
+				Config: testAccGroupConfig_skipExisting(rName, "key1", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_existing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
 				),
 			},
 		},
@@ -485,4 +532,19 @@ resource "aws_cloudwatch_log_group" "test" {
   skip_destroy = true
 }
 `, rName)
+}
+
+func testAccGroupConfig_skipExisting(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+
+  skip_destroy  = true
+  skip_existing = true
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value)
 }

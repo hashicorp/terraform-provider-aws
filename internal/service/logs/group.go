@@ -65,6 +65,11 @@ func resourceGroup() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"skip_existing": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -91,10 +96,16 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
+	foundExisting := false
 	_, err := conn.CreateLogGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Logs Log Group (%s): %s", name, err)
+		if !d.Get("skip_existing").(bool) || !tfawserr.ErrMessageContains(err, "ResourceAlreadyExistsException", "log group already exists") {
+			return diag.Errorf("creating CloudWatch Logs Log Group (%s): %s", name, err)
+		}
+
+		log.Printf("[DEBUG] Found existing CloudWatch Logs Log Group: %s", name)
+		foundExisting = true
 	}
 
 	d.SetId(name)
@@ -112,6 +123,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 		}
+	}
+
+	if foundExisting {
+		return resourceGroupUpdate(ctx, d, meta)
 	}
 
 	return resourceGroupRead(ctx, d, meta)
