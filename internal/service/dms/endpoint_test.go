@@ -2586,7 +2586,7 @@ resource "aws_dms_endpoint" "test" {
     bucket_name             = "bucket_name"
     bucket_folder           = "bucket_folder"
     compression_type        = "GZIP"
-	csv_delimiter           = %[3]q
+    csv_delimiter           = %[3]q
   }
 
   tags = {
