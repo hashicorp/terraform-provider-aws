@@ -36,6 +36,13 @@ The following arguments are required:
 * `verified_access_instance_id` - (Required) The ID of the Verified Access instance.
 * `verified_access_trust_provider_id` - (Required) The ID of the Trust Provider.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Composite ID for the resource. The `verified_access_trust_provider_id` and `verified_access_instance_id` separated by a `/`.
+
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -46,7 +53,7 @@ The following arguments are required:
 
 ## Import
 
-EC2 (Elastic Compute Cloud) Verified Access Trust Provider Attachment can be imported using the `verified_access_trust_provider_id` and `verified_access_instance_id` seperated by a `/`:, e.g.,
+EC2 (Elastic Compute Cloud) Verified Access Trust Provider Attachment can be imported using the `verified_access_trust_provider_id` and `verified_access_instance_id` separated by a `/`:, e.g.,
 
 ```
 $ terraform import aws_verifiedaccess_trust_provider_attachment.example vatp-8012925589/vai-9855292108
