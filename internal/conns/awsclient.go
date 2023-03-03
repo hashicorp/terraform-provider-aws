@@ -6,11 +6,17 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/service/s3"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // InitContext creates context.
 func (client *AWSClient) InitContext(ctx context.Context) context.Context {
-	return ctx
+	v := tftags.InContext{
+		DefaultConfig: client.DefaultTagsConfig,
+		IgnoreConfig:  client.IgnoreTagsConfig,
+	}
+
+	return context.WithValue(ctx, tftags.TagKey, &v)
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
