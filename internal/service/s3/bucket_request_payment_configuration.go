@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_request_payment_configuration")
 func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketRequestPaymentConfigurationCreate,
@@ -66,7 +67,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketRequestPaymentWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 

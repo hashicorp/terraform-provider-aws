@@ -13,7 +13,6 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -31,6 +30,7 @@ var (
 	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
 	export          = flag.Bool("Export", false, "whether to export the list functions")
+	contextOnly     = flag.Bool("ContextOnly", false, "whether to only generate Context-aware functions")
 )
 
 func usage() {
@@ -62,13 +62,7 @@ func main() {
 		filename = args[0]
 	}
 
-	wd, err := os.Getwd()
-
-	if err != nil {
-		log.Fatalf("unable to get working directory: %s", err)
-	}
-
-	servicePackage := filepath.Base(wd)
+	servicePackage := os.Getenv("GOPACKAGE")
 	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
 
 	awsService, err := names.AWSGoV1Package(servicePackage)
@@ -84,15 +78,17 @@ func main() {
 		tmpl:            template.Must(template.New("function").Parse(functionTemplate)),
 		inputPaginator:  *inputPaginator,
 		outputPaginator: *outputPaginator,
+		contextOnly:     *contextOnly,
 	}
 
-	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%s", awsService)
+	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s", awsService)
 	g.parsePackage(sourcePackage)
 
 	g.printHeader(HeaderInfo{
 		Parameters:         strings.Join(os.Args[1:], " "),
 		DestinationPackage: servicePackage,
 		SourcePackage:      sourcePackage,
+		SourceIntfPackage:  fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s/%[1]siface", awsService),
 	})
 
 	awsUpper, err := names.AWSGoV1ClientTypeName(servicePackage)
@@ -102,7 +98,7 @@ func main() {
 	}
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsUpper, *export)
+		g.generateFunction(functionName, awsService, awsUpper, *export)
 	}
 
 	src := g.format()
@@ -117,6 +113,7 @@ type HeaderInfo struct {
 	Parameters         string
 	DestinationPackage string
 	SourcePackage      string
+	SourceIntfPackage  string
 }
 
 type Generator struct {
@@ -125,6 +122,7 @@ type Generator struct {
 	tmpl            *template.Template
 	inputPaginator  string
 	outputPaginator string
+	contextOnly     bool
 }
 
 func (g *Generator) Printf(format string, args ...interface{}) {
@@ -183,12 +181,12 @@ type FuncSpec struct {
 	ResultType      string
 	InputPaginator  string
 	OutputPaginator string
+	ContextOnly     bool
 }
 
-func (g *Generator) generateFunction(functionName, awsService string, export bool) {
+func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper string, export bool) {
 	var function *ast.FuncDecl
 
-	// TODO: check if a Pages() function has been defined
 	for _, file := range g.pkg.files {
 		if file.file != nil {
 			for _, decl := range file.file.Decls {
@@ -216,13 +214,14 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 	}
 
 	funcSpec := FuncSpec{
-		Name:            fixUpFuncName(funcName, awsService),
+		Name:            fixUpFuncName(funcName, awsServiceUpper),
 		AWSName:         function.Name.Name,
-		RecvType:        g.expandTypeField(function.Recv),
+		RecvType:        fmt.Sprintf("%[1]siface.%[2]sAPI", awsService, awsServiceUpper),
 		ParamType:       g.expandTypeField(function.Type.Params),  // Assumes there is a single input parameter
 		ResultType:      g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
 		InputPaginator:  g.inputPaginator,
 		OutputPaginator: g.outputPaginator,
+		ContextOnly:     g.contextOnly,
 	}
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)

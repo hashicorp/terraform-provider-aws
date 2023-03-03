@@ -25,7 +25,9 @@ const (
 	imageBuilderStateTimeout = 60 * time.Minute
 	// userOperationTimeout Maximum amount of time to wait for User operation eventual consistency
 	userOperationTimeout = 4 * time.Minute
-	userAvailable        = "AVAILABLE"
+	// iamPropagationTimeout Maximum amount of time to wait for an iam resource eventual consistency
+	iamPropagationTimeout = 2 * time.Minute
+	userAvailable         = "AVAILABLE"
 )
 
 // waitStackStateDeleted waits for a deleted stack
@@ -111,7 +113,6 @@ func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name 
 	return nil, err
 }
 
-// waitImageBuilderStateRunning waits for a ImageBuilder running
 func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending},
@@ -139,7 +140,6 @@ func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream
 	return nil, err
 }
 
-// waitImageBuilderStateDeleted waits for a ImageBuilder deleted
 func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},

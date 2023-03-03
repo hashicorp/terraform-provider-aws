@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_memorydb_parameter_group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -92,7 +93,7 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateParameterGroupInput{
@@ -169,7 +170,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Parameter Group (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -211,7 +212,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
@@ -262,7 +263,7 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 		ParameterNames:     parameterNames,
 	}
 
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	return resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
 		_, err := conn.ResetParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, memorydb.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {

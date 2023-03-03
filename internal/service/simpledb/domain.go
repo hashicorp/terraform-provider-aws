@@ -21,13 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceDomain)
-}
-
-// newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
+// @FrameworkResource
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceDomain{}, nil
+	r := &resourceDomain{}
+	r.SetMigratedFromPluginSDK(true)
+
+	return r, nil
 }
 
 type resourceDomain struct {

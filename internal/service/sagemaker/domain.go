@@ -1,7 +1,7 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"strings"
@@ -10,23 +10,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_domain")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainCreate,
-		Read:   resourceDomainRead,
-		Update: resourceDomainUpdate,
-		Delete: resourceDomainDelete,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		UpdateWithoutTimeout: resourceDomainUpdate,
+		DeleteWithoutTimeout: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -584,10 +587,11 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
@@ -618,40 +622,41 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] sagemaker domain create config: %#v", *input)
-	output, err := conn.CreateDomain(input)
+	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
+	output, err := conn.CreateDomainWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain: %s", err)
 	}
 
 	domainArn := aws.StringValue(output.DomainArn)
 	domainID, err := DecodeDomainID(domainArn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(domainID)
 
-	if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker domain (%s) to create: %w", d.Id(), err)
+	if _, err := WaitDomainInService(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain, err := FindDomainByName(conn, d.Id())
+	domain, err := FindDomainByName(ctx, conn, d.Id())
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Domain (%s); removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(domain.DomainArn)
@@ -668,42 +673,43 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 
 	if err := d.Set("subnet_ids", flex.FlattenStringSet(domain.SubnetIds)); err != nil {
-		return fmt.Errorf("setting subnet_ids for SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_user_settings", flattenDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
-		return fmt.Errorf("setting default_user_settings for SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_space_settings", flattenDefaultSpaceSettings(domain.DefaultSpaceSettings)); err != nil {
-		return fmt.Errorf("setting default_space_settings for SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_space_settings for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("domain_settings", flattenDomainSettings(domain.DomainSettings)); err != nil {
-		return fmt.Errorf("setting domain_settings for SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -723,29 +729,30 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
-		_, err := conn.UpdateDomain(input)
+		log.Printf("[DEBUG] SageMaker Domain update config: %#v", *input)
+		_, err := conn.UpdateDomainWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("updating SageMaker domain: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain: %s", err)
 		}
 
-		if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
+		if _, err := WaitDomainInService(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker domain (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteDomainInput{
@@ -756,19 +763,19 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		input.RetentionPolicy = expandRetentionPolicy(v.([]interface{}))
 	}
 
-	if _, err := conn.DeleteDomain(input); err != nil {
+	if _, err := conn.DeleteDomainWithContext(ctx, input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("deleting SageMaker domain (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Domain (%s): %s", d.Id(), err)
 		}
 	}
 
-	if _, err := WaitDomainDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitDomainDeleted(ctx, conn, d.Id()); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func expandDomainSettings(l []interface{}) *sagemaker.DomainSettings {

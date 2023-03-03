@@ -14,11 +14,7 @@ import (
 // ListTags lists location service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn locationserviceiface.LocationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn locationserviceiface.LocationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn locationserviceiface.LocationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &locationservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -26,10 +22,10 @@ func ListTagsWithContext(ctx context.Context, conn locationserviceiface.Location
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // map[string]*string handling
@@ -40,19 +36,16 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 }
 
 // KeyValueTags creates KeyValueTags from location service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
 }
 
 // UpdateTags updates location service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn locationserviceiface.LocationServiceAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn locationserviceiface.LocationServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn locationserviceiface.LocationServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &locationservice.UntagResourceInput{

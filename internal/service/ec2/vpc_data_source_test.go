@@ -63,6 +63,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -70,7 +71,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),

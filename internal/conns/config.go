@@ -88,6 +88,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
+		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
@@ -127,7 +128,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
-	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
+	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
 	}
@@ -139,7 +140,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
-	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
+	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
@@ -185,6 +186,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Partition = partition
 	client.Region = c.Region
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
+	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
@@ -391,6 +393,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		case "CreateVpnGateway":
 			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
+			}
+
+		case "RunInstances":
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
+			if tfawserr.ErrCodeEquals(err, "InsufficientInstanceCapacity") {
+				r.Retryable = aws.Bool(false)
 			}
 		}
 	})

@@ -24,6 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// @SDKResource("aws_budgets_budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -32,7 +33,7 @@ func ResourceBudget() *schema.Resource {
 		DeleteWithoutTimeout: resourceBudgetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

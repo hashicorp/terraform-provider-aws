@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ce_cost_category")
 func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCostCategoryRead,
@@ -334,7 +335,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)

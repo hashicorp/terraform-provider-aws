@@ -5,6 +5,8 @@ import (
 )
 
 func TestValid4ByteASN(t *testing.T) {
+	t.Parallel()
+
 	validAsns := []string{
 		"0",
 		"1",

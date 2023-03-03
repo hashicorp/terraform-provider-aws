@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// @SDKDataSource("aws_route53_traffic_policy_document")
 func DataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,

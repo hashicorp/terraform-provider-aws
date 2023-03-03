@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appflow_connector_profile")
 func ResourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
@@ -23,7 +24,7 @@ func ResourceConnectorProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
 		DeleteWithoutTimeout: resourceConnectorProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -1176,7 +1177,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2),
-														validation.StringMatch(regexp.MustCompile(` ^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+														validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
 													),
 												},
 												"oauth_properties": {
@@ -1426,7 +1427,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		createConnectorProfileInput.KmsArn = aws.String(v)
 	}
 
-	out, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
+	out, err := conn.CreateConnectorProfileWithContext(ctx, &createConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("creating AppFlow Connector Profile: %s", err)
@@ -1444,7 +1445,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn()
 
-	connectorProfile, err := FindConnectorProfileByARN(context.Background(), conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
@@ -1485,7 +1486,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 		ConnectorProfileName:   aws.String(name),
 	}
 
-	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
+	_, err := conn.UpdateConnectorProfileWithContext(ctx, &updateConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)

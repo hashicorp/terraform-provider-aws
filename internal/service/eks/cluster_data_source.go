@@ -10,6 +10,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eks_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -102,6 +103,18 @@ func DataSourceCluster() *schema.Resource {
 						"control_plane_instance_type": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"control_plane_placement": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"group_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 						"outpost_arns": {
 							Type:     schema.TypeSet,
@@ -216,7 +229,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

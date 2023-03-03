@@ -113,23 +113,22 @@ EOF
 ### Enabling Logging
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "appsync.amazonaws.com"
-        },
-        "Action": "sts:AssumeRole"
-        }
-    ]
+    principals {
+      type        = "Service"
+      identifiers = ["appsync.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "example" {

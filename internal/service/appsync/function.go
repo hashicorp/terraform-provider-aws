@@ -1,6 +1,7 @@
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,21 +10,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_function")
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFunctionCreate,
-		Read:   resourceFunctionRead,
-		Update: resourceFunctionUpdate,
-		Delete: resourceFunctionDelete,
+		CreateWithoutTimeout: resourceFunctionCreate,
+		ReadWithoutTimeout:   resourceFunctionRead,
+		UpdateWithoutTimeout: resourceFunctionUpdate,
+		DeleteWithoutTimeout: resourceFunctionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -136,7 +140,8 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
-func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
@@ -177,22 +182,23 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	resp, err := conn.CreateFunction(input)
+	resp, err := conn.CreateFunctionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating AppSync Function: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating AppSync Function: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.StringValue(resp.FunctionConfiguration.FunctionId)))
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading AppSync Function (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.GetFunctionInput{
@@ -200,14 +206,14 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		FunctionId: aws.String(functionID),
 	}
 
-	resp, err := conn.GetFunction(input)
+	resp, err := conn.GetFunctionWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting AppSync Function %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppSync Function (%s): %s", d.Id(), err)
 	}
 
 	function := resp.FunctionConfiguration
@@ -224,22 +230,23 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("code", function.Code)
 
 	if err := d.Set("sync_config", flattenSyncConfig(function.SyncConfig)); err != nil {
-		return fmt.Errorf("error setting sync_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sync_config: %s", err)
 	}
 
 	if err := d.Set("runtime", flattenRuntime(function.Runtime)); err != nil {
-		return fmt.Errorf("error setting runtime: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting runtime: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating AppSync Function (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.UpdateFunctionInput{
@@ -278,20 +285,21 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	_, err = conn.UpdateFunction(input)
+	_, err = conn.UpdateFunctionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating AppSync Function %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AppSync Function (%s): %s", d.Id(), err)
 	}
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting AppSync Function (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteFunctionInput{
@@ -299,15 +307,15 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 		FunctionId: aws.String(functionID),
 	}
 
-	_, err = conn.DeleteFunction(input)
+	_, err = conn.DeleteFunctionWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting AppSync Function %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppSync Function (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeFunctionID(id string) (string, string, error) {

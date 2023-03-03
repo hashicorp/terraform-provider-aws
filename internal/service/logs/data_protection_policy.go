@@ -18,10 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_data_protection_policy", resourceDataProtectionPolicy)
-}
-
+// @SDKResource("aws_cloudwatch_log_data_protection_policy")
 func resourceDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataProtectionPolicyPut,

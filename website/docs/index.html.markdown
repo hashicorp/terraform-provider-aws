@@ -248,21 +248,19 @@ credential_process = custom-process --username jdoe
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
-Environment variables are not supported for assuming IAM roles.
-
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Shared Config][config]|
-|-------|--------|-----------------------|
-|Role ARN|`role_arn`|`role_arn`|
-|Duration|`duration` or `duration_seconds`|`duration_seconds`|
-|External ID|`external_id`|`external_id`|
-|Policy|`policy`|N/A|
-|Policy ARNs|`policy_arns`|N/A|
-|Session Name|`session_name`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|
-|Tags|`tags`|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|--------|-----------------------|
+|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
+|Duration|`duration` or `duration_seconds`|N/A|`duration_seconds`|
+|External ID|`external_id`|N/A|`external_id`|
+|Policy|`policy`|N/A|N/A|
+|Policy ARNs|`policy_arns`|N/A|N/A|
+|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|N/A|
+|Tags|`tags`|N/A|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
 
 [envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 [config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
@@ -286,7 +284,7 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
 
 ```sh
 $ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_globalaccelerator_endpoint_group")
 func ResourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
@@ -25,7 +26,7 @@ func ResourceEndpointGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

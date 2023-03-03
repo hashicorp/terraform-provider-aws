@@ -1,6 +1,7 @@
 package firehose
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,23 +11,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	deliveryStreamCreatedTimeout = 20 * time.Minute
-	deliveryStreamDeletedTimeout = 20 * time.Minute
-
-	deliveryStreamEncryptionEnabledTimeout  = 10 * time.Minute
-	deliveryStreamEncryptionDisabledTimeout = 10 * time.Minute
-)
-
-func waitDeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusCreating},
 		Target:  []string{firehose.DeliveryStreamStatusActive},
-		Refresh: statusDeliveryStream(conn, name),
-		Timeout: deliveryStreamCreatedTimeout,
+		Refresh: statusDeliveryStream(ctx, conn, name),
+		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*firehose.DeliveryStreamDescription); ok {
 		if status, failureDescription := aws.StringValue(output.DeliveryStreamStatus), output.FailureDescription; status == firehose.DeliveryStreamStatusCreatingFailed && failureDescription != nil {
@@ -39,15 +32,15 @@ func waitDeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.
 	return nil, err
 }
 
-func waitDeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusDeleting},
 		Target:  []string{},
-		Refresh: statusDeliveryStream(conn, name),
-		Timeout: deliveryStreamDeletedTimeout,
+		Refresh: statusDeliveryStream(ctx, conn, name),
+		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*firehose.DeliveryStreamDescription); ok {
 		if status, failureDescription := aws.StringValue(output.DeliveryStreamStatus), output.FailureDescription; status == firehose.DeliveryStreamStatusDeletingFailed && failureDescription != nil {
@@ -60,15 +53,15 @@ func waitDeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.
 	return nil, err
 }
 
-func waitDeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
+func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusEnabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusEnabled},
-		Refresh: statusDeliveryStreamEncryptionConfiguration(conn, name),
-		Timeout: deliveryStreamEncryptionEnabledTimeout,
+		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
+		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*firehose.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := aws.StringValue(output.Status), output.FailureDescription; status == firehose.DeliveryStreamEncryptionStatusEnablingFailed && failureDescription != nil {
@@ -81,15 +74,15 @@ func waitDeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (
 	return nil, err
 }
 
-func waitDeliveryStreamEncryptionDisabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusDisabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusDisabled},
-		Refresh: statusDeliveryStreamEncryptionConfiguration(conn, name),
-		Timeout: deliveryStreamEncryptionDisabledTimeout,
+		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
+		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*firehose.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := aws.StringValue(output.Status), output.FailureDescription; status == firehose.DeliveryStreamEncryptionStatusDisablingFailed && failureDescription != nil {
