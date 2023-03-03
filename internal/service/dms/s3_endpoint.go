@@ -203,6 +203,10 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"detach_target_on_lob_lookup_failure_parquet": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"dict_page_size_limit": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -416,6 +420,8 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings
 	d.Set("ssl_mode", endpoint.SslMode)
 	d.Set("status", endpoint.Status)
+
+	setDetachTargetOnLobLookupFailureParquet(d, aws.StringValue(endpoint.ExtraConnectionAttributes))
 
 	s3settings := endpoint.S3Settings
 	d.Set("add_column_name", s3settings.AddColumnName)
@@ -751,10 +757,29 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 func extraConnectionAnomalies(d *schema.ResourceData) *string {
 	// not all attributes work in the data structures and must be passed via ex conn attr
 
-	// add a loop to compose the string of ;-sep pairs, if this becomes more than one
+	var anoms []string
+
 	if v, ok := d.GetOk("cdc_path"); ok {
-		return aws.String(fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
+		anoms = append(anoms, fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
 	}
 
-	return nil
+	if v, ok := d.GetOk("detach_target_on_lob_lookup_failure_parquet"); ok {
+		anoms = append(anoms, fmt.Sprintf("%s=%t", "detachTargetOnLobLookupFailureParquet", v.(bool)))
+	}
+
+	if len(anoms) == 0 {
+		return nil
+	}
+
+	return aws.String(strings.Join(anoms, ";"))
+}
+
+func setDetachTargetOnLobLookupFailureParquet(d *schema.ResourceData, eca string) {
+	if strings.Contains(eca, "detachTargetOnLobLookupFailureParquet=false") {
+		d.Set("detach_target_on_lob_lookup_failure_parquet", false)
+	}
+
+	if strings.Contains(eca, "detachTargetOnLobLookupFailureParquet=true") {
+		d.Set("detach_target_on_lob_lookup_failure_parquet", true)
+	}
 }
