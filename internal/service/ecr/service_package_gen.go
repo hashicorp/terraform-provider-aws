@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecr_authorization_token": DataSourceAuthorizationToken,
+		"aws_ecr_image":               DataSourceImage,
+		"aws_ecr_repository":          DataSourceRepository,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecr_lifecycle_policy":                ResourceLifecyclePolicy,
+		"aws_ecr_pull_through_cache_rule":         ResourcePullThroughCacheRule,
+		"aws_ecr_registry_policy":                 ResourceRegistryPolicy,
+		"aws_ecr_registry_scanning_configuration": ResourceRegistryScanningConfiguration,
+		"aws_ecr_replication_configuration":       ResourceReplicationConfiguration,
+		"aws_ecr_repository":                      ResourceRepository,
+		"aws_ecr_repository_policy":               ResourceRepositoryPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ecr"
+	return names.ECR
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

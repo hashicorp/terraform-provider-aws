@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53recoveryreadiness_cell":            ResourceCell,
+		"aws_route53recoveryreadiness_readiness_check": ResourceReadinessCheck,
+		"aws_route53recoveryreadiness_recovery_group":  ResourceRecoveryGroup,
+		"aws_route53recoveryreadiness_resource_set":    ResourceResourceSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "route53recoveryreadiness"
+	return names.Route53RecoveryReadiness
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

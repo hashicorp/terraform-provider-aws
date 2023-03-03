@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_request_validator")
 func ResourceRequestValidator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRequestValidatorCreate,

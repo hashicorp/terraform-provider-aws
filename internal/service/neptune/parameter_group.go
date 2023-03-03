@@ -24,6 +24,7 @@ import (
 // we've got them all.
 const maxParams = 20
 
+// @SDKResource("aws_neptune_parameter_group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,

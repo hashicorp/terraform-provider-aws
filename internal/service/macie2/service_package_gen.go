@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_macie2_account":                             ResourceAccount,
+		"aws_macie2_classification_export_configuration": ResourceClassificationExportConfiguration,
+		"aws_macie2_classification_job":                  ResourceClassificationJob,
+		"aws_macie2_custom_data_identifier":              ResourceCustomDataIdentifier,
+		"aws_macie2_findings_filter":                     ResourceFindingsFilter,
+		"aws_macie2_invitation_accepter":                 ResourceInvitationAccepter,
+		"aws_macie2_member":                              ResourceMember,
+		"aws_macie2_organization_admin_account":          ResourceOrganizationAdminAccount,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "macie2"
+	return names.Macie2
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

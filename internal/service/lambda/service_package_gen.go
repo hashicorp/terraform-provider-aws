@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lambda_alias":               DataSourceAlias,
+		"aws_lambda_code_signing_config": DataSourceCodeSigningConfig,
+		"aws_lambda_function":            DataSourceFunction,
+		"aws_lambda_function_url":        DataSourceFunctionURL,
+		"aws_lambda_functions":           DataSourceFunctions,
+		"aws_lambda_invocation":          DataSourceInvocation,
+		"aws_lambda_layer_version":       DataSourceLayerVersion,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lambda_alias":                          ResourceAlias,
+		"aws_lambda_code_signing_config":            ResourceCodeSigningConfig,
+		"aws_lambda_event_source_mapping":           ResourceEventSourceMapping,
+		"aws_lambda_function":                       ResourceFunction,
+		"aws_lambda_function_event_invoke_config":   ResourceFunctionEventInvokeConfig,
+		"aws_lambda_function_url":                   ResourceFunctionURL,
+		"aws_lambda_invocation":                     ResourceInvocation,
+		"aws_lambda_layer_version":                  ResourceLayerVersion,
+		"aws_lambda_layer_version_permission":       ResourceLayerVersionPermission,
+		"aws_lambda_permission":                     ResourcePermission,
+		"aws_lambda_provisioned_concurrency_config": ResourceProvisionedConcurrencyConfig,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "lambda"
+	return names.Lambda
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rolesanywhere_trust_anchor")
 func ResourceTrustAnchor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustAnchorCreate,

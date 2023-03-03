@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_service_discovery_dns_namespace":  DataSourceDNSNamespace,
+		"aws_service_discovery_http_namespace": DataSourceHTTPNamespace,
+		"aws_service_discovery_service":        DataSourceService,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_service_discovery_http_namespace":        ResourceHTTPNamespace,
+		"aws_service_discovery_instance":              ResourceInstance,
+		"aws_service_discovery_private_dns_namespace": ResourcePrivateDNSNamespace,
+		"aws_service_discovery_public_dns_namespace":  ResourcePublicDNSNamespace,
+		"aws_service_discovery_service":               ResourceService,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "servicediscovery"
+	return names.ServiceDiscovery
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,33 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_iot_endpoint": DataSourceEndpoint,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_iot_authorizer":                 ResourceAuthorizer,
+		"aws_iot_certificate":                ResourceCertificate,
+		"aws_iot_indexing_configuration":     ResourceIndexingConfiguration,
+		"aws_iot_logging_options":            ResourceLoggingOptions,
+		"aws_iot_policy":                     ResourcePolicy,
+		"aws_iot_policy_attachment":          ResourcePolicyAttachment,
+		"aws_iot_provisioning_template":      ResourceProvisioningTemplate,
+		"aws_iot_role_alias":                 ResourceRoleAlias,
+		"aws_iot_thing":                      ResourceThing,
+		"aws_iot_thing_group":                ResourceThingGroup,
+		"aws_iot_thing_group_membership":     ResourceThingGroupMembership,
+		"aws_iot_thing_principal_attachment": ResourceThingPrincipalAttachment,
+		"aws_iot_thing_type":                 ResourceThingType,
+		"aws_iot_topic_rule":                 ResourceTopicRule,
+		"aws_iot_topic_rule_destination":     ResourceTopicRuleDestination,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "iot"
+	return names.IoT
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

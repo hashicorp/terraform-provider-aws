@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_sqs_queue":  DataSourceQueue,
+		"aws_sqs_queues": DataSourceQueues,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_sqs_queue":                      ResourceQueue,
+		"aws_sqs_queue_policy":               ResourceQueuePolicy,
+		"aws_sqs_queue_redrive_allow_policy": ResourceQueueRedriveAllowPolicy,
+		"aws_sqs_queue_redrive_policy":       ResourceQueueRedrivePolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "sqs"
+	return names.SQS
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

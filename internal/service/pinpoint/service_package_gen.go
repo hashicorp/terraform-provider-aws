@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,23 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_pinpoint_adm_channel":               ResourceADMChannel,
+		"aws_pinpoint_apns_channel":              ResourceAPNSChannel,
+		"aws_pinpoint_apns_sandbox_channel":      ResourceAPNSSandboxChannel,
+		"aws_pinpoint_apns_voip_channel":         ResourceAPNSVoIPChannel,
+		"aws_pinpoint_apns_voip_sandbox_channel": ResourceAPNSVoIPSandboxChannel,
+		"aws_pinpoint_app":                       ResourceApp,
+		"aws_pinpoint_baidu_channel":             ResourceBaiduChannel,
+		"aws_pinpoint_email_channel":             ResourceEmailChannel,
+		"aws_pinpoint_event_stream":              ResourceEventStream,
+		"aws_pinpoint_gcm_channel":               ResourceGCMChannel,
+		"aws_pinpoint_sms_channel":               ResourceSMSChannel,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "pinpoint"
+	return names.Pinpoint
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

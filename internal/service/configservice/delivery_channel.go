@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_delivery_channel")
 func ResourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryChannelPut,

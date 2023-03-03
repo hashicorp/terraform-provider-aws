@@ -13,23 +13,17 @@ Provides an IoT policy attachment.
 ## Example Usage
 
 ```terraform
-resource "aws_iot_policy" "pubsub" {
-  name = "PubSubToAnyTopic"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "iot:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+data "aws_iam_policy_document" "pubsub" {
+  statement {
+    effect    = "Allow"
+    actions   = ["iot:*"]
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iot_policy" "pubsub" {
+  name   = "PubSubToAnyTopic"
+  policy = data.aws_iam_policy_document.pubsub.json
 }
 
 resource "aws_iot_certificate" "cert" {

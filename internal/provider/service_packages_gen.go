@@ -5,7 +5,7 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -95,6 +95,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
@@ -199,8 +200,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func servicePackages(context.Context) []intf.ServicePackage {
-	v := []intf.ServicePackage{
+func servicePackages(context.Context) []conns.ServicePackage {
+	v := []conns.ServicePackage{
 		accessanalyzer.ServicePackage,
 		account.ServicePackage,
 		acm.ServicePackage,
@@ -290,6 +291,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		grafana.ServicePackage,
 		greengrass.ServicePackage,
 		guardduty.ServicePackage,
+		healthlake.ServicePackage,
 		iam.ServicePackage,
 		identitystore.ServicePackage,
 		imagebuilder.ServicePackage,

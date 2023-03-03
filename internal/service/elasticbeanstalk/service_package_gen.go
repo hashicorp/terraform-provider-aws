@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elastic_beanstalk_application":    DataSourceApplication,
+		"aws_elastic_beanstalk_hosted_zone":    DataSourceHostedZone,
+		"aws_elastic_beanstalk_solution_stack": DataSourceSolutionStack,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_elastic_beanstalk_application":            ResourceApplication,
+		"aws_elastic_beanstalk_application_version":    ResourceApplicationVersion,
+		"aws_elastic_beanstalk_configuration_template": ResourceConfigurationTemplate,
+		"aws_elastic_beanstalk_environment":            ResourceEnvironment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "elasticbeanstalk"
+	return names.ElasticBeanstalk
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

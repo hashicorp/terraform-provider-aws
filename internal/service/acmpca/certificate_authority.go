@@ -26,6 +26,7 @@ const (
 	certificateAuthorityPermanentDeletionTimeInDaysDefault = certificateAuthorityPermanentDeletionTimeInDaysMax
 )
 
+// @SDKResource("aws_acmpca_certificate_authority")
 func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

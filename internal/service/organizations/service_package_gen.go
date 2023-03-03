@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_organizations_delegated_administrators":                DataSourceDelegatedAdministrators,
+		"aws_organizations_delegated_services":                      DataSourceDelegatedServices,
+		"aws_organizations_organization":                            DataSourceOrganization,
+		"aws_organizations_organizational_unit_child_accounts":      DataSourceOrganizationalUnitChildAccounts,
+		"aws_organizations_organizational_unit_descendant_accounts": DataSourceOrganizationalUnitDescendantAccounts,
+		"aws_organizations_organizational_units":                    DataSourceOrganizationalUnits,
+		"aws_organizations_resource_tags":                           DataSourceResourceTags,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_organizations_account":                 ResourceAccount,
+		"aws_organizations_delegated_administrator": ResourceDelegatedAdministrator,
+		"aws_organizations_organization":            ResourceOrganization,
+		"aws_organizations_organizational_unit":     ResourceOrganizationalUnit,
+		"aws_organizations_policy":                  ResourcePolicy,
+		"aws_organizations_policy_attachment":       ResourcePolicyAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "organizations"
+	return names.Organizations
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

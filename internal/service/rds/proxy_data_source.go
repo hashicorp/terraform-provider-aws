@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_db_proxy")
 func DataSourceProxy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProxyRead,

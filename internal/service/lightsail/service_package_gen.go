@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,34 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lightsail_bucket":                               ResourceBucket,
+		"aws_lightsail_bucket_access_key":                    ResourceBucketAccessKey,
+		"aws_lightsail_bucket_resource_access":               ResourceBucketResourceAccess,
+		"aws_lightsail_certificate":                          ResourceCertificate,
+		"aws_lightsail_container_service":                    ResourceContainerService,
+		"aws_lightsail_container_service_deployment_version": ResourceContainerServiceDeploymentVersion,
+		"aws_lightsail_database":                             ResourceDatabase,
+		"aws_lightsail_disk":                                 ResourceDisk,
+		"aws_lightsail_disk_attachment":                      ResourceDiskAttachment,
+		"aws_lightsail_domain":                               ResourceDomain,
+		"aws_lightsail_domain_entry":                         ResourceDomainEntry,
+		"aws_lightsail_instance":                             ResourceInstance,
+		"aws_lightsail_instance_public_ports":                ResourceInstancePublicPorts,
+		"aws_lightsail_key_pair":                             ResourceKeyPair,
+		"aws_lightsail_lb":                                   ResourceLoadBalancer,
+		"aws_lightsail_lb_attachment":                        ResourceLoadBalancerAttachment,
+		"aws_lightsail_lb_certificate":                       ResourceLoadBalancerCertificate,
+		"aws_lightsail_lb_certificate_attachment":            ResourceLoadBalancerCertificateAttachment,
+		"aws_lightsail_lb_https_redirection_policy":          ResourceLoadBalancerHTTPSRedirectionPolicy,
+		"aws_lightsail_lb_stickiness_policy":                 ResourceLoadBalancerStickinessPolicy,
+		"aws_lightsail_static_ip":                            ResourceStaticIP,
+		"aws_lightsail_static_ip_attachment":                 ResourceStaticIPAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "lightsail"
+	return names.Lightsail
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

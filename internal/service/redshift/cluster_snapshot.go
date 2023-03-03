@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_cluster_snapshot")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -71,8 +72,8 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := redshift.CreateClusterSnapshotInput{
-		ClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
 		SnapshotIdentifier: aws.String(d.Get("snapshot_identifier").(string)),
+		ClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
 		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
@@ -80,16 +81,16 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ManualSnapshotRetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 
-	out, err := conn.CreateClusterSnapshotWithContext(ctx, &input)
+	output, err := conn.CreateClusterSnapshotWithContext(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster Snapshot : %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.Snapshot.SnapshotIdentifier))
+	d.SetId(aws.StringValue(output.Snapshot.SnapshotIdentifier))
 
-	if _, err := waitClusterSnapshotAvailable(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster Snapshot (%s) to be Available: %s", d.Id(), err)
+	if _, err := waitClusterSnapshotCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster Snapshot (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
@@ -101,7 +102,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	out, err := FindClusterSnapshotById(ctx, conn, d.Id())
+	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -117,16 +118,16 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		Service:   "redshift",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(out.ClusterIdentifier), d.Id()),
+		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(snapshot.ClusterIdentifier), d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("snapshot_identifier", out.SnapshotIdentifier)
-	d.Set("cluster_identifier", out.ClusterIdentifier)
-	d.Set("manual_snapshot_retention_period", out.ManualSnapshotRetentionPeriod)
-	d.Set("kms_key_id", out.KmsKeyId)
-	d.Set("owner_account", out.OwnerAccount)
+	d.Set("cluster_identifier", snapshot.ClusterIdentifier)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("manual_snapshot_retention_period", snapshot.ManualSnapshotRetentionPeriod)
+	d.Set("owner_account", snapshot.OwnerAccount)
+	d.Set("snapshot_identifier", snapshot.SnapshotIdentifier)
 
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -146,11 +147,12 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyClusterSnapshotInput{
-			SnapshotIdentifier:            aws.String(d.Id()),
 			ManualSnapshotRetentionPeriod: aws.Int64(int64(d.Get("manual_snapshot_retention_period").(int))),
+			SnapshotIdentifier:            aws.String(d.Id()),
 		}
 
 		_, err := conn.ModifyClusterSnapshotWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster Snapshot (%s): %s", d.Id(), err)
 		}
@@ -185,7 +187,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := waitClusterSnapshotDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster Snapshot (%s) to be Deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster Snapshot (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

@@ -31,6 +31,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_emr_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,

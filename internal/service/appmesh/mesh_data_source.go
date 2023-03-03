@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_appmesh_mesh")
 func DataSourceMesh() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMeshRead,

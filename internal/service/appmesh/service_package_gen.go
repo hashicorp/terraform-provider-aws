@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appmesh_mesh":            DataSourceMesh,
+		"aws_appmesh_virtual_service": DataSourceVirtualService,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appmesh_gateway_route":   ResourceGatewayRoute,
+		"aws_appmesh_mesh":            ResourceMesh,
+		"aws_appmesh_route":           ResourceRoute,
+		"aws_appmesh_virtual_gateway": ResourceVirtualGateway,
+		"aws_appmesh_virtual_node":    ResourceVirtualNode,
+		"aws_appmesh_virtual_router":  ResourceVirtualRouter,
+		"aws_appmesh_virtual_service": ResourceVirtualService,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "appmesh"
+	return names.AppMesh
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

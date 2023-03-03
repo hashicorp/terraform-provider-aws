@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dms_certificate":              ResourceCertificate,
+		"aws_dms_endpoint":                 ResourceEndpoint,
+		"aws_dms_event_subscription":       ResourceEventSubscription,
+		"aws_dms_replication_instance":     ResourceReplicationInstance,
+		"aws_dms_replication_subnet_group": ResourceReplicationSubnetGroup,
+		"aws_dms_replication_task":         ResourceReplicationTask,
+		"aws_dms_s3_endpoint":              ResourceS3Endpoint,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "dms"
+	return names.DMS
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -430,7 +430,7 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 	return output.PartnerIntegrationInfoList[0], nil
 }
 
-func FindClusterSnapshotById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
+func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
 	input := &redshift.DescribeClusterSnapshotsInput{
 		SnapshotIdentifier: aws.String(id),
 	}
@@ -454,6 +454,13 @@ func FindClusterSnapshotById(ctx context.Context, conn *redshift.Redshift, id st
 
 	if count := len(output.Snapshots); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	if status := aws.StringValue(output.Snapshots[0].Status); status == clusterSnapshotStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output.Snapshots[0], nil

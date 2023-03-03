@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_opensearch_domain": DataSourceDomain,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_opensearch_domain":                      ResourceDomain,
+		"aws_opensearch_domain_policy":               ResourceDomainPolicy,
+		"aws_opensearch_domain_saml_options":         ResourceDomainSAMLOptions,
+		"aws_opensearch_inbound_connection_accepter": ResourceInboundConnectionAccepter,
+		"aws_opensearch_outbound_connection":         ResourceOutboundConnection,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "opensearch"
+	return names.OpenSearch
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

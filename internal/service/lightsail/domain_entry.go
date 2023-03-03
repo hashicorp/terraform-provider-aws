@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_domain_entry")
 func ResourceDomainEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainEntryCreate,

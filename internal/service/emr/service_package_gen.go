@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_emr_release_labels": DataSourceReleaseLabels,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_emr_cluster":                ResourceCluster,
+		"aws_emr_instance_fleet":         ResourceInstanceFleet,
+		"aws_emr_instance_group":         ResourceInstanceGroup,
+		"aws_emr_managed_scaling_policy": ResourceManagedScalingPolicy,
+		"aws_emr_security_configuration": ResourceSecurityConfiguration,
+		"aws_emr_studio":                 ResourceStudio,
+		"aws_emr_studio_session_mapping": ResourceStudioSessionMapping,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "emr"
+	return names.EMR
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

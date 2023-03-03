@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_location_geofence_collection")
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,

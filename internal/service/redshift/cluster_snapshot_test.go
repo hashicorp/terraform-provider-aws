@@ -143,7 +143,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		out, err := tfredshift.FindClusterSnapshotById(ctx, conn, rs.Primary.ID)
+		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -164,7 +164,7 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfredshift.FindClusterSnapshotById(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -182,26 +182,26 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 }
 
 func testAccClusterSnapshotConfig_basic(rName string) string {
-	return testAccClusterConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterSnapshotConfig_retention(rName string, retention int) string {
-	return testAccClusterConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier               = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier              = %[1]q
   manual_snapshot_retention_period = %[2]d
 }
-`, rName, retention)
+`, rName, retention))
 }
 
 func testAccClusterSnapshotConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccClusterConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier = %[1]q
@@ -210,11 +210,11 @@ resource "aws_redshift_cluster_snapshot" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccClusterSnapshotConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccClusterConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_redshift_cluster_snapshot" "test" {
   cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
   snapshot_identifier = %[1]q
@@ -223,5 +223,5 @@ resource "aws_redshift_cluster_snapshot" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

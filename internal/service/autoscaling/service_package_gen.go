@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_autoscaling_group":    DataSourceGroup,
+		"aws_autoscaling_groups":   DataSourceGroups,
+		"aws_launch_configuration": DataSourceLaunchConfiguration,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_autoscaling_attachment":     ResourceAttachment,
+		"aws_autoscaling_group":          ResourceGroup,
+		"aws_autoscaling_group_tag":      ResourceGroupTag,
+		"aws_autoscaling_lifecycle_hook": ResourceLifecycleHook,
+		"aws_autoscaling_notification":   ResourceNotification,
+		"aws_autoscaling_policy":         ResourcePolicy,
+		"aws_autoscaling_schedule":       ResourceSchedule,
+		"aws_launch_configuration":       ResourceLaunchConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "autoscaling"
+	return names.AutoScaling
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

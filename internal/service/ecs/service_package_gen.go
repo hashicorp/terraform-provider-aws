@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecs_cluster":              DataSourceCluster,
+		"aws_ecs_container_definition": DataSourceContainerDefinition,
+		"aws_ecs_service":              DataSourceService,
+		"aws_ecs_task_definition":      DataSourceTaskDefinition,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ecs_account_setting_default":    ResourceAccountSettingDefault,
+		"aws_ecs_capacity_provider":          ResourceCapacityProvider,
+		"aws_ecs_cluster":                    ResourceCluster,
+		"aws_ecs_cluster_capacity_providers": ResourceClusterCapacityProviders,
+		"aws_ecs_service":                    ResourceService,
+		"aws_ecs_tag":                        ResourceTag,
+		"aws_ecs_task_definition":            ResourceTaskDefinition,
+		"aws_ecs_task_set":                   ResourceTaskSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ecs"
+	return names.ECS
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

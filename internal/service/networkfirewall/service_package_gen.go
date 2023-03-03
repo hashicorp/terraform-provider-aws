@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkfirewall_firewall":        DataSourceFirewall,
+		"aws_networkfirewall_firewall_policy": DataSourceFirewallPolicy,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkfirewall_firewall":              ResourceFirewall,
+		"aws_networkfirewall_firewall_policy":       ResourceFirewallPolicy,
+		"aws_networkfirewall_logging_configuration": ResourceLoggingConfiguration,
+		"aws_networkfirewall_resource_policy":       ResourceResourcePolicy,
+		"aws_networkfirewall_rule_group":            ResourceRuleGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "networkfirewall"
+	return names.NetworkFirewall
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

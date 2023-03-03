@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lex_bot":       DataSourceBot,
+		"aws_lex_bot_alias": DataSourceBotAlias,
+		"aws_lex_intent":    DataSourceIntent,
+		"aws_lex_slot_type": DataSourceSlotType,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lex_bot":       ResourceBot,
+		"aws_lex_bot_alias": ResourceBotAlias,
+		"aws_lex_intent":    ResourceIntent,
+		"aws_lex_slot_type": ResourceSlotType,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "lexmodels"
+	return names.LexModels
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}
