@@ -200,13 +200,11 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroup (%s): %#v", d.Id(), in)
+
 		_, err := conn.ModifyVerifiedAccessGroupWithContext(ctx, in)
-		if err != nil {
-			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)
-		}
 
 		if err != nil {
-			return create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessPolicy, d.Id(), err)
+			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)
 		}
 	}
 

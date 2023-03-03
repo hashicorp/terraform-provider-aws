@@ -56,7 +56,7 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessInstance_tags(t *testing.T) {
+func TestAccVerifiedAccessGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var verifiedaccessgroup ec2.VerifiedAccessGroup
 	description := sdkacctest.RandString(100)
