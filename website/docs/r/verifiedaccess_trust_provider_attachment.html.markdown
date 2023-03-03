@@ -42,7 +42,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Composite ID for the resource. The `verified_access_trust_provider_id` and `verified_access_instance_id` separated by a `/`.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
