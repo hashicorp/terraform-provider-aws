@@ -60,6 +60,11 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", ""),
 					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", ""),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.as2_transports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.set_stat_option", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.tls_session_resumption_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "SFTP"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
@@ -792,20 +797,22 @@ func testAccServer_protocols(t *testing.T) {
 }
 
 func testAccServer_protocolDetails(t *testing.T) {
+	ctx := acctest.Context(t)
 	var s transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerDestroy,
+		CheckDestroy:             testAccCheckServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerConfig_protocolDetails("AUTO", "DEFAULT", "ENFORCED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerExists(resourceName, &s),
+					testAccCheckServerExists(ctx, resourceName, &s),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.as2_transports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.set_stat_option", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.tls_session_resumption_mode", "ENFORCED"),
@@ -818,11 +825,12 @@ func testAccServer_protocolDetails(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccServerConfig_protocolDetails("AUTO", "ENABLE_NO_OP", "DISABLED"),
+				Config: testAccServerConfig_protocolDetails("8.8.8.8", "ENABLE_NO_OP", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerExists(resourceName, &s),
+					testAccCheckServerExists(ctx, resourceName, &s),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.as2_transports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "8.8.8.8"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.set_stat_option", "ENABLE_NO_OP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.tls_session_resumption_mode", "DISABLED"),
 				),

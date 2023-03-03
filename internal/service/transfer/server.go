@@ -171,30 +171,37 @@ func ResourceServer() *schema.Resource {
 			"protocol_details": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"as2_transports": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(transfer.As2Transport_Values(), false),
+							},
+						},
 						"passive_ip": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 15),
 						},
 						"set_stat_option": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"DEFAULT",
-								"ENABLE_NO_OP",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.SetStatOption_Values(), false),
 						},
 						"tls_session_resumption_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"DISABLED",
-								"ENABLED",
-								"ENFORCED",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.TlsSessionResumptionMode_Values(), false),
 						},
 					},
 				},
@@ -479,11 +486,9 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
-
 	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
-		return fmt.Errorf("error setting protocol_details: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting protocol_details: %s", err)
 	}
-
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
@@ -864,6 +869,10 @@ func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
 
 	apiObject := &transfer.ProtocolDetails{}
 
+	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.As2Transports = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
 		apiObject.PassiveIp = aws.String(v)
 	}
@@ -885,6 +894,10 @@ func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.As2Transports; v != nil {
+		tfMap["as2_transport"] = aws.StringValueSlice(v)
+	}
 
 	if v := apiObject.PassiveIp; v != nil {
 		tfMap["passive_ip"] = aws.StringValue(v)
