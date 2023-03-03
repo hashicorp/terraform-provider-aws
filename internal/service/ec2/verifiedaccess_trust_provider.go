@@ -184,11 +184,11 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 
 	out, err := conn.CreateVerifiedAccessTrustProviderWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, d.Get("name").(string), err)
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", err)
 	}
 
 	if out == nil || out.VerifiedAccessTrustProvider == nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.VerifiedAccessTrustProvider.VerifiedAccessTrustProviderId))
@@ -290,7 +290,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating verified access trust provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 
