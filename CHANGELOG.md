@@ -30,11 +30,13 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Add `instance_requirements.allowed_instance_types` and `instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_networkmanager_core_network: Add `base_policy_regions` argument ([#29623](https://github.com/hashicorp/terraform-provider-aws/issues/29623))
 * resource/aws_spot_fleet_request: Add `launch_template_config.overrides.instance_requirements.allowed_instance_types` and `launch_template_config.overrides.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
+* resource/aws_transfer_server: Add support for `on_partial_upload` block on the `workflow_details` attribute. ([#27730](https://github.com/hashicorp/terraform-provider-aws/issues/27730))
 * resource/aws_transfer_user: Add configurable timeout for Delete ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
 
 BUG FIXES:
 
 * resource/aws_instance: When encountering `InsufficientInstanceCapacity` errors, do not retry in order to fail faster, as this error is typically not resolvable in the near future ([#21293](https://github.com/hashicorp/terraform-provider-aws/issues/21293))
+* resource/aws_transfer_server: Allow the removal of `workflow_details` attribute. ([#27730](https://github.com/hashicorp/terraform-provider-aws/issues/27730))
 * resource/aws_transfer_user: Fix bug preventing removal of all `home_directory_mappings` due to empty list validation error ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
 
 ## 4.56.0 (February 24, 2023)
