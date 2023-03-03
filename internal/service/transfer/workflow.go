@@ -26,6 +26,7 @@ func ResourceWorkflow() *schema.Resource {
 		ReadWithoutTimeout:   resourceWorkflowRead,
 		UpdateWithoutTimeout: resourceWorkflowUpdate,
 		DeleteWithoutTimeout: resourceWorkflowDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -539,8 +540,6 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
-
-	log.Printf("[DEBUG] Creating Transfer Workflow: %s", input)
 	output, err := conn.CreateWorkflowWithContext(ctx, input)
 
 	if err != nil {
@@ -572,11 +571,9 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("arn", output.Arn)
 	d.Set("description", output.Description)
-
 	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting on_exception_steps: %s", err)
 	}
-
 	if err := d.Set("steps", flattenWorkflows(output.Steps)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting steps: %s", err)
 	}
@@ -602,7 +599,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating Transfer Workflow (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -613,7 +610,7 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
 
-	log.Printf("[DEBUG] Deleting Transfer Workflow: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Workflow: %s", d.Id())
 	_, err := conn.DeleteWorkflowWithContext(ctx, &transfer.DeleteWorkflowInput{
 		WorkflowId: aws.String(d.Id()),
 	})

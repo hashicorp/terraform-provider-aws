@@ -30,15 +30,20 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`workflow/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "steps.0.type", "DELETE"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.copy_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.custom_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.decrypt_step_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.delete_step_details.0.source_file_location", "${original.file}"),
-					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.tag_step_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "steps.0.type", "DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
