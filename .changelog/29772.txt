@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dms_endpoint: Trigger updates based on adding new `extra_connection_attributes`
+```
+
+```release-note:enhancement
+resource/aws_dms_s3_endpoint: Add `detach_target_on_lob_lookup_failure_parquet` argument
+```

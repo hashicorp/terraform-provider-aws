@@ -2112,3 +2112,79 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t 
 		})
 	}
 }
+
+// TestNoMatchResourceAttr ensures a value matching a regular expression is
+// NOT stored in state for the given name and key combination. Same as resource.TestMatchResourceAttr()
+// except negative.
+func TestNoMatchResourceAttr(name, key string, r *regexp.Regexp) resource.TestCheckFunc {
+	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
+		is, err := primaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		return testNoMatchResourceAttr(is, name, key, r)
+	})
+}
+
+// testNoMatchResourceAttr is same as testMatchResourceAttr in
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// except negative.
+func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key string, r *regexp.Regexp) error {
+	if r.MatchString(is.Attributes[key]) {
+		return fmt.Errorf(
+			"%s: Attribute '%s' did match %q and should not, got %#v",
+			name,
+			key,
+			r.String(),
+			is.Attributes[key])
+	}
+
+	return nil
+}
+
+// checkIfIndexesIntoTypeSet is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		err := f(s)
+		if err != nil && s.IsBinaryDrivenTest && indexesIntoTypeSet(key) {
+			return fmt.Errorf("Error in test check: %s\nTest check address %q likely indexes into TypeSet\nThis is currently not possible in the SDK", err, key)
+		}
+		return err
+	}
+}
+
+// indexesIntoTypeSet is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func indexesIntoTypeSet(key string) bool {
+	for _, part := range strings.Split(key, ".") {
+		if i, err := strconv.Atoi(part); err == nil && i > 100 {
+			return true
+		}
+	}
+	return false
+}
+
+// primaryInstanceState is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	ms := s.RootModule()
+	return modulePrimaryInstanceState(ms, name)
+}
+
+// modulePrimaryInstanceState is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
+	rs, ok := ms.Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s in %s", name, ms.Path)
+	}
+
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
+	}
+
+	return is, nil
+}
