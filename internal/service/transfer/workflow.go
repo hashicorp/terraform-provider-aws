@@ -262,6 +262,12 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(transfer.EncryptionType_Values(), false),
+									},
 								},
 							},
 						},
@@ -569,6 +575,12 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringLenBetween(0, 256),
 											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(transfer.EncryptionType_Values(), false),
 									},
 								},
 							},
@@ -990,6 +1002,10 @@ func expandDecryptStepDetails(tfMap []interface{}) *transfer.DecryptStepDetails 
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
+	if v, ok := tfMapRaw["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1014,6 +1030,10 @@ func flattenDecryptStepDetails(apiObject *transfer.DecryptStepDetails) []interfa
 
 	if v := apiObject.SourceFileLocation; v != nil {
 		tfMap["source_file_location"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
