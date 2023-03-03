@@ -82,6 +82,39 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 }
 ```
 
+## Mapping settings to what AWS UI displays
+The AWS Console for Logs/Tracing in the API Gateway stage editor has drop downs for CloudWatch Logs. The settings examples show how to map various settings combinations to what is displayed in the AWS UI
+
+```terraform
+#AWS UI = Off
+  settings { 
+    logging_level = "OFF" 
+  }
+
+#AWS UI = Errors Only
+  settings { 
+    logging_level = "ERROR" 
+    metrics_enabled = true 
+    data_trace_enabled = false 
+  }
+
+#AWS UI = Errors and Info Logs
+ settings{ 
+  logging_level="INFO" 
+  metrics_enabled = true 
+  data_trace_enabled = false 
+}
+
+#AWS UI = Full Request and Response Logs
+settings { 
+  logging_level = "INFO" 
+  metrics_enabled = true 
+  data_trace_enabled = true 
+}
+```
+
+
+
 ## Argument Reference
 
 The following arguments are supported:
