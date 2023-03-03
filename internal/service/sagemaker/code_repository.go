@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_code_repository")
 func ResourceCodeRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCodeRepositoryCreate,

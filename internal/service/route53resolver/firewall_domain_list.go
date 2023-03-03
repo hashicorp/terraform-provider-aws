@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_domain_list")
 func ResourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallDomainListCreate,

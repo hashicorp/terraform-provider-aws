@@ -22,11 +22,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_redshiftserverless_credentials": DataSourceCredentials,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_redshiftserverless_endpoint_access": ResourceEndpointAccess,
+		"aws_redshiftserverless_namespace":       ResourceNamespace,
+		"aws_redshiftserverless_resource_policy": ResourceResourcePolicy,
+		"aws_redshiftserverless_snapshot":        ResourceSnapshot,
+		"aws_redshiftserverless_usage_limit":     ResourceUsageLimit,
+		"aws_redshiftserverless_workgroup":       ResourceWorkgroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

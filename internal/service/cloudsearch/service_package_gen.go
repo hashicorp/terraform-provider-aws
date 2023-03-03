@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudsearch_domain":                       ResourceDomain,
+		"aws_cloudsearch_domain_service_access_policy": ResourceDomainServiceAccessPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

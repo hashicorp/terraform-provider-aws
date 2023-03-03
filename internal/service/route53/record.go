@@ -26,6 +26,7 @@ const (
 	recordSetSyncMaxDelay = 30
 )
 
+// @SDKResource("aws_route53_record")
 func ResourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

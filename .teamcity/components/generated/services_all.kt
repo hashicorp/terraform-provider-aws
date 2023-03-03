@@ -90,6 +90,7 @@ val services = mapOf(
     "grafana" to ServiceSpec("Managed Grafana"),
     "greengrass" to ServiceSpec("IoT Greengrass"),
     "guardduty" to ServiceSpec("GuardDuty"),
+    "healthlake" to ServiceSpec("HealthLake"),
     "iam" to ServiceSpec("IAM (Identity & Access Management)"),
     "identitystore" to ServiceSpec("SSO Identity Store"),
     "imagebuilder" to ServiceSpec("EC2 Image Builder"),

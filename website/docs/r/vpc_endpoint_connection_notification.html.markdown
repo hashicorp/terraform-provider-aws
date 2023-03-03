@@ -14,22 +14,23 @@ Connection notifications notify subscribers of VPC Endpoint events.
 ## Example Usage
 
 ```terraform
-resource "aws_sns_topic" "topic" {
-  name = "vpce-notification-topic"
+data "aws_iam_policy_document" "topic" {
+  statement {
+    effect = "Allow"
 
-  policy = <<POLICY
-{
-    "Version":"2012-10-17",
-    "Statement":[{
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "vpce.amazonaws.com"
-        },
-        "Action": "SNS:Publish",
-        "Resource": "arn:aws:sns:*:*:vpce-notification-topic"
-    }]
+    principals {
+      type        = "Service"
+      identifiers = ["vpce.amazonaws.com"]
+    }
+
+    actions   = ["SNS:Publish"]
+    resources = ["arn:aws:sns:*:*:vpce-notification-topic"]
+  }
 }
-POLICY
+
+resource "aws_sns_topic" "topic" {
+  name   = "vpce-notification-topic"
+  policy = data.aws_iam_policy_document.topic.json
 }
 
 resource "aws_vpc_endpoint_service" "foo" {

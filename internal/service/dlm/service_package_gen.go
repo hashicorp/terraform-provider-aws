@@ -26,7 +26,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dlm_lifecycle_policy": ResourceLifecyclePolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

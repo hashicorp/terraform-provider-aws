@@ -304,6 +304,7 @@ VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPN (Client)
 VPN (Site-to-Site)
+Verified Access
 WAF
 WAF Classic
 WAF Classic Regional

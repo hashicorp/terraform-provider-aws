@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_athena_data_catalog": ResourceDataCatalog,
+		"aws_athena_database":     ResourceDatabase,
+		"aws_athena_named_query":  ResourceNamedQuery,
+		"aws_athena_workgroup":    ResourceWorkGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

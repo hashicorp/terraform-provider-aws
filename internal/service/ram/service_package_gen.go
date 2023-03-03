@@ -22,11 +22,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ram_resource_share": DataSourceResourceShare,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ram_principal_association":   ResourcePrincipalAssociation,
+		"aws_ram_resource_association":    ResourceResourceAssociation,
+		"aws_ram_resource_share":          ResourceResourceShare,
+		"aws_ram_resource_share_accepter": ResourceResourceShareAccepter,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

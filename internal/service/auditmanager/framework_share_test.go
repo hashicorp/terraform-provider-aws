@@ -103,7 +103,7 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 					// Sleep briefly to prevent intermittent validation errors when revoking
 					// a new framework share request
 					acctest.CheckSleep(t, 10*time.Second),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

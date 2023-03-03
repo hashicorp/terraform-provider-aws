@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_outposts_outposts")
 func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostsRead,

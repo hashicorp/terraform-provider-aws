@@ -26,7 +26,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_devicefarm_device_pool":       ResourceDevicePool,
+		"aws_devicefarm_instance_profile":  ResourceInstanceProfile,
+		"aws_devicefarm_network_profile":   ResourceNetworkProfile,
+		"aws_devicefarm_project":           ResourceProject,
+		"aws_devicefarm_test_grid_project": ResourceTestGridProject,
+		"aws_devicefarm_upload":            ResourceUpload,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

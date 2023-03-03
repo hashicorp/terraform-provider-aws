@@ -30,6 +30,7 @@ import (
 	"github.com/mitchellh/copystructure"
 )
 
+// @SDKResource("aws_mq_broker")
 func ResourceBroker() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBrokerCreate,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie_s3_bucket_association")
 func ResourceS3BucketAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3BucketAssociationCreate,
