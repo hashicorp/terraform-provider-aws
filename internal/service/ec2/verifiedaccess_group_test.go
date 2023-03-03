@@ -229,7 +229,7 @@ resource "aws_verifiedaccess_group" "test" {
   verified_access_instance_id = aws_verifiedaccess_instance.test.id
 
   policy_document = %[2]q
-  
+
   depends_on = [
     aws_verifiedaccess_trust_provider_attachment.test
   ]
