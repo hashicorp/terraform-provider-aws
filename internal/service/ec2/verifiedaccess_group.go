@@ -3,7 +3,6 @@ package ec2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,15 +72,13 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			CustomizeDiffValidateInstanceTrustProvider,
 		),
 	}
 }
 
 const (
-	ResNameVerifiedAccessInstance = "Verified Access Instance"
-	ResNameVerifiedAccessGroup    = "Verified Access Group"
-	ResNameVerifiedAccessPolicy   = "Verified Access Policy"
+	ResNameVerifiedAccessGroup  = "Verified Access Group"
+	ResNameVerifiedAccessPolicy = "Verified Access Policy"
 )
 
 func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -102,16 +100,21 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
-		in.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVerifiedAccessInstance)
+		in.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVerifiedAccessGroup)
 	}
 
 	out, err := conn.CreateVerifiedAccessGroupWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidParameterValue) {
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, "", err)
+	}
+
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, d.Get("name").(string), err)
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, "", err)
 	}
 
 	if out == nil || out.VerifiedAccessGroup == nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.VerifiedAccessGroup.VerifiedAccessGroupId))
@@ -232,7 +235,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating verified access group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -255,22 +258,6 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func CustomizeDiffValidateInstanceTrustProvider(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	// ensure the instance has a trust provider attached
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	if v, ok := diff.GetOk("verified_access_instance_id"); ok {
-		instance, err := FindVerifiedAccessInstanceByID(ctx, conn, v.(string))
-		if err != nil {
-			return fmt.Errorf("%s %s %s %s %s", names.EC2, create.ErrActionReading, ResNameVerifiedAccessInstance, v, err)
-		}
-
-		if len(instance.VerifiedAccessTrustProviders) > 0 {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("instance %s must have a Trust Provider attached prior to creating a Group", diff.Get("verified_access_instance_id"))
-}
 func SuppressEquivalentGroupPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
 	// ignore leading and trailing whitespace for policies
 	old_policy := strings.TrimSpace(old)
