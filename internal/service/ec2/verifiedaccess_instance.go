@@ -72,11 +72,11 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 
 	out, err := conn.CreateVerifiedAccessInstanceWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessInstance, d.Get("name").(string), err)
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessInstance, "", err)
 	}
 
 	if out == nil || out.VerifiedAccessInstance == nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessInstance, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessInstance, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.VerifiedAccessInstance.VerifiedAccessInstanceId))
@@ -151,7 +151,7 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating verified access instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
