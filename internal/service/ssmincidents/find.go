@@ -12,25 +12,25 @@ import (
 )
 
 func FindReplicationSetByID(context context.Context, client *ssmincidents.Client, arn string) (*types.ReplicationSet, error) {
-	in := &ssmincidents.GetReplicationSetInput{
+	input := &ssmincidents.GetReplicationSetInput{
 		Arn: aws.String(arn),
 	}
-	out, err := client.GetReplicationSet(context, in)
+	output, err := client.GetReplicationSet(context, input)
 	if err != nil {
 		var notFoundError *types.ResourceNotFoundException
 		if errors.As(err, &notFoundError) {
 			return nil, &resource.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: input,
 			}
 		}
 
 		return nil, err
 	}
 
-	if out == nil || out.ReplicationSet == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.ReplicationSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.ReplicationSet, nil
+	return output.ReplicationSet, nil
 }
