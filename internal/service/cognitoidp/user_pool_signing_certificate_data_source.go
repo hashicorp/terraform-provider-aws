@@ -1,17 +1,20 @@
 package cognitoidp
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cognito_user_pool_signing_certificate")
 func DataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserPoolSigningCertificateRead,
+		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"certificate": {
@@ -26,7 +29,8 @@ func DataSourceUserPoolSigningCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID := d.Get("user_pool_id").(string)
@@ -34,14 +38,14 @@ func dataSourceUserPoolSigningCertificateRead(d *schema.ResourceData, meta inter
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	output, err := conn.GetSigningCertificate(input)
+	output, err := conn.GetSigningCertificateWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Cognito User Pool (%s) Signing Certificate: %w", userPoolID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) Signing Certificate: %s", userPoolID, err)
 	}
 
 	d.SetId(userPoolID)
 	d.Set("certificate", output.Certificate)
 
-	return nil
+	return diags
 }

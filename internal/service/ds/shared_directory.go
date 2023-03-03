@@ -22,6 +22,7 @@ const (
 	ResNameSharedDirectory = "Shared Directory"
 )
 
+// @SDKResource("aws_directory_service_shared_directory")
 func ResourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharedDirectoryCreate,
@@ -29,7 +30,7 @@ func ResourceSharedDirectory() *schema.Resource {
 		DeleteWithoutTimeout: resourceSharedDirectoryDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

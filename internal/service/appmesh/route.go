@@ -1,6 +1,7 @@
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,23 +11,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRouteCreate,
-		Read:   resourceRouteRead,
-		Update: resourceRouteUpdate,
-		Delete: resourceRouteDelete,
+		CreateWithoutTimeout: resourceRouteCreate,
+		ReadWithoutTimeout:   resourceRouteRead,
+		UpdateWithoutTimeout: resourceRouteUpdate,
+		DeleteWithoutTimeout: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRouteImport,
+			StateContext: resourceRouteImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -98,6 +102,12 @@ func ResourceRoute() *schema.Resource {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(0, 100),
+															},
+
+															"port": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -190,8 +200,9 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 												},
 
 												"prefix": {
@@ -201,9 +212,14 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"service_name": {
-													Type:         schema.TypeString,
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"port": {
+													Type:         schema.TypeInt,
 													Optional:     true,
-													RequiredWith: []string{"spec.0.grpc_route.0.match.0.method_name"},
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -375,8 +391,30 @@ func ResourceRoute() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.IntBetween(0, 100),
 															},
+
+															"port": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IsPortNumber,
+															},
 														},
 													},
+												},
+											},
+										},
+									},
+
+									"match": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -481,6 +519,12 @@ func RouteHTTPRouteSchema() *schema.Schema {
 											Type:         schema.TypeInt,
 											Required:     true,
 											ValidateFunc: validation.IntBetween(0, 100),
+										},
+
+										"port": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IsPortNumber,
 										},
 									},
 								},
@@ -588,6 +632,12 @@ func RouteHTTPRouteSchema() *schema.Schema {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(appmesh.HttpScheme_Values(), false),
+							},
+
+							"port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumber,
 							},
 						},
 					},
@@ -701,10 +751,11 @@ func RouteHTTPRouteSchema() *schema.Schema {
 	}
 }
 
-func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -718,17 +769,18 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
-	resp, err := conn.CreateRoute(req)
+	resp, err := conn.CreateRouteWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh route: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Route.Metadata.Uid))
 
-	return resourceRouteRead(d, meta)
+	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -744,10 +796,10 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeRouteOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.DescribeRoute(req)
+		resp, err = conn.DescribeRouteWithContext(ctx, req)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -761,31 +813,31 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeRoute(req)
+		resp, err = conn.DescribeRouteWithContext(ctx, req)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Route: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: %s", err)
 	}
 
 	if resp == nil || resp.Route == nil {
-		return fmt.Errorf("error reading App Mesh Route: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: empty response")
 	}
 
 	if aws.StringValue(resp.Route.Status.Status) == appmesh.RouteStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Route: %s after creation", aws.StringValue(resp.Route.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: %s after creation", aws.StringValue(resp.Route.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(resp.Route.Metadata.Arn)
@@ -799,30 +851,31 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", resp.Route.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenRouteSpec(resp.Route.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh route (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh route (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
@@ -838,9 +891,9 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh route: %#v", req)
-		_, err := conn.UpdateRoute(req)
+		_, err := conn.UpdateRouteWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh route: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh route: %s", err)
 		}
 	}
 
@@ -848,34 +901,35 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh route (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh route (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceRouteRead(d, meta)
+	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
-	_, err := conn.DeleteRoute(&appmesh.DeleteRouteInput{
+	_, err := conn.DeleteRouteWithContext(ctx, &appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh route: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-router-name/route-name'", d.Id())
@@ -888,7 +942,7 @@ func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
+	resp, err := conn.DescribeRouteWithContext(ctx, &appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),
 		RouteName:         aws.String(name),
 		VirtualRouterName: aws.String(vrName),

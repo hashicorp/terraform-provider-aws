@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_certificate_attachment")
 func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCertificateAttachmentCreate,
@@ -68,7 +69,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, d.Get("certificate_name").(string), errors.New("Error waiting for Attach Load Balancer Certificate to Load Balancer request operation"))

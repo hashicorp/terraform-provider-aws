@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
@@ -67,7 +68,7 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID := d.Get("catalog_id").(string)
-	output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	})
 

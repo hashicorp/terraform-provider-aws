@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_tag")
 func ResourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagCreate,
@@ -51,7 +52,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := CreateTagsWithContext(ctx, conn, identifier, map[string]string{key: value}); err != nil {
+	if err := CreateTags(ctx, conn, identifier, map[string]string{key: value}); err != nil {
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 
@@ -68,7 +69,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.FromErr(err)
 	}
 
-	value, err := GetTagWithContext(ctx, conn, identifier, key)
+	value, err := GetTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ec2.ServiceID, identifier, key)
@@ -95,7 +96,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsWithContext(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := UpdateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return diag.Errorf("updating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 
@@ -110,7 +111,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsWithContext(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := UpdateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 

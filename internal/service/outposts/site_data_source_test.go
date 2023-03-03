@@ -10,10 +10,11 @@ import (
 )
 
 func TestAccOutpostsSiteDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -32,11 +33,12 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 }
 
 func TestAccOutpostsSiteDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	sourceDataSourceName := "data.aws_outposts_site.source"
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

@@ -7,16 +7,31 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
-// Messager is a simple interface for types with ErrorMessage().
-type Messager interface {
+// errorMessager is a simple interface for types with ErrorMessage().
+type errorMessager interface {
 	ErrorMessage() string
 }
 
 func AsContains(err error, target any, message string) bool {
 	if errors.As(err, target) {
-		if v, ok := target.(Messager); ok && strings.Contains(v.ErrorMessage(), message) {
+		if v, ok := target.(errorMessager); ok && strings.Contains(v.ErrorMessage(), message) {
 			return true
 		}
+	}
+	return false
+}
+
+type ErrorWithErrorMessage interface {
+	error
+	errorMessager
+}
+
+// IsAErrorMessageContains returns whether or not the specified error is of the specified type
+// and its ErrorMessage() value contains the specified needle.
+func IsAErrorMessageContains[T ErrorWithErrorMessage](err error, needle string) bool {
+	as, ok := As[T](err)
+	if ok {
+		return strings.Contains(as.ErrorMessage(), needle)
 	}
 	return false
 }

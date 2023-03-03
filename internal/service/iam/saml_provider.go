@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_saml_provider")
 func ResourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
@@ -62,7 +63,7 @@ func ResourceSAMLProvider() *schema.Resource {
 func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &iam.CreateSAMLProviderInput{
@@ -75,14 +76,14 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Creating IAM SAML Provider: %s", input)
-	output, err := conn.CreateSAMLProvider(input)
+	output, err := conn.CreateSAMLProviderWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
-		output, err = conn.CreateSAMLProvider(input)
+		output, err = conn.CreateSAMLProviderWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -93,7 +94,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := samlProviderUpdateTags(conn, d.Id(), nil, tags)
+		err := samlProviderUpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -141,7 +142,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("valid_until", nil)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -165,7 +166,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		log.Printf("[DEBUG] Updating IAM SAML Provider: %s", input)
-		_, err := conn.UpdateSAMLProvider(input)
+		_, err := conn.UpdateSAMLProviderWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating IAM SAML Provider (%s): %s", d.Id(), err)
@@ -175,7 +176,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := samlProviderUpdateTags(conn, d.Id(), o, n)
+		err := samlProviderUpdateTags(ctx, conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -195,7 +196,7 @@ func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	log.Printf("[DEBUG] Deleting IAM SAML Provider: %s", d.Id())
-	_, err := conn.DeleteSAMLProvider(&iam.DeleteSAMLProviderInput{
+	_, err := conn.DeleteSAMLProviderWithContext(ctx, &iam.DeleteSAMLProviderInput{
 		SAMLProviderArn: aws.String(d.Id()),
 	})
 

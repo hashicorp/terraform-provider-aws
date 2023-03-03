@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_networkfirewall_firewall_policy")
 func DataSourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallPolicyRead,
@@ -147,7 +148,7 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting firewall_policy: %s", err)
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)

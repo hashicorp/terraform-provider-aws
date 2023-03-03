@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_traffic_policy")
 func ResourceTrafficPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficPolicyCreate,
@@ -89,7 +90,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Creating Route53 Traffic Policy: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateTrafficPolicyWithContext(ctx, input)
 	}, route53.ErrCodeNoSuchTrafficPolicy)
 
@@ -156,7 +157,7 @@ func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	var output []*route53.TrafficPolicy
 
-	err := listTrafficPolicyVersionsPagesWithContext(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
+	err := listTrafficPolicyVersionsPages(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

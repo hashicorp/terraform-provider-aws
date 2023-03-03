@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_observability_configuration")
 func ResourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
@@ -74,7 +75,7 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("observability_configuration_name").(string)
 
@@ -156,7 +157,7 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error setting trace_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Observability Configuration (%s): %s", arn, err))
@@ -182,7 +183,7 @@ func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.Res
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner Observability Configuration (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

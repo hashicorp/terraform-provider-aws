@@ -30,6 +30,7 @@ func init() {
 }
 
 func sweepDetectors(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -40,7 +41,7 @@ func sweepDetectors(region string) error {
 	input := &guardduty.ListDetectorsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListDetectorsPages(input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+	err = conn.ListDetectorsPagesWithContext(ctx, input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
 		for _, detectorID := range page.DetectorIds {
 			id := aws.StringValue(detectorID)
 			input := &guardduty.DeleteDetectorInput{
@@ -48,7 +49,7 @@ func sweepDetectors(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
-			_, err := conn.DeleteDetector(input)
+			_, err := conn.DeleteDetectorWithContext(ctx, input)
 			if tfawserr.ErrCodeContains(err, "AccessDenied") {
 				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
 				continue
@@ -76,6 +77,7 @@ func sweepDetectors(region string) error {
 }
 
 func sweepPublishingDestinations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -87,13 +89,13 @@ func sweepPublishingDestinations(region string) error {
 
 	detect_input := &guardduty.ListDetectorsInput{}
 
-	err = conn.ListDetectorsPages(detect_input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+	err = conn.ListDetectorsPagesWithContext(ctx, detect_input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
 		for _, detectorID := range page.DetectorIds {
 			list_input := &guardduty.ListPublishingDestinationsInput{
 				DetectorId: detectorID,
 			}
 
-			err = conn.ListPublishingDestinationsPages(list_input, func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
+			err = conn.ListPublishingDestinationsPagesWithContext(ctx, list_input, func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
 				for _, destination_element := range page.Destinations {
 					input := &guardduty.DeletePublishingDestinationInput{
 						DestinationId: destination_element.DestinationId,
@@ -101,7 +103,7 @@ func sweepPublishingDestinations(region string) error {
 					}
 
 					log.Printf("[INFO] Deleting GuardDuty Publishing Destination: %s", *destination_element.DestinationId)
-					_, err := conn.DeletePublishingDestination(input)
+					_, err := conn.DeletePublishingDestinationWithContext(ctx, input)
 
 					if err != nil {
 						sweeperErr := fmt.Errorf("error deleting GuardDuty Publishing Destination (%s): %w", *destination_element.DestinationId, err)

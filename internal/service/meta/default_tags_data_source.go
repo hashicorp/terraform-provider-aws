@@ -13,11 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
-}
-
-// newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.
+// @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
 	d.SetMigratedFromPluginSDK(true)
@@ -64,7 +60,7 @@ func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.Rea
 	tags := defaultTagsConfig.GetTags()
 
 	data.ID = types.StringValue(d.Meta().Partition)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

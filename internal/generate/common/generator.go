@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/format"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/mitchellh/cli"
@@ -15,7 +16,8 @@ type Generator struct {
 }
 
 type Destination interface {
-	Write(body []byte) error
+	Write() error
+	WriteBytes(body []byte) error
 	WriteTemplate(templateName, templateBody string, templateData any) error
 }
 
@@ -36,14 +38,6 @@ func (g *Generator) NewGoFileDestination(filename string) Destination {
 	}
 }
 
-func (g *Generator) NewGoFileAppenderDestination(filename string) Destination {
-	return &fileDestination{
-		append:    true,
-		filename:  filename,
-		formatter: format.Source,
-	}
-}
-
 func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	return &fileDestination{
 		filename:  filename,
@@ -55,9 +49,10 @@ type fileDestination struct {
 	append    bool
 	filename  string
 	formatter func([]byte) ([]byte, error)
+	buffer    strings.Builder
 }
 
-func (d *fileDestination) Write(body []byte) error {
+func (d *fileDestination) Write() error {
 	var flags int
 	if d.append {
 		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
@@ -72,13 +67,18 @@ func (d *fileDestination) Write(body []byte) error {
 
 	defer f.Close()
 
-	_, err = f.Write(body)
+	_, err = f.WriteString(d.buffer.String())
 
 	if err != nil {
 		return fmt.Errorf("writing to file (%s): %w", d.filename, err)
 	}
 
 	return nil
+}
+
+func (d *fileDestination) WriteBytes(body []byte) error {
+	_, err := d.buffer.Write(body)
+	return err
 }
 
 func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
@@ -94,7 +94,8 @@ func (d *fileDestination) WriteTemplate(templateName, templateBody string, templ
 		return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
 	}
 
-	return d.Write(body)
+	_, err = d.buffer.Write(body)
+	return err
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
@@ -114,6 +115,14 @@ func parseTemplate(templateName, templateBody string, templateData any) ([]byte,
 	return buffer.Bytes(), nil
 }
 
+func (g *Generator) Infof(format string, a ...interface{}) {
+	g.ui.Info(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Warnf(format string, a ...interface{}) {
+	g.ui.Warn(fmt.Sprintf(format, a...))
+}
+
 func (g *Generator) Errorf(format string, a ...interface{}) {
 	g.ui.Error(fmt.Sprintf(format, a...))
 }
@@ -121,12 +130,4 @@ func (g *Generator) Errorf(format string, a ...interface{}) {
 func (g *Generator) Fatalf(format string, a ...interface{}) {
 	g.Errorf(format, a...)
 	os.Exit(1)
-}
-
-func (g *Generator) Infof(format string, a ...interface{}) {
-	g.ui.Info(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Warnf(format string, a ...interface{}) {
-	g.ui.Warn(fmt.Sprintf(format, a...))
 }

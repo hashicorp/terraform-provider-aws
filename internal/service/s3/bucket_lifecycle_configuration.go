@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_lifecycle_configuration")
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
@@ -257,7 +258,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
 	}
@@ -273,7 +274,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -347,7 +348,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", FlattenLifecycleRules(output.Rules)); err != nil {
+	if err := d.Set("rule", FlattenLifecycleRules(ctx, output.Rules)); err != nil {
 		return diag.Errorf("error setting rule: %s", err)
 	}
 
@@ -362,7 +363,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration rule: %s", err)
 	}
@@ -378,7 +379,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, ErrCodeNoSuchLifecycleConfiguration)
 

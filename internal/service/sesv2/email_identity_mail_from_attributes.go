@@ -19,6 +19,7 @@ import (
 
 var ErrMailFromRequired = errors.New("mail from domain is required if behavior on MX failure is REJECT_MESSAGE")
 
+// @SDKResource("aws_sesv2_email_identity_mail_from_attributes")
 func ResourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityMailFromAttributesCreate,

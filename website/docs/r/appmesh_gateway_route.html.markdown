@@ -82,6 +82,7 @@ The `rewrite` object supports the following:
 
 * `hostname` - (Optional) Host name to rewrite.
 * `prefix` - (Optional) Specified beginning characters to rewrite.
+* `port` - (Optional) The port number to match from the request.
 
 The `hostname` object supports the following:
 
@@ -95,11 +96,13 @@ The `prefix` object supports the following:
 The `grpc_route`'s `match` object supports the following:
 
 * `service_name` - (Required) Fully qualified domain name for the service to match from the request.
+* `port` - (Optional) The port number to match from the request.
 
 The `http_route` and `http2_route`'s `match` object supports the following:
 
 * `hostname` - (Optional) Host name to match on.
 * `prefix` - (Required) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
+* `port` - (Optional) The port number to match from the request.
 
 The `hostname` object supports the following:
 

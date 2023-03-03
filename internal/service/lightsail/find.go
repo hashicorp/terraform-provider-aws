@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -451,4 +452,91 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Lightsail, id string)
 	}
 
 	return out.Instance, nil
+}
+
+func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.AccessKey, error) {
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	in := &lightsail.GetBucketAccessKeysInput{BucketName: aws.String(parts[0])}
+	out, err := conn.GetBucketAccessKeysWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *lightsail.AccessKey
+	entryExists := false
+
+	for _, n := range out.AccessKeys {
+		if parts[1] == aws.StringValue(n.AccessKeyId) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.ResourceReceivingAccess, error) {
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	in := &lightsail.GetBucketsInput{
+		BucketName:                aws.String(parts[0]),
+		IncludeConnectedResources: aws.Bool(true),
+	}
+
+	out, err := conn.GetBucketsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.Buckets) == 0 || out.Buckets[0] == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	bucket := out.Buckets[0]
+	var entry *lightsail.ResourceReceivingAccess
+	entryExists := false
+
+	for _, n := range bucket.ResourcesReceivingAccess {
+		if parts[1] == aws.StringValue(n.Name) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
 }

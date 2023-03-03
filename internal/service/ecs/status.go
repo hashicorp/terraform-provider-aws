@@ -25,9 +25,9 @@ const (
 	taskSetStatusPrimary  = "PRIMARY"
 )
 
-func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc
 	}
 }
 
-func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +57,9 @@ func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefre
 	}
 }
 
-func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		service, err := FindServiceNoTagsByID(context.TODO(), conn, id, cluster)
+		service, err := FindServiceNoTagsByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -71,9 +71,9 @@ func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefres
 	}
 }
 
-func statusServiceWaitForStable(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		serviceRaw, status, err := statusServiceNoTags(conn, id, cluster)()
+		serviceRaw, status, err := statusServiceNoTags(ctx, conn, id, cluster)()
 		if err != nil {
 			return nil, "", err
 		}
@@ -112,7 +112,7 @@ func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) resource.Stat
 	}
 }
 
-func stabilityStatusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),
@@ -120,7 +120,7 @@ func stabilityStatusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) r
 			TaskSets: aws.StringSlice([]string{taskSetID}),
 		}
 
-		output, err := conn.DescribeTaskSets(input)
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -134,7 +134,7 @@ func stabilityStatusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) r
 	}
 }
 
-func statusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),
@@ -142,7 +142,7 @@ func statusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.S
 			TaskSets: aws.StringSlice([]string{taskSetID}),
 		}
 
-		output, err := conn.DescribeTaskSets(input)
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err

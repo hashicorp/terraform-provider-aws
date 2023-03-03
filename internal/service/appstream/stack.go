@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appstream_stack")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -236,7 +237,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("access_endpoints"); ok {
 		input.AccessEndpoints = expandAccessEndpoints(v.(*schema.Set).List())
@@ -346,14 +347,14 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
 
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+		tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
 			ResourceArn: v.Arn,
 		})
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
 		}
 
-		tags := KeyValueTags(tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
@@ -401,7 +402,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
-	resp, err := conn.UpdateStack(input)
+	resp, err := conn.UpdateStackWithContext(ctx, input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
@@ -411,7 +412,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Stack.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
 		}
 	}

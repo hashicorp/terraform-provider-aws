@@ -1,6 +1,8 @@
 package sns
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	FIFOTopicNameSuffix = ".fifo"
@@ -89,10 +91,12 @@ const (
 	TopicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"
 	TopicAttributeNameOwner                                = "Owner"
 	TopicAttributeNamePolicy                               = "Policy"
+	TopicAttributeNameSignatureVersion                     = "SignatureVersion"
 	TopicAttributeNameSQSFailureFeedbackRoleARN            = "SQSFailureFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackRoleARN            = "SQSSuccessFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
 	TopicAttributeNameTopicARN                             = "TopicArn"
+	TopicAttributeNameTracingConfig                        = "TracingConfig"
 )
 
 const (
@@ -108,5 +112,17 @@ func SubscriptionFilterPolicyScope_Values() []string {
 	return []string{
 		SubscriptionFilterPolicyScopeMessageAttributes,
 		SubscriptionFilterPolicyScopeMessageBody,
+	}
+}
+
+const (
+	TopicTracingConfigActive      = "Active"
+	TopicTracingConfigPassThrough = "PassThrough"
+)
+
+func TopicTracingConfig_Values() []string {
+	return []string{
+		TopicTracingConfigActive,
+		TopicTracingConfigPassThrough,
 	}
 }

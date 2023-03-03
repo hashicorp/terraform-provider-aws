@@ -14,11 +14,7 @@ import (
 // ListTags lists cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn cloudtrailiface.CloudTrailAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudtrail.ListTagsInput{
 		ResourceIdList: aws.StringSlice([]string{identifier}),
 	}
@@ -26,10 +22,10 @@ func ListTagsWithContext(ctx context.Context, conn cloudtrailiface.CloudTrailAPI
 	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.ResourceTagList[0].TagsList), nil
+	return KeyValueTags(ctx, output.ResourceTagList[0].TagsList), nil
 }
 
 // []*SERVICE.Tag handling
@@ -51,25 +47,22 @@ func Tags(tags tftags.KeyValueTags) []*cloudtrail.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from cloudtrail service tags.
-func KeyValueTags(tags []*cloudtrail.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*cloudtrail.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn cloudtrailiface.CloudTrailAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudtrail.RemoveTagsInput{
