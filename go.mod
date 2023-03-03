@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.5
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.4
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.4
