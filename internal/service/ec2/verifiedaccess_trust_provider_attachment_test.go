@@ -31,6 +31,7 @@ func TestAccVerifiedAccessTrustProviderAttachment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Cannot check for destroy
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderAttachmentConfig_basic(description),
@@ -63,6 +64,7 @@ func TestAccVerifiedAccessTrustProviderAttachment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Cannot check for destroy
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderAttachmentConfig_basic(description),
