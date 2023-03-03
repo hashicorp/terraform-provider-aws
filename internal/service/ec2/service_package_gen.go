@@ -197,6 +197,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_spot_fleet_request":                               ResourceSpotFleetRequest,
 		"aws_spot_instance_request":                            ResourceSpotInstanceRequest,
 		"aws_subnet":                                           ResourceSubnet,
+		"aws_verifiedaccess_trust_provider_attachment":         ResourceVerifiedAccessTrustProviderAttachment,
 		"aws_volume_attachment":                                ResourceVolumeAttachment,
 		"aws_vpc":                                              ResourceVPC,
 		"aws_vpc_dhcp_options":                                 ResourceVPCDHCPOptions,

@@ -6953,3 +6953,63 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 
 	return instanceState, nil
 }
+
+func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VerifiedAccessTrustProvider, error) {
+	in := &ec2.DescribeVerifiedAccessTrustProvidersInput{
+		VerifiedAccessTrustProviderIds: aws.StringSlice([]string{id}),
+	}
+	out, err := conn.DescribeVerifiedAccessTrustProvidersWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VerifiedAccessTrustProviders[0], nil
+}
+
+func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VerifiedAccessInstance, error) {
+	in := &ec2.DescribeVerifiedAccessInstancesInput{
+		VerifiedAccessInstanceIds: aws.StringSlice([]string{id}),
+	}
+	out, err := conn.DescribeVerifiedAccessInstancesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VerifiedAccessInstances[0], nil
+}
+
+func FindVerifiedAccessTrustProviderAttachment(ctx context.Context, conn *ec2.EC2, verifiedAccessTrustProviderId, verifiedAccessInstanceId string) (*ec2.VerifiedAccessTrustProviderCondensed, error) {
+	out, err := FindVerifiedAccessInstanceByID(ctx, conn, verifiedAccessInstanceId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out != nil && len(out.VerifiedAccessTrustProviders) > 0 {
+		for _, trustProvider := range out.VerifiedAccessTrustProviders {
+			if aws.StringValue(trustProvider.VerifiedAccessTrustProviderId) == verifiedAccessTrustProviderId {
+				return trustProvider, nil
+			}
+		}
+	}
+	return nil, &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: verifiedAccessTrustProviderId,
+	}
+}
