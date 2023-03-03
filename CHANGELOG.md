@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_cloudtrail_event_data_store: Add `kms_key_id` argument ([#29224](https://github.com/hashicorp/terraform-provider-aws/issues/29224))
 * resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `db2` engine ([#29380](https://github.com/hashicorp/terraform-provider-aws/issues/29380))
 * resource/aws_dms_endpoint: Add support for `azure-sql-managed-instance` `engine_name` value ([#28960](https://github.com/hashicorp/terraform-provider-aws/issues/28960))
+* resource/aws_dms_s3_endpoint: Add `detach_target_on_lob_lookup_failure_parquet` argument ([#29772](https://github.com/hashicorp/terraform-provider-aws/issues/29772))
 * resource/aws_ec2_fleet: Add `fleet_instance_set`, `fleet_state`, `fulfilled_capacity`, and `fulfilled_on_demand_capacity` attributes ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
 * resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.allowed_instance_types` and `launch_template_config.override.instance_requirements.network_bandwidth_gbps` arguments ([#29140](https://github.com/hashicorp/terraform-provider-aws/issues/29140))
 * resource/aws_ec2_fleet: Add `on_demand_options.capacity_reservation_options`,`on_demand_options.max_total_price`, `on_demand_options.min_target_capacity`, `on_demand_options.single_availability_zone` and `on_demand_options.single_instance_type` arguments ([#29181](https://github.com/hashicorp/terraform-provider-aws/issues/29181))
@@ -35,6 +36,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dms_endpoint: Trigger updates based on adding new `extra_connection_attributes` ([#29772](https://github.com/hashicorp/terraform-provider-aws/issues/29772))
 * resource/aws_instance: When encountering `InsufficientInstanceCapacity` errors, do not retry in order to fail faster, as this error is typically not resolvable in the near future ([#21293](https://github.com/hashicorp/terraform-provider-aws/issues/21293))
 * resource/aws_transfer_server: Allow the removal of `workflow_details` attribute. ([#27730](https://github.com/hashicorp/terraform-provider-aws/issues/27730))
 * resource/aws_transfer_user: Fix bug preventing removal of all `home_directory_mappings` due to empty list validation error ([#27563](https://github.com/hashicorp/terraform-provider-aws/issues/27563))
