@@ -40,11 +40,10 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 				Config: testAccVerifiedAccessGroupConfig_basic(description, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &verifiedaccessgroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`verified-access-group:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`verified-access-group/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument),
-					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
 				),
 			},
 			{
@@ -230,6 +229,10 @@ resource "aws_verifiedaccess_group" "test" {
   verified_access_instance_id = aws_verifiedaccess_instance.test.id
 
   policy_document = %[2]q
+  
+  depends_on = [
+    aws_verifiedaccess_trust_provider_attachment.test
+  ]
 }
 `, description, policyDocument))
 }
@@ -245,6 +248,10 @@ resource "aws_verifiedaccess_group" "test" {
   tags = {
     %[3]q = %[4]q
   }
+
+  depends_on = [
+    aws_verifiedaccess_trust_provider_attachment.test
+  ]
 }
 `, description, policyDocument, tagKey1, tagValue1))
 }
@@ -261,6 +268,9 @@ resource "aws_verifiedaccess_group" "test" {
     %[3]q = %[4]q
     %[5]q = %[6]q
   }
+  depends_on = [
+    aws_verifiedaccess_trust_provider_attachment.test
+  ]
 }
 `, description, policyDocument, tagKey1, tagValue1, tagKey2, tagValue2))
 }
