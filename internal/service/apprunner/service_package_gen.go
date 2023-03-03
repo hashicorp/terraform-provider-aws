@@ -26,7 +26,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_apprunner_auto_scaling_configuration_version": ResourceAutoScalingConfigurationVersion,
+		"aws_apprunner_connection":                         ResourceConnection,
+		"aws_apprunner_custom_domain_association":          ResourceCustomDomainAssociation,
+		"aws_apprunner_observability_configuration":        ResourceObservabilityConfiguration,
+		"aws_apprunner_service":                            ResourceService,
+		"aws_apprunner_vpc_connector":                      ResourceVPCConnector,
+		"aws_apprunner_vpc_ingress_connection":             ResourceVPCIngressConnection,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

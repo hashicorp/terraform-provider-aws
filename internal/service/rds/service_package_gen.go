@@ -24,11 +24,49 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_db_cluster_snapshot":            DataSourceClusterSnapshot,
+		"aws_db_event_categories":            DataSourceEventCategories,
+		"aws_db_instance":                    DataSourceInstance,
+		"aws_db_instances":                   DataSourceInstances,
+		"aws_db_proxy":                       DataSourceProxy,
+		"aws_db_snapshot":                    DataSourceSnapshot,
+		"aws_db_subnet_group":                DataSourceSubnetGroup,
+		"aws_rds_certificate":                DataSourceCertificate,
+		"aws_rds_cluster":                    DataSourceCluster,
+		"aws_rds_clusters":                   DataSourceClusters,
+		"aws_rds_engine_version":             DataSourceEngineVersion,
+		"aws_rds_orderable_db_instance":      DataSourceOrderableInstance,
+		"aws_rds_reserved_instance_offering": DataSourceReservedOffering,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_db_cluster_snapshot":                       ResourceClusterSnapshot,
+		"aws_db_event_subscription":                     ResourceEventSubscription,
+		"aws_db_instance":                               ResourceInstance,
+		"aws_db_instance_automated_backups_replication": ResourceInstanceAutomatedBackupsReplication,
+		"aws_db_instance_role_association":              ResourceInstanceRoleAssociation,
+		"aws_db_option_group":                           ResourceOptionGroup,
+		"aws_db_parameter_group":                        ResourceParameterGroup,
+		"aws_db_proxy":                                  ResourceProxy,
+		"aws_db_proxy_default_target_group":             ResourceProxyDefaultTargetGroup,
+		"aws_db_proxy_endpoint":                         ResourceProxyEndpoint,
+		"aws_db_proxy_target":                           ResourceProxyTarget,
+		"aws_db_security_group":                         ResourceSecurityGroup,
+		"aws_db_snapshot":                               ResourceSnapshot,
+		"aws_db_snapshot_copy":                          ResourceSnapshotCopy,
+		"aws_db_subnet_group":                           ResourceSubnetGroup,
+		"aws_rds_cluster":                               ResourceCluster,
+		"aws_rds_cluster_activity_stream":               ResourceClusterActivityStream,
+		"aws_rds_cluster_endpoint":                      ResourceClusterEndpoint,
+		"aws_rds_cluster_instance":                      ResourceClusterInstance,
+		"aws_rds_cluster_parameter_group":               ResourceClusterParameterGroup,
+		"aws_rds_cluster_role_association":              ResourceClusterRoleAssociation,
+		"aws_rds_global_cluster":                        ResourceGlobalCluster,
+		"aws_rds_reserved_instance":                     ResourceReservedInstance,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -22,11 +22,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_apigatewayv2_api":    DataSourceAPI,
+		"aws_apigatewayv2_apis":   DataSourceAPIs,
+		"aws_apigatewayv2_export": DataSourceExport,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_apigatewayv2_api":                  ResourceAPI,
+		"aws_apigatewayv2_api_mapping":          ResourceAPIMapping,
+		"aws_apigatewayv2_authorizer":           ResourceAuthorizer,
+		"aws_apigatewayv2_deployment":           ResourceDeployment,
+		"aws_apigatewayv2_domain_name":          ResourceDomainName,
+		"aws_apigatewayv2_integration":          ResourceIntegration,
+		"aws_apigatewayv2_integration_response": ResourceIntegrationResponse,
+		"aws_apigatewayv2_model":                ResourceModel,
+		"aws_apigatewayv2_route":                ResourceRoute,
+		"aws_apigatewayv2_route_response":       ResourceRouteResponse,
+		"aws_apigatewayv2_stage":                ResourceStage,
+		"aws_apigatewayv2_vpc_link":             ResourceVPCLink,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

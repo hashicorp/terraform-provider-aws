@@ -22,11 +22,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_wafregional_ipset":                 DataSourceIPSet,
+		"aws_wafregional_rate_based_rule":       DataSourceRateBasedRule,
+		"aws_wafregional_rule":                  DataSourceRule,
+		"aws_wafregional_subscribed_rule_group": DataSourceSubscribedRuleGroup,
+		"aws_wafregional_web_acl":               DataSourceWebACL,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_wafregional_byte_match_set":          ResourceByteMatchSet,
+		"aws_wafregional_geo_match_set":           ResourceGeoMatchSet,
+		"aws_wafregional_ipset":                   ResourceIPSet,
+		"aws_wafregional_rate_based_rule":         ResourceRateBasedRule,
+		"aws_wafregional_regex_match_set":         ResourceRegexMatchSet,
+		"aws_wafregional_regex_pattern_set":       ResourceRegexPatternSet,
+		"aws_wafregional_rule":                    ResourceRule,
+		"aws_wafregional_rule_group":              ResourceRuleGroup,
+		"aws_wafregional_size_constraint_set":     ResourceSizeConstraintSet,
+		"aws_wafregional_sql_injection_match_set": ResourceSQLInjectionMatchSet,
+		"aws_wafregional_web_acl":                 ResourceWebACL,
+		"aws_wafregional_web_acl_association":     ResourceWebACLAssociation,
+		"aws_wafregional_xss_match_set":           ResourceXSSMatchSet,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

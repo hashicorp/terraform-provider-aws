@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_msk_broker_nodes")
 func DataSourceBrokerNodes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerNodesRead,

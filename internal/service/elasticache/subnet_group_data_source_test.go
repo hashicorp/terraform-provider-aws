@@ -12,9 +12,7 @@ import (
 )
 
 func testAccPreCheck(t *testing.T) {
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("ElastiCache is not supported in %s partition", got)
-	}
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func TestAccElastiCacheSubnetGroupDataSource_basic(t *testing.T) {

@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_network_interface")
 func DataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,

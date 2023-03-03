@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_file_system_association")
 func ResourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemAssociationCreate,

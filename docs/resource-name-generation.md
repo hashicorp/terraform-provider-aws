@@ -52,7 +52,7 @@ d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 
 ```go
 func TestAccServiceThing_nameGenerated(t *testing.T) {
-	ctx := acctest.Context(t)
+  ctx := acctest.Context(t)
   var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
@@ -81,7 +81,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
 }
 
 func TestAccServiceThing_namePrefix(t *testing.T) {
-	ctx := acctest.Context(t)
+  ctx := acctest.Context(t)
   var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 

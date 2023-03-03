@@ -1665,7 +1665,7 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 	})
 }
 
-func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
+func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

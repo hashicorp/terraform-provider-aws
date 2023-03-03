@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ecs_container_definition")
 func DataSourceContainerDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerDefinitionRead,

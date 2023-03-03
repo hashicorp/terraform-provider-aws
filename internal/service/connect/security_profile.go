@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_security_profile")
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityProfileCreate,

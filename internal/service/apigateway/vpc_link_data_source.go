@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_api_gateway_vpc_link")
 func DataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,

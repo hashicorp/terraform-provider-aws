@@ -22,11 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_memorydb_acl":             DataSourceACL,
+		"aws_memorydb_cluster":         DataSourceCluster,
+		"aws_memorydb_parameter_group": DataSourceParameterGroup,
+		"aws_memorydb_snapshot":        DataSourceSnapshot,
+		"aws_memorydb_subnet_group":    DataSourceSubnetGroup,
+		"aws_memorydb_user":            DataSourceUser,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_memorydb_acl":             ResourceACL,
+		"aws_memorydb_cluster":         ResourceCluster,
+		"aws_memorydb_parameter_group": ResourceParameterGroup,
+		"aws_memorydb_snapshot":        ResourceSnapshot,
+		"aws_memorydb_subnet_group":    ResourceSubnetGroup,
+		"aws_memorydb_user":            ResourceUser,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

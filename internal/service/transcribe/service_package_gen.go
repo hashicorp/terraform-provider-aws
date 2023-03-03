@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_transcribe_language_model":     ResourceLanguageModel,
+		"aws_transcribe_medical_vocabulary": ResourceMedicalVocabulary,
+		"aws_transcribe_vocabulary":         ResourceVocabulary,
+		"aws_transcribe_vocabulary_filter":  ResourceVocabularyFilter,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

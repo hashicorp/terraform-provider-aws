@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_pool_client")
 func ResourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolClientCreate,

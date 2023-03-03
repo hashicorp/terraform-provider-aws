@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sqs_queue_policy")
 func ResourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: sqs.QueueAttributeNamePolicy,

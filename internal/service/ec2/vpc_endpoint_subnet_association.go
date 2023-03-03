@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_endpoint_subnet_association")
 func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,

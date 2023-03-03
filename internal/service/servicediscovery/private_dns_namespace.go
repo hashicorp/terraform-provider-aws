@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_service_discovery_private_dns_namespace")
 func ResourcePrivateDNSNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrivateDNSNamespaceCreate,

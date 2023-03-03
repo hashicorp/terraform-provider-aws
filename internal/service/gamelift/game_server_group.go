@@ -28,6 +28,7 @@ const (
 	gameServerGroupDeletedDefaultTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_game_server_group")
 func ResourceGameServerGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGameServerGroupCreate,

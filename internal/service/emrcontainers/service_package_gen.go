@@ -22,11 +22,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_emrcontainers_virtual_cluster": DataSourceVirtualCluster,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_emrcontainers_virtual_cluster": ResourceVirtualCluster,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -29,6 +29,7 @@ const (
 	VPCEndpointCreationTimeout = 10 * time.Minute
 )
 
+// @SDKResource("aws_vpc_endpoint")
 func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,

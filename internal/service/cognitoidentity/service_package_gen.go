@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cognito_identity_pool":                        ResourcePool,
+		"aws_cognito_identity_pool_provider_principal_tag": ResourcePoolProviderPrincipalTag,
+		"aws_cognito_identity_pool_roles_attachment":       ResourcePoolRolesAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transfer_user")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -31,18 +34,20 @@ func ResourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"home_directory": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -61,14 +66,12 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"home_directory_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice([]string{transfer.HomeDirectoryTypePath, transfer.HomeDirectoryTypeLogical}, false),
+				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
-
 			"policy": {
 				Type:                  schema.TypeString,
 				Optional:              true,
@@ -80,7 +83,6 @@ func ResourceUser() *schema.Resource {
 					return json
 				},
 			},
-
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -91,35 +93,31 @@ func ResourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"secondary_gids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 							Optional: true,
 						},
+						"uid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 					},
 				},
 			},
-
 			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validServerID,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -176,7 +174,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Transfer User: %s", input)
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
@@ -200,7 +197,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer User ID: %s", err)
 	}
 
-	user, err := FindUserByServerIDAndUserName(ctx, conn, serverID, userName)
+	user, err := FindUserByTwoPartKey(ctx, conn, serverID, userName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
@@ -223,7 +220,6 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
-
 	d.Set("policy", policyToSet)
 
 	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
@@ -291,7 +287,6 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Role = aws.String(d.Get("role").(string))
 		}
 
-		log.Printf("[DEBUG] Updating Transfer User: %s", input)
 		_, err = conn.UpdateUserWithContext(ctx, input)
 
 		if err != nil {
@@ -301,6 +296,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
@@ -319,14 +315,40 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer User ID: %s", err)
 	}
 
-	if err := userDelete(ctx, conn, serverID, userName); err != nil {
+	if err := userDelete(ctx, conn, serverID, userName, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }
 
-// userDelete attempts to delete a transfer user.
-func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName string) error {
+func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
+	input := &transfer.DescribeUserInput{
+		ServerId: aws.String(serverID),
+		UserName: aws.String(userName),
+	}
+
+	output, err := conn.DescribeUserWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.User == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.User, nil
+}
+
+func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName string, timeout time.Duration) error {
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
@@ -344,16 +366,22 @@ func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName
 		return fmt.Errorf("deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = waitUserDeleted(ctx, conn, serverID, userName)
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+		return FindUserByTwoPartKey(ctx, conn, serverID, userName)
+	})
 
 	if err != nil {
-		return fmt.Errorf("deleting Transfer User (%s): waiting for completion: %w", id, err)
+		return fmt.Errorf("waiting for Transfer User (%s) delete: %w", id, err)
 	}
 
 	return nil
 }
 
 func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
+	if len(in) == 0 {
+		return nil
+	}
+
 	mappings := make([]*transfer.HomeDirectoryMapEntry, 0)
 
 	for _, tConfig := range in {

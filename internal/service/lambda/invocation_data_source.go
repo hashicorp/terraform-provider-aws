@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lambda_invocation")
 func DataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInvocationRead,

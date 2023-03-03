@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_internet_gateway")
 func ResourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayCreate,

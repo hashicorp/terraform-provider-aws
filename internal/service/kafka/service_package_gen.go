@@ -22,11 +22,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_msk_broker_nodes":  DataSourceBrokerNodes,
+		"aws_msk_cluster":       DataSourceCluster,
+		"aws_msk_configuration": DataSourceConfiguration,
+		"aws_msk_kafka_version": DataSourceVersion,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_msk_cluster":                  ResourceCluster,
+		"aws_msk_configuration":            ResourceConfiguration,
+		"aws_msk_scram_secret_association": ResourceScramSecretAssociation,
+		"aws_msk_serverless_cluster":       ResourceServerlessCluster,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

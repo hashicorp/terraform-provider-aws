@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_grafana_workspace_api_key")
 func ResourceWorkspaceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceAPIKeyCreate,

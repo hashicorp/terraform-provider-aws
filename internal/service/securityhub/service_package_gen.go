@@ -26,7 +26,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_securityhub_account":                    ResourceAccount,
+		"aws_securityhub_action_target":              ResourceActionTarget,
+		"aws_securityhub_finding_aggregator":         ResourceFindingAggregator,
+		"aws_securityhub_insight":                    ResourceInsight,
+		"aws_securityhub_invite_accepter":            ResourceInviteAccepter,
+		"aws_securityhub_member":                     ResourceMember,
+		"aws_securityhub_organization_admin_account": ResourceOrganizationAdminAccount,
+		"aws_securityhub_organization_configuration": ResourceOrganizationConfiguration,
+		"aws_securityhub_product_subscription":       ResourceProductSubscription,
+		"aws_securityhub_standards_control":          ResourceStandardsControl,
+		"aws_securityhub_standards_subscription":     ResourceStandardsSubscription,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

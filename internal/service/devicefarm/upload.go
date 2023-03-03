@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_devicefarm_upload")
 func ResourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,

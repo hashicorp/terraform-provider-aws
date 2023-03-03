@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ivs_stream_key")
 func DataSourceStreamKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamKeyRead,
