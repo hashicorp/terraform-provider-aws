@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_replication_instance")
 func ResourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,

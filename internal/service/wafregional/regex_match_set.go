@@ -17,6 +17,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_regex_match_set")
 func ResourceRegexMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexMatchSetCreate,

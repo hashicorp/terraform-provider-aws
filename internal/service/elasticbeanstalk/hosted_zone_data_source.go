@@ -39,6 +39,7 @@ var HostedZoneIDs = map[string]string{
 	endpoints.UsGovWest1RegionID: "Z4KAURWC4UUUG",
 }
 
+// @SDKDataSource("aws_elastic_beanstalk_hosted_zone")
 func DataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,

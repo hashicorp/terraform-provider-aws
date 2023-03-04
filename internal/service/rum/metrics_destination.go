@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rum_metrics_destination")
 func ResourceMetricsDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricsDestinationPut,

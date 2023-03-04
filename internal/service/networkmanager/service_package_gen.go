@@ -22,11 +22,42 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkmanager_connection":                   DataSourceConnection,
+		"aws_networkmanager_connections":                  DataSourceConnections,
+		"aws_networkmanager_core_network_policy_document": DataSourceCoreNetworkPolicyDocument,
+		"aws_networkmanager_device":                       DataSourceDevice,
+		"aws_networkmanager_devices":                      DataSourceDevices,
+		"aws_networkmanager_global_network":               DataSourceGlobalNetwork,
+		"aws_networkmanager_global_networks":              DataSourceGlobalNetworks,
+		"aws_networkmanager_link":                         DataSourceLink,
+		"aws_networkmanager_links":                        DataSourceLinks,
+		"aws_networkmanager_site":                         DataSourceSite,
+		"aws_networkmanager_sites":                        DataSourceSites,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkmanager_attachment_accepter":                      ResourceAttachmentAccepter,
+		"aws_networkmanager_connect_attachment":                       ResourceConnectAttachment,
+		"aws_networkmanager_connect_peer":                             ResourceConnectPeer,
+		"aws_networkmanager_connection":                               ResourceConnection,
+		"aws_networkmanager_core_network":                             ResourceCoreNetwork,
+		"aws_networkmanager_core_network_policy_attachment":           ResourceCoreNetworkPolicyAttachment,
+		"aws_networkmanager_customer_gateway_association":             ResourceCustomerGatewayAssociation,
+		"aws_networkmanager_device":                                   ResourceDevice,
+		"aws_networkmanager_global_network":                           ResourceGlobalNetwork,
+		"aws_networkmanager_link":                                     ResourceLink,
+		"aws_networkmanager_link_association":                         ResourceLinkAssociation,
+		"aws_networkmanager_site":                                     ResourceSite,
+		"aws_networkmanager_site_to_site_vpn_attachment":              ResourceSiteToSiteVPNAttachment,
+		"aws_networkmanager_transit_gateway_connect_peer_association": ResourceTransitGatewayConnectPeerAssociation,
+		"aws_networkmanager_transit_gateway_peering":                  ResourceTransitGatewayPeering,
+		"aws_networkmanager_transit_gateway_registration":             ResourceTransitGatewayRegistration,
+		"aws_networkmanager_transit_gateway_route_table_attachment":   ResourceTransitGatewayRouteTableAttachment,
+		"aws_networkmanager_vpc_attachment":                           ResourceVPCAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

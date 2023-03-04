@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appflow_connector_profile": ResourceConnectorProfile,
+		"aws_appflow_flow":              ResourceFlow,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

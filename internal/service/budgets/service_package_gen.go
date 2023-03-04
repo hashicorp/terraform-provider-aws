@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_budgets_budget":        ResourceBudget,
+		"aws_budgets_budget_action": ResourceBudgetAction,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

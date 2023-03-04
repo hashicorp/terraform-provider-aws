@@ -10,7 +10,6 @@ import (
 
 const (
 	serverDeletedTimeout = 10 * time.Minute
-	userDeletedTimeout   = 10 * time.Minute
 )
 
 func waitServerCreated(ctx context.Context, conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
@@ -75,23 +74,6 @@ func waitServerStopped(ctx context.Context, conn *transfer.Transfer, id string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*transfer.DescribedServer); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitUserDeleted(ctx context.Context, conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{userStateExists},
-		Target:  []string{},
-		Refresh: statusUserState(ctx, conn, serverID, userName),
-		Timeout: userDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*transfer.DescribedUser); ok {
 		return output, err
 	}
 

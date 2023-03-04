@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_nat_gateway")
 func ResourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,

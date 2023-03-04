@@ -26,6 +26,7 @@ const (
 	ruleDeleteRetryTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_cloudwatch_event_rule")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,

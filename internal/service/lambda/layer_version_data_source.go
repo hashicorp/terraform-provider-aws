@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_lambda_layer_version")
 func DataSourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLayerVersionRead,

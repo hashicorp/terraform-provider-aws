@@ -24,11 +24,9 @@ resource "aws_api_gateway_model" "MyDemoModel" {
   description  = "a JSON schema"
   content_type = "application/json"
 
-  schema = <<EOF
-{
-  "type": "object"
-}
-EOF
+  schema = jsonencode({
+    type = "object"
+  })
 }
 ```
 

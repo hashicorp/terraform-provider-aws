@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudwatch_dashboard")
 func ResourceDashboard() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDashboardPut,

@@ -20,6 +20,7 @@ import (
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
+// @SDKResource("aws_autoscaling_schedule")
 func ResourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulePut,

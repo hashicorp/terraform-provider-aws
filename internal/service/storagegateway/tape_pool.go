@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_tape_pool")
 func ResourceTapePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTapePoolCreate,

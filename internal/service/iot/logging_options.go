@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_logging_options")
 func ResourceLoggingOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingOptionsPut,

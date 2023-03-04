@@ -15,56 +15,51 @@ Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amaz
 ### Basic
 
 ```terraform
-resource "aws_iam_role" "dlm_lifecycle_role" {
-  name = "dlm-lifecycle-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dlm.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["dlm.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "dlm_lifecycle_role" {
+  name               = "dlm-lifecycle-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "dlm_lifecycle" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:CreateSnapshot",
+      "ec2:CreateSnapshots",
+      "ec2:DeleteSnapshot",
+      "ec2:DescribeInstances",
+      "ec2:DescribeVolumes",
+      "ec2:DescribeSnapshots",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:CreateTags"]
+    resources = ["arn:aws:ec2:*::snapshot/*"]
+  }
 }
 
 resource "aws_iam_role_policy" "dlm_lifecycle" {
-  name = "dlm-lifecycle-policy"
-  role = aws_iam_role.dlm_lifecycle_role.id
-
-  policy = <<EOF
-{
-   "Version": "2012-10-17",
-   "Statement": [
-      {
-         "Effect": "Allow",
-         "Action": [
-            "ec2:CreateSnapshot",
-            "ec2:CreateSnapshots",
-            "ec2:DeleteSnapshot",
-            "ec2:DescribeInstances",
-            "ec2:DescribeVolumes",
-            "ec2:DescribeSnapshots"
-         ],
-         "Resource": "*"
-      },
-      {
-         "Effect": "Allow",
-         "Action": [
-            "ec2:CreateTags"
-         ],
-         "Resource": "arn:aws:ec2:*::snapshot/*"
-      }
-   ]
-}
-EOF
+  name   = "dlm-lifecycle-policy"
+  role   = aws_iam_role.dlm_lifecycle_role.id
+  policy = data.aws_iam_policy_document.dlm_lifecycle.json
 }
 
 resource "aws_dlm_lifecycle_policy" "example" {
@@ -108,28 +103,25 @@ resource "aws_dlm_lifecycle_policy" "example" {
 # ...other configuration...
 data "aws_caller_identity" "current" {}
 
-resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
-  provider = aws.alternate
+data "aws_iam_policy_document" "key" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
 
-  description = "Example Alternate Region KMS Key"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "dlm-cross-region-copy-cmk",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-  ]
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
 }
-POLICY
+
+resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
+  provider    = aws.alternate
+  description = "Example Alternate Region KMS Key"
+  policy      = data.aws_iam_policy_document.key.json
 }
 
 resource "aws_dlm_lifecycle_policy" "example" {

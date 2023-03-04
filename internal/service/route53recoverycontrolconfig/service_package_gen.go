@@ -26,7 +26,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_route53recoverycontrolconfig_cluster":         ResourceCluster,
+		"aws_route53recoverycontrolconfig_control_panel":   ResourceControlPanel,
+		"aws_route53recoverycontrolconfig_routing_control": ResourceRoutingControl,
+		"aws_route53recoverycontrolconfig_safety_rule":     ResourceSafetyRule,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

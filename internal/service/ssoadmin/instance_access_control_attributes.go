@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ssoadmin_instance_access_control_attributes")
 func ResourceAccessControlAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessControlAttributesCreate,

@@ -22,11 +22,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssoadmin_instances":      DataSourceInstances,
+		"aws_ssoadmin_permission_set": DataSourcePermissionSet,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_ssoadmin_account_assignment":                 ResourceAccountAssignment,
+		"aws_ssoadmin_customer_managed_policy_attachment": ResourceCustomerManagedPolicyAttachment,
+		"aws_ssoadmin_instance_access_control_attributes": ResourceAccessControlAttributes,
+		"aws_ssoadmin_managed_policy_attachment":          ResourceManagedPolicyAttachment,
+		"aws_ssoadmin_permission_set":                     ResourcePermissionSet,
+		"aws_ssoadmin_permission_set_inline_policy":       ResourcePermissionSetInlinePolicy,
+		"aws_ssoadmin_permissions_boundary_attachment":    ResourcePermissionsBoundaryAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

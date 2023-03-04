@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dynamodb_table_item")
 func ResourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableItemCreate,

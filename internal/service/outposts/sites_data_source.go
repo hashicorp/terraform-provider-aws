@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_outposts_sites")
 func DataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_user_login_profile")
 func ResourceUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserLoginProfileCreate,

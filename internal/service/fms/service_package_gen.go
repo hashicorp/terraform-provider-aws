@@ -26,7 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_fms_admin_account": ResourceAdminAccount,
+		"aws_fms_policy":        ResourcePolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

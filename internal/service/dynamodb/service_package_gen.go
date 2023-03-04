@@ -22,11 +22,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dynamodb_table":      DataSourceTable,
+		"aws_dynamodb_table_item": DataSourceTableItem,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dynamodb_contributor_insights":          ResourceContributorInsights,
+		"aws_dynamodb_global_table":                  ResourceGlobalTable,
+		"aws_dynamodb_kinesis_streaming_destination": ResourceKinesisStreamingDestination,
+		"aws_dynamodb_table":                         ResourceTable,
+		"aws_dynamodb_table_item":                    ResourceTableItem,
+		"aws_dynamodb_table_replica":                 ResourceTableReplica,
+		"aws_dynamodb_tag":                           ResourceTag,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
