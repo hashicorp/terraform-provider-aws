@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_memorydb_acl")
 func ResourceACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceACLCreate,

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_group_policy")
 func ResourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutGroupPolicy API is idempotent, so these can be the same.

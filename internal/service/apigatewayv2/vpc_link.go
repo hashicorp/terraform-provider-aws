@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apigatewayv2_vpc_link")
 func ResourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,

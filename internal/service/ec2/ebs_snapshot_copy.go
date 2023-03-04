@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ebs_snapshot_copy")
 func ResourceEBSSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCopyCreate,

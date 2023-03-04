@@ -22,11 +22,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lakeformation_data_lake_settings": DataSourceDataLakeSettings,
+		"aws_lakeformation_permissions":        DataSourcePermissions,
+		"aws_lakeformation_resource":           DataSourceResource,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lakeformation_data_lake_settings": ResourceDataLakeSettings,
+		"aws_lakeformation_lf_tag":             ResourceLFTag,
+		"aws_lakeformation_permissions":        ResourcePermissions,
+		"aws_lakeformation_resource":           ResourceResource,
+		"aws_lakeformation_resource_lf_tags":   ResourceResourceLFTags,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

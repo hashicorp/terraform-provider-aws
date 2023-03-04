@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_network_insights_analysis")
 func ResourceNetworkInsightsAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsAnalysisCreate,

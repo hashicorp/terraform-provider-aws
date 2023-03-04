@@ -22,11 +22,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkfirewall_firewall":        DataSourceFirewall,
+		"aws_networkfirewall_firewall_policy": DataSourceFirewallPolicy,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_networkfirewall_firewall":              ResourceFirewall,
+		"aws_networkfirewall_firewall_policy":       ResourceFirewallPolicy,
+		"aws_networkfirewall_logging_configuration": ResourceLoggingConfiguration,
+		"aws_networkfirewall_resource_policy":       ResourceResourcePolicy,
+		"aws_networkfirewall_rule_group":            ResourceRuleGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_neptune_cluster_endpoint")
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,

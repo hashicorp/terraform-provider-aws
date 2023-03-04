@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dynamodb_kinesis_streaming_destination")
 func ResourceKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKinesisStreamingDestinationCreate,

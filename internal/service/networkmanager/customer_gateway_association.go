@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_customer_gateway_association")
 func ResourceCustomerGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayAssociationCreate,

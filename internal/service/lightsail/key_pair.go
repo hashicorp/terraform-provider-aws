@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
+// @SDKResource("aws_lightsail_key_pair")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,

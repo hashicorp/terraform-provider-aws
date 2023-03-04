@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_managed_prefix_list")
 func ResourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListCreate,

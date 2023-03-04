@@ -9,6 +9,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_datapipeline_pipeline")
 func DataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineRead,

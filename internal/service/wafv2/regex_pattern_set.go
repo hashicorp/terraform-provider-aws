@@ -24,6 +24,7 @@ const (
 	regexPatternSetDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_regex_pattern_set")
 func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,

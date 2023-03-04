@@ -26,7 +26,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_amplify_app":                 ResourceApp,
+		"aws_amplify_backend_environment": ResourceBackendEnvironment,
+		"aws_amplify_branch":              ResourceBranch,
+		"aws_amplify_domain_association":  ResourceDomainAssociation,
+		"aws_amplify_webhook":             ResourceWebhook,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -27,6 +27,7 @@ const (
 	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_emr_instance_group")
 func ResourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceGroupCreate,

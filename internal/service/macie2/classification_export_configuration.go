@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie2_classification_export_configuration")
 func ResourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,

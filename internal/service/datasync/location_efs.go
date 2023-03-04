@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_efs")
 func ResourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,

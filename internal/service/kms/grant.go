@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_grant")
 func ResourceGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGrantCreate,

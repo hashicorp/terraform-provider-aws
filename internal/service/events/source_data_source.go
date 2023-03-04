@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudwatch_event_source")
 func DataSourceSource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSourceRead,

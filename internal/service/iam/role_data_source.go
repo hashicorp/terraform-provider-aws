@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_iam_role")
 func DataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,

@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_spot_fleet_request")
 func ResourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -470,6 +471,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 														ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 													},
 												},
+												"allowed_instance_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 400,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 												"bare_metal": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -584,6 +592,28 @@ func ResourceSpotFleetRequest() *schema.Resource {
 																Optional:     true,
 																ForceNew:     true,
 																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"network_bandwidth_gbps": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
 														},
 													},
@@ -1599,6 +1629,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequi
 
 	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {

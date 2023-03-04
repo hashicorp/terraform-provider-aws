@@ -34,6 +34,7 @@ const (
 	ResNameTable                  = "Table"
 )
 
+// @SDKResource("aws_dynamodb_table")
 func ResourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
