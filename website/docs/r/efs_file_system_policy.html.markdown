@@ -44,7 +44,6 @@ data "aws_iam_policy_document" "policy" {
 
 resource "aws_efs_file_system_policy" "policy" {
   file_system_id                     = aws_efs_file_system.fs.id
-  bypass_policy_lockout_safety_check = true
   policy                             = data.aws_iam_policy_document.policy.json
 }
 ```
