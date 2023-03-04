@@ -23,7 +23,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
 	return map[string]func() *schema.Resource{
-		"aws_fsx_openzfs_snapshot": DataSourceOpenzfsSnapshot,
+		"aws_fsx_openzfs_snapshot":    DataSourceOpenzfsSnapshot,
+		"aws_fsx_windows_file_system": DataSourceWindowsFileSystem,
 	}
 }
 
