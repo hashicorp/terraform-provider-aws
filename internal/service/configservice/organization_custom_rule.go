@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_organization_custom_rule")
 func ResourceOrganizationCustomRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomRuleCreate,

@@ -3,6 +3,7 @@ package secretsmanager
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -18,11 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_secretsmanager_secret")
 func ResourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -158,7 +161,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
@@ -298,11 +301,33 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}
 
-	if output, err := conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
-		SecretId: aws.String(d.Id()),
-	}); err != nil {
+	var policy *secretsmanager.GetResourcePolicyOutput
+	err = tfresource.Retry(ctx, PropagationTimeout, func() *resource.RetryError {
+		var err error
+		policy, err = conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
+			SecretId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if policy.ResourcePolicy != nil {
+			valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.StringValue(policy.ResourcePolicy))
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			if !valid {
+				log.Printf("[DEBUG] Retrying because of invalid principals")
+				return resource.RetryableError(errors.New("contains invalid principals"))
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
-	} else if v := output.ResourcePolicy; v != nil {
+	} else if v := policy.ResourcePolicy; v != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(v))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
@@ -325,7 +350,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("rotation_rules", []interface{}{})
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_memorydb_acl")
 func ResourceACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceACLCreate,
@@ -74,7 +75,7 @@ func ResourceACL() *schema.Resource {
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateACLInput{

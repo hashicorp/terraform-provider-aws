@@ -20,11 +20,11 @@ import (
 // to those configured at the provider-level to avoid non-empty plans
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
-func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
+	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
 	if defaultTagsConfig.TagsEqual(resourceTags) {
 		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
@@ -73,19 +73,6 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 
 		return false
 	}
-}
-
-// SuppressEquivalentTypeStringBoolean provides custom difference suppression for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified), but
-// confusing behavior exists when converting bare true/false values with state.
-func SuppressEquivalentTypeStringBoolean(k, old, new string, d *schema.ResourceData) bool {
-	if old == "false" && new == "0" {
-		return true
-	}
-	if old == "true" && new == "1" {
-		return true
-	}
-	return false
 }
 
 // SuppressMissingOptionalConfigurationBlock handles configuration block attributes in the following scenario:

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_inspector_resource_group")
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,

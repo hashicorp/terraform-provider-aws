@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindDBProxyTarget returns matching FindDBProxyTarget.
 func FindDBProxyTarget(ctx context.Context, conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsResourceId string) (*rds.DBProxyTarget, error) {
 	input := &rds.DescribeDBProxyTargetsInput{
 		DBProxyName:     aws.String(dbProxyName),
@@ -36,7 +35,6 @@ func FindDBProxyTarget(ctx context.Context, conn *rds.RDS, dbProxyName, targetGr
 	return dbProxyTarget, err
 }
 
-// FindDBProxyEndpoint returns matching FindDBProxyEndpoint.
 func FindDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
 	dbProxyName, dbProxyEndpointName, err := ProxyEndpointParseID(id)
 	if err != nil {
@@ -90,31 +88,11 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	return nil, &resource.NotFoundError{}
 }
 
-func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dbClusterArn),
-	}
+func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {
+	dbCluster, err := FindDBClusterByID(ctx, conn, arn)
 
-	output, err := conn.DescribeDBClustersWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterArn) != dbClusterArn {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	if status := aws.StringValue(dbCluster.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
@@ -140,8 +118,16 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusterSnapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbClusterSnapshot := output.DBClusterSnapshots[0]
@@ -170,8 +156,16 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBProxies); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbProxy := output.DBProxies[0]
@@ -200,8 +194,16 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBSnapshots) == 0 || output.DBSnapshots[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBSnapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbSnapshot := output.DBSnapshots[0]
@@ -230,8 +232,16 @@ func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBSubnetGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbSubnetGroup := output.DBSubnetGroups[0]
@@ -260,8 +270,16 @@ func FindEventSubscriptionByID(ctx context.Context, conn *rds.RDS, id string) (*
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.EventSubscriptionsList) == 0 || output.EventSubscriptionsList[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.EventSubscriptionsList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	return output.EventSubscriptionsList[0], nil
@@ -434,7 +452,6 @@ func findGlobalClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeG
 	return output, nil
 }
 
-// FindReservedDBInstanceByID returns matching ReservedDBInstance.
 func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
 	input := &rds.DescribeReservedDBInstancesInput{
 		ReservedDBInstanceId: aws.String(id),
@@ -449,8 +466,16 @@ func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.ReservedDBInstances) == 0 || output.ReservedDBInstances[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ReservedDBInstances); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	return output.ReservedDBInstances[0], nil

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_network_insights_path")
 func ResourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsPathCreate,
@@ -74,7 +75,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNetworkInsightsPathInput{
 		Destination:       aws.String(d.Get("destination").(string)),
@@ -132,7 +133,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("source", nip.Source)
 	d.Set("source_ip", nip.SourceIp)
 
-	tags := KeyValueTags(nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

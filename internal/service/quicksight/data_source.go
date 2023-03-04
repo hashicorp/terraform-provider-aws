@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_quicksight_data_source")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -605,7 +606,7 @@ func ResourceDataSource() *schema.Resource {
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)

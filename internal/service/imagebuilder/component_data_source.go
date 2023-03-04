@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_component")
 func DataSourceComponent() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComponentRead,
@@ -114,7 +115,7 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	if err := d.Set("tags", KeyValueTags(component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

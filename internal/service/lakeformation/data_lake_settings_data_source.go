@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_lakeformation_data_lake_settings")
 func DataSourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataLakeSettingsRead,

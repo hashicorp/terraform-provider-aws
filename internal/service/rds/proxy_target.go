@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_db_proxy_target")
 func ResourceProxyTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyTargetCreate,

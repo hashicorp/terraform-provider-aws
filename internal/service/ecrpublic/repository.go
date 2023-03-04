@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecrpublic_repository")
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -122,7 +123,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),

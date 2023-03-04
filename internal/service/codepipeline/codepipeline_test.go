@@ -29,7 +29,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -135,7 +135,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -163,7 +163,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -206,7 +206,7 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -240,7 +240,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -299,10 +299,10 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -341,10 +341,10 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -397,10 +397,10 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -461,7 +461,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -571,7 +571,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(ctx, t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

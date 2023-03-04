@@ -26,7 +26,7 @@ func TestAccAuditManagerAssessmentReport_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,7 +59,7 @@ func TestAccAuditManagerAssessmentReport_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +69,7 @@ func TestAccAuditManagerAssessmentReport_disappears(t *testing.T) {
 				Config: testAccAssessmentReportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceAssessmentReport, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceAssessmentReport, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func TestAccAuditManagerAssessmentReport_optional(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

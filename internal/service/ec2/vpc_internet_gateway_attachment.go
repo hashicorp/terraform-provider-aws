@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_internet_gateway_attachment")
 func ResourceInternetGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayAttachmentCreate,

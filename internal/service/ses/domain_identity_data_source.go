@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ses_domain_identity")
 func DataSourceDomainIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainIdentityRead,

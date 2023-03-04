@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_framework")
 func DataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,
@@ -124,7 +125,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
-	if err := d.Set("control", flattenFrameworkControls(resp.FrameworkControls)); err != nil {
+	if err := d.Set("control", flattenFrameworkControls(ctx, resp.FrameworkControls)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 

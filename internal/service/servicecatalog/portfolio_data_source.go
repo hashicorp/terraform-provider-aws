@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_servicecatalog_portfolio")
 func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
@@ -95,7 +96,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := KeyValueTags(output.Tags)
+	tags := KeyValueTags(ctx, output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

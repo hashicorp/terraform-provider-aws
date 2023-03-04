@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_eks_identity_provider_config")
 func ResourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,
@@ -127,7 +128,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
@@ -192,7 +193,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("status", oidc.Status)
 
-	tags := KeyValueTags(oidc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, oidc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

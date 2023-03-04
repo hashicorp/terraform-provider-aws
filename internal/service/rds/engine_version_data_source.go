@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_rds_engine_version")
 func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,

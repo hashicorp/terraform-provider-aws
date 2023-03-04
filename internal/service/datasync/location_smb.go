@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_smb")
 func ResourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
@@ -111,7 +112,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
@@ -189,7 +190,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("subdirectory", subdirectory)
 
-	tags := KeyValueTags(tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

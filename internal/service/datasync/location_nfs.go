@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_nfs")
 func ResourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,
@@ -105,7 +106,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
 		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_shield_protection")
 func ResourceProtection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProtectionCreate,
@@ -67,7 +68,7 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(d.Get("name").(string)),

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpn_gateway")
 func DataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPNGatewayRead,
@@ -94,7 +95,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		)...)
 	}
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -130,7 +131,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("availability_zone", vgw.AvailabilityZone)
 	d.Set("state", vgw.State)
 
-	if err := d.Set("tags", KeyValueTags(vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

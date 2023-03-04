@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_distribution")
 func ResourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -831,7 +832,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	params := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{

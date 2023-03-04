@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_lakeformation_permissions")
 func DataSourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionsRead,

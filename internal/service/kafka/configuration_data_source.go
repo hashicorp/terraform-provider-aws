@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_msk_configuration")
 func DataSourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationRead,

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_file_system_association")
 func ResourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemAssociationCreate,
@@ -98,7 +99,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
@@ -160,7 +161,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

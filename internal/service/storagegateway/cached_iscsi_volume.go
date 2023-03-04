@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_cached_iscsi_volume")
 func ResourceCachediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachediSCSIVolumeCreate,
@@ -117,7 +118,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
 		ClientToken:        aws.String(resource.UniqueId()),

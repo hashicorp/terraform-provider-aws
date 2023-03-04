@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie_member_account_association")
 func ResourceMemberAccountAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberAccountAssociationCreate,

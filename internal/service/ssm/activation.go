@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ssm_activation")
 func ResourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,
@@ -80,7 +81,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] SSM activation create: %s", d.Id())
 
@@ -186,7 +187,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)
 	d.Set("registration_count", activation.RegistrationsCount)
-	tags := KeyValueTags(activation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, activation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

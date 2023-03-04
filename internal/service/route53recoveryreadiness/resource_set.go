@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53recoveryreadiness_resource_set")
 func ResourceResourceSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceSetCreate,
@@ -148,7 +149,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(d.Get("resource_set_name").(string)),

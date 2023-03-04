@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_batch_job_queue")
 func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
@@ -117,7 +118,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

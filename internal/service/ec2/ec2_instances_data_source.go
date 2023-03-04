@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_instances")
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
@@ -72,7 +73,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("instance_tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(

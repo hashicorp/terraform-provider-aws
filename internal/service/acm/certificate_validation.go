@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_acm_certificate_validation")
 func ResourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,

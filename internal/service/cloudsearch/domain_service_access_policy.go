@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudsearch_domain_service_access_policy")
 func ResourceDomainServiceAccessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainServiceAccessPolicyPut,

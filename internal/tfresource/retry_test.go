@@ -227,7 +227,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNewResourceNotFound(ctx, 5*time.Second, testCase.F, testCase.NewResource)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -386,7 +386,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if err != expected {
+		if err != expected { //nolint: errorlint // We are actually comparing equality
 			t.Fatalf("bad: %#v", err)
 		}
 	case <-time.After(5 * time.Second):

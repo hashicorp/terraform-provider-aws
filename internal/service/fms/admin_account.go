@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fms_admin_account")
 func ResourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAdminAccountCreate,

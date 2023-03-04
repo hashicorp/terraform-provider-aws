@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_anomaly_subscription")
 func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
@@ -101,7 +102,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{

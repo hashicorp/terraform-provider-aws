@@ -24,6 +24,7 @@ import (
 // we've got them all.
 const maxParams = 20
 
+// @SDKResource("aws_neptune_parameter_group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -94,7 +95,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	createOpts := neptune.CreateDBParameterGroupInput{
 		DBParameterGroupName:   aws.String(d.Get("name").(string)),

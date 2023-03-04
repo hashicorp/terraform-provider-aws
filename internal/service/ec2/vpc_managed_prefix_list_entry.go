@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_managed_prefix_list_entry")
 func ResourceManagedPrefixListEntry() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

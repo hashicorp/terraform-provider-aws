@@ -33,6 +33,7 @@ const (
 	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_role")
 func ResourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -177,7 +178,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
 	if err != nil {
@@ -279,7 +280,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	role := outputRaw.(*iam.Role)
 
-	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHRKPWRZUN6 (unique ID)
+	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
 	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
@@ -330,7 +331,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("managed_policy_arns", managedPolicies)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -21,6 +21,7 @@ import (
 
 const BucketACLSeparator = ","
 
+// @SDKResource("aws_s3_bucket_acl")
 func ResourceBucketACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketACLCreate,

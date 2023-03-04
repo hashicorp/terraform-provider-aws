@@ -23,7 +23,7 @@ func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(directconnect.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, directconnect.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

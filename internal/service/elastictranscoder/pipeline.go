@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elastictranscoder_pipeline")
 func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,

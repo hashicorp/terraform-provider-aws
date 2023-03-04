@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_agent")
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
@@ -94,7 +96,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
@@ -125,12 +127,12 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			response, err = client.Do(request)
 
-			if err, ok := err.(net.Error); ok {
-				return resource.RetryableError(fmt.Errorf("error making HTTP request: %w", err))
+			if errs.IsA[net.Error](err) {
+				return resource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
+				return resource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if response == nil {
@@ -144,11 +146,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %w", err))
+				return resource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
 			}
 
 			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
-				errMessage := fmt.Errorf("got error during activation: %s", errorType)
+				errMessage := fmt.Errorf("during activation: %s", errorType)
 				return resource.RetryableError(errMessage)
 			}
 
