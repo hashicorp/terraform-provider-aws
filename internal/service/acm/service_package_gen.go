@@ -22,11 +22,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_acm_certificate": DataSourceCertificate,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_acm_certificate":            ResourceCertificate,
+		"aws_acm_certificate_validation": ResourceCertificateValidation,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

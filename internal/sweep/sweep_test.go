@@ -76,6 +76,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iot"

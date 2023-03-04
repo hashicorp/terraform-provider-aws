@@ -16,6 +16,7 @@ const (
 	DSNameSubscribedRuleGroup = "Subscribed Rule Group Data Source"
 )
 
+// @SDKDataSource("aws_wafregional_subscribed_rule_group")
 func DataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,

@@ -27,6 +27,7 @@ const (
 	targetSubscriptionTimeout = 30 * time.Second
 )
 
+// @SDKResource("aws_codestarnotifications_notification_rule")
 func ResourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_ml_transform")
 func ResourceMLTransform() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMLTransformCreate,

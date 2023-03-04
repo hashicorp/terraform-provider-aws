@@ -22,11 +22,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_secretsmanager_random_password": DataSourceRandomPassword,
+		"aws_secretsmanager_secret":          DataSourceSecret,
+		"aws_secretsmanager_secret_rotation": DataSourceSecretRotation,
+		"aws_secretsmanager_secret_version":  DataSourceSecretVersion,
+		"aws_secretsmanager_secrets":         DataSourceSecrets,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_secretsmanager_secret":          ResourceSecret,
+		"aws_secretsmanager_secret_policy":   ResourceSecretPolicy,
+		"aws_secretsmanager_secret_rotation": ResourceSecretRotation,
+		"aws_secretsmanager_secret_version":  ResourceSecretVersion,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

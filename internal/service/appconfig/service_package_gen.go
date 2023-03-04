@@ -22,11 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appconfig_configuration_profile":  DataSourceConfigurationProfile,
+		"aws_appconfig_configuration_profiles": DataSourceConfigurationProfiles,
+		"aws_appconfig_environment":            DataSourceEnvironment,
+		"aws_appconfig_environments":           DataSourceEnvironments,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_appconfig_application":                  ResourceApplication,
+		"aws_appconfig_configuration_profile":        ResourceConfigurationProfile,
+		"aws_appconfig_deployment":                   ResourceDeployment,
+		"aws_appconfig_deployment_strategy":          ResourceDeploymentStrategy,
+		"aws_appconfig_environment":                  ResourceEnvironment,
+		"aws_appconfig_extension":                    ResourceExtension,
+		"aws_appconfig_extension_association":        ResourceExtensionAssociation,
+		"aws_appconfig_hosted_configuration_version": ResourceHostedConfigurationVersion,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -31,6 +31,7 @@ const (
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
+// @SDKResource("aws_codepipeline")
 func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,

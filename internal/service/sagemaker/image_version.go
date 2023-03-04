@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_sagemaker_image_version")
 func ResourceImageVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageVersionCreate,

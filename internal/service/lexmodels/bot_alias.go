@@ -28,6 +28,7 @@ const (
 	botAliasDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_bot_alias")
 func ResourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotAliasCreate,
