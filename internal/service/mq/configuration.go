@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mq_configuration")
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationCreate,
@@ -99,7 +100,7 @@ func ResourceConfiguration() *schema.Resource {
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &mq.CreateConfigurationRequest{
@@ -187,7 +188,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("data", string(data))
 
-	tags := KeyValueTags(configuration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, configuration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

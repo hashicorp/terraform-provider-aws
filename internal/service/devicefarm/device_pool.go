@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_devicefarm_device_pool")
 func ResourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
@@ -91,7 +92,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateDevicePoolInput{

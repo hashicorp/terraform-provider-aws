@@ -27,10 +27,7 @@ const (
 	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_bucket", resourceBucket)
-}
-
+// @SDKResource("aws_s3control_bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -83,7 +80,7 @@ func resourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	bucket := d.Get("bucket").(string)
 	input := &s3control.CreateBucketInput{
@@ -198,7 +195,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	log.Printf("[DEBUG] Deleting S3 Control Bucket: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteBucketWithContext(ctx, input)
 	}, errCodeInvalidBucketState)
 
@@ -247,7 +244,7 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	input := &s3control.GetBucketTaggingInput{
@@ -258,14 +255,14 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	output, err := conn.GetBucketTaggingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
-		return tftags.New(nil), nil
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
@@ -277,8 +274,8 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier
 		return err
 	}
 
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := bucketListTags(ctx, conn, identifier)

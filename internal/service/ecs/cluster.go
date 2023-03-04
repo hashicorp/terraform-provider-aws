@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecs_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -188,7 +189,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
@@ -331,7 +332,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

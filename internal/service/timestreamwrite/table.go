@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_timestreamwrite_table")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,
@@ -140,7 +141,7 @@ func ResourceTable() *schema.Resource {
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	tableName := d.Get("table_name").(string)
 	input := &timestreamwrite.CreateTableInput{

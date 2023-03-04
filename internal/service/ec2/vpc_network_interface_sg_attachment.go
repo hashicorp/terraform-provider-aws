@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_network_interface_sg_attachment")
 func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceSGAttachmentCreate,
@@ -95,7 +96,7 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 

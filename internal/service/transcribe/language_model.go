@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_language_model")
 func ResourceLanguageModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLanguageModelCreate,
@@ -117,13 +118,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_backup")
 func ResourceBackup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupCreate,
@@ -75,7 +76,7 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -164,7 +165,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}
 
-	tags := KeyValueTags(backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

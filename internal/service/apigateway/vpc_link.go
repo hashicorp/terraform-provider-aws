@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_vpc_link")
 func ResourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
@@ -61,7 +62,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -106,7 +107,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_object_copy")
 func ResourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -372,7 +373,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -487,7 +488,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(d.Get("bucket").(string)),

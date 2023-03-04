@@ -36,6 +36,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
+// @SDKResource("aws_s3_bucket_object")
 func ResourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -284,7 +285,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -433,7 +434,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 

@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eks_node_group")
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,
@@ -207,7 +208,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error setting subnets: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

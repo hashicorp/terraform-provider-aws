@@ -18,10 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_multi_region_access_point_policy", resourceMultiRegionAccessPointPolicy)
-}
-
+// @SDKResource("aws_s3control_multi_region_access_point_policy")
 func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiRegionAccessPointPolicyCreate,

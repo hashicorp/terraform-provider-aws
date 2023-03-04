@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_servicecatalog_product")
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
@@ -153,7 +154,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),
@@ -279,7 +280,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_s3_bucket_ownership_controls")
 func ResourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
@@ -148,7 +149,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 		Bucket: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (any, error) {
 			return conn.DeleteBucketOwnershipControlsWithContext(ctx, input)
 		},

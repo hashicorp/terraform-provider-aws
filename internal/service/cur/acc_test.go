@@ -35,7 +35,7 @@ var testAccProviderCurConfigure sync.Once
 
 // testAccPreCheck verifies AWS credentials and that Cost and Usage Reporting is supported
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(costandusagereportservice.ServiceName, t)
+	acctest.PreCheckPartitionHasService(t, costandusagereportservice.ServiceName)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.

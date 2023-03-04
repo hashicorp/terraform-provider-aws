@@ -28,6 +28,7 @@ const (
 	intentDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_intent")
 func ResourceIntent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntentCreate,

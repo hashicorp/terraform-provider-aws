@@ -2,13 +2,11 @@ package rds
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,21 +15,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	clusterEndpointCreateTimeout   = 30 * time.Minute
-	clusterEndpointRetryDelay      = 5 * time.Second
-	ClusterEndpointRetryMinTimeout = 3 * time.Second
-)
-
+// @SDKResource("aws_rds_cluster_endpoint")
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,
 		ReadWithoutTimeout:   resourceClusterEndpointRead,
 		UpdateWithoutTimeout: resourceClusterEndpointUpdate,
 		DeleteWithoutTimeout: resourceClusterEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,14 +38,14 @@ func ResourceClusterEndpoint() *schema.Resource {
 			},
 			"cluster_endpoint_identifier": {
 				Type:         schema.TypeString,
-				ForceNew:     true,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
 			"cluster_identifier": {
 				Type:         schema.TypeString,
-				ForceNew:     true,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
 			"custom_endpoint_type": {
@@ -61,23 +56,21 @@ func ResourceClusterEndpoint() *schema.Resource {
 					"ANY",
 				}, false),
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"excluded_members": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"static_members"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
+				ConflictsWith: []string{"static_members"},
 			},
 			"static_members": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"excluded_members"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				ConflictsWith: []string{"excluded_members"},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -88,39 +81,40 @@ func ResourceClusterEndpoint() *schema.Resource {
 }
 
 func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		clusterEndpointCreateTimeout = 30 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	clusterId := d.Get("cluster_identifier").(string)
-	endpointId := d.Get("cluster_endpoint_identifier").(string)
-	endpointType := d.Get("custom_endpoint_type").(string)
-
-	createClusterEndpointInput := &rds.CreateDBClusterEndpointInput{
-		DBClusterIdentifier:         aws.String(clusterId),
-		DBClusterEndpointIdentifier: aws.String(endpointId),
-		EndpointType:                aws.String(endpointType),
+	endpointID := d.Get("cluster_endpoint_identifier").(string)
+	input := &rds.CreateDBClusterEndpointInput{
+		DBClusterEndpointIdentifier: aws.String(endpointID),
+		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
+		EndpointType:                aws.String(d.Get("custom_endpoint_type").(string)),
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	if v := d.Get("static_members"); v != nil {
-		createClusterEndpointInput.StaticMembers = flex.ExpandStringSet(v.(*schema.Set))
-	}
-	if v := d.Get("excluded_members"); v != nil {
-		createClusterEndpointInput.ExcludedMembers = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {
+		input.ExcludedMembers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateDBClusterEndpointWithContext(ctx, createClusterEndpointInput)
+	if v, ok := d.GetOk("static_members"); ok && v.(*schema.Set).Len() > 0 {
+		input.StaticMembers = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	_, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Endpoint (%s): %s", endpointID, err)
 	}
 
-	d.SetId(endpointId)
+	d.SetId(endpointID)
 
-	err = resourceClusterEndpointWaitForAvailable(ctx, clusterEndpointCreateTimeout, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Endpoint: waiting for completion: %s", err)
+	if _, err := waitClusterEndpointCreated(ctx, conn, d.Id(), clusterEndpointCreateTimeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Endpoint (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
@@ -132,53 +126,31 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &rds.DescribeDBClusterEndpointsInput{
-		DBClusterEndpointIdentifier: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
-	resp, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
+	clusterEp, err := FindDBClusterEndpointByID(ctx, conn, d.Id())
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing RDS Cluster Endpoints (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving RDS Cluster Endpoints: empty response for: %s", input)
-	}
-
-	var clusterEp *rds.DBClusterEndpoint
-	for _, e := range resp.DBClusterEndpoints {
-		if aws.StringValue(e.DBClusterEndpointIdentifier) == d.Id() {
-			clusterEp = e
-			break
-		}
-	}
-
-	if clusterEp == nil {
-		log.Printf("[WARN] RDS Cluster Endpoint (%s) not found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS Cluster Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	arn := clusterEp.DBClusterEndpointArn
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Endpoint (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.StringValue(clusterEp.DBClusterEndpointArn)
+	d.Set("arn", arn)
 	d.Set("cluster_endpoint_identifier", clusterEp.DBClusterEndpointIdentifier)
 	d.Set("cluster_identifier", clusterEp.DBClusterIdentifier)
-	d.Set("arn", arn)
-	d.Set("endpoint", clusterEp.Endpoint)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
+	d.Set("endpoint", clusterEp.Endpoint)
+	d.Set("excluded_members", aws.StringValueSlice(clusterEp.ExcludedMembers))
+	d.Set("static_members", aws.StringValueSlice(clusterEp.StaticMembers))
 
-	if err := d.Set("excluded_members", flex.FlattenStringList(clusterEp.ExcludedMembers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting excluded_members: %s", err)
-	}
-
-	if err := d.Set("static_members", flex.FlattenStringList(clusterEp.StaticMembers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting static_members: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, *arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Endpoint (%s): %s", *arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Endpoint (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -198,8 +170,33 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	input := &rds.ModifyDBClusterEndpointInput{
-		DBClusterEndpointIdentifier: aws.String(d.Id()),
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &rds.ModifyDBClusterEndpointInput{
+			DBClusterEndpointIdentifier: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("custom_endpoint_type"); ok {
+			input.EndpointType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {
+			input.ExcludedMembers = flex.ExpandStringSet(v.(*schema.Set))
+		} else {
+			input.ExcludedMembers = aws.StringSlice([]string{})
+		}
+
+		if v, ok := d.GetOk("static_members"); ok && v.(*schema.Set).Len() > 0 {
+			input.StaticMembers = flex.ExpandStringSet(v.(*schema.Set))
+		} else {
+			input.StaticMembers = aws.StringSlice([]string{})
+		}
+
+		_, err := conn.ModifyDBClusterEndpointWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS Cluster Endpoint (%s): %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -210,105 +207,110 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if v, ok := d.GetOk("custom_endpoint_type"); ok {
-		input.EndpointType = aws.String(v.(string))
-	}
-
-	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
-		input.ExcludedMembers = flex.ExpandStringSet(attr)
-	} else {
-		input.ExcludedMembers = make([]*string, 0)
-	}
-
-	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
-		input.StaticMembers = flex.ExpandStringSet(attr)
-	} else {
-		input.StaticMembers = make([]*string, 0)
-	}
-
-	_, err := conn.ModifyDBClusterEndpointWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "modifying RDS Cluster Endpoint: %s", err)
-	}
-
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	input := &rds.DeleteDBClusterEndpointInput{
+
+	log.Printf("[DEBUG] Deleting RDS Cluster Endpoint: %s", d.Id())
+	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, input)
+	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceClusterEndpointWaitForDestroy(ctx, d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Endpoint (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := waitClusterEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceClusterEndpointWaitForDestroy(ctx context.Context, timeout time.Duration, id string, conn *rds.RDS) error {
-	log.Printf("Waiting for RDS Cluster Endpoint %s to be deleted...", id)
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"available", "deleting"},
-		Target:     []string{"destroyed"},
-		Refresh:    DBClusterEndpointStateRefreshFunc(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      clusterEndpointRetryDelay,
-		MinTimeout: ClusterEndpointRetryMinTimeout,
+func FindDBClusterEndpointByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterEndpoint, error) {
+	input := &rds.DescribeDBClusterEndpointsInput{
+		DBClusterEndpointIdentifier: aws.String(id),
 	}
-	_, err := stateConf.WaitForStateContext(ctx)
+
+	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for RDS Cluster Endpoint (%s) to be deleted: %v", id, err)
+		return nil, err
 	}
-	return nil
+
+	if output == nil || len(output.DBClusterEndpoints) == 0 || output.DBClusterEndpoints[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusterEndpoints); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	dbClusterEndpoint := output.DBClusterEndpoints[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbClusterEndpoint.DBClusterEndpointIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbClusterEndpoint, nil
 }
 
-func resourceClusterEndpointWaitForAvailable(ctx context.Context, timeout time.Duration, id string, conn *rds.RDS) error {
-	log.Printf("Waiting for RDS Cluster Endpoint %s to become available...", id)
+func statusClusterEndpoint(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterEndpointByID(ctx, conn, id)
 
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitClusterEndpointCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBClusterEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    DBClusterEndpointStateRefreshFunc(ctx, conn, id),
+		Refresh:    statusClusterEndpoint(ctx, conn, id),
 		Timeout:    timeout,
-		Delay:      clusterEndpointRetryDelay,
-		MinTimeout: ClusterEndpointRetryMinTimeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return fmt.Errorf("Error waiting for RDS Cluster Endpoint (%s) to be ready: %v", id, err)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBClusterEndpoint); ok {
+		return output, err
 	}
-	return nil
+
+	return nil, err
 }
 
-func DBClusterEndpointStateRefreshFunc(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		emptyResp := &rds.DescribeDBClusterEndpointsOutput{}
-
-		resp, err := conn.DescribeDBClusterEndpointsWithContext(ctx, &rds.DescribeDBClusterEndpointsInput{
-			DBClusterEndpointIdentifier: aws.String(id),
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-				return emptyResp, "destroyed", nil
-			} else if resp != nil && len(resp.DBClusterEndpoints) == 0 {
-				return emptyResp, "destroyed", nil
-			} else {
-				return emptyResp, "", fmt.Errorf("Error on refresh: %+v", err)
-			}
-		}
-
-		if resp == nil || resp.DBClusterEndpoints == nil || len(resp.DBClusterEndpoints) == 0 {
-			return emptyResp, "destroyed", nil
-		}
-
-		return resp.DBClusterEndpoints[0], *resp.DBClusterEndpoints[0].Status, nil
+func waitClusterEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBClusterEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"available", "deleting"},
+		Target:     []string{},
+		Refresh:    statusClusterEndpoint(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBClusterEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }

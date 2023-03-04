@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_traffic_mirror_session")
 func ResourceTrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorSessionCreate,
@@ -81,7 +82,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
 		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
@@ -156,7 +157,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	tags := KeyValueTags(session.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, session.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

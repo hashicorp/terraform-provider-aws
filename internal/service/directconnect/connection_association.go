@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_dx_connection_association")
 func ResourceConnectionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionAssociationCreate,
@@ -95,7 +96,7 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Dir
 		LagId:        aws.String(lagID),
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, connectionDisassociatedTimeout,
+	_, err := tfresource.RetryWhen(ctx, connectionDisassociatedTimeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLagWithContext(ctx, input)
 		},

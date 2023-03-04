@@ -33,6 +33,7 @@ const (
 	validationExceptionMessageDataSourceSecrets = "Secrets Manager throws the exception"
 )
 
+// @SDKResource("aws_kendra_data_source")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -586,7 +587,7 @@ func documentAttributeValueSchema() *schema.Schema {
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -627,7 +628,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Creating Kendra Data Source %#v", input)
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
@@ -778,7 +779,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
 
-		_, err = tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},

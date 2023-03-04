@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_user_hierarchy_group")
 func ResourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserHierarchyGroupCreate,
@@ -116,7 +117,7 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	userHierarchyGroupName := d.Get("name").(string)
@@ -190,7 +191,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Group hierarchy_path (%s): %w", d.Id(), err))
 	}
 
-	tags := KeyValueTags(resp.HierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.HierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

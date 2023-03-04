@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_job")
 func ResourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
@@ -175,7 +176,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &glue.CreateJobInput{

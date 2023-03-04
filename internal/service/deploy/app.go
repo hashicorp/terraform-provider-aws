@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codedeploy_app")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -100,7 +101,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)

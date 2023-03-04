@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_kendra_experience")
 func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExperienceRead,

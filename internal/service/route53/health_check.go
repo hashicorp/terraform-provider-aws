@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_health_check")
 func ResourceHealthCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHealthCheckCreate,
@@ -195,7 +196,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	healthCheckType := d.Get("type").(string)
 	healthConfig := &route53.HealthCheckConfig{

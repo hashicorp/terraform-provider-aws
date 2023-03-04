@@ -25,6 +25,7 @@ import (
 // https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
 const route53ZoneID = "Z2BJ6XQ5FK7U4H"
 
+// @SDKResource("aws_globalaccelerator_accelerator")
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -130,7 +131,7 @@ func ResourceAccelerator() *schema.Resource {
 func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{

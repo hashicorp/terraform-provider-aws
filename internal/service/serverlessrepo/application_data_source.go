@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_serverlessapplicationrepository_application")
 func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,

@@ -24,6 +24,7 @@ const (
 	ResNameGroupMembership = "GroupMembership"
 )
 
+// @SDKResource("aws_identitystore_group_membership")
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,

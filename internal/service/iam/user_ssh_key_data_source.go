@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_iam_user_ssh_key")
 func DataSourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserSSHKeyRead,

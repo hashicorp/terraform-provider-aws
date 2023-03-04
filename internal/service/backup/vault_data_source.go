@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_vault")
 func DataSourceVault() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVaultRead,

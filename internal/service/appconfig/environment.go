@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appconfig_environment")
 func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,
@@ -92,7 +93,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	appId := d.Get("application_id").(string)
 

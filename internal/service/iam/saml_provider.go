@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_saml_provider")
 func ResourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
@@ -62,7 +63,7 @@ func ResourceSAMLProvider() *schema.Resource {
 func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &iam.CreateSAMLProviderInput{
@@ -141,7 +142,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("valid_until", nil)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

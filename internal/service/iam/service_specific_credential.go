@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_service_specific_credential")
 func ResourceServiceSpecificCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSpecificCredentialCreate,
@@ -106,7 +107,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindServiceSpecificCredential(ctx, conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 

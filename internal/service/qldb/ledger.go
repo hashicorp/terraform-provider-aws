@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_qldb_ledger")
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLedgerCreate,
@@ -76,7 +77,7 @@ func ResourceLedger() *schema.Resource {
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
@@ -203,7 +204,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteLedgerWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)

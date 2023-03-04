@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_imagebuilder_distribution_configuration")
 func ResourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
@@ -290,7 +291,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -361,7 +362,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

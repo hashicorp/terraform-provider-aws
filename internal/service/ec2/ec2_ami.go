@@ -30,6 +30,7 @@ const (
 	amiRetryMinTimeout = 3 * time.Second
 )
 
+// @SDKResource("aws_ami")
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,
@@ -289,7 +290,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ec2.RegisterImageInput{
@@ -388,7 +389,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -456,7 +457,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

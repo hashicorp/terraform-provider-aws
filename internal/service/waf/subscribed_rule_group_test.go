@@ -27,7 +27,7 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_subscribed_rule_group.rulegroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

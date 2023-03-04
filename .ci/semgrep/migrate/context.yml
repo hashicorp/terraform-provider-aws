@@ -9,8 +9,6 @@ rules:
       exclude:
         # `pattern-not` not working
         - internal/service/kafkaconnect
-        # WIP
-        - internal/acctest/acctest.go
     patterns:
       - pattern: |
           $CONN.$API(...)
@@ -53,13 +51,6 @@ rules:
       - pattern-either:
           - pattern: $X.WaitForState()
           - pattern: resource.Retry()
-          - pattern: tfresource.RetryWhen(...)
-          - pattern: tfresource.RetryWhenAWSErrCodeEquals(...)
-          - pattern: tfresource.RetryWhenAWSErrMessageContains(...)
-          - pattern: tfresource.RetryUntilNotFound(...)
-          - pattern: tfresource.RetryWhenNotFound(...)
-          - pattern: tfresource.RetryWhenNewResourceNotFound(...)
-          - pattern: tfresource.WaitUntil(...)
     severity: WARNING
   - id: context-todo
     languages: [go]
@@ -72,4 +63,23 @@ rules:
     message: Should use `schema.NoopContext` instead of `schema.Noop`
     paths: *paths
     pattern: schema.Noop
+    severity: ERROR
+  - id: direct-CRUD-calls
+    languages: [go]
+    message: Avoid direct calls to `schema.Resource` CRUD calls
+    paths: *paths
+    patterns:
+      - pattern-either:
+          - pattern: $D.Create($DATA, $META)
+          - pattern: $D.Read($DATA, $META)
+          - pattern: $D.Update($DATA, $META)
+          - pattern: $D.Delete($DATA, $META)
+          - pattern: $D.CreateContext($CTX, $DATA, $META)
+          - pattern: $D.ReadContext($CTX, $DATA, $META)
+          - pattern: $D.UpdateContext($CTX, $DATA, $META)
+          - pattern: $D.DeleteContext($CTX, $DATA, $META)
+          - pattern: $D.CreateWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.ReadWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.UpdateWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.DeleteWithoutTimeout($CTX, $DATA, $META)
     severity: ERROR

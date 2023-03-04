@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_api_gateway_rest_api")
 func DataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
@@ -134,7 +135,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

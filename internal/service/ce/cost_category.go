@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_category")
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostCategoryCreate,
@@ -374,7 +375,7 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -398,7 +399,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateCostCategoryDefinitionWithContext(ctx, input)
 		},

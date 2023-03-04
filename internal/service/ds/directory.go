@@ -24,6 +24,7 @@ const (
 	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_directory_service_directory")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
@@ -198,7 +199,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	switch directoryType := d.Get("type").(string); directoryType {
@@ -438,7 +439,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DSConn()
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})

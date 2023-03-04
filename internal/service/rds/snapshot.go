@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_db_snapshot")
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
@@ -124,7 +125,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
 
 	params := &rds.CreateDBSnapshotInput{

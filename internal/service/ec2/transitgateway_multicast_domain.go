@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_multicast_domain")
 func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastDomainCreate,
@@ -79,7 +80,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayMulticastDomainInput{
 		Options: &ec2.CreateTransitGatewayMulticastDomainRequestOptions{
@@ -131,7 +132,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set("transit_gateway_id", multicastDomain.TransitGatewayId)
 
-	tags := KeyValueTags(multicastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, multicastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

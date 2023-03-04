@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_efs_file_system")
 func ResourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemCreate,
@@ -146,7 +147,7 @@ func ResourceFileSystem() *schema.Resource {
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	creationToken := ""
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -245,7 +246,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	tags := KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

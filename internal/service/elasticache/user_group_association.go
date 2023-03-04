@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_elasticache_user_group_association")
 func ResourceUserGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupAssociationCreate,
@@ -53,8 +54,8 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	id := userGroupAssociationID(d.Get("user_group_id").(string), d.Get("user_id").(string))
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 10*time.Minute, func() (interface{}, error) {
-		return tfresource.RetryWhenNotFoundContext(ctx, 30*time.Second, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+		return tfresource.RetryWhenNotFound(ctx, 30*time.Second, func() (interface{}, error) {
 			return conn.ModifyUserGroupWithContext(ctx, input)
 		})
 	}, elasticache.ErrCodeInvalidUserGroupStateFault)
@@ -137,7 +138,7 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 		UserIdsToRemove: aws.StringSlice([]string{d.Get("user_id").(string)}),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 10*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
 		return conn.ModifyUserGroupWithContext(ctx, input)
 	}, elasticache.ErrCodeInvalidUserGroupStateFault)
 

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_identitystore_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_snapshot_copy_grant")
 func ResourceSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyGrantCreate,
@@ -59,7 +60,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	grantName := d.Get("snapshot_copy_grant_name").(string)
 
@@ -87,7 +88,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
 	d.SetId(grantName)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
 		return findSnapshotCopyGrant(ctx, conn, grantName)
 	})
 	if err != nil {
@@ -127,7 +128,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
-	tags := KeyValueTags(grant.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, grant.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -185,7 +186,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 
 // Used by the tests as well
 func WaitForSnapshotCopyGrantToBeDeleted(ctx context.Context, conn *redshift.Redshift, grantName string) error {
-	_, err := tfresource.RetryUntilNotFoundContext(ctx, 3*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
 		return findSnapshotCopyGrant(ctx, conn, grantName)
 	})
 	return err

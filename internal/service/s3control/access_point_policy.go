@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_access_point_policy", resourceAccessPointPolicy)
-}
-
+// @SDKResource("aws_s3control_access_point_policy")
 func resourceAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointPolicyCreate,

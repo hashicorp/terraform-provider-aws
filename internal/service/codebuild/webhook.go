@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_webhook")
 func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,

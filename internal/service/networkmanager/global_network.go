@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_global_network")
 func ResourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,
@@ -56,7 +57,7 @@ func ResourceGlobalNetwork() *schema.Resource {
 func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &networkmanager.CreateGlobalNetworkInput{}
 
@@ -104,7 +105,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", globalNetwork.GlobalNetworkArn)
 	d.Set("description", globalNetwork.Description)
 
-	tags := KeyValueTags(globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -166,7 +167,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),
@@ -287,7 +288,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 }
 
 func globalNetworkIDNotFoundError(err error) bool {
-	return validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
+	return validationExceptionFieldsMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
 }
 
 func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.GlobalNetwork, error) {

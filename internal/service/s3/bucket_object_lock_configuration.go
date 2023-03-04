@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_object_lock_configuration")
 func ResourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
@@ -118,7 +119,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		input.Token = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutObjectLockConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 

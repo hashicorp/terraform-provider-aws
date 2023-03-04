@@ -14,10 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_imagebuilder_container_recipe")
 func ResourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerRecipeCreate,
@@ -128,26 +130,18 @@ func ResourceContainerRecipe() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"delete_on_termination": {
-													// Use TypeString to allow an "unspecified" value,
-													// since TypeBool only has true/false with false default.
-													// The conversion from bare true/false values in
-													// configurations to TypeString value is currently safe.
-													Type:             schema.TypeString,
+													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
-													DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-													ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
 												"encrypted": {
-													// Use TypeString to allow an "unspecified" value,
-													// since TypeBool only has true/false with false default.
-													// The conversion from bare true/false values in
-													// configurations to TypeString value is currently safe.
-													Type:             schema.TypeString,
+													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
-													DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-													ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
 												"iops": {
 													Type:         schema.TypeInt,
@@ -282,7 +276,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateContainerRecipeInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -403,7 +397,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
 
-	tags := KeyValueTags(containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

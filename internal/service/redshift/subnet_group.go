@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_subnet_group")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -68,7 +69,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
 	subnetIds := make([]*string, subnetIdsSet.Len())
@@ -125,7 +126,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("description", subnetgroup.Description)
 	d.Set("name", d.Id())
 	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
-	tags := KeyValueTags(subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

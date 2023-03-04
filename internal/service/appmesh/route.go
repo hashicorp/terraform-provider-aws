@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -106,7 +107,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -199,8 +200,9 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 												},
 
 												"prefix": {
@@ -210,15 +212,14 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"service_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													RequiredWith: []string{"spec.0.grpc_route.0.match.0.method_name"},
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -394,7 +395,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -413,7 +414,7 @@ func ResourceRoute() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -523,7 +524,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 										"port": {
 											Type:         schema.TypeInt,
 											Optional:     true,
-											ValidateFunc: validation.IntBetween(1, 65535),
+											ValidateFunc: validation.IsPortNumber,
 										},
 									},
 								},
@@ -636,7 +637,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 							"port": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(1, 65535),
+								ValidateFunc: validation.IsPortNumber,
 							},
 						},
 					},
@@ -754,7 +755,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
