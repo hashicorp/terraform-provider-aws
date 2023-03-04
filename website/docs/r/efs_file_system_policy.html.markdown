@@ -43,8 +43,8 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_efs_file_system_policy" "policy" {
-  file_system_id                     = aws_efs_file_system.fs.id
-  policy                             = data.aws_iam_policy_document.policy.json
+  file_system_id = aws_efs_file_system.fs.id
+  policy         = data.aws_iam_policy_document.policy.json
 }
 ```
 
