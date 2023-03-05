@@ -1357,7 +1357,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ALB_updateTlsVersionAndCipherSuite(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_updateTLSVersionAndCipherSuite(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
