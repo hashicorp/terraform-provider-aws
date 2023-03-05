@@ -286,6 +286,32 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 
+			"enable_tls_version_and_cipher_suite_headers": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
+			"enable_xff_client_port": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
+			"xff_header_processing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "append",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+				ValidateFunc: validation.StringInSlice([]string{
+					"append",
+					"preserve",
+					"remove",
+				}, false),
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -525,6 +551,27 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.desync_mitigation_mode"),
 				Value: aws.String(d.Get("desync_mitigation_mode").(string)),
+			})
+		}
+
+		if d.HasChange("enable_tls_version_and_cipher_suite_headers") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.x_amzn_tls_version_and_cipher_suite.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_tls_version_and_cipher_suite_headers").(bool))),
+			})
+		}
+
+		if d.HasChange("enable_xff_client_port") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.xff_client_port.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_xff_client_port").(bool))),
+			})
+		}
+
+		if d.HasChange("xff_header_processing_mode") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.xff_header_processing.mode"),
+				Value: aws.String(d.Get("xff_header_processing_mode").(string)),
 			})
 		}
 
@@ -1032,6 +1079,18 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			desyncMitigationMode := aws.StringValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB Desync Mitigation Mode: %s", desyncMitigationMode)
 			d.Set("desync_mitigation_mode", desyncMitigationMode)
+		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
+			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB TLS Version And Cipher Suite Headers Enabled: %t", tlsVersionAndCipherEnabled)
+			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
+		case "routing.http.xff_client_port.enabled":
+			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Xff Client Port Enabled: %t", xffClientPortEnabled)
+			d.Set("enable_xff_client_port", xffClientPortEnabled)
+		case "routing.http.xff_header_processing.mode":
+			xffHeaderProcMode := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Xff Header Processing Mode: %s", xffHeaderProcMode)
+			d.Set("xff_header_processing_mode", xffHeaderProcMode)
 		}
 	}
 
