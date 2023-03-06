@@ -797,6 +797,20 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// Table Class cannot be changed concurrently with other values
+	if d.HasChange("table_class") {
+		_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+			TableName:  aws.String(d.Id()),
+			TableClass: aws.String(d.Get("table_class").(string)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: %s", d.Id(), err)
+		}
+		if _, err := waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: waiting for completion: %s", d.Id(), err)
+		}
+	}
+
 	hasTableUpdate := false
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(d.Id()),
@@ -852,11 +866,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
-	}
-
-	if d.HasChange("table_class") {
-		hasTableUpdate = true
-		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {
