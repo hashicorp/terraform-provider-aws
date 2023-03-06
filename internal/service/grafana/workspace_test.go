@@ -698,16 +698,16 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 resource "aws_grafana_workspace" "test" {
-  account_access_type       = "CURRENT_ACCOUNT"
-  authentication_providers  = ["SAML"]
-  permission_type           = "SERVICE_MANAGED"
-  name                      = %[1]q
-  description               = %[1]q
-  role_arn                  = aws_iam_role.test.arn
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
 
   network_access_control {
     prefix_list_ids = [aws_ec2_managed_prefix_list.test.id]
-	vpce_ids        = aws_vpc_endpoint.test[*].id
+    vpce_ids        = aws_vpc_endpoint.test[*].id
   }
 }
 `, rName, endpoints))
@@ -738,12 +738,12 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 resource "aws_grafana_workspace" "test" {
-  account_access_type       = "CURRENT_ACCOUNT"
-  authentication_providers  = ["SAML"]
-  permission_type           = "SERVICE_MANAGED"
-  name                      = %[1]q
-  description               = %[1]q
-  role_arn                  = aws_iam_role.test.arn
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  role_arn                 = aws_iam_role.test.arn
 }
 `, rName))
 }
