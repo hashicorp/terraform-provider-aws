@@ -363,7 +363,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_label", ""),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
@@ -2314,6 +2314,71 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_tableClassExplicitDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccTableConfig_class(rName, "STANDARD"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_tableClass_migrate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		CheckDestroy: testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.57.0",
+					},
+				},
+				Config: testAccTableConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTableConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4117,14 +4182,15 @@ resource "aws_dynamodb_table" "test" {
 func testAccTableConfig_class(rName, tableClass string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  hash_key       = "TestTableHashKey"
   name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
-  table_class    = %[2]q
+  hash_key       = %[1]q
+
+  table_class = %[2]q
 
   attribute {
-    name = "TestTableHashKey"
+    name = %[1]q
     type = "S"
   }
 }

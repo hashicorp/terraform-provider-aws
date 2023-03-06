@@ -356,8 +356,12 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(append(dynamodb.StreamViewType_Values(), ""), false),
 			},
 			"table_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  dynamodb.TableClassStandard,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && new == dynamodb.TableClassStandard
+				},
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -656,8 +660,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if table.StreamSpecification != nil {
-		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 	} else {
 		d.Set("stream_enabled", false)
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
@@ -693,7 +697,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
