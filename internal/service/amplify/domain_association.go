@@ -50,6 +50,12 @@ func ResourceDomainAssociation() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
+			"enable_auto_sub_domain": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"sub_domain": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -92,12 +98,14 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
+	enableAutoSubDomain := d.Get("enable_auto_sub_domain").(bool)
 	id := DomainAssociationCreateResourceID(appID, domainName)
 
 	input := &amplify.CreateDomainAssociationInput{
-		AppId:             aws.String(appID),
-		DomainName:        aws.String(domainName),
-		SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+		AppId:               aws.String(appID),
+		DomainName:          aws.String(domainName),
+		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+		EnableAutoSubDomain: aws.Bool(enableAutoSubDomain),
 	}
 
 	log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
@@ -148,6 +156,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("arn", domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
 	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
@@ -165,11 +174,18 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "parsing Amplify Domain Association ID: %s", err)
 	}
 
-	if d.HasChange("sub_domain") {
+	if d.HasChanges("sub_domain", "enable_auto_sub_domain") {
 		input := &amplify.UpdateDomainAssociationInput{
-			AppId:             aws.String(appID),
-			DomainName:        aws.String(domainName),
-			SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+			AppId:      aws.String(appID),
+			DomainName: aws.String(domainName),
+		}
+
+		if d.HasChange("sub_domain") {
+			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
+		}
+
+		if d.HasChange("enable_auto_sub_domain") {
+			input.EnableAutoSubDomain = aws.Bool(d.Get("enable_auto_sub_domain").(bool))
 		}
 
 		log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
