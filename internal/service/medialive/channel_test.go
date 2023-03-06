@@ -800,11 +800,11 @@ resource "aws_medialive_channel" "test" {
     id = %[1]q
 
     settings {
-	  url = "rtp://localhost:8000"
+      url = "rtp://localhost:8000"
     }
 
     settings {
-	  url = "rtp://localhost:8001"
+      url = "rtp://localhost:8001"
     }
   }
 
@@ -850,9 +850,9 @@ resource "aws_medialive_channel" "test" {
                 audio_buffer_model = "ATSC"
                 buffer_model       = "MULTIPLEX"
                 rate_mode          = "CBR"
-			  }
-			}
-		  }
+              }
+            }
+          }
         }
       }
     }
