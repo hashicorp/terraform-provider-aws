@@ -257,7 +257,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
 	for _, sp := range servicePackages(ctx) {
-		servicePackageMap[sp.ServicePackageName()] = sp
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+
+		var spNameInterceptor InterceptorFunc = func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return conns.NewContext(ctx, servicePackageName), diags
+		}
 
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
@@ -276,6 +281,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			ds := &DataSource{}
+			// First interceptor sets service package name.
+			ds.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
 
 			if v := r.ReadWithoutTimeout; v != nil {
 				r.ReadWithoutTimeout = ds.Read(v)
@@ -325,6 +332,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			rs := &Resource{}
+			// First interceptor sets service package name.
+			rs.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
 
 			if v := r.CreateWithoutTimeout; v != nil {
 				r.CreateWithoutTimeout = rs.Create(v)

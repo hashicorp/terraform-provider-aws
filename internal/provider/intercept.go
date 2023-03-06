@@ -59,6 +59,7 @@ func (v *Interceptors) Append(when When, why Why, f InterceptorFunc) {
 	}
 }
 
+// Why returns a slice of Interceptors that run for the specified CRUD operation.
 func (v *Interceptors) Why(why Why) Interceptors {
 	var interceptors Interceptors
 
@@ -71,6 +72,7 @@ func (v *Interceptors) Why(why Why) Interceptors {
 	return interceptors
 }
 
+// InvokeHandler invokes the specified CRUD handler, running any interceptors.
 func InvokeHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors []Interceptor, f F, why Why) diag.Diagnostics {
 	var diags diag.Diagnostics
 

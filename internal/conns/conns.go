@@ -27,6 +27,19 @@ type ServicePackageWithUpdateTags interface {
 	UpdateTags(context.Context, any, string, any, any) error
 }
 
+type contextKey int
+
+var servicePackageNameContextKey contextKey
+
+func NewContext(ctx context.Context, servicePackageName string) context.Context {
+	return context.WithValue(ctx, servicePackageNameContextKey, servicePackageName)
+}
+
+func ServicePackageNameFromContext(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(servicePackageNameContextKey).(string)
+	return v, ok
+}
+
 func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
 	session, err := session.NewSession(cfg)
 
