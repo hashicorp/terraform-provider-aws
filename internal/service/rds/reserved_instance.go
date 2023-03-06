@@ -22,12 +22,13 @@ const (
 	ResNameReservedInstance = "Reserved Instance"
 )
 
+// @SDKResource("aws_rds_reserved_instance")
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceReservedInstanceCreate,
-		ReadContext:   resourceReservedInstanceRead,
-		UpdateContext: resourceReservedInstanceUpdate,
-		DeleteContext: resourceReservedInstanceDelete,
+		CreateWithoutTimeout: resourceReservedInstanceCreate,
+		ReadWithoutTimeout:   resourceReservedInstanceRead,
+		UpdateWithoutTimeout: resourceReservedInstanceUpdate,
+		DeleteWithoutTimeout: resourceReservedInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -126,9 +127,9 @@ func ResourceReservedInstance() *schema.Resource {
 }
 
 func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
@@ -161,7 +162,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -194,7 +195,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
-	tags, err := ListTagsWithContext(ctx, conn, aws.ToString(reservation.ReservedDBInstanceArn))
+	tags, err := ListTags(ctx, conn, aws.ToString(reservation.ReservedDBInstanceArn))
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
@@ -214,12 +215,12 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}
@@ -227,7 +228,7 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}

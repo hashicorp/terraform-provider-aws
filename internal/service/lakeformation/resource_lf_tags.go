@@ -27,11 +27,12 @@ const (
 	ResNameLFTags = "Resource LF Tags"
 )
 
+// @SDKResource("aws_lakeformation_resource_lf_tags")
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourceLFTagsCreate,
-		ReadContext:   resourceResourceLFTagsRead,
-		DeleteContext: resourceResourceLFTagsDelete,
+		CreateWithoutTimeout: resourceResourceLFTagsCreate,
+		ReadWithoutTimeout:   resourceResourceLFTagsRead,
+		DeleteWithoutTimeout: resourceResourceLFTagsDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -222,7 +223,7 @@ func ResourceResourceLFTags() *schema.Resource {
 }
 
 func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.AddLFTagsToResourceInput{
 		Resource: &lakeformation.Resource{},
@@ -249,9 +250,9 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.AddLFTagsToResource(input)
+		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
@@ -266,7 +267,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResource(input)
+		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -307,7 +308,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetResourceLFTagsInput{
 		Resource:           &lakeformation.Resource{},
@@ -330,7 +331,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.GetResourceLFTags(input)
+	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 	if err != nil {
 		return create.DiagError(names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
@@ -364,7 +365,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.RemoveLFTagsFromResourceInput{
 		Resource: &lakeformation.Resource{},
@@ -396,9 +397,9 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		var err error
-		_, err = conn.RemoveLFTagsFromResource(input)
+		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
@@ -413,7 +414,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResource(input)
+		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
 	}
 
 	if err != nil {

@@ -8,6 +8,8 @@ import (
 )
 
 func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
+	t.Parallel()
+
 	equal := []interface{}{
 		[]interface{}{
 			[]string{"a", "b", "c"},
@@ -62,6 +64,8 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 }
 
 func TestStringSlicesEqual(t *testing.T) {
+	t.Parallel()
+
 	equal := []interface{}{
 		[]interface{}{
 			[]string{"a", "b", "c"},

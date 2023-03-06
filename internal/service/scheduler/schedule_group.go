@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_scheduler_schedule_group")
 func ResourceScheduleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleGroupCreate,
@@ -90,7 +91,7 @@ const (
 )
 
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -99,7 +100,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -124,7 +125,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	out, err := findScheduleGroupByName(ctx, conn, d.Id())
 
@@ -166,7 +167,7 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -180,7 +181,7 @@ func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup %s", d.Id())
 

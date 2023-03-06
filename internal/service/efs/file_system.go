@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_efs_file_system")
 func ResourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemCreate,
@@ -28,7 +29,7 @@ func ResourceFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -144,9 +145,9 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	creationToken := ""
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -216,7 +217,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -245,7 +246,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	tags := KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -276,7 +277,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -324,7 +325,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EFS file system (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -333,7 +334,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{

@@ -14,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_instance")
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -87,7 +88,7 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	var matchedInstance *connect.Instance
 
@@ -100,7 +101,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
 
-		output, err := conn.DescribeInstance(&input)
+		output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))

@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceMetricFilter() *schema.Resource {
+// @SDKResource("aws_cloudwatch_log_metric_filter")
+func resourceMetricFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricFilterPut,
 		ReadWithoutTimeout:   resourceMetricFilterRead,
@@ -101,7 +102,7 @@ func ResourceMetricFilter() *schema.Resource {
 }
 
 func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	name := d.Get("name").(string)
 	logGroupName := d.Get("log_group_name").(string)
@@ -133,7 +134,7 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	mf, err := FindMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
@@ -158,7 +159,7 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	// Creating multiple filters on the same log group can sometimes cause
 	// clashes, so use a mutex here (and on creation) to serialise actions on

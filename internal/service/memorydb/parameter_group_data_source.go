@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_memorydb_parameter_group")
 func DataSourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParameterGroupRead,
@@ -55,7 +56,7 @@ func DataSourceParameterGroup() *schema.Resource {
 }
 
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -84,7 +85,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)

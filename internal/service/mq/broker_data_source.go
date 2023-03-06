@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_mq_broker")
 func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerRead,
@@ -245,7 +246,7 @@ func DataSourceBroker() *schema.Resource {
 }
 
 func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mq.ListBrokersInput{}
@@ -343,7 +344,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

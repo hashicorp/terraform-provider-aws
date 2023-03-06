@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sfn_activity")
 func ResourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -26,7 +27,7 @@ func ResourceActivity() *schema.Resource {
 		DeleteWithoutTimeout: resourceActivityDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,9 +50,9 @@ func ResourceActivity() *schema.Resource {
 }
 
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &sfn.CreateActivityInput{
@@ -71,7 +72,7 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -90,7 +91,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for Step Functions Activity (%s): %s", d.Id(), err)
@@ -111,12 +112,12 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating Step Functions Activity (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -125,7 +126,7 @@ func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 	_, err := conn.DeleteActivityWithContext(ctx, &sfn.DeleteActivityInput{

@@ -10,13 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
-}
-
-// newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
+// @FrameworkDataSource
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceBillingServiceAccount{}, nil
+	d := &dataSourceBillingServiceAccount{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceBillingServiceAccount struct {

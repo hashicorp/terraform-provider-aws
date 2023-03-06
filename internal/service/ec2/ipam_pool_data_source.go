@@ -1,21 +1,24 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpc_ipam_pool")
 func DataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPAMPoolRead,
+		ReadWithoutTimeout: dataSourceIPAMPoolRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -97,8 +100,9 @@ func DataSourceIPAMPool() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeIpamPoolsInput{}
@@ -115,10 +119,10 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	pool, err := FindIPAMPool(conn, input)
+	pool, err := FindIPAMPool(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("IPAM Pool", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IPAM Pool", err))
 	}
 
 	d.SetId(aws.StringValue(pool.IpamPoolId))
@@ -126,7 +130,7 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
 	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
-	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -140,9 +144,9 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
-	if err := d.Set("tags", KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,27 +1,30 @@
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshiftserverless_snapshot")
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSnapshotCreate,
-		Read:   resourceSnapshotRead,
-		Update: resourceSnapshotUpdate,
-		Delete: resourceSnapshotDelete,
+		CreateWithoutTimeout: resourceSnapshotCreate,
+		ReadWithoutTimeout:   resourceSnapshotRead,
+		UpdateWithoutTimeout: resourceSnapshotUpdate,
+		DeleteWithoutTimeout: resourceSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -78,8 +81,9 @@ func ResourceSnapshot() *schema.Resource {
 	}
 }
 
-func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := redshiftserverless.CreateSnapshotInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
@@ -90,33 +94,34 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 
-	out, err := conn.CreateSnapshot(&input)
+	out, err := conn.CreateSnapshotWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Serverless Snapshot : %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Snapshot : %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Snapshot.SnapshotName))
 
-	if _, err := waitSnapshotAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Snapshot (%s) to be Available: %w", d.Id(), err)
+	if _, err := waitSnapshotAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Snapshot (%s) to be Available: %s", d.Id(), err)
 	}
 
-	return resourceSnapshotRead(d, meta)
+	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
-	out, err := FindSnapshotByName(conn, d.Id())
+	out, err := FindSnapshotByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Serverless Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Snapshot (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.SnapshotArn)
@@ -130,44 +135,46 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("accounts_with_provisioned_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))
 	d.Set("accounts_with_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := &redshiftserverless.UpdateSnapshotInput{
 		SnapshotName:    aws.String(d.Id()),
 		RetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
 	}
 
-	_, err := conn.UpdateSnapshot(input)
+	_, err := conn.UpdateSnapshotWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating Redshift Serverless Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Snapshot (%s): %s", d.Id(), err)
 	}
 
-	return resourceSnapshotRead(d, meta)
+	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Snapshot: %s", d.Id())
-	_, err := conn.DeleteSnapshot(&redshiftserverless.DeleteSnapshotInput{
+	_, err := conn.DeleteSnapshotWithContext(ctx, &redshiftserverless.DeleteSnapshotInput{
 		SnapshotName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Serverless Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitSnapshotDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Snapshot (%s) to be Deleted: %w", d.Id(), err)
+	if _, err := waitSnapshotDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Snapshot (%s) to be Deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

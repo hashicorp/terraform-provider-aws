@@ -1,31 +1,34 @@
 package redshiftserverless
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_resource_policy")
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourcePolicyPut,
-		Read:   resourceResourcePolicyRead,
-		Update: resourceResourcePolicyPut,
-		Delete: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,14 +52,15 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	arn := d.Get("resource_arn").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := redshiftserverless.PutResourcePolicyInput{
@@ -64,29 +68,30 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 		Policy:      aws.String(policy),
 	}
 
-	out, err := conn.PutResourcePolicy(&input)
+	out, err := conn.PutResourcePolicyWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error setting Redshift Serverless Resource Policy (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "setting Redshift Serverless Resource Policy (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.StringValue(out.ResourcePolicy.ResourceArn))
 
-	return resourceResourcePolicyRead(d, meta)
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
-	out, err := FindResourcePolicyByARN(conn, d.Id())
+	out, err := FindResourcePolicyByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Serverless Resource Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("resource_arn", out.ResourceArn)
@@ -95,7 +100,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("policy is %s:", aws.StringValue(out.Policy))
 
 	if err := json.Unmarshal([]byte(aws.StringValue(out.Policy)), &doc); err != nil {
-		return fmt.Errorf("error unmarshaling policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "unmarshaling policy: %s", err)
 	}
 
 	doc.Statement.Resources = nil
@@ -108,43 +113,44 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	formattedPolicy, err := json.Marshal(policyDoc)
 	if err != nil {
-		return fmt.Errorf("error marshling policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "marshling policy: %s", err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), string(formattedPolicy))
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	return nil
+	return diags
 }
 
-func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicy(&redshiftserverless.DeleteResourcePolicyInput{
+	_, err := conn.DeleteResourcePolicyWithContext(ctx, &redshiftserverless.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Serverless Resource Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 type resourcePolicyDoc struct {

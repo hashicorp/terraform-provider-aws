@@ -17,20 +17,21 @@ import (
 )
 
 func TestAccKafkaServerlessCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_serverless_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessClusterDestroy,
+		CheckDestroy:             testAccCheckServerlessClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
@@ -53,21 +54,22 @@ func TestAccKafkaServerlessCluster_basic(t *testing.T) {
 }
 
 func TestAccKafkaServerlessCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_serverless_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessClusterDestroy,
+		CheckDestroy:             testAccCheckServerlessClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceServerlessCluster(), resourceName),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceServerlessCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,20 +78,21 @@ func TestAccKafkaServerlessCluster_disappears(t *testing.T) {
 }
 
 func TestAccKafkaServerlessCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_serverless_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessClusterDestroy,
+		CheckDestroy:             testAccCheckServerlessClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -102,7 +105,7 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 			{
 				Config: testAccServerlessClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -111,7 +114,7 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 			{
 				Config: testAccServerlessClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -121,20 +124,21 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 }
 
 func TestAccKafkaServerlessCluster_securityGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_serverless_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessClusterDestroy,
+		CheckDestroy:             testAccCheckServerlessClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessClusterConfig_securityGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessClusterExists(resourceName, &v),
+					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -149,31 +153,33 @@ func TestAccKafkaServerlessCluster_securityGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckServerlessClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+func testAccCheckServerlessClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_msk_serverless_cluster" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_msk_serverless_cluster" {
+				continue
+			}
+
+			_, err := tfkafka.FindServerlessClusterByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("MSK Serverless Cluster %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfkafka.FindServerlessClusterByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("MSK Serverless Cluster %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckServerlessClusterExists(n string, v *kafka.Cluster) resource.TestCheckFunc {
+func testAccCheckServerlessClusterExists(ctx context.Context, n string, v *kafka.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,9 +190,9 @@ func testAccCheckServerlessClusterExists(n string, v *kafka.Cluster) resource.Te
 			return fmt.Errorf("No MSK Serverless Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
-		output, err := tfkafka.FindServerlessClusterByARN(context.Background(), conn, rs.Primary.ID)
+		output, err := tfkafka.FindServerlessClusterByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

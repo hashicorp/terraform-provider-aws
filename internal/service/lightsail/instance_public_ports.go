@@ -2,6 +2,7 @@ package lightsail
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 
@@ -9,19 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lightsail_instance_public_ports")
 func ResourceInstancePublicPorts() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstancePublicPortsCreate,
-		Read:   resourceInstancePublicPortsRead,
-		Delete: resourceInstancePublicPortsDelete,
+		CreateWithoutTimeout: resourceInstancePublicPortsCreate,
+		ReadWithoutTimeout:   resourceInstancePublicPortsRead,
+		DeleteWithoutTimeout: resourceInstancePublicPortsDelete,
 
 		Schema: map[string]*schema.Schema{
 			"instance_name": {
@@ -44,6 +48,14 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+						},
+						"cidr_list_aliases": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"from_port": {
@@ -81,8 +93,9 @@ func ResourceInstancePublicPorts() *schema.Resource {
 	}
 }
 
-func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -94,10 +107,10 @@ func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{})
 		PortInfos:    portInfos,
 	}
 
-	_, err := conn.PutInstancePublicPorts(input)
+	_, err := conn.PutInstancePublicPortsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("unable to create public ports for instance %s: %w", d.Get("instance_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "unable to create public ports for instance %s: %s", d.Get("instance_name").(string), err)
 	}
 
 	var buffer bytes.Buffer
@@ -107,43 +120,45 @@ func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), create.StringHashcode(buffer.String())))
 
-	return resourceInstancePublicPortsRead(d, meta)
+	return append(diags, resourceInstancePublicPortsRead(ctx, d, meta)...)
 }
 
-func resourceInstancePublicPortsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetInstancePortStatesInput{
 		InstanceName: aws.String(d.Get("instance_name").(string)),
 	}
 
-	output, err := conn.GetInstancePortStates(input)
+	output, err := conn.GetInstancePortStatesWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NotFoundException") {
 		log.Printf("[WARN] Lightsail instance public ports (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lightsail instance public ports (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lightsail instance public ports (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.PortStates) == 0 || output.PortStates == nil {
 		log.Printf("[WARN] Lightsail instance public ports (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("port_info", flattenInstancePortStates(output.PortStates)); err != nil {
-		return fmt.Errorf("error setting port_info: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting port_info: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var err *multierror.Error
 
@@ -153,7 +168,7 @@ func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	for _, portInfo := range portInfos {
-		_, portError := conn.CloseInstancePublicPorts(&lightsail.CloseInstancePublicPortsInput{
+		_, portError := conn.CloseInstancePublicPortsWithContext(ctx, &lightsail.CloseInstancePublicPortsInput{
 			InstanceName: aws.String(d.Get("instance_name").(string)),
 			PortInfo:     portInfo,
 		})
@@ -164,10 +179,10 @@ func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to close public ports for instance %s: %w", d.Get("instance_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "unable to close public ports for instance %s: %s", d.Get("instance_name").(string), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
@@ -183,6 +198,10 @@ func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Cidrs = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["cidr_list_aliases"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CidrListAliases = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["ipv6_cidrs"].(*schema.Set); ok && v.Len() > 0 {
@@ -231,6 +250,10 @@ func flattenInstancePortState(apiObject *lightsail.InstancePortState) map[string
 
 	if v := apiObject.Cidrs; v != nil {
 		tfMap["cidrs"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.CidrListAliases; v != nil {
+		tfMap["cidr_list_aliases"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.Ipv6Cidrs; v != nil {

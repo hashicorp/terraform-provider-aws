@@ -104,7 +104,7 @@ Defaults to true.
   or will use [RDS Blue/Green deployments][blue-green].
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
-* `blue_green_update` - (Optional) Enables low-downtime updates using R[RDS Blue/Green deployments][blue-green].
+* `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
   See [blue_green_update](#blue_green_update) below
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB

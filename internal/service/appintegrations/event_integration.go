@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appintegrations_event_integration")
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceEventIntegrationCreate,
-		ReadContext:   resourceEventIntegrationRead,
-		UpdateContext: resourceEventIntegrationUpdate,
-		DeleteContext: resourceEventIntegrationDelete,
+		CreateWithoutTimeout: resourceEventIntegrationCreate,
+		ReadWithoutTimeout:   resourceEventIntegrationRead,
+		UpdateWithoutTimeout: resourceEventIntegrationUpdate,
+		DeleteWithoutTimeout: resourceEventIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -73,9 +74,9 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -112,7 +113,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,7 +146,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -160,7 +161,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 
@@ -171,13 +172,13 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -186,7 +187,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_route53_resolver_firewall_config")
 func DataSourceFirewallConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallConfigRead,
@@ -35,7 +36,7 @@ func DataSourceFirewallConfig() *schema.Resource {
 }
 
 func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	id := d.Get("resource_id").(string)
 	firewallConfig, err := findFirewallConfigByResourceID(ctx, conn, id)

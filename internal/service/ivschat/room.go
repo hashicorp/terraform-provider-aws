@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivschat_room")
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,
@@ -102,7 +103,7 @@ const (
 )
 
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	in := &ivschat.CreateRoomInput{}
 
@@ -127,7 +128,7 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -152,7 +153,7 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	out, err := findRoomByID(ctx, conn, d.Id())
 
@@ -202,7 +203,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	update := false
 
@@ -261,7 +262,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	log.Printf("[INFO] Deleting IVSChat Room %s", d.Id())
 

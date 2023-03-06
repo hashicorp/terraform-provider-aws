@@ -1,22 +1,25 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_sagemaker_servicecatalog_portfolio_status")
 func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServicecatalogPortfolioStatusPut,
-		Read:   resourceServicecatalogPortfolioStatusRead,
-		Update: resourceServicecatalogPortfolioStatusPut,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
+		ReadWithoutTimeout:   resourceServicecatalogPortfolioStatusRead,
+		UpdateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,35 +32,37 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 	}
 }
 
-func resourceServicecatalogPortfolioStatusPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	status := d.Get("status").(string)
 	var err error
 	if status == sagemaker.SagemakerServicecatalogStatusEnabled {
-		_, err = conn.EnableSagemakerServicecatalogPortfolio(&sagemaker.EnableSagemakerServicecatalogPortfolioInput{})
+		_, err = conn.EnableSagemakerServicecatalogPortfolioWithContext(ctx, &sagemaker.EnableSagemakerServicecatalogPortfolioInput{})
 	} else {
-		_, err = conn.DisableSagemakerServicecatalogPortfolio(&sagemaker.DisableSagemakerServicecatalogPortfolioInput{})
+		_, err = conn.DisableSagemakerServicecatalogPortfolioWithContext(ctx, &sagemaker.DisableSagemakerServicecatalogPortfolioInput{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("setting SageMaker Servicecatalog Portfolio Status: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting SageMaker Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceServicecatalogPortfolioStatusRead(d, meta)
+	return append(diags, resourceServicecatalogPortfolioStatusRead(ctx, d, meta)...)
 }
 
-func resourceServicecatalogPortfolioStatusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	resp, err := conn.GetSagemakerServicecatalogPortfolioStatus(&sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
+	resp, err := conn.GetSagemakerServicecatalogPortfolioStatusWithContext(ctx, &sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
 	if err != nil {
-		return fmt.Errorf("Getting SageMaker Servicecatalog Portfolio Status: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Getting SageMaker Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.Set("status", resp.Status)
 
-	return nil
+	return diags
 }

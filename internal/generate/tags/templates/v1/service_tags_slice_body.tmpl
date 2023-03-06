@@ -118,7 +118,7 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 //   - []interface{} (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
 {{- end }}
-func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*{{ .TagPackage }}.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
@@ -152,7 +152,7 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 		}
 		{{- end }}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	case []*{{ .TagPackage }}.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
@@ -185,10 +185,10 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 		}
 		{{- end }}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
-		return KeyValueTags(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+		return KeyValueTags(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	case []interface{}:
 		result := make(map[string]*tftags.TagData)
 
@@ -240,20 +240,20 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 			result[key] = tagData
 		}
 
-		return tftags.New(result)
+		return tftags.New(ctx, result)
 	{{- end }}
 	default:
-		return tftags.New(nil)
+		return tftags.New(ctx, nil)
 	}
 }
 {{- else }}
-func KeyValueTags(tags []*{{ .TagPackage }}.{{ .TagType }}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tag.{{ .TagTypeValElem }}
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 {{- end }}

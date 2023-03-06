@@ -1,20 +1,23 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment")
 func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayVPNAttachmentRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayVPNAttachmentRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -35,8 +38,9 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
@@ -51,7 +55,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -67,19 +71,19 @@ func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta inte
 		})...)
 	}
 
-	transitGatewayAttachment, err := FindTransitGatewayAttachment(conn, input)
+	transitGatewayAttachment, err := FindTransitGatewayAttachment(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPN Attachment", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPN Attachment", err))
 	}
 
 	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

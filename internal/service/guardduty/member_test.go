@@ -1,6 +1,7 @@
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccMember_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 
@@ -22,12 +24,12 @@ func testAccMember_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
@@ -44,6 +46,7 @@ func testAccMember_basic(t *testing.T) {
 }
 
 func testAccMember_invite_disassociate(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 
@@ -51,12 +54,12 @@ func testAccMember_invite_disassociate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
@@ -65,7 +68,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 			{
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
 				),
@@ -83,6 +86,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 }
 
 func testAccMember_invite_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 
@@ -90,12 +94,12 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
@@ -104,7 +108,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 			{
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
@@ -122,6 +126,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 }
 
 func testAccMember_invitationMessage(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccMemberFromEnv(t)
 	invitationMessage := "inviting"
@@ -130,12 +135,12 @@ func testAccMember_invitationMessage(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName),
+					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
@@ -158,43 +163,45 @@ func testAccMember_invitationMessage(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_member" {
-			continue
-		}
-
-		accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &guardduty.GetMembersInput{
-			AccountIds: []*string{aws.String(accountID)},
-			DetectorId: aws.String(detectorID),
-		}
-
-		gmo, err := conn.GetMembers(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_member" {
+				continue
 			}
-			return err
+
+			accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &guardduty.GetMembersInput{
+				AccountIds: []*string{aws.String(accountID)},
+				DetectorId: aws.String(detectorID),
+			}
+
+			gmo, err := conn.GetMembersWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+					return nil
+				}
+				return err
+			}
+
+			if len(gmo.Members) < 1 {
+				continue
+			}
+
+			return fmt.Errorf("Expected GuardDuty Detector to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		if len(gmo.Members) < 1 {
-			continue
-		}
-
-		return fmt.Errorf("Expected GuardDuty Detector to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMemberExists(name string) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -211,8 +218,8 @@ func testAccCheckMemberExists(name string) resource.TestCheckFunc {
 			DetectorId: aws.String(detectorID),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
-		gmo, err := conn.GetMembers(input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		gmo, err := conn.GetMembersWithContext(ctx, input)
 		if err != nil {
 			return err
 		}

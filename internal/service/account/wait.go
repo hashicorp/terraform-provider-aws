@@ -24,7 +24,7 @@ func waitAlternateContactCreated(ctx context.Context, conn *account.Account, acc
 		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*account.AlternateContact); ok {
 		return output, err
@@ -43,7 +43,7 @@ func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, acc
 		ContinuousTargetOccurence: 2,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -56,7 +56,7 @@ func waitAlternateContactDeleted(ctx context.Context, conn *account.Account, acc
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

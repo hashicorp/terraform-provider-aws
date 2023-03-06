@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepDomains(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudSearchConn
+	conn := client.(*conns.AWSClient).CloudSearchConn()
 	input := &cloudsearch.DescribeDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	domains, err := conn.DescribeDomains(input)
+	domains, err := conn.DescribeDomainsWithContext(ctx, input)
 
 	for _, domain := range domains.DomainStatusList {
 		if aws.BoolValue(domain.Deleted) {
@@ -53,7 +54,7 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error listing CloudSearch Domains (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudSearch Domains (%s): %w", region, err)

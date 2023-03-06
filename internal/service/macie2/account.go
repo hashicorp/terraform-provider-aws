@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_account")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -57,7 +58,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.EnableMacieInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -97,7 +98,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.GetMacieSessionInput{}
 
@@ -124,7 +125,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -145,7 +146,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisableMacieInput{}
 

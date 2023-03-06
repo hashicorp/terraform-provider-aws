@@ -9,13 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourcePartition)
-}
-
-// newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
+// @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePartition{}, nil
+	d := &dataSourcePartition{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourcePartition struct {

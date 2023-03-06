@@ -14,9 +14,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_hours_of_operation")
 func DataSourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceHoursOfOperationRead,
+		ReadWithoutTimeout: dataSourceHoursOfOperationRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -109,7 +110,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 }
 
 func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -135,7 +136,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		input.HoursOfOperationId = hoursOfOperationSummary.Id
 	}
 
-	resp, err := conn.DescribeHoursOfOperation(input)
+	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))
@@ -159,7 +160,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error setting config: %s", err))
 	}
 
-	if err := d.Set("tags", KeyValueTags(hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

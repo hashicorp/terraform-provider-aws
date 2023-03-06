@@ -7,6 +7,8 @@ import (
 )
 
 func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName    string
 		InputARN    string
@@ -28,7 +30,10 @@ func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tflogs.TrimLogGroupARNWildcardSuffix(testCase.InputARN)
 
 			if got != testCase.ExpectedARN {

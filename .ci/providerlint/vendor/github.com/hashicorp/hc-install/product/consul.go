@@ -50,6 +50,6 @@ var Consul = Product{
 	BuildInstructions: &BuildInstructions{
 		GitRepoURL:    "https://github.com/hashicorp/consul.git",
 		PreCloneCheck: &build.GoIsInstalled{},
-		Build:         &build.GoBuild{Version: v1_18},
+		Build:         &build.GoBuild{},
 	},
 }

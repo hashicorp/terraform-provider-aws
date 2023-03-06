@@ -14,11 +14,7 @@ import (
 // ListTags lists deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codedeploy.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -26,10 +22,10 @@ func ListTagsWithContext(ctx context.Context, conn codedeployiface.CodeDeployAPI
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // []*SERVICE.Tag handling
@@ -51,25 +47,22 @@ func Tags(tags tftags.KeyValueTags) []*codedeploy.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from codedeploy service tags.
-func KeyValueTags(tags []*codedeploy.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*codedeploy.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn codedeployiface.CodeDeployAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codedeploy.UntagResourceInput{

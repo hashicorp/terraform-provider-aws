@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_email_identity_feedback_attributes")
 func ResourceEmailIdentityFeedbackAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityFeedbackAttributesCreate,
@@ -47,7 +48,7 @@ const (
 )
 
 func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.PutEmailIdentityFeedbackAttributesInput{
 		EmailIdentity:          aws.String(d.Get("email_identity").(string)),
@@ -69,7 +70,7 @@ func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schem
 }
 
 func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
 
@@ -90,7 +91,7 @@ func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.
 }
 
 func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	update := false
 
@@ -117,7 +118,7 @@ func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schem
 }
 
 func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 EmailIdentityFeedbackAttributes %s", d.Id())
 

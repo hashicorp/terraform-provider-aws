@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,22 +9,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_traffic_mirror_filter_rule")
 func ResourceTrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTrafficMirrorFilterRuleCreate,
-		Read:   resourceTrafficMirrorFilterRuleRead,
-		Update: resourceTrafficMirrorFilterRuleUpdate,
-		Delete: resourceTrafficMirrorFilterRuleDelete,
+		CreateWithoutTimeout: resourceTrafficMirrorFilterRuleCreate,
+		ReadWithoutTimeout:   resourceTrafficMirrorFilterRuleRead,
+		UpdateWithoutTimeout: resourceTrafficMirrorFilterRuleUpdate,
+		DeleteWithoutTimeout: resourceTrafficMirrorFilterRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceTrafficMirrorFilterRuleImport,
+			StateContext: resourceTrafficMirrorFilterRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -110,8 +114,9 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
 		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
@@ -138,30 +143,31 @@ func resourceTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interfac
 		input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateTrafficMirrorFilterRule(input)
+	output, err := conn.CreateTrafficMirrorFilterRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Traffic Mirror Filter Rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Filter Rule: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TrafficMirrorFilterRule.TrafficMirrorFilterRuleId))
 
-	return resourceTrafficMirrorFilterRuleRead(d, meta)
+	return append(diags, resourceTrafficMirrorFilterRuleRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	rule, err := FindTrafficMirrorFilterRuleByTwoPartKey(conn, d.Get("traffic_mirror_filter_id").(string), d.Id())
+	rule, err := FindTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, d.Get("traffic_mirror_filter_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Traffic Mirror Filter Rule %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Traffic Mirror Filter Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -176,7 +182,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
 	if rule.DestinationPortRange != nil {
 		if err := d.Set("destination_port_range", []interface{}{flattenTrafficMirrorPortRange(rule.DestinationPortRange)}); err != nil {
-			return fmt.Errorf("setting destination_port_range: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting destination_port_range: %s", err)
 		}
 	} else {
 		d.Set("destination_port_range", nil)
@@ -187,7 +193,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	d.Set("source_cidr_block", rule.SourceCidrBlock)
 	if rule.SourcePortRange != nil {
 		if err := d.Set("source_port_range", []interface{}{flattenTrafficMirrorPortRange(rule.SourcePortRange)}); err != nil {
-			return fmt.Errorf("setting source_port_range: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting source_port_range: %s", err)
 		}
 	} else {
 		d.Set("source_port_range", nil)
@@ -195,11 +201,12 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	d.Set("traffic_direction", rule.TrafficDirection)
 	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
 
-	return nil
+	return diags
 }
 
-func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ModifyTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: aws.String(d.Id()),
@@ -267,31 +274,32 @@ func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interfac
 		input.RemoveFields = aws.StringSlice(removeFields)
 	}
 
-	_, err := conn.ModifyTrafficMirrorFilterRule(input)
+	_, err := conn.ModifyTrafficMirrorFilterRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating EC2 Traffic Mirror Filter Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
-	return resourceTrafficMirrorFilterRuleRead(d, meta)
+	return append(diags, resourceTrafficMirrorFilterRuleRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter Rule: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorFilterRule(&ec2.DeleteTrafficMirrorFilterRuleInput{
+	_, err := conn.DeleteTrafficMirrorFilterRuleWithContext(ctx, &ec2.DeleteTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Traffic Mirror Filter Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTrafficMirrorFilterRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTrafficMirrorFilterRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.SplitN(d.Id(), ":", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <filter-id>:<rule-id>", d.Id())

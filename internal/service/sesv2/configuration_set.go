@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_configuration_set")
 func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -142,7 +143,7 @@ const (
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
@@ -169,7 +170,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -190,7 +191,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
 
@@ -276,7 +277,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	if d.HasChanges("delivery_options") {
 		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
@@ -394,7 +395,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_mskconnect_worker_configuration")
 func DataSourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkerConfigurationRead,
@@ -41,7 +42,7 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 }
 
 func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name")
 	var output []*kafkaconnect.WorkerConfigurationSummary

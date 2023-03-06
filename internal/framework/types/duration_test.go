@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -16,9 +17,8 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		val         tftypes.Value
-		expected    attr.Value
-		expectError bool
+		val      tftypes.Value
+		expected attr.Value
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
@@ -33,21 +33,20 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 			expected: fwtypes.DurationValue(2 * time.Hour),
 		},
 		"invalid duration": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
-			expectError: true,
+			val:      tftypes.NewValue(tftypes.String, "not ok"),
+			expected: fwtypes.DurationUnknown(),
 		},
 	}
 
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
 			val, err := fwtypes.DurationType.ValueFromTerraform(ctx, test.val)
 
-			if err == nil && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-			if err != nil && !test.expectError {
+			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
 			}
 
@@ -88,6 +87,8 @@ func TestDurationTypeValidate(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
 
 			diags := fwtypes.DurationType.Validate(ctx, test.val, path.Root("test"))
@@ -101,4 +102,55 @@ func TestDurationTypeValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDurationToStringValue(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		duration fwtypes.Duration
+		expected types.String
+	}{
+		"value": {
+			// TODO: StringValue does not round-trip
+			duration: durationFromString(t, "2h"),
+			expected: types.StringValue("2h0m0s"),
+		},
+		"null": {
+			duration: fwtypes.DurationNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			duration: fwtypes.DurationUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			s, _ := test.duration.ToStringValue(ctx)
+
+			if !test.expected.Equal(s) {
+				t.Fatalf("expected %#v to equal %#v", s, test.expected)
+			}
+		})
+	}
+}
+
+func durationFromString(t *testing.T, s string) fwtypes.Duration {
+	ctx := context.Background()
+
+	val := tftypes.NewValue(tftypes.String, s)
+
+	attr, err := fwtypes.DurationType.ValueFromTerraform(ctx, val)
+	if err != nil {
+		t.Fatalf("setting Duration: %s", err)
+	}
+
+	return attr.(fwtypes.Duration)
 }
