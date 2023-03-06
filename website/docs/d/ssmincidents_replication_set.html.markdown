@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS Systems Manager Incident Manager incidents"
+subcategory: "SSM Incident Manager Incidents"
 layout: "aws"
 page_title: "AWS: aws_ssmincidents_replication_set"
 description: |-
