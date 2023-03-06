@@ -156,7 +156,7 @@ func TestAccMediaLiveChannel_udp_output_settings(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
