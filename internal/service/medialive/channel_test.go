@@ -856,7 +856,7 @@ resource "aws_medialive_channel" "test" {
       }
     }
 
-	audio_descriptions {
+    audio_descriptions {
       audio_selector_name = "audio_2"
       name                = "audio_2"
 
