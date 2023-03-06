@@ -236,7 +236,7 @@ resource "aws_amplify_domain_association" "test" {
   }
 
   enable_auto_sub_domain = %[3]t
-  wait_for_verification = %[4]t
+  wait_for_verification  = %[4]t
 }
 `, rName, domainName, enableAutoSubDomain, waitForVerification)
 }
@@ -272,7 +272,7 @@ resource "aws_amplify_domain_association" "test" {
   }
 
   enable_auto_sub_domain = %[3]t
-  wait_for_verification = %[4]t
+  wait_for_verification  = %[4]t
 }
 `, rName, domainName, enableAutoSubDomain, waitForVerification)
 }
