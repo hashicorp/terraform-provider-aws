@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -281,7 +280,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			ds := &DataSource{}
-			// First interceptor sets service package name.
+			// First interceptor sets service package name in Context.
 			ds.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
 
 			if v := r.ReadWithoutTimeout; v != nil {
@@ -290,11 +289,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			provider.DataSourcesMap[typeName] = r
 		}
-
-		// var update func(context.Context, any, string, any, any) error
-		// if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
-		// 	update = v.UpdateTags
-		// }
 
 		for _, v := range sp.SDKResources(ctx) {
 			typeName := v.TypeName
@@ -305,13 +299,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			r := v.Factory()
-
-			// var identifierAttribute *string
-			// if v.Tags != nil {
-			// 	identifierAttribute = &v.Tags.IdentifierAttribute
-
-			// 	// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
-			// }
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
@@ -332,8 +319,15 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			}
 
 			rs := &Resource{}
-			// First interceptor sets service package name.
+			// First interceptor sets service package name in Context.
 			rs.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
+
+			if v.Tags != nil {
+				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
+
+				rs.tags = v.Tags
+				rs.interceptors.Append(Before|After, Create|Read|Update, rs.tagsInterceptor)
+			}
 
 			if v := r.CreateWithoutTimeout; v != nil {
 				r.CreateWithoutTimeout = rs.Create(v)
@@ -821,84 +815,4 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 	}
 
 	return endpoints, nil
-}
-
-func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedUpdateContextFunc(f schema.UpdateContextFunc, idAttribute *string, update func(context.Context, any, string, any, any) error) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		if idAttribute != nil && update != nil {
-			var identifier string
-			if *idAttribute == "id" {
-				identifier = d.Id()
-			} else {
-				identifier = d.Get(*idAttribute).(string)
-			}
-
-			if d.HasChange("tags_all") {
-				o, n := d.GetChange("tags_all")
-				err := update(ctx, meta, identifier, o, n)
-
-				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
-					return f(ctx, d, meta)
-				}
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diag.Diagnostics{}, err.Error())
-				}
-			}
-		}
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedCustomizeDiffFunc(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateUpgradeFunc(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
-	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, rawState, meta)
-	}
 }
