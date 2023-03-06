@@ -1,4 +1,9 @@
 ## 4.57.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Prevent `Provider produced inconsistent final plan` errors produced by null `skip_destroy` attribute value. NOTE: Because the maintainers have been unable to reproduce the reported problem, the fix is best effort and we ask for community support in verifying the fix. ([#29812](https://github.com/hashicorp/terraform-provider-aws/issues/29812))
+
 ## 4.57.0 (March  3, 2023)
 
 NOTES:
