@@ -265,25 +265,27 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := v.Factory()
+			r := v.Factory()
 
 			// Ensure that the correct CRUD handler variants are used.
-			if ds.Read != nil || ds.ReadContext != nil {
+			if r.Read != nil || r.ReadContext != nil {
 				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 
-			if v := ds.ReadWithoutTimeout; v != nil {
-				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			ds := &DataSource{}
+
+			if v := r.ReadWithoutTimeout; v != nil {
+				r.ReadWithoutTimeout = ds.Read(v)
 			}
 
-			provider.DataSourcesMap[typeName] = ds
+			provider.DataSourcesMap[typeName] = r
 		}
 
-		var update func(context.Context, any, string, any, any) error
-		if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
-			update = v.UpdateTags
-		}
+		// var update func(context.Context, any, string, any, any) error
+		// if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
+		// 	update = v.UpdateTags
+		// }
 
 		for _, v := range sp.SDKResources(ctx) {
 			typeName := v.TypeName
@@ -295,12 +297,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			r := v.Factory()
 
-			var identifierAttribute *string
-			if v.Tags != nil {
-				identifierAttribute = &v.Tags.IdentifierAttribute
+			// var identifierAttribute *string
+			// if v.Tags != nil {
+			// 	identifierAttribute = &v.Tags.IdentifierAttribute
 
-				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
-			}
+			// 	// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
+			// }
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
@@ -320,29 +322,31 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			rs := &Resource{}
+
 			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
+				r.CreateWithoutTimeout = rs.Create(v)
 			}
 			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
+				r.ReadWithoutTimeout = rs.Read(v)
 			}
 			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v, identifierAttribute, update)
+				r.UpdateWithoutTimeout = rs.Update(v)
 			}
 			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
+				r.DeleteWithoutTimeout = rs.Delete(v)
 			}
 			if v := r.Importer; v != nil {
 				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = wrappedStateContextFunc(v)
+					r.Importer.StateContext = rs.State(v)
 				}
 			}
 			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = wrappedCustomizeDiffFunc(v)
+				r.CustomizeDiff = rs.CustomizeDiff(v)
 			}
 			for _, stateUpgrader := range r.StateUpgraders {
 				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = wrappedStateUpgradeFunc(v)
+					stateUpgrader.Upgrade = rs.StateUpgrade(v)
 				}
 			}
 
