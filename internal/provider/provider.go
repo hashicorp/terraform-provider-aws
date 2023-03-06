@@ -254,9 +254,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	}
 
 	var errs *multierror.Error
-	servicePackages := servicePackages(ctx)
+	servicePackageMap := make(map[string]conns.ServicePackage)
 
-	for _, sp := range servicePackages {
+	for _, sp := range servicePackages(ctx) {
+		servicePackageMap[sp.ServicePackageName()] = sp
+
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
 
@@ -367,7 +369,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta.ServicePackages = servicePackages
+	meta.ServicePackages = servicePackageMap
 	provider.SetMeta(meta)
 
 	return provider, nil
