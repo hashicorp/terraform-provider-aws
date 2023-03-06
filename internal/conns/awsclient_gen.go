@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -293,7 +294,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -604,7 +604,7 @@ type AWSClient struct {
 	snsConn                          *sns.SNS
 	sqsConn                          *sqs.SQS
 	ssmConn                          *ssm.SSM
-	ssmcontactsConn                  *ssmcontacts.SSMContacts
+	ssmcontactsClient                *ssmcontacts.Client
 	ssmincidentsClient               *ssmincidents.Client
 	ssoConn                          *sso.SSO
 	ssoadminConn                     *ssoadmin.SSOAdmin
@@ -1718,8 +1718,8 @@ func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
 	return client.ssmClient.Client()
 }
 
-func (client *AWSClient) SSMContactsConn() *ssmcontacts.SSMContacts {
-	return client.ssmcontactsConn
+func (client *AWSClient) SSMContactsClient() *ssmcontacts.Client {
+	return client.ssmcontactsClient
 }
 
 func (client *AWSClient) SSMIncidentsClient() *ssmincidents.Client {
