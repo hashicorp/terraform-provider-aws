@@ -13,7 +13,8 @@ type DataSource struct {
 
 func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		return InvokeHandler(ctx, d, meta, ds.interceptors.Why(Read), f)
+		why := Read
+		return InvokeHandler(ctx, d, meta, ds.interceptors.Why(why), f, why)
 	}
 }
 
@@ -23,25 +24,29 @@ type Resource struct {
 
 func (r *Resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(Create), f)
+		why := Create
+		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
 	}
 }
 
 func (r *Resource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(Read), f)
+		why := Read
+		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
 	}
 }
 
 func (r *Resource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(Update), f)
+		why := Update
+		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
 	}
 }
 
 func (r *Resource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(Delete), f)
+		why := Delete
+		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
 	}
 }
 

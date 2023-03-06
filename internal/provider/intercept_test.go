@@ -16,7 +16,7 @@ func TestInterceptorsAppend(t *testing.T) {
 		t.Errorf("length of interceptors = %v, want %v", got, want)
 	}
 
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
 
@@ -24,7 +24,7 @@ func TestInterceptorsAppend(t *testing.T) {
 		t.Errorf("length of interceptors = %v, want %v", got, want)
 	}
 
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
 
@@ -36,13 +36,13 @@ func TestInterceptorsAppend(t *testing.T) {
 func TestInterceptorsWhy(t *testing.T) {
 	var interceptors Interceptors
 
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
 
@@ -63,13 +63,13 @@ func TestInterceptorsWhy(t *testing.T) {
 func TestInvokeHandler(t *testing.T) {
 	var interceptors Interceptors
 
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 		return ctx, diags
 	})
 
@@ -78,7 +78,7 @@ func TestInvokeHandler(t *testing.T) {
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
 
-	diags := InvokeHandler(context.Background(), nil, 42, interceptors, read)
+	diags := InvokeHandler(context.Background(), nil, 42, interceptors, read, Read)
 	if got, want := len(diags), 1; got != want {
 		t.Errorf("length of diags = %v, want %v", got, want)
 	}

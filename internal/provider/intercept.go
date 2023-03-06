@@ -12,7 +12,7 @@ import (
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type InterceptorFunc func(context.Context, *schema.ResourceData, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type InterceptorFunc func(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // Interceptor represents a single interceptor.
 type Interceptor struct {
@@ -71,12 +71,13 @@ func (v *Interceptors) Why(why Why) Interceptors {
 	return interceptors
 }
 
-func InvokeHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors []Interceptor, f F) diag.Diagnostics {
+func InvokeHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors []Interceptor, f F, why Why) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	when := Before
 	for _, v := range interceptors {
-		if v.When&Before != 0 {
-			ctx, diags = v.Func(ctx, d, meta, diags)
+		if v.When&when != 0 {
+			ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 
 			// Short circuit if any Before interceptor errors.
 			if diags.HasError() {
@@ -89,22 +90,25 @@ func InvokeHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diag
 	diags = f(ctx, d, meta)
 
 	if diags.HasError() {
+		when = OnError
 		for _, v := range reversed {
-			if v.When&OnError != 0 {
-				ctx, diags = v.Func(ctx, d, meta, diags)
+			if v.When&when != 0 {
+				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 			}
 		}
 	} else {
+		when = After
 		for _, v := range reversed {
-			if v.When&After != 0 {
-				ctx, diags = v.Func(ctx, d, meta, diags)
+			if v.When&when != 0 {
+				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 			}
 		}
 	}
 
 	for _, v := range reversed {
-		if v.When&Finally != 0 {
-			ctx, diags = v.Func(ctx, d, meta, diags)
+		when = Finally
+		if v.When&when != 0 {
+			ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 		}
 	}
 
