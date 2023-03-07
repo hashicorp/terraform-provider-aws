@@ -43,6 +43,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Replication Group",
 		},
 		{
+			Factory:  DataSourceReservedCacheNodeOffering,
+			TypeName: "aws_elasticache_reserved_cache_node_offering",
+		},
+		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
 			Name:     "Subnet Group",
@@ -82,6 +86,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceReservedCacheNode,
+			TypeName: "aws_elasticache_reserved_cache_node",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
