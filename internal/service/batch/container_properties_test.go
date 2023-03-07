@@ -373,6 +373,79 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
+		"empty environment variables": {
+			//lintignore:AWSAT005
+			ApiJson: `
+{
+	"image": "example:image",
+	"vcpus": 8,
+	"memory": 2048,
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"environment": [
+		{
+			"name": "VALUE",
+			"value": "test"
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example",
+	"volumes": [],
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": []
+}`,
+			//lintignore:AWSAT005
+			ConfigurationJson: `
+{
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"image": "example:image",
+	"memory": 2048,
+	"vcpus": 8,
+	"environment": [
+		{
+			"name": "EMPTY",
+			"value": ""
+		},
+		{
+			"name": "VALUE",
+			"value": "test"
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
+}`,
+			ExpectEquivalent: true,
+		},
+		"empty environment variable": {
+			//lintignore:AWSAT005
+			ApiJson: `
+{
+	"image": "example:image",
+	"vcpus": 8,
+	"memory": 2048,
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"environment": [],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example",
+	"volumes": [],
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": []
+}`,
+			//lintignore:AWSAT005
+			ConfigurationJson: `
+{
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"image": "example:image",
+	"memory": 2048,
+	"vcpus": 8,
+	"environment": [
+		{
+			"name": "EMPTY",
+			"value": ""
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
+}`,
+			ExpectEquivalent: true,
+		},
 	}
 
 	for name, testCase := range testCases {

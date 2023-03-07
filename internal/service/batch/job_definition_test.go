@@ -423,6 +423,38 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_containerProperties_emptyField(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(environment)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "environment[?name=='VALUE'].value | [0]", "value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -802,6 +834,31 @@ resource "aws_batch_job_definition" "test" {
   type = "container"
 
   propagate_tags = true
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_containerProperties_emptyField(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+    environment = [
+      {
+        name  = "EMPTY"
+        value = ""
+      },
+      {
+        name  = "VALUE"
+        value = "value"
+      }
+    ]
+  })
+  name = %[1]q
+  type = "container"
 }
 `, rName)
 }
