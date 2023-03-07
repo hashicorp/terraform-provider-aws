@@ -144,8 +144,8 @@ resource "aws_securityhub_organization_admin_account" "test" {
 }
 
 resource "aws_securityhub_organization_configuration" "test" {
-  auto_enable 				  = true
-	auto_enable_standards = "%[1]s"
+  auto_enable           = true
+  auto_enable_standards = "%[1]s"
 
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
