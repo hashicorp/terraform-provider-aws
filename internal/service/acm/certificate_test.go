@@ -1405,6 +1405,11 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, acm.ValidationMethodDns, "ENABLED"),
+				Check:  testAccCheckCertificateExists(ctx, resourceName, &v),
+			},
+			// Check the certificate's attributes once the validation has been applied.
+			{
+				Config: testAccCertificateConfig_optionsWithValidation(rootDomain, acm.ValidationMethodDns, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
