@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_query_log_config")
 func ResourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogConfigCreate,
@@ -25,7 +26,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 		DeleteWithoutTimeout: resourceQueryLogConfigDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,7 +65,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
@@ -116,7 +117,7 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_id", queryLogConfig.OwnerId)
 	d.Set("share_status", queryLogConfig.ShareStatus)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Query Log Config (%s): %s", arn, err)
@@ -142,7 +143,7 @@ func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Route53 Resolver Query Log Config (%s) tags: %s", d.Id(), err)
 		}
 	}

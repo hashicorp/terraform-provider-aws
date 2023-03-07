@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_disk_attachment")
 func ResourceDiskAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiskAttachmentCreate,
@@ -66,7 +67,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string), errors.New("Error waiting for Attach Disk request operation"))
 	}
@@ -133,7 +134,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 
 		op := stopOut.Operations[0]
 
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeStopInstance, ResInstance, iName, errors.New("Error waiting for Stop Instance operation"))
 		}
@@ -153,7 +154,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string), errors.New("Error waiting for Detach Disk request operation"))
 	}
@@ -179,7 +180,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 
 		op := stopOut.Operations[0]
 
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeStartInstance, ResInstance, iName, errors.New("Error waiting for Start Instance operation"))
 		}

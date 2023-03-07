@@ -1,30 +1,33 @@
 package appmesh
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_mesh")
 func ResourceMesh() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMeshCreate,
-		Read:   resourceMeshRead,
-		Update: resourceMeshUpdate,
-		Delete: resourceMeshDelete,
+		CreateWithoutTimeout: resourceMeshCreate,
+		ReadWithoutTimeout:   resourceMeshRead,
+		UpdateWithoutTimeout: resourceMeshUpdate,
+		DeleteWithoutTimeout: resourceMeshDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -100,10 +103,11 @@ func ResourceMesh() *schema.Resource {
 	}
 }
 
-func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	meshName := d.Get("name").(string)
 	req := &appmesh.CreateMeshInput{
@@ -113,17 +117,18 @@ func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
-	_, err := conn.CreateMesh(req)
+	_, err := conn.CreateMeshWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh service mesh: %s", err)
 	}
 
 	d.SetId(meshName)
 
-	return resourceMeshRead(d, meta)
+	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
 
-func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -137,10 +142,10 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeMeshOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.DescribeMesh(req)
+		resp, err = conn.DescribeMeshWithContext(ctx, req)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -154,31 +159,31 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeMesh(req)
+		resp, err = conn.DescribeMeshWithContext(ctx, req)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Service Mesh: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s", err)
 	}
 
 	if resp == nil || resp.Mesh == nil {
-		return fmt.Errorf("error reading App Mesh Service Mesh: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: empty response")
 	}
 
 	if aws.StringValue(resp.Mesh.Status.Status) == appmesh.MeshStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Service Mesh: %s after creation", aws.StringValue(resp.Mesh.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s after creation", aws.StringValue(resp.Mesh.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
@@ -190,30 +195,31 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh service mesh (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
@@ -224,9 +230,9 @@ func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh service mesh: %#v", req)
-		_, err := conn.UpdateMesh(req)
+		_, err := conn.UpdateMeshWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh service mesh: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh: %s", err)
 		}
 	}
 
@@ -234,27 +240,28 @@ func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh service mesh (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceMeshRead(d, meta)
+	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
 
-func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
-	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
+	_, err := conn.DeleteMeshWithContext(ctx, &appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh service mesh: %s", err)
 	}
 
-	return nil
+	return diags
 }

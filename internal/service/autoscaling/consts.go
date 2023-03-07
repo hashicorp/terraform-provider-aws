@@ -1,6 +1,8 @@
 package autoscaling
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	TagResourceTypeGroup = `auto-scaling-group`

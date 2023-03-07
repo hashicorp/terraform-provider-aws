@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_memorydb_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -229,7 +230,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)

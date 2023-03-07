@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie2_invitation_accepter")
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
@@ -52,7 +53,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	listInvitationsInput := &macie2.ListInvitationsInput{}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err := conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)
@@ -74,7 +75,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err = conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)

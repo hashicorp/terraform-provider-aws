@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_budgets_budget_action")
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -30,7 +31,7 @@ func ResourceBudgetAction() *schema.Resource {
 		DeleteWithoutTimeout: resourceBudgetActionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -230,7 +231,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetActionWithContext(ctx, input)
 	}, budgets.ErrCodeAccessDeniedException)
 

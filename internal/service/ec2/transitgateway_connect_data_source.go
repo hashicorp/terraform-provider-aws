@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_connect")
 func DataSourceTransitGatewayConnect() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayConnectRead,
@@ -59,7 +60,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnect, err := FindTransitGatewayConnect(conn, input)
+	transitGatewayConnect, err := FindTransitGatewayConnect(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect", err))
@@ -71,7 +72,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

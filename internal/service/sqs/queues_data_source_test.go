@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var queueAttributes map[string]string
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sqs_queues.test"
@@ -24,7 +25,7 @@ func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
 			{
 				Config: testAccQueuesDataSourceConfig_queueNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &queueAttributes),
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "queue_urls.0", resourceName, "url"),
 				),

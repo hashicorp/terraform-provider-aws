@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_appconfig_environment")
 func DataSourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentRead,
@@ -106,7 +107,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("arn", arn)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)

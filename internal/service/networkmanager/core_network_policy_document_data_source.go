@@ -1,17 +1,21 @@
 package networkmanager
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_networkmanager_core_network_policy_document")
 func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
 		Type:     schema.TypeSet,
@@ -22,7 +26,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Read: dataSourceCoreNetworkPolicyDocumentRead,
+		ReadWithoutTimeout: dataSourceCoreNetworkPolicyDocumentRead,
 		Schema: map[string]*schema.Schema{
 			"attachment_policies": {
 				Type:     schema.TypeList,
@@ -307,7 +311,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	mergedDoc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
 	}
@@ -315,42 +320,42 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	// CoreNetworkConfiguration
 	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
 	// AttachmentPolicies
 	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
 	// SegmentActions
 	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.SegmentActions = segment_actions
 
 	// Segments
 	segments, err := expandDataCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.Segments = segments
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: formatting JSON: %s", err)
 	}
 	jsonString := string(jsonDoc)
 
 	d.Set("json", jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
-	return nil
+	return diags
 }
 
 func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface{}) ([]*CoreNetworkPolicySegmentAction, error) {

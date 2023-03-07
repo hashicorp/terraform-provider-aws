@@ -19,12 +19,12 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",

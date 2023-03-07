@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_service")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -433,7 +434,7 @@ func ResourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("service_name").(string)
 
@@ -577,7 +578,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
@@ -645,7 +646,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

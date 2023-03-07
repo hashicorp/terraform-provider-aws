@@ -25,6 +25,7 @@ import (
 	"github.com/mattbaird/jsonpatch"
 )
 
+// @SDKResource("aws_cloudcontrolapi_resource")
 func ResourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,

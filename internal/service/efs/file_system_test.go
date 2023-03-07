@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccEFSFileSystem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -24,12 +25,12 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
@@ -56,6 +57,7 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -63,13 +65,13 @@ func TestAccEFSFileSystem_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystem(), resourceName),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,6 +80,7 @@ func TestAccEFSFileSystem_disappears(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_performanceMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -85,12 +88,12 @@ func TestAccEFSFileSystem_performanceMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_performanceMode,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "maxIO"),
 				),
 			},
@@ -104,6 +107,7 @@ func TestAccEFSFileSystem_performanceMode(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -112,12 +116,12 @@ func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_availabilityZoneName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 				),
@@ -132,6 +136,7 @@ func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_file_system.test"
@@ -140,12 +145,12 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -158,7 +163,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -167,7 +172,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -175,14 +180,14 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_pagedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "10"),
 				),
 			},
 			{
 				Config: testAccFileSystemConfig_maxTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "50"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Another", "tag"),
@@ -194,6 +199,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -203,12 +209,12 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_kmsKey(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
 				),
@@ -223,13 +229,14 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFileSystemConfig_kmsKey(rName, false),
@@ -240,6 +247,7 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -247,12 +255,12 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(1.0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
 				),
@@ -260,7 +268,7 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(2.0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
 				),
@@ -275,6 +283,7 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_throughputMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -282,12 +291,12 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(1.0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
 				),
@@ -295,7 +304,7 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_throughputMode(efs.ThroughputModeBursting),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
 				),
@@ -310,6 +319,7 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 }
 
 func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -317,7 +327,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_lifecyclePolicy(
@@ -332,7 +342,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					efs.TransitionToIARulesAfter30Days,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
 				),
@@ -348,7 +358,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					efs.TransitionToPrimaryStorageClassRulesAfter1Access,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
 				),
@@ -356,7 +366,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_removedLifecyclePolicy,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 				),
 			},
@@ -368,7 +378,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					efs.TransitionToIARulesAfter30Days,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
@@ -378,30 +388,32 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_efs_file_system" {
-			continue
+func testAccCheckFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_efs_file_system" {
+				continue
+			}
+
+			_, err := tfefs.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EFS file system %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfefs.FindFileSystemByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EFS file system %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckFileSystem(n string, v *efs.FileSystemDescription) resource.TestCheckFunc {
+func testAccCheckFileSystem(ctx context.Context, n string, v *efs.FileSystemDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -413,7 +425,7 @@ func testAccCheckFileSystem(n string, v *efs.FileSystemDescription) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 
-		output, err := tfefs.FindFileSystemByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfefs.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

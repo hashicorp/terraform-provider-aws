@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"sort"
@@ -8,16 +9,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ami_ids")
 func DataSourceAMIIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAMIIDsRead,
+		ReadWithoutTimeout: dataSourceAMIIDsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -58,7 +62,8 @@ func DataSourceAMIIDs() *schema.Resource {
 	}
 }
 
-func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeImagesInput{
@@ -73,10 +78,10 @@ func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
-	images, err := FindImages(conn, input)
+	images, err := FindImages(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 AMIs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
 
 	var filteredImages []*ec2.Image
@@ -117,5 +122,5 @@ func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 	d.Set("ids", imageIDs)
 
-	return nil
+	return diags
 }

@@ -27,10 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceIndex)
-}
-
+// @FrameworkResource
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIndex{}
 	r.SetDefaultCreateTimeout(2 * time.Hour)
@@ -88,10 +85,8 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	conn := r.Meta().ResourceExplorer2Client()
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
+	tags := r.ExpandTags(ctx, data.Tags)
 	input := &resourceexplorer2.CreateIndexInput{
 		ClientToken: aws.String(sdkresource.UniqueId()),
 	}
@@ -141,7 +136,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
-	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.TagsAll = r.FlattenTagsAll(ctx, tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -156,8 +151,6 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 
 	conn := r.Meta().ResourceExplorer2Client()
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
 	output, err := findIndex(ctx, conn)
 
@@ -175,16 +168,11 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
-	data.Type = types.StringValue(string(output.Type))
+	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		data.Tags = tftags.Null
-	} else {
-		data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
-	}
-	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	apiTags := KeyValueTags(ctx, output.Tags)
+	data.Tags = r.FlattenTags(ctx, apiTags)
+	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

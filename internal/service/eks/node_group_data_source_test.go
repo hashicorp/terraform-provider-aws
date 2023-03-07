@@ -11,16 +11,17 @@ import (
 )
 
 func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_node_group.test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_dataSourceName(rName),
@@ -29,7 +30,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNodeGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "ami_type", dataSourceResourceName, "ami_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "capacity_type", dataSourceResourceName, "capacity_type"),

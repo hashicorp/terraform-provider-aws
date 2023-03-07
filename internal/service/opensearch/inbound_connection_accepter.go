@@ -15,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_inbound_connection_accepter")
 func ResourceInboundConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInboundConnectionAccepterCreate,
 		ReadWithoutTimeout:   resourceInboundConnectionRead,
 		DeleteWithoutTimeout: resourceInboundConnectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("connection_id", d.Id())
 
 				return []*schema.ResourceData{d}, nil
@@ -160,7 +161,7 @@ func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservi
 		Refresh: inboundConnectionRefreshState(ctx, conn, id),
 		Timeout: timeout,
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 		return fmt.Errorf("Error waiting for Inbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
@@ -178,7 +179,7 @@ func waitForInboundConnectionDeletion(ctx context.Context, conn *opensearchservi
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

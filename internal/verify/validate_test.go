@@ -42,62 +42,6 @@ func TestValid4ByteASNString(t *testing.T) {
 	}
 }
 
-func TestValidTypeStringNullableBoolean(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		val         interface{}
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "",
-		},
-		{
-			val: "0",
-		},
-		{
-			val: "1",
-		},
-		{
-			val: "true",
-		},
-		{
-			val: "false",
-		},
-		{
-			val:         "invalid",
-			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
-		},
-	}
-
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for i, tc := range testCases {
-		_, errs := ValidTypeStringNullableBoolean(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
-		}
-	}
-}
-
 func TestValidTypeStringNullableFloat(t *testing.T) {
 	t.Parallel()
 
@@ -192,6 +136,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule

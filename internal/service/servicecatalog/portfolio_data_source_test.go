@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_servicecatalog_portfolio.test"
 	resourceName := "aws_servicecatalog_portfolio.test"
@@ -18,7 +19,7 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy,
+		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioDataSourceConfig_basic(rName),

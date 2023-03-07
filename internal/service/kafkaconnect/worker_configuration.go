@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mskconnect_worker_configuration")
 func ResourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkerConfigurationCreate,
@@ -21,7 +22,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

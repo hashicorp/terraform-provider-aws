@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_db_snapshot_copy")
 func ResourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
@@ -142,7 +143,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	in := &rds.CopyDBSnapshotInput{
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
@@ -186,16 +187,16 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindSnapshot(ctx, conn, d.Id())
+	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing RDS DB snapshot (%s): %s", d.Id(), err)
+		return diag.Errorf("reading RDS DB snapshot (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
@@ -218,7 +219,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
@@ -244,7 +245,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
@@ -273,32 +274,13 @@ func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func FindSnapshot(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
-	in := &rds.DescribeDBSnapshotsInput{
-		DBSnapshotIdentifier: aws.String(id),
-	}
-	out, err := conn.DescribeDBSnapshotsWithContext(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if out == nil || len(out.DBSnapshots) == 0 || out.DBSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.DBSnapshots[0], nil
-}
 func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Waiting for Snapshot %s to become available...", d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(d, meta),
+		Refresh:    resourceSnapshotStateRefreshFunc(ctx, d, meta),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting

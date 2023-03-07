@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_geofence_collection")
 func ResourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGeofenceCollectionCreate,
@@ -96,7 +97,7 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -138,7 +139,7 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("kms_key_id", out.KmsKeyId)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("collection_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("collection_arn").(string))
 	if err != nil {
 		return create.DiagError(names.Location, create.ErrActionReading, ResNameGeofenceCollection, d.Id(), err)
 	}
@@ -175,7 +176,7 @@ func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("collection_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("collection_arn").(string), o, n); err != nil {
 			return create.DiagError(names.Location, create.ErrActionUpdating, ResNameGeofenceCollection, d.Id(), err)
 		}
 	}

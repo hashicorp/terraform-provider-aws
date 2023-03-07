@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,17 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ami")
 func DataSourceAMI() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAMIRead,
+		ReadWithoutTimeout: dataSourceAMIRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -223,7 +227,8 @@ func DataSourceAMI() *schema.Resource {
 	}
 }
 
-func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -243,10 +248,10 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		input.Owners = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	images, err := FindImages(conn, input)
+	images, err := FindImages(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 AMIs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
 
 	var filteredImages []*ec2.Image
@@ -271,12 +276,12 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(filteredImages) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(filteredImages) > 1 {
 		if !d.Get("most_recent").(bool) {
-			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 		sort.Slice(filteredImages, func(i, j int) bool {
@@ -298,7 +303,7 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", imageArn)
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("setting block_device_mappings: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
 	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
@@ -317,7 +322,7 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform", image.Platform)
 	d.Set("platform_details", image.PlatformDetails)
 	if err := d.Set("product_codes", flattenAMIProductCodes(image.ProductCodes)); err != nil {
-		return fmt.Errorf("setting product_codes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting product_codes: %s", err)
 	}
 	d.Set("public", image.Public)
 	d.Set("ramdisk_id", image.RamdiskId)
@@ -327,17 +332,17 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("state", image.State)
 	if err := d.Set("state_reason", flattenAMIStateReason(image.StateReason)); err != nil {
-		return fmt.Errorf("setting state_reason: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting state_reason: %s", err)
 	}
 	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set("tags", KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {

@@ -1,6 +1,7 @@
 package waf
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,13 +18,13 @@ type WafRetryer struct {
 
 type withTokenFunc func(token *string) (interface{}, error)
 
-func (t *WafRetryer) RetryWithToken(f withTokenFunc) (interface{}, error) {
+func (t *WafRetryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interface{}, error) {
 	conns.GlobalMutexKV.Lock("WafRetryer")
 	defer conns.GlobalMutexKV.Unlock("WafRetryer")
 
 	var out interface{}
 	var tokenOut *waf.GetChangeTokenOutput
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, 15*time.Minute, func() *resource.RetryError {
 		var err error
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 		if err != nil {

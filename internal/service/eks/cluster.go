@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_eks_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -29,7 +30,7 @@ func ResourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -288,7 +289,7 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &eks.CreateClusterInput{
@@ -315,7 +316,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateClusterWithContext(ctx, input)
 		},
@@ -412,7 +413,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -521,7 +522,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating EKS Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -540,7 +541,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.RetryContext(context.Background(), clusterDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.DeleteClusterWithContext(ctx, input)

@@ -28,10 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_scheduler_schedule", resourceSchedule)
-}
-
+// @SDKResource("aws_scheduler_schedule")
 func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
@@ -475,7 +472,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
-		in.Target = expandTarget(v[0].(map[string]interface{}))
+		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
@@ -557,7 +554,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("state", string(out.State))
 
-	if err := d.Set("target", []interface{}{flattenTarget(out.Target)}); err != nil {
+	if err := d.Set("target", []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -572,7 +569,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
-		Target:             expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.Get("description").(string); ok && v != "" {

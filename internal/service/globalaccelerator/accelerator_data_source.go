@@ -16,11 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceAccelerator)
-}
-
-// newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
+// @FrameworkDataSource
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
 	d.SetMigratedFromPluginSDK(true)
@@ -171,7 +167,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTagsWithContext(ctx, conn, acceleratorARN)
+	tags, err := ListTags(ctx, conn, acceleratorARN)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())

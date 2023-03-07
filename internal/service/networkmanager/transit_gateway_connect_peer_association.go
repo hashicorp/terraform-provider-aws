@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_transit_gateway_connect_peer_association")
 func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerAssociationCreate,
@@ -25,7 +26,7 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayConnectPeerAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

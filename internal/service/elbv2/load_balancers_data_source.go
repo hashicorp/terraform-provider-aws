@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_lbs")
 func DataSourceLoadBalancers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancersRead,
@@ -36,19 +37,19 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	results, err := FindLoadBalancers(conn, &elbv2.DescribeLoadBalancersInput{})
+	results, err := FindLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.DiagError(names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
 	}
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if len(tagsToMatch) > 0 {
 		var loadBalancers []*elbv2.LoadBalancer
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(conn, arn)
+			tags, err := ListTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
