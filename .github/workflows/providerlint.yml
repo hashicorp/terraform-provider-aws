@@ -37,7 +37,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/providerlint && go install .
+      - run: cd .ci/providerlint && go install -buildvcs=false .
       - run: .ci/scripts/providerlint.sh ec2
   providerlintb:
     name: 2 of 2
@@ -62,5 +62,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/providerlint && go install .
+      - run: cd .ci/providerlint && go install -buildvcs=false .
       - run: make providerlint
