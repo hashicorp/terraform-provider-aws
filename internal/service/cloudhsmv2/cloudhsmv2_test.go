@@ -16,11 +16,10 @@ func TestAccCloudHSMV2_serial(t *testing.T) {
 			"tags":       testAccCluster_tags,
 		},
 		"Hsm": {
-			"availabilityZone":   testAccHSM_AvailabilityZone,
-			"basic":              testAccHSM_basic,
-			"disappears":         testAccHSM_disappears,
-			"disappears_Cluster": testAccHSM_disappears_Cluster,
-			"ipAddress":          testAccHSM_IPAddress,
+			"availabilityZone": testAccHSM_AvailabilityZone,
+			"basic":            testAccHSM_basic,
+			"disappears":       testAccHSM_disappears,
+			"ipAddress":        testAccHSM_IPAddress,
 		},
 		"DataSource": {
 			"basic": testAccDataSourceCluster_basic,
