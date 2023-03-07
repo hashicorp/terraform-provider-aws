@@ -17,6 +17,7 @@ const (
 	ResNameServiceSetting = "Service Setting"
 )
 
+// @SDKResource("aws_ssm_service_setting")
 func ResourceServiceSetting() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSettingUpdate,

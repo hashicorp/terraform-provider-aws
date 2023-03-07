@@ -26,6 +26,7 @@ const (
 	remediationConfigurationDeletionTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_config_remediation_configuration")
 func ResourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRemediationConfigurationPut,

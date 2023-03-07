@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_domain_mail_from")
 func ResourceDomainMailFrom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainMailFromSet,

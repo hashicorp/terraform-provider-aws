@@ -24,6 +24,7 @@ import (
 
 const clusterParameterGroupMaxParamsBulkEdit = 20
 
+// @SDKResource("aws_rds_cluster_parameter_group")
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
@@ -101,7 +102,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBClusterParameterGroupInput{

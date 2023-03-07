@@ -22,6 +22,7 @@ import (
 
 const scriptMutex = `aws_gamelift_script`
 
+// @SDKResource("aws_gamelift_script")
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScriptCreate,
@@ -93,7 +94,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateScriptInput{
 		Name: aws.String(d.Get("name").(string)),

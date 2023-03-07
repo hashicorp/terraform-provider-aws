@@ -20,11 +20,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceIPRanges)
-}
-
-// newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.
+// @FrameworkDataSource
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceIPRanges{}
 	d.SetMigratedFromPluginSDK(true)

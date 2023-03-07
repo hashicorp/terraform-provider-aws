@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_apigatewayv2_apis")
 func DataSourceAPIs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIsRead,
@@ -42,7 +43,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	apis, err := FindAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
 
@@ -61,7 +62,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 			continue
 		}
 
-		if len(tagsToMatch) > 0 && !KeyValueTags(api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+		if len(tagsToMatch) > 0 && !KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
 			continue
 		}
 

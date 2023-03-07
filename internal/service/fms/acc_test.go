@@ -35,7 +35,7 @@ var testAccProviderAdminConfigure sync.Once
 
 // testAccPreCheckAdmin verifies AWS credentials and that Firewall Management Service is supported
 func testAccPreCheckAdmin(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(fms.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, fms.EndpointsID)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.

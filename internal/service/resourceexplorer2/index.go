@@ -27,10 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceIndex)
-}
-
+// @FrameworkResource
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIndex{}
 	r.SetDefaultCreateTimeout(2 * time.Hour)
@@ -173,7 +170,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
-	apiTags := KeyValueTags(output.Tags)
+	apiTags := KeyValueTags(ctx, output.Tags)
 	data.Tags = r.FlattenTags(ctx, apiTags)
 	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
 
