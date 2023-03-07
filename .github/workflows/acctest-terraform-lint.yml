@@ -7,10 +7,10 @@ on:
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
-      - go.sum
       - .ci/.tflint.hcl
       - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
+      - go.sum
       - 'internal/service/**/*_test.go'
 
 jobs:
