@@ -35,11 +35,9 @@ func ResourceJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"container_properties": {
 				Type:     schema.TypeString,
@@ -56,6 +54,12 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validName,
+			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -70,6 +74,12 @@ func ResourceJobDefinition() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
+			},
+			"propagate_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
 			},
 			"retry_strategy": {
 				Type:     schema.TypeList,
@@ -134,14 +144,12 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+			"revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"propagate_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -163,14 +171,6 @@ func ResourceJobDefinition() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer}, true),
-			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
