@@ -233,6 +233,7 @@ func ResourceTopic() *schema.Resource {
 }
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
@@ -278,7 +279,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("creating SNS Topic (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Topic (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
@@ -286,7 +287,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Post-create tagging supported in some partitions
@@ -296,22 +297,21 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
-			return resourceTopicRead(ctx, d, meta)
+
+			return append(diags, resourceTopicRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "adding tags after create for SNS Topic (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicRead(ctx, d, meta)
+	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
@@ -344,29 +344,6 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		// ISO partitions may not support tagging, giving error
-		log.Printf("[WARN] failed listing tags for SNS Topic (%s): %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
@@ -386,22 +363,6 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return diag.FromErr(err)
 		}
 	}
-
-	//if d.HasChange("tags_all") {
-	//	o, n := d.GetChange("tags_all")
-	//
-	//	err := UpdateTags(ctx, conn, d.Id(), o, n)
-	//
-	//	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-	//		// ISO partitions may not support tagging, giving error
-	//		log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
-	//		return resourceTopicRead(ctx, d, meta)
-	//	}
-	//
-	//	if err != nil {
-	//		return diag.Errorf("updating tags for SNS Topic (%s): %s", d.Id(), err)
-	//	}
-	//}
 
 	return resourceTopicRead(ctx, d, meta)
 }

@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"log"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -118,7 +118,10 @@ func (r *Resource) tagsInterceptor(ctx context.Context, d *schema.ResourceData, 
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 						// ISO partitions may not support tagging, giving error
-						log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
+						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+							r.tags.IdentifierAttribute: d.Id(),
+							"error":                    err.Error(),
+						})
 						return ctx, diags
 					}
 
@@ -131,6 +134,50 @@ func (r *Resource) tagsInterceptor(ctx context.Context, d *schema.ResourceData, 
 				// if d.HasChangesExcept("tags", "tags_all") {
 				// }
 			}
+		}
+	case After:
+		switch why {
+		case Read:
+			if v, ok := sp.(conns.ServicePackageWithListTags); ok {
+				var identifier string
+
+				if key := r.tags.IdentifierAttribute; key == "id" {
+					identifier = d.Id()
+				} else {
+					identifier = d.Get(key).(string)
+				}
+
+				t, ok := tftags.FromContext(ctx)
+				if !ok {
+					return ctx, diags
+				}
+
+				tags, err := v.ListTags(ctx, meta, identifier)
+
+				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
+						r.tags.IdentifierAttribute: d.Id(),
+						"error":                    err.Error(),
+					})
+					return ctx, diags
+				}
+
+				if err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for resource(%s): %s", d.Id(), err)
+				}
+
+				tags = tags.IgnoreAWS().IgnoreConfig(t.IgnoreConfig)
+
+				if err := d.Set("tags", tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+				}
+
+				if err := d.Set("tags_all", tags.Map()); err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+				}
+			}
+
 		}
 	}
 
