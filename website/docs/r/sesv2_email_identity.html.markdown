@@ -46,15 +46,11 @@ resource "aws_sesv2_email_identity" "example" {
 #### DKIM Signing Attributes (BYODKIM)
 
 ```terraform
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
 resource "aws_sesv2_email_identity" "example" {
   email_identity = "example.com"
 
   dkim_signing_attributes {
-    domain_signing_private_key = base64encode(tls_private_key.example.private_key_pem)
+    domain_signing_private_key = "MIIJKAIBAAKCAgEA2Se7p8zvnI4yh+Gh9j2rG5e2aRXjg03Y8saiupLnadPH9xvM..." #PEM private key without headers or newline characters
     domain_signing_selector    = "example"
   }
 }
