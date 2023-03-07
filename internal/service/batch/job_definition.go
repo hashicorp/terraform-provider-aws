@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -195,6 +197,16 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+		}
+
+		for _, env := range props.Environment {
+			if aws.StringValue(env.Value) == "" {
+				diags = append(diags, errs.NewAttributeWarningDiagnostic(
+					cty.GetAttrPath("container_properties"),
+					"Ignoring environment variable",
+					fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
+				)
+			}
 		}
 
 		input.ContainerProperties = props
