@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_licensemanager_grant
 
-Provides a License Manager grant. This allows for sharing licenses with other aws accounts.
+Provides a License Manager grant. This allows for sharing licenses with other AWS accounts.
 
 ## Example Usage
 
