@@ -112,6 +112,17 @@ func ResourceFunction() *schema.Resource {
 						},
 					},
 				},
+				// Suppress diff if change is to an empty list
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == "1" {
+						_, n := d.GetChange("environment.0.variables")
+						newn, ok := n.(map[string]interface{})
+						if ok && len(newn) == 0 {
+							return true
+						}
+					}
+					return false
+				},
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
