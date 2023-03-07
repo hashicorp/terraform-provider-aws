@@ -36,6 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_redshift_authentication_profile":        ResourceAuthenticationProfile,
 		"aws_redshift_cluster":                       ResourceCluster,
 		"aws_redshift_cluster_iam_roles":             ResourceClusterIAMRoles,
+		"aws_redshift_cluster_snapshot":              ResourceClusterSnapshot,
 		"aws_redshift_endpoint_access":               ResourceEndpointAccess,
 		"aws_redshift_endpoint_authorization":        ResourceEndpointAuthorization,
 		"aws_redshift_event_subscription":            ResourceEventSubscription,
