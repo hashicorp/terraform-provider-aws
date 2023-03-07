@@ -90,7 +90,7 @@ resource "aws_elasticache_reserved_cache_node" "test" {
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
-  cache_node_type     = "cache.t2.micro"
+  cache_node_type     = "cache.t4g.small"
   duration            = 31536000
   offering_type       = "No Upfront"
   product_description = "redis"
