@@ -32,11 +32,11 @@ func ResourceHSM() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"subnet_id"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
 			},
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -62,11 +62,11 @@ func ResourceHSM() *schema.Resource {
 				ForceNew: true,
 			},
 			"subnet_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"availability_zone"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
 			},
 		},
 	}
