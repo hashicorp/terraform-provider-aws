@@ -5,6 +5,8 @@ import (
 )
 
 func TestArgsEmptyString(t *testing.T) {
+	t.Parallel()
+
 	input := ``
 	args := ParseArgs(input)
 
@@ -17,6 +19,8 @@ func TestArgsEmptyString(t *testing.T) {
 }
 
 func TestArgsSinglePositional(t *testing.T) {
+	t.Parallel()
+
 	input := `aws_instance`
 	args := ParseArgs(input)
 
@@ -32,6 +36,8 @@ func TestArgsSinglePositional(t *testing.T) {
 }
 
 func TestArgsSingleQuotedPositional(t *testing.T) {
+	t.Parallel()
+
 	input := `"aws_instance"`
 	args := ParseArgs(input)
 
@@ -47,6 +53,8 @@ func TestArgsSingleQuotedPositional(t *testing.T) {
 }
 
 func TestArgsSingleKeyword(t *testing.T) {
+	t.Parallel()
+
 	input := `vv=42`
 	args := ParseArgs(input)
 
@@ -62,6 +70,8 @@ func TestArgsSingleKeyword(t *testing.T) {
 }
 
 func TestArgsMultipleKeywords(t *testing.T) {
+	t.Parallel()
+
 	input := `vv=42,type=aws_instance`
 	args := ParseArgs(input)
 
@@ -80,6 +90,8 @@ func TestArgsMultipleKeywords(t *testing.T) {
 }
 
 func TestArgsPostionalAndKeywords(t *testing.T) {
+	t.Parallel()
+
 	input := `first, vv=42 ,type=aws_instance,2`
 	args := ParseArgs(input)
 
