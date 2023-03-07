@@ -32,12 +32,13 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 				),
 			},
 			{
@@ -50,14 +51,15 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.11/32"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.*", "10.10.10.12/32"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 				),
 			},
 		},
@@ -81,12 +83,12 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", "aws_cognito_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 				),
 			},
 			{
@@ -114,13 +116,13 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.*", "SIGN_IN"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.0.event_action", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
 				),
 			},
 			{
@@ -200,10 +202,6 @@ func testAccCheckRiskConfigurationExists(ctx context.Context, name string) resou
 
 func testAccRiskConfigurationConfig_riskException(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-}
-
 resource "aws_cognito_risk_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
@@ -211,15 +209,15 @@ resource "aws_cognito_risk_configuration" "test" {
     blocked_ip_range_list = ["10.10.10.10/32"]
   }
 }
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccRiskConfigurationConfig_riskExceptionUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-}
-
 resource "aws_cognito_risk_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
@@ -228,15 +226,15 @@ resource "aws_cognito_risk_configuration" "test" {
     skipped_ip_range_list = ["10.10.10.12/32"]
   }
 }
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccRiskConfigurationConfig_compromised(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-}
-
 resource "aws_cognito_risk_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
@@ -247,11 +245,24 @@ resource "aws_cognito_risk_configuration" "test" {
     }
   }
 }
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccRiskConfigurationConfig_riskExceptionClient(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+  client_id    = aws_cognito_user_pool_client.test.id
+
+  risk_exception_configuration {
+    blocked_ip_range_list = ["10.10.10.10/32"]
+  }
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
@@ -260,15 +271,6 @@ resource "aws_cognito_user_pool_client" "test" {
   name                = %[1]q
   user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
-}
-
-resource "aws_cognito_risk_configuration" "test" {
-  user_pool_id = aws_cognito_user_pool.test.id
-  client_id    = aws_cognito_user_pool_client.test.id
-
-  risk_exception_configuration {
-    blocked_ip_range_list = ["10.10.10.10/32"]
-  }
 }
 `, rName)
 }
