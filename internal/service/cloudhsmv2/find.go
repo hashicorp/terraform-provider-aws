@@ -42,7 +42,7 @@ func FindClusterByID(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string
 	return result, nil
 }
 
-func FindHSM(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, hsmID string, eniID string) (*cloudhsmv2.Hsm, error) {
+func FindHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, hsmID, eniID string) (*cloudhsmv2.Hsm, error) {
 	input := &cloudhsmv2.DescribeClustersInput{}
 
 	var result *cloudhsmv2.Hsm

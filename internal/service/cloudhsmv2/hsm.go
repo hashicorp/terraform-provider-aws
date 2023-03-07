@@ -125,7 +125,7 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
-	hsm, err := FindHSM(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
+	hsm, err := FindHSMByTwoPartKey(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 HSM (%s): %s", d.Id(), err)

@@ -220,7 +220,7 @@ func testAccCheckHSMDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			hsm, err := tfcloudhsmv2.FindHSM(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
+			hsm, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
 
 			if err != nil {
 				return err
@@ -244,7 +244,7 @@ func testAccCheckHSMExists(ctx context.Context, name string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		_, err := tfcloudhsmv2.FindHSM(ctx, conn, it.Primary.ID, it.Primary.Attributes["hsm_eni_id"])
+		_, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, it.Primary.ID, it.Primary.Attributes["hsm_eni_id"])
 		if err != nil {
 			return fmt.Errorf("CloudHSM cluster not found: %s", err)
 		}

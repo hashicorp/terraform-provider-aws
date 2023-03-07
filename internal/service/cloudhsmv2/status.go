@@ -26,7 +26,7 @@ func statusClusterState(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id str
 
 func statusHSMState(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := FindHSM(ctx, conn, id, "")
+		hsm, err := FindHSMByTwoPartKey(ctx, conn, id, "")
 
 		if err != nil {
 			return nil, "", err
