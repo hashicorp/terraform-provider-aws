@@ -82,7 +82,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("availability_zone"); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	} else {
-		cluster, err := FindCluster(ctx, conn, d.Get("cluster_id").(string))
+		cluster, err := FindClusterByID(ctx, conn, d.Get("cluster_id").(string))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s", d.Id(), err)

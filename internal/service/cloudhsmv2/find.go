@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 )
 
-func FindCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
+func FindClusterByID(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]*string{
 			"clusterIds": aws.StringSlice([]string{id}),

@@ -163,7 +163,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := FindCluster(ctx, conn, d.Id())
+	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s", d.Id(), err)

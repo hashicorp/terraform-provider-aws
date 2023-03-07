@@ -190,7 +190,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_cloudhsm_v2_cluster" {
 				continue
 			}
-			cluster, err := tfcloudhsmv2.FindCluster(ctx, conn, rs.Primary.ID)
+			cluster, err := tfcloudhsmv2.FindClusterByID(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
 				return err
@@ -213,7 +213,7 @@ func testAccCheckClusterExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		_, err := tfcloudhsmv2.FindCluster(ctx, conn, it.Primary.ID)
+		_, err := tfcloudhsmv2.FindClusterByID(ctx, conn, it.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("CloudHSM cluster not found: %s", err)

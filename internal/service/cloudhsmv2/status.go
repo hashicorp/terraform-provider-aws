@@ -10,7 +10,7 @@ import (
 
 func statusClusterState(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := FindCluster(ctx, conn, id)
+		cluster, err := FindClusterByID(ctx, conn, id)
 
 		if err != nil {
 			return nil, "", err
