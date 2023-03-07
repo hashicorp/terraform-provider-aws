@@ -9,21 +9,18 @@ import (
 func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
-		Name              string
+	testCases := map[string]struct {
 		ApiJson           string
 		ConfigurationJson string
 		ExpectEquivalent  bool
 		ExpectError       bool
 	}{
-		{
-			Name:              "empty",
+		"empty": {
 			ApiJson:           ``,
 			ConfigurationJson: ``,
 			ExpectEquivalent:  true,
 		},
-		{
-			Name: "empty ResourceRequirements",
+		"empty ResourceRequirements": {
 			ApiJson: `
 {
 	"command": ["ls", "-la"],
@@ -99,8 +96,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "reordered Environment",
+		"reordered Environment": {
 			ApiJson: `
 {
 	"command": ["ls", "-la"],
@@ -185,8 +181,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty environment, mountPoints, ulimits, and volumes",
+		"empty environment, mountPoints, ulimits, and volumes": {
 			//lintignore:AWSAT005
 			ApiJson: `
 {
@@ -214,8 +209,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes",
+		"empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes": {
 			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
@@ -256,8 +250,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "no fargatePlatformConfiguration",
+		"no fargatePlatformConfiguration": {
 			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
@@ -295,8 +288,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options",
+		"empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options": {
 			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
@@ -334,8 +326,7 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions",
+		"empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions": {
 			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
@@ -384,9 +375,9 @@ func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for name, testCase := range testCases {
 		testCase := testCase
-		t.Run(testCase.Name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			got, err := tfbatch.EquivalentContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
