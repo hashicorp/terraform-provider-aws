@@ -1,5 +1,9 @@
 ## 4.58.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ecs_task_execution` ([#29783](https://github.com/hashicorp/terraform-provider-aws/issues/29783))
+
 ENHANCEMENTS:
 
 * resource/aws_grafana_workspace: Add `network_access_control` argument ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
