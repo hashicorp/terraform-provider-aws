@@ -43,7 +43,7 @@ func ResourceGrant() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(licensemanager.AllowedOperation_Values(), true),
 				},
-				Description: "Allowed operations for the grant.",
+				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 			},
 			"arn": {
 				Type:        schema.TypeString,
