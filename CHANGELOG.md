@@ -12,10 +12,12 @@ ENHANCEMENTS:
 * resource/aws_sesv2_configuration_set: Add `vdm_options` argument ([#28812](https://github.com/hashicorp/terraform-provider-aws/issues/28812))
 * resource/aws_transfer_server: Add `protocol_details` argument ([#28621](https://github.com/hashicorp/terraform-provider-aws/issues/28621))
 * resource/aws_transfer_workflow: Add `decrypt_step_details` to the `on_exception_steps` and `steps` configuration blocks ([#29692](https://github.com/hashicorp/terraform-provider-aws/issues/29692))
+* resource/db_snapshot: Add `shared_accounts` argument ([#28424](https://github.com/hashicorp/terraform-provider-aws/issues/28424))
 
 BUG FIXES:
 
 * resource/aws_grafana_workspace: Allow removing `vpc_configuration` ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
+* resource/aws_medialive_channel: Fix setting of the `video_pid` attribute in `m2ts_settings` ([#29824](https://github.com/hashicorp/terraform-provider-aws/issues/29824))
 
 ## 4.57.1 (March  6, 2023)
 
