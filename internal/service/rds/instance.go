@@ -1671,6 +1671,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if err := d.Set("listener_endpoint", []interface{}{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
 		}
+	} else {
+		d.Set("listener_endpoint", nil)
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
