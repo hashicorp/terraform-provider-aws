@@ -15,6 +15,12 @@ func FromContext(ctx context.Context) (*InContext, bool) {
 	return v, ok
 }
 
+func MergedTagsFromContext(ctx context.Context) (*KeyValueTags, bool) {
+	v, ok := ctx.Value(MergedTagsKey).(*KeyValueTags)
+	return v, ok
+}
+
 type key int
 
 var TagKey key
+var MergedTagsKey key

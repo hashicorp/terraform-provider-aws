@@ -235,8 +235,6 @@ func ResourceTopic() *schema.Resource {
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -265,8 +263,9 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		delete(attributes, TopicAttributeNameFIFOTopic)
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	tags, ok := tftags.MergedTagsFromContext(ctx)
+	if ok {
+		input.Tags = Tags(*tags)
 	}
 
 	output, err := conn.CreateTopicWithContext(ctx, input)
@@ -291,7 +290,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags) > 0 {
+	if input.Tags == nil && len(*tags) > 0 {
 		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {

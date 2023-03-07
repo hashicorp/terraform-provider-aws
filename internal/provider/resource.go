@@ -102,6 +102,16 @@ func (r *Resource) tagsInterceptor(ctx context.Context, d *schema.ResourceData, 
 		ctx = context.WithValue(ctx, tftags.TagKey, &v)
 
 		switch why {
+		case Create:
+			t, ok := tftags.FromContext(ctx)
+			if !ok {
+				return ctx, diags
+			}
+
+			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+			tags = tags.IgnoreAWS()
+
+			ctx = context.WithValue(ctx, tftags.MergedTagsKey, &tags)
 		case Update:
 			if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
 				var identifier string
