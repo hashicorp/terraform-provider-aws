@@ -13,7 +13,7 @@ func TestAccCloudHSMV2_serial(t *testing.T) {
 		"Cluster": {
 			"basic":      testAccCluster_basic,
 			"disappears": testAccCluster_disappears,
-			"tags":       testAccCluster_Tags,
+			"tags":       testAccCluster_tags,
 		},
 		"Hsm": {
 			"availabilityZone":   testAccHSM_AvailabilityZone,
