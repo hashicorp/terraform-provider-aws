@@ -24,6 +24,7 @@ func ResourceCluster() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterRead,
 		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,51 +36,20 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"source_backup_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"hsm_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
-			},
-
-			"subnet_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				ForceNew: true,
-			},
-
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"cluster_certificates": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"aws_hardware_certificate": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"cluster_certificate": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"cluster_csr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"aws_hardware_certificate": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -94,19 +64,41 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
-
-			"security_group_id": {
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cluster_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"hsm_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
+			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"source_backup_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"subnet_ids": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
