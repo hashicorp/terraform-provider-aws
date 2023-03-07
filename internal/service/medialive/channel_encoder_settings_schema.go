@@ -143,7 +143,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"aac_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -205,7 +204,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"ac3_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -255,7 +253,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"eac3_atmos_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -303,7 +300,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"eac3_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -427,7 +423,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"mp2_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -453,7 +448,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"pass_through_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{}, // no exported elements in this list
@@ -462,7 +456,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"wav_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
