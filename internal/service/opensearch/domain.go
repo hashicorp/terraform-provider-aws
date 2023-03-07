@@ -449,7 +449,7 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Default:  "OpenSearch_1.1",
 			},
-			"kibana_endpoint": {
+			"dashboard_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -848,14 +848,14 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		d.Set("endpoint", endpoints["vpc"])
-		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", ds.Endpoint)
-			d.Set("kibana_endpoint", getKibanaEndpoint(d))
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		}
 		if ds.Endpoints != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain not in VPC expected to have null Endpoints value", d.Id())
@@ -1097,8 +1097,8 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 	return strings.Contains(old, new)
 }
 
-func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+func getDashboardEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_dashboards"
 }
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
