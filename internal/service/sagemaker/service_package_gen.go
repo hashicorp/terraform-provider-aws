@@ -32,6 +32,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_sagemaker_app":                                       ResourceApp,
 		"aws_sagemaker_app_image_config":                          ResourceAppImageConfig,
 		"aws_sagemaker_code_repository":                           ResourceCodeRepository,
+		"aws_sagemaker_data_quality_job_definition":               ResourceDataQualityJobDefinition,
 		"aws_sagemaker_device":                                    ResourceDevice,
 		"aws_sagemaker_device_fleet":                              ResourceDeviceFleet,
 		"aws_sagemaker_domain":                                    ResourceDomain,
