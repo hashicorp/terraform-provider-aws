@@ -52,8 +52,7 @@ func ResourceGrant() *schema.Resource {
 			},
 			"home_region": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Computed:    true,
 				Description: "Home Region of the grant.",
 			},
 			"license_arn": {
@@ -101,7 +100,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
 		ClientToken:       aws.String(resource.UniqueId()),
 		GrantName:         aws.String(d.Get("name").(string)),
-		HomeRegion:        aws.String(d.Get("home_region").(string)),
+		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
 		Principals:        aws.StringSlice([]string{d.Get("principal").(string)}),
 	}
