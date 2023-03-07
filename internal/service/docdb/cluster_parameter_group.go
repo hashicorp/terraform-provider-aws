@@ -22,6 +22,7 @@ import (
 
 const clusterParameterGroupMaxParamsBulkEdit = 20
 
+// @SDKResource("aws_docdb_cluster_parameter_group")
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,

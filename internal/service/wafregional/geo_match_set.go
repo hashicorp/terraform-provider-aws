@@ -16,6 +16,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_geo_match_set")
 func ResourceGeoMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGeoMatchSetCreate,

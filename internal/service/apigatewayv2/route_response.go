@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_apigatewayv2_route_response")
 func ResourceRouteResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteResponseCreate,

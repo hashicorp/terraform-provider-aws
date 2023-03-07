@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_efs_access_point":  DataSourceAccessPoint,
+		"aws_efs_access_points": DataSourceAccessPoints,
+		"aws_efs_file_system":   DataSourceFileSystem,
+		"aws_efs_mount_target":  DataSourceMountTarget,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_efs_access_point":              ResourceAccessPoint,
+		"aws_efs_backup_policy":             ResourceBackupPolicy,
+		"aws_efs_file_system":               ResourceFileSystem,
+		"aws_efs_file_system_policy":        ResourceFileSystemPolicy,
+		"aws_efs_mount_target":              ResourceMountTarget,
+		"aws_efs_replication_configuration": ResourceReplicationConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "efs"
+	return names.EFS
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

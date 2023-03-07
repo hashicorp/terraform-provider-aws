@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
 func DataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,

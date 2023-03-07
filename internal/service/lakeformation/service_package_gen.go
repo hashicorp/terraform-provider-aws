@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lakeformation_data_lake_settings": DataSourceDataLakeSettings,
+		"aws_lakeformation_permissions":        DataSourcePermissions,
+		"aws_lakeformation_resource":           DataSourceResource,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_lakeformation_data_lake_settings": ResourceDataLakeSettings,
+		"aws_lakeformation_lf_tag":             ResourceLFTag,
+		"aws_lakeformation_permissions":        ResourcePermissions,
+		"aws_lakeformation_resource":           ResourceResource,
+		"aws_lakeformation_resource_lf_tags":   ResourceResourceLFTags,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "lakeformation"
+	return names.LakeFormation
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

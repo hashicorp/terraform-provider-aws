@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_sagemaker_notebook_instance_lifecycle_configuration")
 func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationCreate,

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_apprunner_auto_scaling_configuration_version": ResourceAutoScalingConfigurationVersion,
+		"aws_apprunner_connection":                         ResourceConnection,
+		"aws_apprunner_custom_domain_association":          ResourceCustomDomainAssociation,
+		"aws_apprunner_observability_configuration":        ResourceObservabilityConfiguration,
+		"aws_apprunner_service":                            ResourceService,
+		"aws_apprunner_vpc_connector":                      ResourceVPCConnector,
+		"aws_apprunner_vpc_ingress_connection":             ResourceVPCIngressConnection,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "apprunner"
+	return names.AppRunner
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

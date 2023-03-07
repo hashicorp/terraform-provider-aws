@@ -19,6 +19,7 @@ import (
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
+// @SDKResource("aws_iot_thing_type")
 func ResourceThingType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingTypeCreate,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_backup_vault_notifications")
 func ResourceVaultNotifications() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultNotificationsCreate,

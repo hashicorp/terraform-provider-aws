@@ -30,6 +30,7 @@ const (
 	dbInstanceRoleAssociationDeletedTimeout = 10 * time.Minute
 )
 
+// @SDKResource("aws_db_instance_role_association")
 func ResourceInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceRoleAssociationCreate,

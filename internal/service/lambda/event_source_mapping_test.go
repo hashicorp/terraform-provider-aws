@@ -964,7 +964,7 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSecretsManager(ctx, t)
-			acctest.PreCheckPartitionHasService("mq", t)
+			acctest.PreCheckPartitionHasService(t, "mq")
 			testAccPreCheckMQ(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
@@ -1007,7 +1007,7 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSecretsManager(ctx, t)
-			acctest.PreCheckPartitionHasService("mq", t)
+			acctest.PreCheckPartitionHasService(t, "mq")
 			testAccPreCheckMQ(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),

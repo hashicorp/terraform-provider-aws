@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_mskconnect_connector":            DataSourceConnector,
+		"aws_mskconnect_custom_plugin":        DataSourceCustomPlugin,
+		"aws_mskconnect_worker_configuration": DataSourceWorkerConfiguration,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_mskconnect_connector":            ResourceConnector,
+		"aws_mskconnect_custom_plugin":        ResourceCustomPlugin,
+		"aws_mskconnect_worker_configuration": ResourceWorkerConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "kafkaconnect"
+	return names.KafkaConnect
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

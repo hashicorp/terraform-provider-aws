@@ -44,6 +44,7 @@ const (
 	certificateValidationMethodNone = "NONE"
 )
 
+// @SDKResource("aws_acm_certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

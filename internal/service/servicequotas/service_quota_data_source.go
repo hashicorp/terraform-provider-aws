@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_servicequotas_service_quota")
 func DataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceQuotaRead,

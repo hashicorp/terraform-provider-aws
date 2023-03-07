@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_memorydb_acl":             DataSourceACL,
+		"aws_memorydb_cluster":         DataSourceCluster,
+		"aws_memorydb_parameter_group": DataSourceParameterGroup,
+		"aws_memorydb_snapshot":        DataSourceSnapshot,
+		"aws_memorydb_subnet_group":    DataSourceSubnetGroup,
+		"aws_memorydb_user":            DataSourceUser,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_memorydb_acl":             ResourceACL,
+		"aws_memorydb_cluster":         ResourceCluster,
+		"aws_memorydb_parameter_group": ResourceParameterGroup,
+		"aws_memorydb_snapshot":        ResourceSnapshot,
+		"aws_memorydb_subnet_group":    ResourceSubnetGroup,
+		"aws_memorydb_user":            ResourceUser,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "memorydb"
+	return names.MemoryDB
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -26,11 +26,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_amplify_app":                 ResourceApp,
+		"aws_amplify_backend_environment": ResourceBackendEnvironment,
+		"aws_amplify_branch":              ResourceBranch,
+		"aws_amplify_domain_association":  ResourceDomainAssociation,
+		"aws_amplify_webhook":             ResourceWebhook,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "amplify"
+	return names.Amplify
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_iot_thing_principal_attachment")
 func ResourceThingPrincipalAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingPrincipalAttachmentCreate,

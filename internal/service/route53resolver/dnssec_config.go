@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_dnssec_config")
 func ResourceDNSSECConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDNSSECConfigCreate,

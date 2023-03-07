@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_pool")
 func ResourcePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolCreate,

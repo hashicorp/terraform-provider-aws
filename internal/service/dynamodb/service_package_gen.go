@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dynamodb_table":      DataSourceTable,
+		"aws_dynamodb_table_item": DataSourceTableItem,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dynamodb_contributor_insights":          ResourceContributorInsights,
+		"aws_dynamodb_global_table":                  ResourceGlobalTable,
+		"aws_dynamodb_kinesis_streaming_destination": ResourceKinesisStreamingDestination,
+		"aws_dynamodb_table":                         ResourceTable,
+		"aws_dynamodb_table_item":                    ResourceTableItem,
+		"aws_dynamodb_table_replica":                 ResourceTableReplica,
+		"aws_dynamodb_tag":                           ResourceTag,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "dynamodb"
+	return names.DynamoDB
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

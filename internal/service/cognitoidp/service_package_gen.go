@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cognito_user_pool_client":              DataSourceUserPoolClient,
+		"aws_cognito_user_pool_clients":             DataSourceUserPoolClients,
+		"aws_cognito_user_pool_signing_certificate": DataSourceUserPoolSigningCertificate,
+		"aws_cognito_user_pools":                    DataSourceUserPools,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cognito_identity_provider":          ResourceIdentityProvider,
+		"aws_cognito_resource_server":            ResourceResourceServer,
+		"aws_cognito_risk_configuration":         ResourceRiskConfiguration,
+		"aws_cognito_user":                       ResourceUser,
+		"aws_cognito_user_group":                 ResourceUserGroup,
+		"aws_cognito_user_in_group":              ResourceUserInGroup,
+		"aws_cognito_user_pool":                  ResourceUserPool,
+		"aws_cognito_user_pool_client":           ResourceUserPoolClient,
+		"aws_cognito_user_pool_domain":           ResourceUserPoolDomain,
+		"aws_cognito_user_pool_ui_customization": ResourceUserPoolUICustomization,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "cognitoidp"
+	return names.CognitoIDP
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

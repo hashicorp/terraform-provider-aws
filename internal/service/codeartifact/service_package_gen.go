@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -22,15 +22,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codeartifact_authorization_token": DataSourceAuthorizationToken,
+		"aws_codeartifact_repository_endpoint": DataSourceRepositoryEndpoint,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_codeartifact_domain":                        ResourceDomain,
+		"aws_codeartifact_domain_permissions_policy":     ResourceDomainPermissionsPolicy,
+		"aws_codeartifact_repository":                    ResourceRepository,
+		"aws_codeartifact_repository_permissions_policy": ResourceRepositoryPermissionsPolicy,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "codeartifact"
+	return names.CodeArtifact
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}
