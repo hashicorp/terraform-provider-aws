@@ -2,10 +2,13 @@ package cloudhsmv2
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
@@ -21,6 +24,8 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
 		return output, err
 	}
 
@@ -40,6 +45,8 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
 		return output, err
 	}
 
@@ -59,6 +66,8 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
 		return output, err
 	}
 
@@ -78,6 +87,8 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
 		return output, err
 	}
 
@@ -97,6 +108,8 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
 		return output, err
 	}
 
