@@ -77,7 +77,7 @@ func ResourceGrant() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				Description:  "The grantee principal ARN.",
+				Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
 			},
 			"status": {
 				Type:        schema.TypeString,
