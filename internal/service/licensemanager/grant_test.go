@@ -35,7 +35,6 @@ func testAccGrant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
-	homeRegionKey := "LICENSE_MANAGER_GRANT_HOME_REGION"
 	principal := os.Getenv(principalKey)
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
@@ -43,10 +42,6 @@ func testAccGrant_basic(t *testing.T) {
 	licenseArn := os.Getenv(licenseKey)
 	if licenseArn == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
@@ -58,7 +53,7 @@ func testAccGrant_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(rName, licenseArn, principal, homeRegion),
+				Config: testAccGrantConfig_basic(licenseArn, rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`grant:g-.+`)),
@@ -67,7 +62,7 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckInLicense"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ExtendConsumptionLicense"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CreateToken"),
-					resource.TestCheckResourceAttr(resourceName, "home_region", homeRegion),
+					resource.TestCheckResourceAttrSet(resourceName, "home_region"),
 					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseArn),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
@@ -89,7 +84,6 @@ func testAccGrant_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
-	homeRegionKey := "LICENSE_MANAGER_GRANT_HOME_REGION"
 	principal := os.Getenv(principalKey)
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
@@ -97,10 +91,6 @@ func testAccGrant_disappears(t *testing.T) {
 	licenseArn := os.Getenv(licenseKey)
 	if licenseArn == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
@@ -112,7 +102,7 @@ func testAccGrant_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(rName, licenseArn, principal, homeRegion),
+				Config: testAccGrantConfig_basic(licenseArn, rName, principal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceGrant(), resourceName),
@@ -127,7 +117,6 @@ func testAccGrant_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	principalKey := "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
-	homeRegionKey := "LICENSE_MANAGER_GRANT_HOME_REGION"
 	principal := os.Getenv(principalKey)
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
@@ -135,10 +124,6 @@ func testAccGrant_name(t *testing.T) {
 	licenseArn := os.Getenv(licenseKey)
 	if licenseArn == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
 	}
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,7 +136,7 @@ func testAccGrant_name(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(rName1, licenseArn, principal, homeRegion),
+				Config: testAccGrantConfig_basic(licenseArn, rName1, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -163,7 +148,7 @@ func testAccGrant_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGrantConfig_basic(rName2, licenseArn, principal, homeRegion),
+				Config: testAccGrantConfig_basic(licenseArn, rName2, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -226,20 +211,21 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccGrantConfig_basic(rName string, licenseArn string, principal string, homeRegion string) string {
+func testAccGrantConfig_basic(licenseArn string, rName string, principal string) string {
 	return fmt.Sprintf(`
-resource "aws_licensemanager_grant" "test" {
-  name = %[1]q
-  allowed_operations = [
-    "ListPurchasedLicenses",
-    "CheckoutLicense",
-    "CheckInLicense",
-    "ExtendConsumptionLicense",
-    "CreateToken"
-  ]
-  license_arn = %[2]q
-  principal   = %[3]q
-  home_region = %[4]q
+data "aws_licensemanager_received_license" "test" {
+  license_arn = %[1]q
 }
-`, rName, licenseArn, principal, homeRegion)
+
+locals {
+  allowed_operations = [for i in data.aws_licensemanager_received_license.test.received_metadata[0].allowed_operations : i if i != "CreateGrant"]
+}
+
+resource "aws_licensemanager_grant" "test" {
+  name               = %[2]q
+  allowed_operations = local.allowed_operations
+  license_arn        = data.aws_licensemanager_received_license.test.license_arn
+  principal          = %[3]q
+}
+`, licenseArn, rName, principal)
 }
