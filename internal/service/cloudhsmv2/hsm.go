@@ -114,7 +114,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.Hsm.HsmId))
 
-	if _, err := waitHSMActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitHSMCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudHSMv2 HSM (%s) creation: %s", d.Id(), err)
 	}
 

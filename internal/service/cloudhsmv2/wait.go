@@ -65,7 +65,7 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, 
 	return nil, err
 }
 
-func waitHSMActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
+func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress},
 		Target:     []string{cloudhsmv2.HsmStateActive},
