@@ -33,7 +33,7 @@ resource "aws_licensemanager_grant" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The Name of the grant.
-* `allowed_operations` - (Required) A list of the allowed operations for the grant.
+* `allowed_operations` - (Required) A list of the allowed operations for the grant. This is a subset of the allowed operations on the license.
 * `license_arn` - (Required) The ARN of the license to grant.
 * `principal` - (Required) The target account for the grant in the form of the ARN for an account principal of the root user.
 * `home_region` - (Required) The home region for the license.
