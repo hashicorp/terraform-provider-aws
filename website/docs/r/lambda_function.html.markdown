@@ -44,7 +44,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 data "archive_file" "lambda" {
   type        = "zip"
   source_file = "lambda.js"
-  output_path = "lambda.zip"
+  output_path = "lambda_function_payload.zip"
 }
 
 resource "aws_lambda_function" "test_lambda" {
