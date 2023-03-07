@@ -585,6 +585,47 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 	}
 }
 
+func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
+		}
+
+		if v != value {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q expected %#v, got %#v", name, key, jmesPath, value, v)
+		}
+
+		return nil
+	}
+}
+
 func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySecond string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		first, err := PrimaryInstanceState(s, nameFirst)
@@ -613,9 +654,14 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
 		}
 
-		value, ok := result.(string)
-		if !ok {
-			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected single string, got %#v", nameFirst, keyFirst, jmesPath, result)
+		var value string
+		switch x := result.(type) {
+		case string:
+			value = x
+		case float64:
+			value = strconv.FormatFloat(x, 'f', -1, 64)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
 
 		vSecond, okSecond := second.Attributes[keySecond]

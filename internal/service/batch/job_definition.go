@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,11 +37,9 @@ func ResourceJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"container_properties": {
 				Type:     schema.TypeString,
@@ -56,6 +56,12 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validName,
+			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -70,6 +76,12 @@ func ResourceJobDefinition() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
+			},
+			"propagate_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
 			},
 			"retry_strategy": {
 				Type:     schema.TypeList,
@@ -134,14 +146,12 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+			"revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"propagate_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -163,14 +173,6 @@ func ResourceJobDefinition() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer}, true),
-			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
@@ -195,6 +197,16 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+		}
+
+		for _, env := range props.Environment {
+			if aws.StringValue(env.Value) == "" {
+				diags = append(diags, errs.NewAttributeWarningDiagnostic(
+					cty.GetAttrPath("container_properties"),
+					"Ignoring environment variable",
+					fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
+				)
+			}
 		}
 
 		input.ContainerProperties = props
