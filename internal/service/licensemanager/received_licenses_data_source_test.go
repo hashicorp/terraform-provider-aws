@@ -54,10 +54,10 @@ func testAccReceivedLicensesDataSourceConfig_arns(productSKU string) string {
 	return fmt.Sprintf(`
 data "aws_licensemanager_received_licenses" "test" {
   filter {
-	name = "ProductSKU"
-	values = [
+    name = "ProductSKU"
+    values = [
 		%[1]q
-	]
+    ]
   }
 }
 `, productSKU)
@@ -67,10 +67,10 @@ func testAccReceivedLicensesDataSourceConfig_empty() string {
 	return fmt.Sprint(`
 data "aws_licensemanager_received_licenses" "test" {
   filter {
-	name = "IssuerName"
-	values = [
-		"This Is Fake"
-	]
+    name = "IssuerName"
+    values = [
+      "This Is Fake"
+    ]
   }
 }
 `)
