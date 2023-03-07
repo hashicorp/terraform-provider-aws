@@ -29,10 +29,15 @@ func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLo
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+}
+
 // UpdateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -65,6 +70,6 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 	return nil
 }
 
-func (p *servicePackage) UpdateLogGroupTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateLogGroupTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier, oldTags, newTags)
 }

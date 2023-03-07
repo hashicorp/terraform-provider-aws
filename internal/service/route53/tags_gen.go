@@ -15,7 +15,7 @@ import (
 // ListTags lists route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn route53iface.Route53API, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &route53.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
@@ -28,6 +28,10 @@ func ListTags(ctx context.Context, conn route53iface.Route53API, identifier stri
 	}
 
 	return KeyValueTags(ctx, output.ResourceTagSet.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Route53Conn(), identifier, resourceType)
 }
 
 // []*SERVICE.Tag handling
@@ -62,7 +66,8 @@ func KeyValueTags(ctx context.Context, tags []*route53.Tag) tftags.KeyValueTags 
 // UpdateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
@@ -95,6 +100,6 @@ func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier st
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53Conn(), identifier, resourceType, oldTags, newTags)
 }

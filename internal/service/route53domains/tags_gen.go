@@ -17,7 +17,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *route53domains.Client, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn *route53domains.Client, identifier, key string) (*string, error) {
 	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
@@ -80,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []types.Tag) tftags.KeyValueTags {
 // UpdateTags updates route53domains service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
