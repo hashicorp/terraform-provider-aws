@@ -249,10 +249,10 @@ func ResourceRiskConfiguration() *schema.Resource {
 						"blocked_ip_range_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MaxItems: 200,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
-									validation.StringLenBetween(0, 200),
 									validation.IsCIDR,
 								),
 							},
@@ -260,10 +260,10 @@ func ResourceRiskConfiguration() *schema.Resource {
 						"skipped_ip_range_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MaxItems: 200,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
-									validation.StringLenBetween(0, 200),
 									validation.IsCIDR,
 								)},
 						},
