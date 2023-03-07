@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -62,4 +63,8 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateLogGroupTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier, oldTags, newTags)
 }

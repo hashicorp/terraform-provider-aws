@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/transfer/transferiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -45,4 +46,8 @@ func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAP
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTagsNoIgnoreSystem(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsNoIgnoreSystem(ctx, meta.(*conns.AWSClient).TransferConn(), identifier, oldTags, newTags)
 }

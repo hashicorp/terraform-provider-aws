@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum/cloudwatchrumiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -57,4 +58,8 @@ func UpdateTags(ctx context.Context, conn cloudwatchrumiface.CloudWatchRUMAPI, i
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).RUMConn(), identifier, oldTags, newTags)
 }
