@@ -384,7 +384,7 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, 
 	return err
 }
 
-func waitDBSnapshotAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
+func waitDBSnapshotCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DBSnapshotCreating},
 		Target:     []string{DBSnapshotAvailable},

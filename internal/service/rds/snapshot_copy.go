@@ -26,6 +26,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 		ReadWithoutTimeout:   resourceSnapshotCopyRead,
 		UpdateWithoutTimeout: resourceSnapshotCopyUpdate,
 		DeleteWithoutTimeout: resourceSnapshotCopyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -146,37 +147,43 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	in := &rds.CopyDBSnapshotInput{
+	targetDBSnapshotID := d.Get("target_db_snapshot_identifier").(string)
+	input := &rds.CopyDBSnapshotInput{
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
-		TargetDBSnapshotIdentifier: aws.String(d.Get("target_db_snapshot_identifier").(string)),
 		Tags:                       Tags(tags.IgnoreAWS()),
+		TargetDBSnapshotIdentifier: aws.String(targetDBSnapshotID),
 	}
 
 	if v, ok := d.GetOk("copy_tags"); ok {
-		in.CopyTags = aws.Bool(v.(bool))
+		input.CopyTags = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		in.KmsKeyId = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("option_group_name"); ok {
-		in.OptionGroupName = aws.String(v.(string))
-	}
+
 	if v, ok := d.GetOk("destination_region"); ok {
-		in.DestinationRegion = aws.String(v.(string))
+		input.DestinationRegion = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("option_group_name"); ok {
+		input.OptionGroupName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("presigned_url"); ok {
-		in.PreSignedUrl = aws.String(v.(string))
+		input.PreSignedUrl = aws.String(v.(string))
 	}
 
-	out, err := conn.CopyDBSnapshotWithContext(ctx, in)
+	output, err := conn.CopyDBSnapshotWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "error creating RDS DB Snapshot Copy %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBSnapshotID, err)
 	}
 
-	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
+	d.SetId(aws.StringValue(output.DBSnapshot.DBSnapshotIdentifier))
 
-	if err := waitDBSnapshotAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) to be available: %s", d.Id(), err)
+	if err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
@@ -197,7 +204,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot Copy (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
@@ -222,18 +229,18 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "error listing tags for RDS DB Snapshot (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Snapshot Copy (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -247,7 +254,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
-			sdkdiag.AppendErrorf(diags, "error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
+			sdkdiag.AppendErrorf(diags, "updating RDS DB Snapshot Copy (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
 
@@ -258,7 +265,7 @@ func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
-	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Snapshot Copy: %s", d.Id())
 	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	})
@@ -268,7 +275,7 @@ func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Snapshot Copy (%s): %s", d.Id(), err)
 	}
 
 	return diags

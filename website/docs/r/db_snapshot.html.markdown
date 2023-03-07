@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20m`)
+- `create` - (Default `20m`)
 
 ## Import
 
