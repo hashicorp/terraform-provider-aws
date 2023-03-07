@@ -27,6 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 		"aws_ecs_container_definition": DataSourceContainerDefinition,
 		"aws_ecs_service":              DataSourceService,
 		"aws_ecs_task_definition":      DataSourceTaskDefinition,
+		"aws_ecs_task_execution":       DataSourceTaskExecution,
 	}
 }
 
