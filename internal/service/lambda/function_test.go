@@ -76,7 +76,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -130,7 +130,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -207,7 +207,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_cscUpdate(rName),
@@ -255,7 +255,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_cscDelete(rName),
@@ -295,7 +295,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_concurrencyUpdate(rName),
@@ -335,7 +335,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_concurrencyUpdate(rName),
@@ -400,7 +400,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_envVariables(rName),
@@ -455,7 +455,7 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -491,7 +491,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_encryptedEnvVariablesKey2(rName),
@@ -562,7 +562,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -640,7 +640,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -689,7 +689,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				// No changes, `publish` is true. This should not publish a new version.
@@ -747,7 +747,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -782,7 +782,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure configuration can be removed
 			{
@@ -832,7 +832,7 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -894,7 +894,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure lambda file system configuration can be updated
 			{
@@ -967,7 +967,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure lambda image code can be updated
 			{
@@ -1023,7 +1023,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
 			{
@@ -1074,7 +1074,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure function architecture can be updated
 			{
@@ -1125,7 +1125,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure function architecture can be updated
 			{
@@ -1168,7 +1168,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_updateEphemeralStorage(rName),
@@ -1210,7 +1210,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_tracingUpdated(rName),
@@ -1256,7 +1256,7 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1290,7 +1290,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1324,7 +1324,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_layersUpdated(rName),
@@ -1368,7 +1368,7 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1401,7 +1401,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
@@ -1444,7 +1444,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_vpcUpdated(rName),
@@ -1490,7 +1490,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1525,7 +1525,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_vpcPublish(rName),
@@ -1568,7 +1568,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_vpcUpdatedPublish(rName),
@@ -1703,7 +1703,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1732,7 +1732,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "s3_bucket", "s3_key", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"publish", "s3_bucket", "s3_key"},
 			},
 		},
 	})
@@ -1778,7 +1778,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				PreConfig: func() {
@@ -1844,7 +1844,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				PreConfig: func() {
@@ -1899,7 +1899,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "s3_object_version", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "s3_object_version"},
 			},
 			{
 				PreConfig: func() {
@@ -1955,7 +1955,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key"},
 			},
 			{
 				PreConfig: func() {
@@ -1998,7 +1998,7 @@ func TestAccLambdaFunction_snapStart(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccFunctionConfig_snapStartDisabled(rName),
@@ -2070,7 +2070,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		ResourceName:            resourceName,
 		ImportState:             true,
 		ImportStateVerify:       true,
-		ImportStateVerifyIgnore: []string{"filename", "publish", "skip_destroy"},
+		ImportStateVerifyIgnore: []string{"filename", "publish"},
 	})
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2121,6 +2121,43 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/29777.
+func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaEndpointID),
+		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.56.0",
+					},
+				},
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckNoResourceAttr(resourceName, "skip_destroy"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccFunctionConfig_basic(rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
 				),
 			},
 		},

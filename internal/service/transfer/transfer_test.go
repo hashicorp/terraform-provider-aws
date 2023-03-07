@@ -32,6 +32,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"HostKey":                       testAccServer_hostKey,
 			"LambdaFunction":                testAccServer_lambdaFunction,
 			"Protocols":                     testAccServer_protocols,
+			"ProtocolDetails":               testAccServer_protocolDetails,
 			"SecurityPolicy":                testAccServer_securityPolicy,
 			"UpdateEndpointTypePublicToVPC": testAccServer_updateEndpointType_publicToVPC,
 			"UpdateEndpointTypePublicToVPCAddressAllocationIDs":      testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs,
