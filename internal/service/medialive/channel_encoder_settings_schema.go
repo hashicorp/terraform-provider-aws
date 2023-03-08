@@ -5555,7 +5555,7 @@ func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":          float32(in.Bitrate),
+		"bitrate":          in.Bitrate,
 		"bitstream_mode":   string(in.BitstreamMode),
 		"coding_mode":      string(in.CodingMode),
 		"dialnorm":         int(in.Dialnorm),
