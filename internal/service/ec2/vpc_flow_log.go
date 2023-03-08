@@ -245,17 +245,19 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
-	output, err := conn.CreateFlowLogsWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateFlowLogsWithContext(ctx, input)
+	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
-	if err == nil && output != nil {
-		err = UnsuccessfulItemsError(output.Unsuccessful)
+	if err == nil && outputRaw != nil {
+		err = UnsuccessfulItemsError(outputRaw.(*ec2.CreateFlowLogsOutput).Unsuccessful)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Flow Log (%s): %s", resourceID, err)
 	}
 
-	d.SetId(aws.StringValue(output.FlowLogIds[0]))
+	d.SetId(aws.StringValue(outputRaw.(*ec2.CreateFlowLogsOutput).FlowLogIds[0]))
 
 	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
