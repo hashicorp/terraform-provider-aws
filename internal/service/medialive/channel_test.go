@@ -143,6 +143,68 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveChannel_UDP_outputSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_channel.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccChannelsPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_udpOutputSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "AVC"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "HD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
+						"input_attachment_name": "example-input1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]string{
+						"id": rName,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": rName,
+						"name":                rName,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
+						"name": "test-video-name",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.udp_output_settings.0.fec_output_settings.*", map[string]string{
+						"include_fec":  "COLUMN_AND_ROW",
+						"column_depth": "5",
+						"row_length":   "5",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_channel"},
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -697,6 +759,92 @@ resource "aws_medialive_channel" "test" {
           archive_output_settings {
             name_modifier = "_1"
             extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccChannelConfig_udpOutputSettings(rName string) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		testAccChannelBaseMultiplexConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = %[1]q
+
+    settings {
+      url = "rtp://localhost:8000"
+    }
+
+    settings {
+      url = "rtp://localhost:8001"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    video_descriptions {
+      name = "test-video-name"
+    }
+
+    audio_descriptions {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+    }
+
+    output_groups {
+      output_group_settings {
+        udp_group_settings {
+          input_loss_action = "DROP_TS"
+        }
+      }
+
+      outputs {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          udp_output_settings {
+            destination {
+              destination_ref_id = %[1]q
+            }
+
+            fec_output_settings {
+              include_fec  = "COLUMN_AND_ROW"
+              column_depth = 5
+              row_length   = 5
+            }
+
             container_settings {
               m2ts_settings {
                 audio_buffer_model = "ATSC"
