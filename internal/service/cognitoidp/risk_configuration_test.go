@@ -180,6 +180,28 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPRiskConfiguration_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRiskConfigurationConfig_empty(rName),
+				ExpectError: acctest.ExpectErrorAttrAtLeastOneOf(
+					"account_takeover_risk_configuration",
+					"compromised_credentials_risk_configuration",
+					"risk_exception_configuration",
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRiskConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
@@ -294,6 +316,18 @@ resource "aws_cognito_user_pool_client" "test" {
   name                = %[1]q
   user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+}
+`, rName)
+}
+
+func testAccRiskConfigurationConfig_empty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 `, rName)
 }

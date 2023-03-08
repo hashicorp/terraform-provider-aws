@@ -46,6 +46,11 @@ func ResourceRiskConfiguration() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				AtLeastOneOf: []string{
+					"account_takeover_risk_configuration",
+					"compromised_credentials_risk_configuration",
+					"risk_exception_configuration",
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"actions": {

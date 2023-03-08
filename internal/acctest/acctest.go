@@ -2292,3 +2292,7 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 
 	return is, nil
 }
+
+func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("one of[ \\n]`%s`[ \\n]must be specified", strings.Join(attrs, ",")))
+}
