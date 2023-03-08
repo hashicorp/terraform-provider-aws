@@ -21,7 +21,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAuthorizationTokenBasicDataSourceConfig,
+				Config: testAccAuthorizationTokenDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
@@ -32,7 +32,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckAuthorizationTokenRepositoryDataSourceConfig(rName),
+				Config: testAccAuthorizationTokenDataSourceConfig_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "registry_id", "aws_ecr_repository.repo", "registry_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
@@ -47,11 +47,11 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckAuthorizationTokenBasicDataSourceConfig = `
+var testAccAuthorizationTokenDataSourceConfig_basic = `
 data "aws_ecr_authorization_token" "repo" {}
 `
 
-func testAccCheckAuthorizationTokenRepositoryDataSourceConfig(rName string) string {
+func testAccAuthorizationTokenDataSourceConfig_repository(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "repo" {
   name = %q

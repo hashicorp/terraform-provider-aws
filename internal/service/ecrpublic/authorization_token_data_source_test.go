@@ -18,7 +18,7 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAuthorizationTokenBasicDataSourceConfig,
+				Config: testAccAuthorizationTokenDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
@@ -31,6 +31,6 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckAuthorizationTokenBasicDataSourceConfig = `
+var testAccAuthorizationTokenDataSourceConfig_basic = `
 data "aws_ecrpublic_authorization_token" "repo" {}
 `

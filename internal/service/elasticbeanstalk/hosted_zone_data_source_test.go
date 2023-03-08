@@ -39,19 +39,19 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckHostedZoneDataSource_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
+				Config: testAccHostedZoneDataSourceConfig_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedZone(dataSourceName, "ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
 				),
 			},
 			{
-				Config: testAccCheckHostedZoneDataSource_byRegion("eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
+				Config: testAccHostedZoneDataSourceConfig_byRegion("eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedZone(dataSourceName, "eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
 				),
 			},
 			{
-				Config:      testAccCheckHostedZoneDataSource_byRegion("ss-pluto-1"),
+				Config:      testAccHostedZoneDataSourceConfig_byRegion("ss-pluto-1"),
 				ExpectError: regexp.MustCompile("Unsupported region"),
 			},
 		},
@@ -74,7 +74,7 @@ const testAccHostedZoneDataSourceConfig_currentRegion = `
 data "aws_elastic_beanstalk_hosted_zone" "test" {}
 `
 
-func testAccCheckHostedZoneDataSource_byRegion(r string) string {
+func testAccHostedZoneDataSourceConfig_byRegion(r string) string {
 	return fmt.Sprintf(`
 data "aws_elastic_beanstalk_hosted_zone" "test" {
   region = "%s"

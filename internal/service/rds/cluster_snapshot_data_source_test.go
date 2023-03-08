@@ -96,7 +96,7 @@ func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName),
+				Config: testAccClusterSnapshotDataSourceConfig_mostRecent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
@@ -221,7 +221,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
+func testAccClusterSnapshotDataSourceConfig_mostRecent(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"

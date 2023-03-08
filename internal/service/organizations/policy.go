@@ -37,7 +37,7 @@ func ResourcePolicy() *schema.Resource {
 			"content": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
 			"description": {

@@ -27,7 +27,7 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
@@ -42,7 +42,7 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryPermissionsPolicyUpdatedConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
@@ -67,7 +67,7 @@ func testAccRepositoryPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPermissionsPolicyOrderConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
@@ -77,7 +77,7 @@ func testAccRepositoryPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccRepositoryPermissionsPolicyNewOrderConfig(rName),
+				Config:   testAccRepositoryPermissionsPolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -95,7 +95,7 @@ func testAccRepositoryPermissionsPolicy_owner(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPermissionsPolicyOwnerConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
@@ -124,7 +124,7 @@ func testAccRepositoryPermissionsPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
@@ -146,7 +146,7 @@ func testAccRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPermissionsExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
@@ -220,7 +220,7 @@ func testAccCheckRepositoryPermissionsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRepositoryPermissionsPolicyBasicConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -257,7 +257,7 @@ EOF
 `, rName)
 }
 
-func testAccRepositoryPermissionsPolicyOwnerConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyConfig_owner(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -295,7 +295,7 @@ EOF
 `, rName)
 }
 
-func testAccRepositoryPermissionsPolicyUpdatedConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -335,7 +335,7 @@ EOF
 `, rName)
 }
 
-func testAccRepositoryPermissionsPolicyOrderConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyConfig_order(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -371,7 +371,7 @@ resource "aws_codeartifact_repository_permissions_policy" "test" {
 `, rName)
 }
 
-func testAccRepositoryPermissionsPolicyNewOrderConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
