@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_acm_certificate: Change `options` to `Computed` ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
 * resource/aws_cloudhsm_v2_hsm: Enforce `ExactlyOneOf` for `availability_zone` and `subnet_id` arguments ([#20891](https://github.com/hashicorp/terraform-provider-aws/issues/20891))
 * resource/aws_db_instance: Add `listener_endpoint` attribute ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
 * resource/aws_db_instance: Add plan time validations for `backup_retention_period`, `monitoring_interval`, and `monitoring_role_arn` ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_acm_certificate: Update `options.certificate_transparency_logging_preference` in place rather than replacing the resource ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
 * resource/aws_batch_job_definition: Prevents perpetual diff when container properties environment variable has empty value. ([#29820](https://github.com/hashicorp/terraform-provider-aws/issues/29820))
 * resource/aws_grafana_workspace: Allow removing `vpc_configuration` ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
 * resource/aws_medialive_channel: Fix setting of the `video_pid` attribute in `m2ts_settings` ([#29824](https://github.com/hashicorp/terraform-provider-aws/issues/29824))
