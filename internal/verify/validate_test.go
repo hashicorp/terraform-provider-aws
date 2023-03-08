@@ -174,6 +174,8 @@ func TestValidARN(t *testing.T) {
 }
 
 func TestValidServicePrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := ValidServicePrincipal(v, "test.google.com")
 	if len(errors) != 0 {
@@ -210,6 +212,8 @@ func TestValidServicePrincipal(t *testing.T) {
 }
 
 func TestValidARNOrServicePrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := ValidARNOrServicePrincipal(v, "test.google.com")
 	if len(errors) != 0 {
