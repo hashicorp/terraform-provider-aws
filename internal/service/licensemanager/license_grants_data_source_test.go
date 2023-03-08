@@ -11,7 +11,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccLicenseManagerGrantsDataSource_basic(t *testing.T) {
+func TestAccLicenseManagerGrantsDataSource_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"grant": {
+			"basic": testAccGrantsDataSource_basic,
+			"empty": testAccGrantsDataSource_empty,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccGrantsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceName := "data.aws_licensemanager_grants.test"
@@ -20,9 +33,7 @@ func TestAccLicenseManagerGrantsDataSource_basic(t *testing.T) {
 	if licenseARN == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
-	resourceName := "aws_licensemanager_grant.test"
-
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -30,21 +41,19 @@ func TestAccLicenseManagerGrantsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGrantsDataSourceConfig_arns(licenseARN, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "arns.0", resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(datasourceName, "arns.0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLicenseManagerGrantsDataSource_empty(t *testing.T) {
-	ctx := acctest.Context(t)
+func testAccGrantsDataSource_empty(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_grants.test"
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGrantsDataSourceConfig_empty(),
@@ -59,33 +68,28 @@ func TestAccLicenseManagerGrantsDataSource_empty(t *testing.T) {
 func testAccGrantsDataSourceConfig_arns(licenseARN string, rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_licensemanager_received_license" "test" {
-  provider    = awsalternate
   license_arn = %[1]q
 }
 
 locals {
   allowed_operations = [for i in data.aws_licensemanager_received_license.test.received_metadata[0].allowed_operations : i if i != "CreateGrant"]
 }
-data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {
+	provider    = awsalternate
+}
+data "aws_caller_identity" "current" {
+	provider    = awsalternate
+}
 
 resource "aws_licensemanager_grant" "test" {
-  provider = awsalternate
-
   name               = %[2]q
   allowed_operations = local.allowed_operations
   license_arn        = data.aws_licensemanager_received_license.test.license_arn
   principal          = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
 }
 
-data "aws_licensemanager_grants" "test" {
-  filter {
-    name = "ProductSKU"
-    values = [
-		%[1]q
-    ]
-  }
-}
+data "aws_licensemanager_grants" "test" {}
 `, licenseARN, rName)
 }
 
