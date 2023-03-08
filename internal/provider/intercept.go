@@ -238,6 +238,13 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 	case After:
+		v := tftags.InContext{
+			DefaultConfig: meta.(*conns.AWSClient).DefaultTagsConfig,
+			IgnoreConfig:  meta.(*conns.AWSClient).IgnoreTagsConfig,
+		}
+
+		ctx = context.WithValue(ctx, tftags.TagKey, &v)
+
 		switch why {
 		case Create, Read, Update:
 			if v, ok := sp.(conns.ServicePackageWithListTags); ok {
@@ -247,6 +254,12 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					identifier = d.Id()
 				} else {
 					identifier = d.Get(key).(string)
+				}
+
+				// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
+				// Disappears test
+				if identifier == "" {
+					return ctx, diags
 				}
 
 				t, ok := tftags.FromContext(ctx)
@@ -279,7 +292,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					return ctx, sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 				}
 			}
-
 		}
 	}
 
