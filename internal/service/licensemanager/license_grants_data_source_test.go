@@ -17,7 +17,7 @@ func TestAccLicenseManagerGrantsDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"grant": {
 			"basic": testAccGrantsDataSource_basic,
-			"empty": testAccGrantsDataSource_empty,
+			"empty": testAccGrantsDataSource_noMatch,
 		},
 	}
 
@@ -28,19 +28,27 @@ func testAccGrantsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceName := "data.aws_licensemanager_grants.test"
-	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
-	licenseARN := os.Getenv(licenseKey)
+	licenseARN := os.Getenv(licenseARNKey)
 	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set to true", licenseKey)
+		t.Skipf("Environment variable %s is not set to true", licenseARNKey)
 	}
+	principal := os.Getenv(principalKey)
+	if principal == "" {
+		t.Skipf("Environment variable %s is not set", principalKey)
+	}
+	homeRegion := os.Getenv(homeRegionKey)
+	if homeRegion == "" {
+		t.Skipf("Environment variable %s is not set", homeRegionKey)
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantsDataSourceConfig_arns(licenseARN, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGrantsDataSourceConfig_basic(licenseARN, rName, principal, homeRegion),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "arns.0"),
 				),
 			},
@@ -48,7 +56,7 @@ func testAccGrantsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccGrantsDataSource_empty(t *testing.T) {
+func testAccGrantsDataSource_noMatch(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_grants.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -56,8 +64,8 @@ func testAccGrantsDataSource_empty(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantsDataSourceConfig_empty(),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGrantsDataSourceConfig_noMatch(),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "arns.#", "0"),
 				),
 			},
@@ -65,8 +73,11 @@ func testAccGrantsDataSource_empty(t *testing.T) {
 	})
 }
 
-func testAccGrantsDataSourceConfig_arns(licenseARN string, rName string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+func testAccGrantsDataSourceConfig_basic(licenseARN, rName, principal, homeRegion string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRegionalProvider(homeRegion),
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
 data "aws_licensemanager_received_license" "test" {
   license_arn = %[1]q
 }
@@ -75,31 +86,25 @@ locals {
   allowed_operations = [for i in data.aws_licensemanager_received_license.test.received_metadata[0].allowed_operations : i if i != "CreateGrant"]
 }
 
-data "aws_partition" "current" {
-  provider = awsalternate
-}
-data "aws_caller_identity" "current" {
-  provider = awsalternate
-}
-
 resource "aws_licensemanager_grant" "test" {
   name               = %[2]q
   allowed_operations = local.allowed_operations
   license_arn        = data.aws_licensemanager_received_license.test.license_arn
-  principal          = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+  principal          = %[3]q
 }
 
 data "aws_licensemanager_grants" "test" {}
-`, licenseARN, rName)
+`, licenseARN, rName, principal),
+	)
 }
 
-func testAccGrantsDataSourceConfig_empty() string {
+func testAccGrantsDataSourceConfig_noMatch() string {
 	return `
 data "aws_licensemanager_grants" "test" {
   filter {
     name = "LicenseIssuerName"
     values = [
-      "This Is Fake"
+      "No Match"
     ]
   }
 }
