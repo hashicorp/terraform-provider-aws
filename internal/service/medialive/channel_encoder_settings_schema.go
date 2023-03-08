@@ -5535,13 +5535,13 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":           float32(in.Bitrate),
+		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
 		"profile":           string(in.Profile),
 		"rate_control_mode": string(in.RateControlMode),
 		"raw_format":        string(in.RawFormat),
-		"sample_rate":       float32(in.SampleRate),
+		"sample_rate":       in.SampleRate,
 		"spec":              string(in.Spec),
 		"vbr_quality":       string(in.VbrQuality),
 	}
