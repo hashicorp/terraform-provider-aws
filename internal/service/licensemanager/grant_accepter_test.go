@@ -16,18 +16,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccLicenseManagerGrantAccepter_basic(t *testing.T) {
+func TestAccLicenseManagerGrantAccepter_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"grant": {
+			"basic":      testAccGrantAccepter_basic,
+			"disappears": testAccGrantAccepter_disappears,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
 	licenseARN := os.Getenv(licenseKey)
 	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set to true", licenseKey)
+		t.Skipf("Environment variable %s is not set", licenseKey)
 	}
 	resourceName := "aws_licensemanager_grant_accepter.test"
 	resourceGrantName := "aws_licensemanager_grant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
@@ -60,7 +73,7 @@ func TestAccLicenseManagerGrantAccepter_basic(t *testing.T) {
 	})
 }
 
-func TestAccLicenseManagerGrantAccepter_disappears(t *testing.T) {
+func testAccGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
@@ -70,7 +83,7 @@ func TestAccLicenseManagerGrantAccepter_disappears(t *testing.T) {
 	}
 	resourceName := "aws_licensemanager_grant_accepter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
@@ -154,15 +167,17 @@ locals {
   allowed_operations = [for i in data.aws_licensemanager_received_license.test.received_metadata[0].allowed_operations : i if i != "CreateGrant"]
 }
 
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
 resource "aws_licensemanager_grant" "test" {
   provider = awsalternate
 
   name               = %[2]q
   allowed_operations = local.allowed_operations
   license_arn        = data.aws_licensemanager_received_license.test.license_arn
-  principal          = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+  principal          = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
 }
-data "aws_caller_identity" "current" {}
 
 resource "aws_licensemanager_grant_accepter" "test" {
   grant_arn = aws_licensemanager_grant.test.arn
