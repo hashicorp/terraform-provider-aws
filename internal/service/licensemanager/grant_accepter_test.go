@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/licensemanager"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,39 +18,40 @@ import (
 
 func TestAccLicenseManagerGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	grantARNKey := "LICENSE_MANAGER_GRANT_ACCEPTER_ARN_BASIC"
-	grantARN := os.Getenv(grantARNKey)
-	if grantARN == "" {
-		t.Skipf("Environment variable %s is not set to true", grantARNKey)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
+	licenseARN := os.Getenv(licenseKey)
+	if licenseARN == "" {
+		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
 	resourceName := "aws_licensemanager_grant_accepter.test"
+	resourceGrantName := "aws_licensemanager_grant.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGrantAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantAccepterConfig_basic(grantARN),
+				Config: testAccGrantAccepterConfig_basic(licenseARN, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "grant_arn"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ListPurchasedLicenses"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckoutLicense"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckInLicense"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ExtendConsumptionLicense"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CreateToken"),
-					resource.TestCheckResourceAttrSet(resourceName, "home_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "license_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "grant_arn", resourceGrantName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "allowed_operations.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "home_region", resourceGrantName, "home_region"),
+					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
+					resource.TestCheckResourceAttrPair(resourceName, "name", resourceGrantName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parent_arn", resourceGrantName, "parent_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", resourceGrantName, "principal"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
+				Config:            testAccGrantAccepterConfig_basic(licenseARN, rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -60,21 +62,24 @@ func TestAccLicenseManagerGrantAccepter_basic(t *testing.T) {
 
 func TestAccLicenseManagerGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	grantARNKey := "LICENSE_MANAGER_GRANT_ACCEPTER_ARN_DISAPPEARS"
-	grantARN := os.Getenv(grantARNKey)
-	if grantARN == "" {
-		t.Skipf("Environment variable %s is not set to true", grantARNKey)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	licenseKey := "LICENSE_MANAGER_GRANT_LICENSE_ARN"
+	licenseARN := os.Getenv(licenseKey)
+	if licenseARN == "" {
+		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
 	resourceName := "aws_licensemanager_grant_accepter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGrantAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantAccepterConfig_basic(grantARN),
+				Config: testAccGrantAccepterConfig_basic(licenseARN, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceGrantAccepter(), resourceName),
@@ -138,10 +143,29 @@ func testAccCheckGrantAccepterDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccGrantAccepterConfig_basic(grantARN string) string {
-	return fmt.Sprintf(`
-resource "aws_licensemanager_grant_accepter" "test" {
-  grant_arn = %[1]q
+func testAccGrantAccepterConfig_basic(licenseARN string, rName string) string {
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+data "aws_licensemanager_received_license" "test" {
+  provider    = awsalternate
+  license_arn = %[1]q
 }
-`, grantARN)
+
+locals {
+  allowed_operations = [for i in data.aws_licensemanager_received_license.test.received_metadata[0].allowed_operations : i if i != "CreateGrant"]
+}
+
+resource "aws_licensemanager_grant" "test" {
+  provider = awsalternate
+
+  name               = %[2]q
+  allowed_operations = local.allowed_operations
+  license_arn        = data.aws_licensemanager_received_license.test.license_arn
+  principal          = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+}
+data "aws_caller_identity" "current" {}
+
+resource "aws_licensemanager_grant_accepter" "test" {
+  grant_arn = aws_licensemanager_grant.test.arn
+}
+`, licenseARN, rName)
 }
