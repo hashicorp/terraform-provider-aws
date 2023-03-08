@@ -209,6 +209,10 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
+const (
+	errCodeInvalidParameterValue = "InvalidParameterValue"
+)
+
 func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, applicationName, templateName string) (*elasticbeanstalk.ConfigurationSettingsDescription, error) {
 	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
 		ApplicationName: aws.String(applicationName),
@@ -217,7 +221,7 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 
 	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Configuration Template named") || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Application named") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
