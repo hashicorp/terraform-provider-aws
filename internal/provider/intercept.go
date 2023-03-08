@@ -239,7 +239,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	case After:
 		switch why {
-		case Read:
+		case Create, Read, Update:
 			if v, ok := sp.(conns.ServicePackageWithListTags); ok {
 				var identifier string
 
