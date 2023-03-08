@@ -335,6 +335,7 @@ EOF
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name       = %[1]q
   default_iam_role_arn = aws_iam_role.test.arn
+  iam_roles            = [aws_iam_role.test.arn]
 }
 `, rName)
 }
