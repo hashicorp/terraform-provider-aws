@@ -36,6 +36,7 @@ func DataSourceFiltersSchema() *schema.Schema {
 				"values": {
 					Type:     schema.TypeList,
 					Required: true,
+					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 			},

@@ -12,10 +12,9 @@ import (
 
 func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_received_licenses.test"
-	productSKUKey := "LICENSE_MANAGER_LICENSE_PRODUCT_SKU"
-	productSKU := os.Getenv(productSKUKey)
-	if productSKU == "" {
-		t.Skipf("Environment variable %s is not set", productSKUKey)
+	licenseARN := os.Getenv(licenseARNKey)
+	if licenseARN == "" {
+		t.Skipf("Environment variable %s is not set", licenseARNKey)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,7 +23,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceivedLicensesDataSourceConfig_arns(productSKU),
+				Config: testAccReceivedLicensesDataSourceConfig_arns(licenseARN),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
 				),
@@ -50,17 +49,21 @@ func TestAccLicenseManagerReceivedLicensesDataSource_empty(t *testing.T) {
 	})
 }
 
-func testAccReceivedLicensesDataSourceConfig_arns(productSKU string) string {
+func testAccReceivedLicensesDataSourceConfig_arns(licenseARN string) string {
 	return fmt.Sprintf(`
 data "aws_licensemanager_received_licenses" "test" {
   filter {
     name = "ProductSKU"
     values = [
-		%[1]q
+		data.aws_licensemanager_received_license.test.product_sku
     ]
   }
 }
-`, productSKU)
+
+data "aws_licensemanager_received_license" "test" {
+  license_arn = %[1]q
+}
+`, licenseARN)
 }
 
 func testAccReceivedLicensesDataSourceConfig_empty() string {
