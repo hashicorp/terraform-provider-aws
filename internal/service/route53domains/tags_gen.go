@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -46,6 +47,10 @@ func ListTags(ctx context.Context, conn *route53domains.Client, identifier strin
 	}
 
 	return KeyValueTags(ctx, output.TagList), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -111,4 +116,8 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier, oldTags, newTags)
 }

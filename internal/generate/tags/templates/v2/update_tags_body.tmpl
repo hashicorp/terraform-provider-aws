@@ -128,3 +128,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	return nil
 }
+
+func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+}
