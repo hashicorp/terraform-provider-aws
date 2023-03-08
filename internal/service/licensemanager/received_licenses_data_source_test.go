@@ -64,7 +64,7 @@ data "aws_licensemanager_received_licenses" "test" {
 }
 
 func testAccReceivedLicensesDataSourceConfig_empty() string {
-	return fmt.Sprint(`
+	return `
 data "aws_licensemanager_received_licenses" "test" {
   filter {
     name = "IssuerName"
@@ -73,5 +73,5 @@ data "aws_licensemanager_received_licenses" "test" {
     ]
   }
 }
-`)
+`
 }
