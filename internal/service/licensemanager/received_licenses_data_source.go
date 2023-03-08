@@ -90,17 +90,3 @@ func FindReceivedLicenses(ctx context.Context, conn *licensemanager.LicenseManag
 
 	return out, nil
 }
-
-func expandLicenseARNs(rawLicenseARNs []interface{}) []string {
-	if rawLicenseARNs == nil {
-		return nil
-	}
-
-	licenseARNs := make([]string, 0, 8)
-
-	for _, item := range rawLicenseARNs {
-		licenseARNs = append(licenseARNs, item.(string))
-	}
-
-	return licenseARNs
-}
