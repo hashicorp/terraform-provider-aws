@@ -174,6 +174,11 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	out, err := FindGrantByARN(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
+		return nil
+	}
+
 	if err != nil {
 		return create.DiagError(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
 	}
@@ -210,7 +215,7 @@ func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, ar
 		return nil, err
 	}
 
-	if out == nil || out.Grant == nil || aws.StringValue(out.Grant.GrantStatus) == licensemanager.GrantStatusDeleted {
+	if out == nil || out.Grant == nil || aws.StringValue(out.Grant.GrantStatus) == licensemanager.GrantStatusDeleted || aws.StringValue(out.Grant.GrantStatus) == licensemanager.GrantStatusRejected {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
