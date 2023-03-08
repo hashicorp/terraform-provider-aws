@@ -30,25 +30,14 @@ func ValidARNOrServicePrincipal(v interface{}, k string) (ws []string, errors []
 		return ws, errors
 	}
 
-	ws_arn := []string{}
-	errors_arn := []error{}
-
-	ws_arn, errors_arn = ValidARN(v, k)
-	errors = append(errors, errors_arn...)
-	ws = append(ws, ws_arn...)
-
-	ws_sp := []string{}
-	errors_sp := []error{}
-
-	ws_sp, errors_sp = ValidServicePrincipal(v, k)
-	errors = append(errors, errors_sp...)
-	ws = append(ws, ws_sp...)
+	var _, errors_arn = ValidARN(v, k)
+	var _, errors_sp = ValidServicePrincipal(v, k)
 
 	if len(errors_arn) > 0 && len(errors_sp) > 0 {
-		return ws, errors
-	} else {
-		return []string{}, []error{}
+		errors = []error{fmt.Errorf("%q (%s) is neither a valid service principal or ARN", k, value)}
 	}
+
+	return ws, errors
 }
 
 func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {

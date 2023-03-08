@@ -227,7 +227,7 @@ func TestValidARNOrServicePrincipal(t *testing.T) {
 	for _, v := range validNames {
 		_, errors := ValidARNOrServicePrincipal(v, "arn")
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+			t.Fatalf("%q should be a valid Service Principal or ARN: %q", v, errors)
 		}
 	}
 
@@ -241,7 +241,7 @@ func TestValidARNOrServicePrincipal(t *testing.T) {
 	for _, v := range invalidNames {
 		_, errors := ValidARNOrServicePrincipal(v, "arn")
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid Service Principal", v)
+			t.Fatalf("%q should be an invalid Service Principal and ARN", v)
 		}
 	}
 }
