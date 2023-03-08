@@ -39,8 +39,8 @@ func testAccGrant_basic(t *testing.T) {
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
 	}
-	licenseArn := os.Getenv(licenseKey)
-	if licenseArn == "" {
+	licenseARN := os.Getenv(licenseKey)
+	if licenseARN == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -53,7 +53,7 @@ func testAccGrant_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(licenseArn, rName, principal),
+				Config: testAccGrantConfig_basic(licenseARN, rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`grant:g-.+`)),
@@ -63,7 +63,7 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ExtendConsumptionLicense"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CreateToken"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_region"),
-					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseArn),
+					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal),
@@ -88,8 +88,8 @@ func testAccGrant_disappears(t *testing.T) {
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
 	}
-	licenseArn := os.Getenv(licenseKey)
-	if licenseArn == "" {
+	licenseARN := os.Getenv(licenseKey)
+	if licenseARN == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -102,7 +102,7 @@ func testAccGrant_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(licenseArn, rName, principal),
+				Config: testAccGrantConfig_basic(licenseARN, rName, principal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceGrant(), resourceName),
@@ -121,8 +121,8 @@ func testAccGrant_name(t *testing.T) {
 	if principal == "" {
 		t.Skipf("Environment variable %s is not set to true", principalKey)
 	}
-	licenseArn := os.Getenv(licenseKey)
-	if licenseArn == "" {
+	licenseARN := os.Getenv(licenseKey)
+	if licenseARN == "" {
 		t.Skipf("Environment variable %s is not set to true", licenseKey)
 	}
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func testAccGrant_name(t *testing.T) {
 		CheckDestroy:             testAccCheckGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGrantConfig_basic(licenseArn, rName1, principal),
+				Config: testAccGrantConfig_basic(licenseARN, rName1, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -148,7 +148,7 @@ func testAccGrant_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGrantConfig_basic(licenseArn, rName2, principal),
+				Config: testAccGrantConfig_basic(licenseARN, rName2, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -211,7 +211,7 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccGrantConfig_basic(licenseArn string, rName string, principal string) string {
+func testAccGrantConfig_basic(licenseARN string, rName string, principal string) string {
 	return fmt.Sprintf(`
 data "aws_licensemanager_received_license" "test" {
   license_arn = %[1]q
@@ -227,5 +227,5 @@ resource "aws_licensemanager_grant" "test" {
   license_arn        = data.aws_licensemanager_received_license.test.license_arn
   principal          = %[3]q
 }
-`, licenseArn, rName, principal)
+`, licenseARN, rName, principal)
 }
