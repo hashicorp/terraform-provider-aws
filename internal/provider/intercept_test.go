@@ -60,7 +60,7 @@ func TestInterceptorsWhy(t *testing.T) {
 	}
 }
 
-func TestInvokeHandler(t *testing.T) {
+func TestInterceptedHandler(t *testing.T) {
 	var interceptors Interceptors
 
 	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
@@ -78,7 +78,7 @@ func TestInvokeHandler(t *testing.T) {
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
 
-	diags := InvokeHandler(context.Background(), nil, 42, interceptors, read, Read)
+	diags := interceptedHandler(interceptors, read, Read)(context.Background(), nil, 42)
 	if got, want := len(diags), 1; got != want {
 		t.Errorf("length of diags = %v, want %v", got, want)
 	}

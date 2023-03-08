@@ -78,93 +78,84 @@ func (v *Interceptors) Why(why Why) Interceptors {
 	return interceptors
 }
 
-// InvokeHandler invokes the specified CRUD handler, running any interceptors.
-func InvokeHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors []Interceptor, f F, why Why) diag.Diagnostics {
-	var diags diag.Diagnostics
+// interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
+// func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors Interceptors, f F, why Why) diag.Diagnostics {
+func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](interceptors Interceptors, f F, why Why) F {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		var diags diag.Diagnostics
+		forward := interceptors.Why(why)
 
-	when := Before
-	for _, v := range interceptors {
-		if v.When&when != 0 {
-			ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+		when := Before
+		for _, v := range forward {
+			if v.When&when != 0 {
+				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 
-			// Short circuit if any Before interceptor errors.
-			if diags.HasError() {
-				return diags
+				// Short circuit if any Before interceptor errors.
+				if diags.HasError() {
+					return diags
+				}
 			}
 		}
-	}
 
-	reversed := slices.Reverse(interceptors)
-	diags = f(ctx, d, meta)
+		reverse := slices.Reverse(forward)
+		diags = f(ctx, d, meta)
 
-	if diags.HasError() {
-		when = OnError
-		for _, v := range reversed {
+		if diags.HasError() {
+			when = OnError
+			for _, v := range reverse {
+				if v.When&when != 0 {
+					ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+				}
+			}
+		} else {
+			when = After
+			for _, v := range reverse {
+				if v.When&when != 0 {
+					ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+				}
+			}
+		}
+
+		for _, v := range reverse {
+			when = Finally
 			if v.When&when != 0 {
 				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
 			}
 		}
-	} else {
-		when = After
-		for _, v := range reversed {
-			if v.When&when != 0 {
-				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
-			}
-		}
-	}
 
-	for _, v := range reversed {
-		when = Finally
-		if v.When&when != 0 {
-			ctx, diags = v.Func(ctx, d, meta, when, why, diags)
-		}
+		return diags
 	}
-
-	return diags
 }
 
+// DataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
 type DataSource struct {
 	interceptors Interceptors
 }
 
 func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		why := Read
-		return InvokeHandler(ctx, d, meta, ds.interceptors.Why(why), f, why)
-	}
+	return interceptedHandler(ds.interceptors, f, Read)
 }
 
+// Resource represents an interceptor dispatcher for a Plugin SDK v2 resource.
 type Resource struct {
 	interceptors Interceptors
 	tags         *types.ServicePackageResourceTags
 }
 
 func (r *Resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		why := Create
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
-	}
+	return interceptedHandler(r.interceptors, f, Create)
 }
 
 func (r *Resource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		why := Read
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
-	}
+	return interceptedHandler(r.interceptors, f, Read)
 }
 
 func (r *Resource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		why := Update
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
-	}
+	return interceptedHandler(r.interceptors, f, Update)
 }
 
 func (r *Resource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		why := Delete
-		return InvokeHandler(ctx, d, meta, r.interceptors.Why(why), f, why)
-	}
+	return interceptedHandler(r.interceptors, f, Delete)
 }
 
 func (r *Resource) State(f schema.StateContextFunc) schema.StateContextFunc {
