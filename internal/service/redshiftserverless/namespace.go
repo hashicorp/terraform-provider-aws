@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_namespace")
 func ResourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
@@ -101,7 +102,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{

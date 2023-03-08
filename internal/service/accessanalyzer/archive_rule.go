@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_accessanalyzer_archive_rule")
 func ResourceArchiveRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveRuleCreate,

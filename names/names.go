@@ -31,6 +31,7 @@ const (
 	Inspector2EndpointID           = "inspector2"
 	IVSChatEndpointID              = "ivschat"
 	KendraEndpointID               = "kendra"
+	LambdaEndpointID               = "lambda"
 	MediaLiveEndpointID            = "medialive"
 	OpenSearchServerlessEndpointID = "aoss"
 	PipesEndpointID                = "pipes"
@@ -40,6 +41,7 @@ const (
 	SchedulerEndpointID            = "scheduler"
 	SESV2EndpointID                = "sesv2"
 	SSMEndpointID                  = "ssm"
+	SSMContactsEndpointId          = "ssm-contacts"
 	TranscribeEndpointID           = "transcribe"
 )
 

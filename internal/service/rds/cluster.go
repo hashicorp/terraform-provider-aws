@@ -29,6 +29,7 @@ const (
 	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
+// @SDKResource("aws_rds_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -465,7 +466,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -1472,8 +1473,16 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbCluster := output.DBClusters[0]

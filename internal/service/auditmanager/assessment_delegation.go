@@ -24,10 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessmentDelegation)
-}
-
+// @FrameworkResource
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }

@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go/service/licensemanager/licensemanageriface"
 )
 
-func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.LicenseManager, input *licensemanager.ListLicenseConfigurationsInput, fn func(*licensemanager.ListLicenseConfigurationsOutput, bool) bool) error {
+func listLicenseConfigurationsPages(ctx context.Context, conn licensemanageriface.LicenseManagerAPI, input *licensemanager.ListLicenseConfigurationsInput, fn func(*licensemanager.ListLicenseConfigurationsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListLicenseConfigurationsWithContext(ctx, input)
 		if err != nil {
@@ -25,7 +26,7 @@ func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.Li
 	}
 	return nil
 }
-func listLicenseSpecificationsForResourcePages(ctx context.Context, conn *licensemanager.LicenseManager, input *licensemanager.ListLicenseSpecificationsForResourceInput, fn func(*licensemanager.ListLicenseSpecificationsForResourceOutput, bool) bool) error {
+func listLicenseSpecificationsForResourcePages(ctx context.Context, conn licensemanageriface.LicenseManagerAPI, input *licensemanager.ListLicenseSpecificationsForResourceInput, fn func(*licensemanager.ListLicenseSpecificationsForResourceOutput, bool) bool) error {
 	for {
 		output, err := conn.ListLicenseSpecificationsForResourceWithContext(ctx, input)
 		if err != nil {

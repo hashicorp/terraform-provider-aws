@@ -202,10 +202,10 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_cas(rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmRootCAResourceName, &caRoot),
-					acctest.CheckACMPCACertificateAuthorityExists(acmSubordinateCAResourceName, &caSubordinate),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&caRoot),
-					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(&caRoot, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmRootCAResourceName, &caRoot),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmSubordinateCAResourceName, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &caRoot),
+					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx, &caRoot, &caSubordinate),
 				),
 			},
 			{
@@ -225,8 +225,8 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CAs must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&caSubordinate),
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&caRoot),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caRoot),
 				),
 				ExpectNonEmptyPlan: true,
 			},

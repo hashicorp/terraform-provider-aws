@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_db_proxy")
 func ResourceProxy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyCreate,
@@ -136,7 +137,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := rds.CreateDBProxyInput{
 		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
@@ -163,7 +164,6 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", input)
 	output, err := conn.CreateDBProxyWithContext(ctx, &input)
 
 	if err != nil {
@@ -252,7 +252,6 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SecurityGroups = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Updating RDS DB Proxy: %s", input)
 		_, err := conn.ModifyDBProxyWithContext(ctx, input)
 
 		if err != nil {

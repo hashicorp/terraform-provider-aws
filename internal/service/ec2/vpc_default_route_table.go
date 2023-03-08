@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_default_route_table")
 func ResourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
@@ -148,7 +149,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	routeTableID := d.Get("default_route_table_id").(string)
 

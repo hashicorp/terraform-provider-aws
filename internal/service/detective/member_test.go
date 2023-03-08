@@ -26,7 +26,7 @@ func testAccMember_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func testAccMember_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func testAccMember_message(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{

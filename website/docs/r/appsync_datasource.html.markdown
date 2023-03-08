@@ -25,45 +25,35 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "appsync.amazonaws.com"
-      },
-      "Effect": "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["appsync.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect    = "Allow"
+    actions   = ["dynamodb:*"]
+    resources = [aws_dynamodb_table.example.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "example"
-  role = aws_iam_role.example.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "dynamodb:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_dynamodb_table.example.arn}"
-      ]
-    }
-  ]
-}
-EOF
+  name   = "example"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_role_policy.example.json
 }
 
 resource "aws_appsync_graphql_api" "example" {

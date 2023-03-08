@@ -24,6 +24,7 @@ const (
 	AttrObjectPath = "object_path"
 )
 
+// @SDKResource("aws_appflow_flow")
 func ResourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
@@ -1229,7 +1230,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get(names.AttrTags).(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}

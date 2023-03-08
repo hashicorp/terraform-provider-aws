@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ssm_resource_data_sync")
 func ResourceResourceDataSync() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceDataSyncCreate,

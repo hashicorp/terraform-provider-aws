@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_sagemaker_servicecatalog_portfolio_status")
 func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,

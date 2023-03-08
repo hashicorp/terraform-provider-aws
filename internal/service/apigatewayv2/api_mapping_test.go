@@ -172,7 +172,7 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 		output, err := conn.ImportCertificateWithContext(ctx, &acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: tfacm.Tags(tftags.New(map[string]interface{}{
+			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
 				"Name": rName,
 			}).IgnoreAWS()),
 		})
