@@ -5,49 +5,107 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_imagebuilder_component":                     DataSourceComponent,
-		"aws_imagebuilder_components":                    DataSourceComponents,
-		"aws_imagebuilder_container_recipe":              DataSourceContainerRecipe,
-		"aws_imagebuilder_container_recipes":             DataSourceContainerRecipes,
-		"aws_imagebuilder_distribution_configuration":    DataSourceDistributionConfiguration,
-		"aws_imagebuilder_distribution_configurations":   DataSourceDistributionConfigurations,
-		"aws_imagebuilder_image":                         DataSourceImage,
-		"aws_imagebuilder_image_pipeline":                DataSourceImagePipeline,
-		"aws_imagebuilder_image_pipelines":               DataSourceImagePipelines,
-		"aws_imagebuilder_image_recipe":                  DataSourceImageRecipe,
-		"aws_imagebuilder_image_recipes":                 DataSourceImageRecipes,
-		"aws_imagebuilder_infrastructure_configuration":  DataSourceInfrastructureConfiguration,
-		"aws_imagebuilder_infrastructure_configurations": DataSourceInfrastructureConfigurations,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceComponent,
+			TypeName: "aws_imagebuilder_component",
+		},
+		{
+			Factory:  DataSourceComponents,
+			TypeName: "aws_imagebuilder_components",
+		},
+		{
+			Factory:  DataSourceContainerRecipe,
+			TypeName: "aws_imagebuilder_container_recipe",
+		},
+		{
+			Factory:  DataSourceContainerRecipes,
+			TypeName: "aws_imagebuilder_container_recipes",
+		},
+		{
+			Factory:  DataSourceDistributionConfiguration,
+			TypeName: "aws_imagebuilder_distribution_configuration",
+		},
+		{
+			Factory:  DataSourceDistributionConfigurations,
+			TypeName: "aws_imagebuilder_distribution_configurations",
+		},
+		{
+			Factory:  DataSourceImage,
+			TypeName: "aws_imagebuilder_image",
+		},
+		{
+			Factory:  DataSourceImagePipeline,
+			TypeName: "aws_imagebuilder_image_pipeline",
+		},
+		{
+			Factory:  DataSourceImagePipelines,
+			TypeName: "aws_imagebuilder_image_pipelines",
+		},
+		{
+			Factory:  DataSourceImageRecipe,
+			TypeName: "aws_imagebuilder_image_recipe",
+		},
+		{
+			Factory:  DataSourceImageRecipes,
+			TypeName: "aws_imagebuilder_image_recipes",
+		},
+		{
+			Factory:  DataSourceInfrastructureConfiguration,
+			TypeName: "aws_imagebuilder_infrastructure_configuration",
+		},
+		{
+			Factory:  DataSourceInfrastructureConfigurations,
+			TypeName: "aws_imagebuilder_infrastructure_configurations",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_imagebuilder_component":                    ResourceComponent,
-		"aws_imagebuilder_container_recipe":             ResourceContainerRecipe,
-		"aws_imagebuilder_distribution_configuration":   ResourceDistributionConfiguration,
-		"aws_imagebuilder_image":                        ResourceImage,
-		"aws_imagebuilder_image_pipeline":               ResourceImagePipeline,
-		"aws_imagebuilder_image_recipe":                 ResourceImageRecipe,
-		"aws_imagebuilder_infrastructure_configuration": ResourceInfrastructureConfiguration,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceComponent,
+			TypeName: "aws_imagebuilder_component",
+		},
+		{
+			Factory:  ResourceContainerRecipe,
+			TypeName: "aws_imagebuilder_container_recipe",
+		},
+		{
+			Factory:  ResourceDistributionConfiguration,
+			TypeName: "aws_imagebuilder_distribution_configuration",
+		},
+		{
+			Factory:  ResourceImage,
+			TypeName: "aws_imagebuilder_image",
+		},
+		{
+			Factory:  ResourceImagePipeline,
+			TypeName: "aws_imagebuilder_image_pipeline",
+		},
+		{
+			Factory:  ResourceImageRecipe,
+			TypeName: "aws_imagebuilder_image_recipe",
+		},
+		{
+			Factory:  ResourceInfrastructureConfiguration,
+			TypeName: "aws_imagebuilder_infrastructure_configuration",
+		},
 	}
 }
 
