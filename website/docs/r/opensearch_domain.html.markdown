@@ -322,7 +322,7 @@ The following arguments are optional:
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
 * `auto_tune_options` - (Optional) Configuration block for the Auto-Tune options of the domain. Detailed below.
 * `cluster_config` - (Optional) Configuration block for the cluster of the domain. Detailed below.
-* `cognito_options` - (Optional) Configuration block for authenticating Kibana with Cognito. Detailed below.
+* `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`. See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains). Defaults to `OpenSearch_1.1`.
@@ -387,9 +387,9 @@ The following arguments are optional:
 
 ### cognito_options
 
-AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-cognito-auth.html)
+AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-cognito-auth.html)
 
-* `enabled` - (Optional) Whether Amazon Cognito authentication with Kibana is enabled or not. Default is `false`.
+* `enabled` - (Optional) Whether Amazon Cognito authentication with Dashboard is enabled or not. Default is `false`.
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use.
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
@@ -452,7 +452,7 @@ In addition to all arguments above, the following attributes are exported:
 * `domain_id` - Unique identifier for the domain.
 * `domain_name` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
-* `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
+* `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
