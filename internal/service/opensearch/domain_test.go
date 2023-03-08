@@ -150,7 +150,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1"),
-					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards/`)),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
