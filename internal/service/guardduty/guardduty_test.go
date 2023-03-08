@@ -3,14 +3,19 @@ package guardduty_test
 import (
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			"basic":                             testAccDetector_basic,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
+			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
 			"tags":                              testAccDetector_tags,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
@@ -33,12 +38,14 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":  testAccOrganizationConfiguration_basic,
-			"s3Logs": testAccOrganizationConfiguration_s3logs,
+			"basic":             testAccOrganizationConfiguration_basic,
+			"s3Logs":            testAccOrganizationConfiguration_s3logs,
+			"kubernetes":        testAccOrganizationConfiguration_kubernetes,
+			"malwareProtection": testAccOrganizationConfiguration_malwareprotection,
 		},
 		"ThreatIntelSet": {
-			"basic": testAccThreatintelset_basic,
-			"tags":  testAccThreatintelset_tags,
+			"basic": testAccThreatIntelSet_basic,
+			"tags":  testAccThreatIntelSet_tags,
 		},
 		"Member": {
 			"basic":              testAccMember_basic,
@@ -52,17 +59,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccMemberFromEnv(t *testing.T) (string, string) {

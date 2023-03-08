@@ -14,7 +14,6 @@ Provides a resource to manage AWS Device Farm Instance Profiles.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_instance_profile" "example" {
   name = "example"
@@ -28,14 +27,14 @@ resource "aws_devicefarm_instance_profile" "example" {
 * `name` - (Required) The name for the instance profile.
 * `package_cleanup` - (Optional) When set to `true`, Device Farm removes app packages after a test run. The default value is `false` for private devices.
 * `reboot_after_use` - (Optional) When set to `true`, Device Farm reboots the instance after a test run. The default value is `true`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of this instance profile.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

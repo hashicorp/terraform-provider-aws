@@ -33,6 +33,10 @@ resource "aws_ecrpublic_repository" "foo" {
     operating_systems = ["Linux"]
     usage_text        = "Usage Text"
   }
+
+  tags = {
+    env = "production"
+  }
 }
 ```
 
@@ -42,7 +46,7 @@ The following arguments are supported:
 
 * `repository_name` - (Required) Name of the repository.
 * `catalog_data` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
-
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### catalog_data
 
@@ -61,13 +65,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The repository name.
 * `registry_id` - The registry ID where the repository was created.
 * `repository_uri` - The URI of the repository.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_ecrpublic_repository` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
+- `delete` - (Default `20m`)
 
 ## Import
 

@@ -7,11 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
@@ -20,13 +16,12 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEKSClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationDataSourceConfig_Basic(rName),
+				Config: testAccApplicationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
@@ -41,36 +36,12 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccApplicationDataSourceConfig_Basic(rName string) string {
+func testAccApplicationDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 %s
 
 data "aws_elastic_beanstalk_application" "test" {
   name = aws_elastic_beanstalk_application.tftest.name
 }
-`, testAccBeanstalkAppConfigWithMaxAge(rName))
-}
-
-func testAccCheckEKSClusterDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_eks_cluster" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
-
-		_, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EKS Cluster %s still exists", rs.Primary.ID)
-	}
-
-	return nil
+`, testAccApplicationConfig_maxAge(rName))
 }

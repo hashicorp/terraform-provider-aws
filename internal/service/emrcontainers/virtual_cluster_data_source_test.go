@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
@@ -23,15 +24,15 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterDataSourceConfig_Basic(rName),
+				Config: testAccVirtualClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.#", "1"),
@@ -51,8 +52,8 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccVirtualClusterDataSourceConfig_Basic(rName string) string {
-	return acctest.ConfigCompose(testAccVirtualClusterConfig(rName), `
+func testAccVirtualClusterDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterConfig_basic(rName), `
 data "aws_emrcontainers_virtual_cluster" "test" {
   virtual_cluster_id = aws_emrcontainers_virtual_cluster.test.id
 }

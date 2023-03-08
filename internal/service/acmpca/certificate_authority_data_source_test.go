@@ -17,17 +17,17 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateAuthorityDataSourceConfig_NonExistent,
+				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccCertificateAuthorityDataSourceConfig_ARN(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityDataSourceConfig_arn(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -41,6 +41,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},
@@ -54,17 +55,17 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateAuthorityDataSourceConfig_NonExistent,
+				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccCertificateAuthorityS3ObjectACLDataSourceConfig_ARN(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -82,13 +83,14 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCertificateAuthorityDataSourceConfig_ARN(commonName string) string {
+func testAccCertificateAuthorityDataSourceConfig_arn(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -122,7 +124,7 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-func testAccCertificateAuthorityS3ObjectACLDataSourceConfig_ARN(commonName string) string {
+func testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -156,8 +158,8 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-//lintignore:AWSAT003,AWSAT005
-const testAccCertificateAuthorityDataSourceConfig_NonExistent = `
+// lintignore:AWSAT003,AWSAT005
+const testAccCertificateAuthorityDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"
 }

@@ -34,19 +34,24 @@ var testAccProviderCur *schema.Provider
 var testAccProviderCurConfigure sync.Once
 
 // testAccPreCheck verifies AWS credentials and that Cost and Usage Reporting is supported
-func testAccPreCheck(t *testing.T) {
-	acctest.PreCheckPartitionHasService(costandusagereportservice.ServiceName, t)
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	acctest.PreCheckPartitionHasService(t, costandusagereportservice.ServiceName)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderCurConfigure.Do(func() {
-		testAccProviderCur = provider.Provider()
+		var err error
+		testAccProviderCur, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": testAccGetRegion(),
 		}
 
-		diags := testAccProviderCur.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderCur.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -57,13 +62,13 @@ func testAccPreCheck(t *testing.T) {
 		}
 	})
 
-	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 	input := &costandusagereportservice.DescribeReportDefinitionsInput{
 		MaxResults: aws.Int64(5),
 	}
 
-	_, err := conn.DescribeReportDefinitions(input)
+	_, err := conn.DescribeReportDefinitionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "AccessDeniedException", "linked account is not allowed to modify report preference") {
 		t.Skipf("skipping acceptance testing: %s", err)

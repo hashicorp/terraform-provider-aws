@@ -53,3 +53,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - AWS Region.
 * `instance_types` - List of EC2 Instance Types.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

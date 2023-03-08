@@ -11,17 +11,18 @@ import (
 )
 
 func testAccResourceTagsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_policy.test"
 	dataSourceName := "data.aws_organizations_resource_tags.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceTagsDataSourceConfig(rName),
+				Config: testAccResourceTagsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "tags.#", dataSourceName, "tags.#"),
 				),
@@ -30,7 +31,7 @@ func testAccResourceTagsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccResourceTagsDataSourceConfig(rName string) string {
+func testAccResourceTagsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 

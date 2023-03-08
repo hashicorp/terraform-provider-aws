@@ -14,12 +14,12 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAccountConfig_basic,
+				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -35,12 +35,12 @@ func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAccountConfig_region,
+				Config: testAccServiceAccountDataSourceConfig_region,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -50,11 +50,11 @@ func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 	})
 }
 
-const testAccServiceAccountConfig_basic = `
+const testAccServiceAccountDataSourceConfig_basic = `
 data "aws_cloudtrail_service_account" "main" {}
 `
 
-const testAccServiceAccountConfig_region = `
+const testAccServiceAccountDataSourceConfig_region = `
 data "aws_region" "current" {}
 
 data "aws_cloudtrail_service_account" "regional" {

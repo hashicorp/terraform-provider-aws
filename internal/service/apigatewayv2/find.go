@@ -1,6 +1,8 @@
 package apigatewayv2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -9,18 +11,18 @@ import (
 
 // FindAPIByID returns the API corresponding to the specified ID.
 // Returns NotFoundError if no API is found.
-func FindAPIByID(conn *apigatewayv2.ApiGatewayV2, apiID string) (*apigatewayv2.GetApiOutput, error) {
+func FindAPIByID(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiID string) (*apigatewayv2.GetApiOutput, error) {
 	input := &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiID),
 	}
 
-	return FindAPI(conn, input)
+	return FindAPI(ctx, conn, input)
 }
 
 // FindAPI returns the API corresponding to the specified input.
 // Returns NotFoundError if no API is found.
-func FindAPI(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
-	output, err := conn.GetApi(input)
+func FindAPI(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
+	output, err := conn.GetApiWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -46,10 +48,10 @@ func FindAPI(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (
 
 // FindAPIs returns the APIs corresponding to the specified input.
 // Returns an empty slice if no APIs are found.
-func FindAPIs(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
+func FindAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
 	var apis []*apigatewayv2.Api
 
-	err := getAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+	err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -72,16 +74,16 @@ func FindAPIs(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput)
 	return apis, nil
 }
 
-func FindDomainNameByName(conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
+func FindDomainNameByName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
 	input := &apigatewayv2.GetDomainNameInput{
 		DomainName: aws.String(name),
 	}
 
-	return FindDomainName(conn, input)
+	return FindDomainName(ctx, conn, input)
 }
 
-func FindDomainName(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
-	output, err := conn.GetDomainName(input)
+func FindDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
+	output, err := conn.GetDomainNameWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

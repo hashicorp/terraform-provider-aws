@@ -5,7 +5,6 @@ import (
 )
 
 // TagsSchema returns the schema to use for tags.
-//
 func TagsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,

@@ -31,19 +31,24 @@ var testAccProviderPricing *schema.Provider
 var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheck verifies AWS credentials and that Pricing is supported
-func testAccPreCheck(t *testing.T) {
-	acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	acctest.PreCheckPartitionHasService(t, pricing.EndpointsID)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderPricingConfigure.Do(func() {
-		testAccProviderPricing = provider.Provider()
+		var err error
+		testAccProviderPricing, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": testAccGetRegion(),
 		}
 
-		diags := testAccProviderPricing.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderPricing.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

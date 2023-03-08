@@ -1,6 +1,7 @@
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,19 +17,20 @@ import (
 )
 
 func TestAccDMSCertificate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig(randId),
+				Config: testAccCertificateConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCertificateExists(resourceName),
+					testAccCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_arn"),
 				),
 			},
@@ -42,20 +44,21 @@ func TestAccDMSCertificate_basic(t *testing.T) {
 }
 
 func TestAccDMSCertificate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig(randId),
+				Config: testAccCertificateConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceCertificate(), resourceName),
+					testAccCertificateExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,19 +67,20 @@ func TestAccDMSCertificate_disappears(t *testing.T) {
 }
 
 func TestAccDMSCertificate_certificateWallet(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_certificate.dms_certificate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateCertificateWalletConfig(rName),
+				Config: testAccCertificateConfig_wallet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCertificateExists(resourceName),
+					testAccCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_wallet"),
 				),
 			},
@@ -90,19 +94,20 @@ func TestAccDMSCertificate_certificateWallet(t *testing.T) {
 }
 
 func TestAccDMSCertificate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateTags1Config(randId, "key1", "value1"),
+				Config: testAccCertificateConfig_tags1(randId, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCertificateExists(resourceName),
+					testAccCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -113,18 +118,18 @@ func TestAccDMSCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCertificateTags2Config(randId, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificateConfig_tags2(randId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCertificateExists(resourceName),
+					testAccCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccCertificateTags1Config(randId, "key2", "value2"),
+				Config: testAccCertificateConfig_tags1(randId, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCertificateExists(resourceName),
+					testAccCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -133,40 +138,42 @@ func TestAccDMSCertificate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dms_certificate" {
-			continue
-		}
+func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dms_certificate" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
-		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("certificate-id"),
-					Values: []*string{aws.String(rs.Primary.ID)},
+			output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
+				Filters: []*dms.Filter{
+					{
+						Name:   aws.String("certificate-id"),
+						Values: []*string{aws.String(rs.Primary.ID)},
+					},
 				},
-			},
-		})
+			})
 
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			continue
+			if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading DMS Certificate (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil && len(output.Certificates) != 0 {
+				return fmt.Errorf("DMS Certificate (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		if err != nil {
-			return fmt.Errorf("error reading DMS Certificate (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil && len(output.Certificates) != 0 {
-			return fmt.Errorf("DMS Certificate (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCertificateExists(n string) resource.TestCheckFunc {
+func testAccCertificateExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -177,9 +184,9 @@ func testAccCertificateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
-		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
+		output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("certificate-id"),
@@ -200,7 +207,7 @@ func testAccCertificateExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCertificateConfig(randId string) string {
+func testAccCertificateConfig_basic(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"
@@ -209,7 +216,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, randId)
 }
 
-func testAccCertificateCertificateWalletConfig(rName string) string {
+func testAccCertificateConfig_wallet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id     = %q
@@ -218,7 +225,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, rName)
 }
 
-func testAccCertificateTags1Config(randId, tagKey1, tagValue1 string) string {
+func testAccCertificateConfig_tags1(randId, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"
@@ -231,7 +238,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, randId, tagKey1, tagValue1)
 }
 
-func testAccCertificateTags2Config(randId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificateConfig_tags2(randId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"

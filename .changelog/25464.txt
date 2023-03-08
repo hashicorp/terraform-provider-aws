@@ -1,0 +1,7 @@
+```release-note:enhancement
+ resource/aws_ec2_host: Add `outpost_arn` argument
+ ```
+
+ ```release-note:enhancement
+ data-source/aws_ec2_host: Add `outpost_arn` attribute
+ ```

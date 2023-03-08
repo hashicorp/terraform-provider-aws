@@ -13,12 +13,12 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkPolicyDocumentBasic,
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
@@ -29,8 +29,8 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	})
 }
 
-//lintignore:AWSAT003
-var testAccCoreNetworkPolicyDocumentBasic = `
+// lintignore:AWSAT003
+var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
@@ -76,7 +76,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "AnotherGoodSegmentSpecification"
     description                   = "A good segment."
-    require_attachment_acceptance = true
+    require_attachment_acceptance = false
     isolate_attachments           = false
     allow_filter                  = ["AllowThisSegment"]
   }
@@ -99,12 +99,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "b"
     require_attachment_acceptance = true
-    isolate_attachments           = false
+    isolate_attachments           = true
   }
   segments {
     name                          = "c"
-    require_attachment_acceptance = true
     isolate_attachments           = false
+    require_attachment_acceptance = true
   }
 
   segment_actions {
@@ -249,7 +249,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     action {
       association_method = "constant"
       segment            = "GoodSegmentSpecification"
-      require_acceptance = true
+      require_acceptance = false
     }
   }
 
@@ -271,7 +271,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 func testAccPolicyDocumentExpectedJSON() string {
 	return `{
   "version": "2021.12",
@@ -314,6 +314,7 @@ func testAccPolicyDocumentExpectedJSON() string {
         "us-east-1",
         "eu-west-1"
       ],
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
@@ -322,29 +323,35 @@ func testAccPolicyDocumentExpectedJSON() string {
       "allow-filter": [
         "AllowThisSegment"
       ],
-      "require-attachment-acceptance": true
+      "isolate-attachments": false,
+      "require-attachment-acceptance": false
     },
     {
       "name": "AllowThisSegment",
       "deny-filter": [
         "DenyThisSegment"
       ],
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "DenyThisSegment",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "a",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "b",
+      "isolate-attachments": true,
       "require-attachment-acceptance": true
     },
     {
       "name": "c",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     }
   ],
@@ -434,8 +441,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 72,
       "action": {
         "association-method": "constant",
-        "segment": "GoodSegmentSpecification",
-        "require-acceptance": true
+        "segment": "GoodSegmentSpecification"
       },
       "conditions": [
         {

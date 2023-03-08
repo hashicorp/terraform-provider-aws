@@ -10,20 +10,21 @@ import (
 )
 
 func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPoolClientDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolClientConfigDataSource_basic(rName),
+				Config: testAccUserPoolClientDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolClientExists(resourceName, &client),
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
@@ -35,7 +36,7 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolClientConfigDataSource_basic(rName string) string {
+func testAccUserPoolClientDataSourceConfig_basic(rName string) string {
 	return testAccUserPoolClientConfig_basic(rName) + `
 data "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id

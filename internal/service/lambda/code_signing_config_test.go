@@ -1,6 +1,7 @@
 package lambda_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,21 +15,22 @@ import (
 )
 
 func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	signingProfile1 := "aws_signer_signing_profile.test1"
 	signingProfile2 := "aws_signer_signing_profile.test2"
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeSigningBasicConfig(),
+				Config: testAccCodeSigningConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
@@ -46,27 +48,28 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 }
 
 func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeSigningBasicConfig(),
+				Config: testAccCodeSigningConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
 				),
 			},
 			{
-				Config: testAccCodeSigningUpdatePolicyConfig(),
+				Config: testAccCodeSigningConfigConfig_updatePolicy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Enforce"),
 				),
 			},
@@ -80,21 +83,22 @@ func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
 }
 
 func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	signingProfile1 := "aws_signer_signing_profile.test1"
 	signingProfile2 := "aws_signer_signing_profile.test2"
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCodeSigningConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCodeSigningConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeSigningBasicConfig(),
+				Config: testAccCodeSigningConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
@@ -102,9 +106,9 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCodeSigningUpdatePublishersConfig(),
+				Config: testAccCodeSigningConfigConfig_updatePublishers(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
@@ -118,7 +122,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 	})
 }
 
-func testAccCodeSigningUpdatePublishersConfig() string {
+func testAccCodeSigningConfigConfig_updatePublishers() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -137,7 +141,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccCodeSigningUpdatePolicyConfig() string {
+func testAccCodeSigningConfigConfig_updatePolicy() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -161,7 +165,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccCodeSigningBasicConfig() string {
+func testAccCodeSigningConfigConfig_basic() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -187,7 +191,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSigningConfigOutput) resource.TestCheckFunc {
+func testAccCheckCodeSigningExistsConfig(ctx context.Context, n string, mapping *lambda.GetCodeSigningConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,13 +202,13 @@ func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSignin
 			return fmt.Errorf("Code Signing Config ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		params := &lambda.GetCodeSigningConfigInput{
 			CodeSigningConfigArn: aws.String(rs.Primary.ID),
 		}
 
-		getCodeSigningConfig, err := conn.GetCodeSigningConfig(params)
+		getCodeSigningConfig, err := conn.GetCodeSigningConfigWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -215,30 +219,30 @@ func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSignin
 	}
 }
 
-func testAccCheckCodeSigningConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+func testAccCheckCodeSigningConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lambda_code_signing_config" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lambda_code_signing_config" {
+				continue
+			}
+
+			_, err := conn.GetCodeSigningConfigWithContext(ctx, &lambda.GetCodeSigningConfigInput{
+				CodeSigningConfigArn: aws.String(rs.Primary.ID),
+			})
+
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Code Signing Config still exists")
 		}
 
-		_, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
-			CodeSigningConfigArn: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Code Signing Config still exists")
-
+		return nil
 	}
-
-	return nil
-
 }

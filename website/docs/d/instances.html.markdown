@@ -45,10 +45,10 @@ resource "aws_eip" "test" {
 
 ## Argument Reference
 
-* `instance_tags` - (Optional) A map of tags, each pair of which must
+* `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on desired instances.
 
-* `instance_state_names` - (Optional) A list of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.
+* `instance_state_names` - (Optional) List of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.
 
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
@@ -61,5 +61,10 @@ several valid keys, for a full reference, check out
 * `private_ips` - Private IP addresses of instances found through the filter
 * `public_ips` - Public IP addresses of instances found through the filter
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

@@ -14,19 +14,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_routing_profile")
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRoutingProfileCreate,
-		ReadContext:   resourceRoutingProfileRead,
-		UpdateContext: resourceRoutingProfileUpdate,
+		CreateWithoutTimeout: resourceRoutingProfileCreate,
+		ReadWithoutTimeout:   resourceRoutingProfileRead,
+		UpdateWithoutTimeout: resourceRoutingProfileUpdate,
 		// Routing profiles do not support deletion today. NoOp the Delete method.
 		// Users can rename their routing profiles manually if they want.
-		DeleteContext: schema.NoopContext,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -151,9 +154,9 @@ func ResourceRoutingProfile() *schema.Resource {
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -191,7 +194,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -244,7 +247,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("queue_configs", queueConfigs)
 	d.Set("queue_configs_associated", queueConfigs)
 
-	tags := KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -259,7 +262,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -284,7 +287,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputConcurrency.MediaConcurrencies = mediaConcurrencies
 		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -299,7 +302,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -315,7 +318,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Name (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Name (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -343,7 +346,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 			inputQueueDisassociate.QueueReferences = currentAssociatedQueueReferences
 			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, inputQueueDisassociate)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
 			}
 		}
 		// re-associate the queues
@@ -352,7 +355,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 			inputQueueAssociate.QueueConfigs = updatedQueueConfigs
 			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, inputQueueAssociate)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
 			}
 		}
 	}
@@ -360,7 +363,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -369,7 +372,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 // func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn
+// 	conn := meta.(*conns.AWSClient).ConnectConn()
 
 // 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 

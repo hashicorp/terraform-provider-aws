@@ -12,15 +12,15 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories:         acctest.ProviderFactories,
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorBasicResourceConfig(),
+				Config: testAccDetectorDataSourceConfig_basicResource(),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccDetectorBasicResourceDataConfig(),
+				Config: testAccDetectorDataSourceConfig_basicResource2(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
@@ -34,12 +34,12 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 
 func testAccDetectorDataSource_ID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorExplicitConfig(),
+				Config: testAccDetectorDataSourceConfig_explicit(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
@@ -51,13 +51,13 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccDetectorBasicResourceConfig() string {
+func testAccDetectorDataSourceConfig_basicResource() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 `
 }
 
-func testAccDetectorBasicResourceDataConfig() string {
+func testAccDetectorDataSourceConfig_basicResource2() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 
@@ -65,7 +65,7 @@ data "aws_guardduty_detector" "test" {}
 `
 }
 
-func testAccDetectorExplicitConfig() string {
+func testAccDetectorDataSourceConfig_explicit() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 
