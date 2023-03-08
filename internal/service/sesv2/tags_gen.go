@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -26,6 +27,10 @@ func ListTags(ctx context.Context, conn *sesv2.Client, identifier string) (tftag
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).SESV2Client(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -91,4 +96,8 @@ func UpdateTags(ctx context.Context, conn *sesv2.Client, identifier string, oldT
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SESV2Client(), identifier, oldTags, newTags)
 }

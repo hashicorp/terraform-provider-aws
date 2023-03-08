@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -25,6 +26,10 @@ func ListTags(ctx context.Context, conn *oam.Client, identifier string) (tftags.
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ObservabilityAccessManagerClient(), identifier)
 }
 
 // map[string]string handling
@@ -73,4 +78,8 @@ func UpdateTags(ctx context.Context, conn *oam.Client, identifier string, oldTag
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ObservabilityAccessManagerClient(), identifier, oldTags, newTags)
 }

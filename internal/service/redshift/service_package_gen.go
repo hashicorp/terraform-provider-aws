@@ -59,6 +59,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_redshift_cluster_iam_roles",
 		},
 		{
+			Factory:  ResourceClusterSnapshot,
+			TypeName: "aws_redshift_cluster_snapshot",
+		},
+		{
 			Factory:  ResourceEndpointAccess,
 			TypeName: "aws_redshift_endpoint_access",
 		},

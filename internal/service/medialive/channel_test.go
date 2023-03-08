@@ -129,6 +129,7 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 						"dvb_sub_pids":              "300",
 						"arib_captions_pid":         "100",
 						"arib_captions_pid_control": "AUTO",
+						"video_pid":                 "101",
 					}),
 				),
 			},
@@ -791,6 +792,7 @@ resource "aws_medialive_channel" "test" {
                 dvb_sub_pids              = "300"
                 arib_captions_pid         = "100"
                 arib_captions_pid_control = "AUTO"
+                video_pid                 = "101"
               }
             }
           }

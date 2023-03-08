@@ -6,10 +6,10 @@ on:
   pull_request:
     paths:
       - .github/workflows/examples.yml
-      - .go-version
       - .ci/.tflint.hcl
       - .ci/tools/go.mod
       - examples/**
+      - go.mod
 
 env:
   AWS_DEFAULT_REGION: us-west-2
@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - uses: actions/setup-go@v3
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
 
       - name: install tflint
         run: cd .ci/tools && go install github.com/terraform-linters/tflint
@@ -76,7 +76,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - uses: actions/setup-go@v3
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: go build
         run: go build -o terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 .
       - name: override plugin
