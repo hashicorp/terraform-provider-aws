@@ -22,6 +22,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceDistributedGrants,
+			TypeName: "aws_licensemanager_grants",
+		},
+		{
 			Factory:  DataSourceReceivedLicense,
 			TypeName: "aws_licensemanager_received_license",
 		},
