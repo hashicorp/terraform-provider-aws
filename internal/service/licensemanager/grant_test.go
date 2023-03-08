@@ -32,6 +32,14 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 			"disappears": testAccGrant_disappears,
 			"name":       testAccGrant_name,
 		},
+		"grant_accepter": {
+			"basic":      testAccGrantAccepter_basic,
+			"disappears": testAccGrantAccepter_disappears,
+		},
+		"grant_data_source": {
+			"basic": testAccGrantsDataSource_basic,
+			"empty": testAccGrantsDataSource_noMatch,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

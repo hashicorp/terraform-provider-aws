@@ -11,19 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccLicenseManagerGrantsDataSource_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"grant": {
-			"basic": testAccGrantsDataSource_basic,
-			"empty": testAccGrantsDataSource_noMatch,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
 func testAccGrantsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
