@@ -9,41 +9,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func TestInterceptorsAppend(t *testing.T) {
-	var interceptors Interceptors
-
-	if got, want := len(interceptors), 0; got != want {
-		t.Errorf("length of interceptors = %v, want %v", got, want)
-	}
-
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
-	})
-
-	if got, want := len(interceptors), 1; got != want {
-		t.Errorf("length of interceptors = %v, want %v", got, want)
-	}
-
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
-	})
-
-	if got, want := len(interceptors), 2; got != want {
-		t.Errorf("length of interceptors = %v, want %v", got, want)
-	}
-}
-
 func TestInterceptorsWhy(t *testing.T) {
-	var interceptors Interceptors
+	var interceptors interceptorItems
 
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: Before,
+		Why:  Create,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: After,
+		Why:  Delete,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: Before,
+		Why:  Create,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
 
 	if got, want := len(interceptors.Why(Create)), 2; got != want {
@@ -61,16 +49,28 @@ func TestInterceptorsWhy(t *testing.T) {
 }
 
 func TestInterceptedHandler(t *testing.T) {
-	var interceptors Interceptors
+	var interceptors interceptorItems
 
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: Before,
+		Why:  Create,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
-	interceptors.Append(After, Delete, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: After,
+		Why:  Delete,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
-	interceptors.Append(Before, Create, func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-		return ctx, diags
+	interceptors = append(interceptors, interceptorItem{
+		When: Before,
+		Why:  Create,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return ctx, diags
+		}),
 	})
 
 	var read schema.ReadContextFunc = func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -259,8 +259,19 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 
-		var spNameInterceptor InterceptorFunc = func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		// First interceptor sets service package name in Context.
+		var spNameInterceptor interceptorFunc = func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return conns.NewContext(ctx, servicePackageName), diags
+		}
+		firstDataSourceInterceptor := interceptorItem{
+			When:        Before,
+			Why:         Read,
+			Interceptor: spNameInterceptor,
+		}
+		firstResourceInterceptor := interceptorItem{
+			When:        Before,
+			Why:         Create | Read | Update | Delete,
+			Interceptor: spNameInterceptor,
 		}
 
 		for _, v := range sp.SDKDataSources(ctx) {
@@ -279,9 +290,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := &DataSource{}
-			// First interceptor sets service package name in Context.
-			ds.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
+			ds := &DataSource{interceptors: []interceptorItem{firstDataSourceInterceptor}}
 
 			if v := r.ReadWithoutTimeout; v != nil {
 				r.ReadWithoutTimeout = ds.Read(v)
@@ -318,15 +327,16 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			rs := &Resource{}
-			// First interceptor sets service package name in Context.
-			rs.interceptors.Append(Before, Create|Read|Update|Delete, spNameInterceptor)
+			rs := &Resource{interceptors: []interceptorItem{firstResourceInterceptor}}
 
 			if v.Tags != nil {
 				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
 
-				rs.tags = v.Tags
-				rs.interceptors.Append(Before|After, Create|Read|Update, rs.tagsInterceptor)
+				rs.interceptors = append(rs.interceptors, interceptorItem{
+					When:        Before | After,
+					Why:         Create | Read | Update,
+					Interceptor: tagsInterceptor{tags: v.Tags},
+				})
 			}
 
 			if v := r.CreateWithoutTimeout; v != nil {

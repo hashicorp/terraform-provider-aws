@@ -14,17 +14,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// InterceptorFunc is functionality invoked during the CRUD request lifecycle.
+// An interceptor is functionality invoked during the CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
-type InterceptorFunc func(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptor interface {
+	run(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+}
 
-// Interceptor represents a single interceptor.
-type Interceptor struct {
-	When When
-	Why  Why
-	Func InterceptorFunc
+type interceptorFunc func(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+
+func (f interceptorFunc) run(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	return f(ctx, d, meta, when, why, diags)
+}
+
+// interceptorItem represents a single interceptor invocation.
+type interceptorItem struct {
+	When        When
+	Why         Why
+	Interceptor interceptor
 }
 
 // When represents the point in the CRUD request lifecycle that an interceptor is run.
@@ -49,38 +57,18 @@ const (
 	Delete                 // Interceptor is invoked for a Delete call
 )
 
-type Interceptors []Interceptor
+type interceptorItems []interceptorItem
 
-func (v *Interceptors) Append(when When, why Why, f InterceptorFunc) {
-	interceptor := Interceptor{
-		When: when,
-		Why:  why,
-		Func: f,
-	}
-
-	if v == nil {
-		*v = Interceptors{interceptor}
-	} else {
-		*v = append(*v, interceptor)
-	}
-}
-
-// Why returns a slice of Interceptors that run for the specified CRUD operation.
-func (v *Interceptors) Why(why Why) Interceptors {
-	var interceptors Interceptors
-
-	for _, v := range *v {
-		if v.Why&why != 0 {
-			interceptors = append(interceptors, v)
-		}
-	}
-
-	return interceptors
+// Why returns a slice of interceptors that run for the specified CRUD operation.
+func (s interceptorItems) Why(why Why) interceptorItems {
+	return slices.Filter(s, func(t interceptorItem) bool {
+		return t.Why&why != 0
+	})
 }
 
 // interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
 // func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors Interceptors, f F, why Why) diag.Diagnostics {
-func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](interceptors Interceptors, f F, why Why) F {
+func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](interceptors interceptorItems, f F, why Why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 		forward := interceptors.Why(why)
@@ -88,7 +76,7 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		when := Before
 		for _, v := range forward {
 			if v.When&when != 0 {
-				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+				ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
 
 				// Short circuit if any Before interceptor errors.
 				if diags.HasError() {
@@ -104,14 +92,14 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 			when = OnError
 			for _, v := range reverse {
 				if v.When&when != 0 {
-					ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+					ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
 				}
 			}
 		} else {
 			when = After
 			for _, v := range reverse {
 				if v.When&when != 0 {
-					ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+					ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
 				}
 			}
 		}
@@ -119,7 +107,7 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		for _, v := range reverse {
 			when = Finally
 			if v.When&when != 0 {
-				ctx, diags = v.Func(ctx, d, meta, when, why, diags)
+				ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
 			}
 		}
 
@@ -129,7 +117,7 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 
 // DataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
 type DataSource struct {
-	interceptors Interceptors
+	interceptors interceptorItems
 }
 
 func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
@@ -138,8 +126,7 @@ func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
 
 // Resource represents an interceptor dispatcher for a Plugin SDK v2 resource.
 type Resource struct {
-	interceptors Interceptors
-	tags         *types.ServicePackageResourceTags
+	interceptors interceptorItems
 }
 
 func (r *Resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
@@ -176,7 +163,11 @@ func (r *Resource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFu
 	}
 }
 
-func (r *Resource) tagsInterceptor(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+type tagsInterceptor struct {
+	tags *types.ServicePackageResourceTags
+}
+
+func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
