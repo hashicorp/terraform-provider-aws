@@ -5,71 +5,195 @@ package iam
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_iam_access_keys":             DataSourceAccessKeys,
-		"aws_iam_account_alias":           DataSourceAccountAlias,
-		"aws_iam_group":                   DataSourceGroup,
-		"aws_iam_instance_profile":        DataSourceInstanceProfile,
-		"aws_iam_instance_profiles":       DataSourceInstanceProfiles,
-		"aws_iam_openid_connect_provider": DataSourceOpenIDConnectProvider,
-		"aws_iam_policy":                  DataSourcePolicy,
-		"aws_iam_policy_document":         DataSourcePolicyDocument,
-		"aws_iam_role":                    DataSourceRole,
-		"aws_iam_roles":                   DataSourceRoles,
-		"aws_iam_saml_provider":           DataSourceSAMLProvider,
-		"aws_iam_server_certificate":      DataSourceServerCertificate,
-		"aws_iam_session_context":         DataSourceSessionContext,
-		"aws_iam_user":                    DataSourceUser,
-		"aws_iam_user_ssh_key":            DataSourceUserSSHKey,
-		"aws_iam_users":                   DataSourceUsers,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAccessKeys,
+			TypeName: "aws_iam_access_keys",
+		},
+		{
+			Factory:  DataSourceAccountAlias,
+			TypeName: "aws_iam_account_alias",
+		},
+		{
+			Factory:  DataSourceGroup,
+			TypeName: "aws_iam_group",
+		},
+		{
+			Factory:  DataSourceInstanceProfile,
+			TypeName: "aws_iam_instance_profile",
+		},
+		{
+			Factory:  DataSourceInstanceProfiles,
+			TypeName: "aws_iam_instance_profiles",
+		},
+		{
+			Factory:  DataSourceOpenIDConnectProvider,
+			TypeName: "aws_iam_openid_connect_provider",
+		},
+		{
+			Factory:  DataSourcePolicy,
+			TypeName: "aws_iam_policy",
+		},
+		{
+			Factory:  DataSourcePolicyDocument,
+			TypeName: "aws_iam_policy_document",
+		},
+		{
+			Factory:  DataSourceRole,
+			TypeName: "aws_iam_role",
+		},
+		{
+			Factory:  DataSourceRoles,
+			TypeName: "aws_iam_roles",
+		},
+		{
+			Factory:  DataSourceSAMLProvider,
+			TypeName: "aws_iam_saml_provider",
+		},
+		{
+			Factory:  DataSourceServerCertificate,
+			TypeName: "aws_iam_server_certificate",
+		},
+		{
+			Factory:  DataSourceSessionContext,
+			TypeName: "aws_iam_session_context",
+		},
+		{
+			Factory:  DataSourceUser,
+			TypeName: "aws_iam_user",
+		},
+		{
+			Factory:  DataSourceUserSSHKey,
+			TypeName: "aws_iam_user_ssh_key",
+		},
+		{
+			Factory:  DataSourceUsers,
+			TypeName: "aws_iam_users",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_iam_access_key":                  ResourceAccessKey,
-		"aws_iam_account_alias":               ResourceAccountAlias,
-		"aws_iam_account_password_policy":     ResourceAccountPasswordPolicy,
-		"aws_iam_group":                       ResourceGroup,
-		"aws_iam_group_membership":            ResourceGroupMembership,
-		"aws_iam_group_policy":                ResourceGroupPolicy,
-		"aws_iam_group_policy_attachment":     ResourceGroupPolicyAttachment,
-		"aws_iam_instance_profile":            ResourceInstanceProfile,
-		"aws_iam_openid_connect_provider":     ResourceOpenIDConnectProvider,
-		"aws_iam_policy":                      ResourcePolicy,
-		"aws_iam_policy_attachment":           ResourcePolicyAttachment,
-		"aws_iam_role":                        ResourceRole,
-		"aws_iam_role_policy":                 ResourceRolePolicy,
-		"aws_iam_role_policy_attachment":      ResourceRolePolicyAttachment,
-		"aws_iam_saml_provider":               ResourceSAMLProvider,
-		"aws_iam_server_certificate":          ResourceServerCertificate,
-		"aws_iam_service_linked_role":         ResourceServiceLinkedRole,
-		"aws_iam_service_specific_credential": ResourceServiceSpecificCredential,
-		"aws_iam_signing_certificate":         ResourceSigningCertificate,
-		"aws_iam_user":                        ResourceUser,
-		"aws_iam_user_group_membership":       ResourceUserGroupMembership,
-		"aws_iam_user_login_profile":          ResourceUserLoginProfile,
-		"aws_iam_user_policy":                 ResourceUserPolicy,
-		"aws_iam_user_policy_attachment":      ResourceUserPolicyAttachment,
-		"aws_iam_user_ssh_key":                ResourceUserSSHKey,
-		"aws_iam_virtual_mfa_device":          ResourceVirtualMFADevice,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAccessKey,
+			TypeName: "aws_iam_access_key",
+		},
+		{
+			Factory:  ResourceAccountAlias,
+			TypeName: "aws_iam_account_alias",
+		},
+		{
+			Factory:  ResourceAccountPasswordPolicy,
+			TypeName: "aws_iam_account_password_policy",
+		},
+		{
+			Factory:  ResourceGroup,
+			TypeName: "aws_iam_group",
+		},
+		{
+			Factory:  ResourceGroupMembership,
+			TypeName: "aws_iam_group_membership",
+		},
+		{
+			Factory:  ResourceGroupPolicy,
+			TypeName: "aws_iam_group_policy",
+		},
+		{
+			Factory:  ResourceGroupPolicyAttachment,
+			TypeName: "aws_iam_group_policy_attachment",
+		},
+		{
+			Factory:  ResourceInstanceProfile,
+			TypeName: "aws_iam_instance_profile",
+		},
+		{
+			Factory:  ResourceOpenIDConnectProvider,
+			TypeName: "aws_iam_openid_connect_provider",
+		},
+		{
+			Factory:  ResourcePolicy,
+			TypeName: "aws_iam_policy",
+		},
+		{
+			Factory:  ResourcePolicyAttachment,
+			TypeName: "aws_iam_policy_attachment",
+		},
+		{
+			Factory:  ResourceRole,
+			TypeName: "aws_iam_role",
+		},
+		{
+			Factory:  ResourceRolePolicy,
+			TypeName: "aws_iam_role_policy",
+		},
+		{
+			Factory:  ResourceRolePolicyAttachment,
+			TypeName: "aws_iam_role_policy_attachment",
+		},
+		{
+			Factory:  ResourceSAMLProvider,
+			TypeName: "aws_iam_saml_provider",
+		},
+		{
+			Factory:  ResourceServerCertificate,
+			TypeName: "aws_iam_server_certificate",
+		},
+		{
+			Factory:  ResourceServiceLinkedRole,
+			TypeName: "aws_iam_service_linked_role",
+		},
+		{
+			Factory:  ResourceServiceSpecificCredential,
+			TypeName: "aws_iam_service_specific_credential",
+		},
+		{
+			Factory:  ResourceSigningCertificate,
+			TypeName: "aws_iam_signing_certificate",
+		},
+		{
+			Factory:  ResourceUser,
+			TypeName: "aws_iam_user",
+		},
+		{
+			Factory:  ResourceUserGroupMembership,
+			TypeName: "aws_iam_user_group_membership",
+		},
+		{
+			Factory:  ResourceUserLoginProfile,
+			TypeName: "aws_iam_user_login_profile",
+		},
+		{
+			Factory:  ResourceUserPolicy,
+			TypeName: "aws_iam_user_policy",
+		},
+		{
+			Factory:  ResourceUserPolicyAttachment,
+			TypeName: "aws_iam_user_policy_attachment",
+		},
+		{
+			Factory:  ResourceUserSSHKey,
+			TypeName: "aws_iam_user_ssh_key",
+		},
+		{
+			Factory:  ResourceVirtualMFADevice,
+			TypeName: "aws_iam_virtual_mfa_device",
+		},
 	}
 }
 
