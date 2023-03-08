@@ -38,7 +38,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cross_account_iam_role_arn": {
+			"deliver_cross_account_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -217,7 +217,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("cross_account_iam_role_arn"); ok {
+	if v, ok := d.GetOk("deliver_cross_account_role"); ok {
 		input.DeliverCrossAccountRole = aws.String(v.(string))
 	}
 
@@ -286,7 +286,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("cross_account_iam_role_arn", fl.DeliverCrossAccountRole)
+	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)

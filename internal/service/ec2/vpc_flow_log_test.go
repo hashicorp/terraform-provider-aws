@@ -36,6 +36,7 @@ func TestAccVPCFlowLog_vpcID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "deliver_cross_account_role", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -149,7 +150,7 @@ func TestAccVPCFlowLog_crossAccountRole(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_crossAccountRole(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					resource.TestCheckResourceAttrPair(resourceName, "cross_account_iam_role_arn", crossAccountIamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "deliver_cross_account_role", crossAccountIamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -963,7 +964,7 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  cross_account_iam_role_arn = aws_iam_role.test_cross_account.arn
+  deliver_cross_account_role = aws_iam_role.test_cross_account.arn
   iam_role_arn               = aws_iam_role.test.arn
   log_group_name             = aws_cloudwatch_log_group.test.name
   subnet_id                  = aws_subnet.test.id

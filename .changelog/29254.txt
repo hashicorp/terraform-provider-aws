@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_flow_log: Add `cross_account_iam_role_arn` attribute
+resource/aws_flow_log: Add `deliver_cross_account_role` argument
 ```
