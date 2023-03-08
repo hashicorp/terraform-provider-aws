@@ -32,7 +32,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"audio_normalization_settings": {
 								Type:     schema.TypeList,
 								Optional: true,
-								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -502,7 +501,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"remix_settings": {
 								Type:     schema.TypeList,
 								Optional: true,
-								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
