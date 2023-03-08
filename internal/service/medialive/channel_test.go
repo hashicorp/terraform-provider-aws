@@ -143,7 +143,7 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_udp_output_settings(t *testing.T) {
+func TestAccMediaLiveChannel_UDP_outputSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
