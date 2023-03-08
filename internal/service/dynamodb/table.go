@@ -356,8 +356,12 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(append(dynamodb.StreamViewType_Values(), ""), false),
 			},
 			"table_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  dynamodb.TableClassStandard,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && new == dynamodb.TableClassStandard
+				},
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -656,8 +660,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if table.StreamSpecification != nil {
-		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 	} else {
 		d.Set("stream_enabled", false)
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
@@ -693,7 +697,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
@@ -793,6 +797,20 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// Table Class cannot be changed concurrently with other values
+	if d.HasChange("table_class") {
+		_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+			TableName:  aws.String(d.Id()),
+			TableClass: aws.String(d.Get("table_class").(string)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: %s", d.Id(), err)
+		}
+		if _, err := waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: waiting for completion: %s", d.Id(), err)
+		}
+	}
+
 	hasTableUpdate := false
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(d.Id()),
@@ -848,11 +866,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
-	}
-
-	if d.HasChange("table_class") {
-		hasTableUpdate = true
-		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {
