@@ -21,8 +21,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
-		"aws_licensemanager_received_license":  DataSourceReceivedLicense,
-		"aws_licensemanager_received_licenses": DataSourceReceivedLicenses,
+		{
+			Factory:  DataSourceReceivedLicense,
+			TypeName: "aws_licensemanager_received_license",
+		},
+		{
+			Factory:  DataSourceReceivedLicenses,
+			TypeName: "aws_licensemanager_received_licenses",
+		},
 	}
 }
 
@@ -33,9 +39,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_licensemanager_association",
 		},
 		{
+			Factory:  ResourceGrant,
+			TypeName: "aws_licensemanager_grant",
+		},
+		{
+			Factory:  ResourceGrantAccepter,
+			TypeName: "aws_licensemanager_grant_accepter",
+		},
+		{
 			Factory:  ResourceLicenseConfiguration,
-		"aws_licensemanager_grant":                 ResourceGrant,
-		"aws_licensemanager_grant_accepter":        ResourceGrantAccepter,
 			TypeName: "aws_licensemanager_license_configuration",
 		},
 	}
