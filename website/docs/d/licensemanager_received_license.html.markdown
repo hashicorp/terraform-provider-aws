@@ -29,7 +29,7 @@ data "aws_licensemanager_received_license" "test" {
 * `id` - The received license ARN (Same as: `license_arn`).
 * `beneficiary` - Granted license beneficiary. This is in the form of the ARN of the root user of the account.
 * `consumption_configuration` - Configuration for consumption of the license. [Detailed below](#consumption_configuration)
-* `create_time` - Creation time of the granted license.
+* `create_time` - Creation time of the granted license in RFC 3339 format.
 * `entitlements` - License entitlements. [Detailed below](#entitlements)
 * `home_region` - Home Region of the granted license.
 * `issuer` - Granted license issuer. [Detailed below](#issuer)

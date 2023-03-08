@@ -17,6 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	homeRegionKey = "LICENSE_MANAGER_GRANT_HOME_REGION"
+	licenseARNKey = "LICENSE_MANAGER_GRANT_LICENSE_ARN"
+)
+
 func TestAccLicenseManagerGrant_serial(t *testing.T) {
 	t.Parallel()
 

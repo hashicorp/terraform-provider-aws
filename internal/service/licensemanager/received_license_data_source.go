@@ -3,6 +3,8 @@ package licensemanager
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -215,20 +217,21 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
+	arn := d.Get("license_arn").(string)
+
 	in := &licensemanager.ListReceivedLicensesInput{
-		LicenseArns: aws.StringSlice([]string{d.Get("license_arn").(string)}),
+		LicenseArns: aws.StringSlice([]string{arn}),
 	}
 
 	out, err := FindReceivedLicenseByARN(ctx, conn, in)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Received Licenses: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.StringValue(out.LicenseArn))
 	d.Set("beneficiary", out.Beneficiary)
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
-	d.Set("create_time", out.CreateTime)
 	d.Set("entitlements", flattenEntitlements(out.Entitlements))
 	d.Set("home_region", out.HomeRegion)
 	d.Set("issuer", []interface{}{flattenIssuer(out.Issuer)})
@@ -241,6 +244,14 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("status", out.Status)
 	d.Set("validity", []interface{}{flattenDateTimeRange(out.Validity)})
 	d.Set("version", out.Version)
+
+	if v := aws.StringValue(out.CreateTime); v != "" {
+		seconds, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
+		}
+		d.Set("create_time", time.Unix(seconds, 0).UTC().Format(time.RFC3339))
+	}
 
 	return diags
 }

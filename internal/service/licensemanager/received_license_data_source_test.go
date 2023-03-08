@@ -12,10 +12,13 @@ import (
 
 func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_received_license.test"
-	licenseARNKey := "LICENSE_MANAGER_LICENSE_ARN"
 	licenseARN := os.Getenv(licenseARNKey)
 	if licenseARN == "" {
 		t.Skipf("Environment variable %s is not set", licenseARNKey)
+	}
+	homeRegion := os.Getenv(homeRegionKey)
+	if homeRegion == "" {
+		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,14 +28,14 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceivedLicenseDataSourceConfig_arn(licenseARN),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "beneficiary"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGlobalARN(datasourceName, "beneficiary", "iam", "root"),
 					resource.TestCheckResourceAttr(datasourceName, "consumption_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(datasourceName, "create_time"),
 					resource.TestCheckResourceAttr(datasourceName, "entitlements.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "home_region"),
+					resource.TestCheckResourceAttr(datasourceName, "home_region", homeRegion),
 					resource.TestCheckResourceAttr(datasourceName, "issuer.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "license_arn"),
+					resource.TestCheckResourceAttr(datasourceName, "license_arn", licenseARN),
 					resource.TestCheckResourceAttrSet(datasourceName, "license_metadata.0.%"),
 					resource.TestCheckResourceAttrSet(datasourceName, "license_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "product_name"),
