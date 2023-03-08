@@ -76,10 +76,10 @@ locals {
 }
 
 data "aws_partition" "current" {
-	provider    = awsalternate
+  provider = awsalternate
 }
 data "aws_caller_identity" "current" {
-	provider    = awsalternate
+  provider = awsalternate
 }
 
 resource "aws_licensemanager_grant" "test" {
