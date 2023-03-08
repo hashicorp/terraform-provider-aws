@@ -12,15 +12,15 @@ This resource can be used to get a set of license ARNs matching a filter.
 
 ## Example Usage
 
-The following shows getting all license ARNs issued from the AWS marketplace. Providing no filter, would provide all license ARNs for the entire account. 
+The following shows getting all license ARNs issued from the AWS marketplace. Providing no filter, would provide all license ARNs for the entire account.
 
 ```terraform
 data "aws_licensemanager_received_licenses" "test" {
   filter {
-	name = "IssuerName"
-	values = [
-		"AWS/Marketplace"
-	]
+    name = "IssuerName"
+    values = [
+      "AWS/Marketplace"
+    ]
   }
 }
 ```
@@ -50,4 +50,3 @@ data "aws_licensemanager_received_licenses" "selected" {
 ## Attributes Reference
 
 * `arns` - List of all the license ARNs found.
-
