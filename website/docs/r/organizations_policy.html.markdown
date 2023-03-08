@@ -14,9 +14,11 @@ Provides a resource to manage an [AWS Organizations policy](https://docs.aws.ama
 
 ```terraform
 data "aws_iam_policy_document" "example" {
-  effect    = "Allow"
-  actions   = ["*"]
-  resources = ["*"]
+  statement {
+    effect    = "Allow"
+    actions   = ["*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_organizations_policy" "example" {
