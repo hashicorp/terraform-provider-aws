@@ -5,3 +5,11 @@ aws_licensemanager_grant
 ```release-note:new-resource
 aws_licensemanager_grant_accepter
 ```
+
+```release-note:new-data-source
+aws_licensemanager_received_license
+```
+
+```release-note:new-data-source
+aws_licensemanager_received_licenses
+```
