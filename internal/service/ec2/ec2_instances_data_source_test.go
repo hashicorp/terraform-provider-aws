@@ -116,15 +116,15 @@ func testAccInstancesDataSourceConfig_ids(rName string) string {
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block                       = "10.0.0.0/16"
-	assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 }
 
 resource "aws_subnet" "test" {
-	vpc_id                          = aws_vpc.test.id
-	cidr_block                      = "10.0.1.0/24"
-	ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
-	assign_ipv6_address_on_creation = true
+  vpc_id                          = aws_vpc.test.id
+  cidr_block                      = "10.0.1.0/24"
+  ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
+  assign_ipv6_address_on_creation = true
 }
 
 resource "aws_instance" "test" {
