@@ -177,7 +177,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 				Config: testAccMultiplexProgramConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
