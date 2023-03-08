@@ -225,7 +225,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Received Licenses: %s", err)
 	}
 
-	d.SetId(*out.LicenseArn)
+	d.SetId(aws.StringValue(out.LicenseArn))
 	d.Set("beneficiary", out.Beneficiary)
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
 	d.Set("create_time", out.CreateTime)
