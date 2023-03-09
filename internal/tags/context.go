@@ -8,6 +8,7 @@ import (
 type InContext struct {
 	DefaultConfig *DefaultConfig
 	IgnoreConfig  *IgnoreConfig
+	Tags          KeyValueTags
 }
 
 // NewContext returns a Context enhanced with tagging information.
@@ -25,12 +26,6 @@ func FromContext(ctx context.Context) (*InContext, bool) {
 	return v, ok
 }
 
-func MergedTagsFromContext(ctx context.Context) (*KeyValueTags, bool) {
-	v, ok := ctx.Value(MergedTagsKey).(*KeyValueTags)
-	return v, ok
-}
-
 type key int
 
 var tagKey key
-var MergedTagsKey key

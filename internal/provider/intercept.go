@@ -56,7 +56,7 @@ const (
 	Update                 // Interceptor is invoked for a Update call
 	Delete                 // Interceptor is invoked for a Delete call
 
-	AllOps = Why(1 << (16 - 1)) // Interceptor is invoked for all calls
+	AllOps = Create | Read | Update | Delete // Interceptor is invoked for all calls
 )
 
 type interceptorItems []interceptorItem
@@ -198,7 +198,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 			tags = tags.IgnoreAWS()
 
-			ctx = context.WithValue(ctx, tftags.MergedTagsKey, &tags)
+			t.Tags = tags
 		case Update:
 			if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
 				var identifier string
@@ -226,10 +226,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						return ctx, sdkdiag.AppendFromErr(diags, err)
 					}
 				}
-
-				// TODO It would be nice to be able to skip calling the CRUD hanelder if only tags had changed.
-				// if d.HasChangesExcept("tags", "tags_all") {
-				// }
 			}
 		}
 	case After:

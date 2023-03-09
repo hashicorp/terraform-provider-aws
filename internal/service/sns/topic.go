@@ -263,9 +263,9 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		delete(attributes, TopicAttributeNameFIFOTopic)
 	}
 
-	tags, ok := tftags.MergedTagsFromContext(ctx)
-	if ok {
-		input.Tags = Tags(*tags)
+	tags, ok := tftags.FromContext(ctx)
+	if ok && tags != nil && len(tags.Tags) > 0 {
+		input.Tags = Tags(tags.Tags)
 	}
 
 	output, err := conn.CreateTopicWithContext(ctx, input)
@@ -290,8 +290,8 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(*tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	if input.Tags == nil && tags != nil && len(tags.Tags) > 0 {
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags.Tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
