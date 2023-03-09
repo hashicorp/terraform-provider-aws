@@ -259,19 +259,23 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 
-		// First interceptor sets service package name in Context.
-		var spNameInterceptor interceptorFunc = func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-			return conns.NewContext(ctx, servicePackageName), diags
-		}
-		firstDataSourceInterceptor := interceptorItem{
-			When:        Before,
-			Why:         Read,
-			Interceptor: spNameInterceptor,
-		}
-		firstResourceInterceptor := interceptorItem{
-			When:        Before,
-			Why:         Create | Read | Update | Delete,
-			Interceptor: spNameInterceptor,
+		stdInterceptors := [...]interceptorItem{
+			// First interceptor sets service package name in Context.
+			{
+				When: Before,
+				Why:  AllOps,
+				Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+					return conns.NewContext(ctx, servicePackageName), diags
+				}),
+			},
+			// The second initializes tagging information in Context.
+			{
+				When: Before,
+				Why:  AllOps,
+				Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+					return tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig), diags
+				}),
+			},
 		}
 
 		for _, v := range sp.SDKDataSources(ctx) {
@@ -290,7 +294,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := &DataSource{interceptors: []interceptorItem{firstDataSourceInterceptor}}
+			ds := &DataSource{interceptors: stdInterceptors[:]}
 
 			if v := r.ReadWithoutTimeout; v != nil {
 				r.ReadWithoutTimeout = ds.Read(v)
@@ -327,7 +331,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			rs := &Resource{interceptors: []interceptorItem{firstResourceInterceptor}}
+			rs := &Resource{interceptors: stdInterceptors[:]}
 
 			if v.Tags != nil {
 				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
