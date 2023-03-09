@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func TestInterceptorsWhy(t *testing.T) { //nolint:paralleltest
+func TestInterceptorsWhy(t *testing.T) {
+	t.Parallel()
+
 	var interceptors interceptorItems
 
 	interceptors = append(interceptors, interceptorItem{
@@ -48,7 +50,9 @@ func TestInterceptorsWhy(t *testing.T) { //nolint:paralleltest
 	}
 }
 
-func TestInterceptedHandler(t *testing.T) { //nolint:paralleltest
+func TestInterceptedHandler(t *testing.T) {
+	t.Parallel()
+
 	var interceptors interceptorItems
 
 	interceptors = append(interceptors, interceptorItem{
