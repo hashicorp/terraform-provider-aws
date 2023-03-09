@@ -411,7 +411,7 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
+func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarm cloudwatch.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
@@ -424,32 +424,32 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricAlarmConfig_badExpression(rName),
+				Config:      testAccMetricAlarmConfig_badMetricQuery(rName),
 				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
-				Config: testAccMetricAlarmConfig_expression(rName),
+				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmConfig_crossAccount(rName),
+				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmConfig_expressionUpdated(rName),
+				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "3"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmConfig_expression(rName),
+				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
@@ -457,13 +457,6 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 			},
 			{
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
-				),
-			},
-			{
-				Config: testAccMetricAlarmConfig_expressionQueryUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
@@ -800,7 +793,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmConfig_expression(rName string) string {
+func testAccMetricAlarmConfig_metricQueryExpressionReference(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -836,7 +829,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmConfig_crossAccount(rName string) string {
+func testAccMetricAlarmConfig_metricQueryCrossAccount(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -906,7 +899,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmConfig_expressionUpdated(rName string) string {
+func testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -948,43 +941,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmConfig_expressionQueryUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = 2
-  threshold                 = 80
-  alarm_description         = "This metric monitors ec2 cpu utilization"
-  insufficient_data_actions = []
-
-  metric_query {
-    id          = "e1"
-    expression  = "m1"
-    label       = "cat"
-    return_data = true
-  }
-
-  metric_query {
-    id = "m1"
-
-    metric {
-      metric_name = "CPUUtilization"
-      namespace   = "AWS/EC2"
-      period      = 120
-      stat        = "Maximum"
-      unit        = "Count"
-
-      dimensions = {
-        InstanceId = "i-abc123"
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccMetricAlarmConfig_badExpression(rName string) string {
+func testAccMetricAlarmConfig_badMetricQuery(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
