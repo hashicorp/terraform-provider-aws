@@ -3,13 +3,22 @@
 FEATURES:
 
 * **New Data Source:** `aws_ecs_task_execution` ([#29783](https://github.com/hashicorp/terraform-provider-aws/issues/29783))
+* **New Data Source:** `aws_licensemanager_grants` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Data Source:** `aws_licensemanager_received_license` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Data Source:** `aws_licensemanager_received_licenses` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Resource:** `aws_licensemanager_grant` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Resource:** `aws_licensemanager_grant_accepter` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_transit_gateway_attachment: Add `association_state` and `association_transit_gateway_route_table_id` attributes ([#29648](https://github.com/hashicorp/terraform-provider-aws/issues/29648))
+* data-source/aws_instances: Add `ipv6_addresses` attribute ([#29794](https://github.com/hashicorp/terraform-provider-aws/issues/29794))
 * resource/aws_acm_certificate: Change `options` to `Computed` ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
+* resource/aws_amplify_domain_association: Add `enable_auto_sub_domain` argument ([#92814](https://github.com/hashicorp/terraform-provider-aws/issues/92814))
 * resource/aws_cloudhsm_v2_hsm: Enforce `ExactlyOneOf` for `availability_zone` and `subnet_id` arguments ([#20891](https://github.com/hashicorp/terraform-provider-aws/issues/20891))
 * resource/aws_db_instance: Add `listener_endpoint` attribute ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
 * resource/aws_db_instance: Add plan time validations for `backup_retention_period`, `monitoring_interval`, and `monitoring_role_arn` ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
+* resource/aws_flow_log: Add `deliver_cross_account_role` argument ([#29254](https://github.com/hashicorp/terraform-provider-aws/issues/29254))
 * resource/aws_grafana_workspace: Add `network_access_control` argument ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
 * resource/aws_sesv2_configuration_set: Add `vdm_options` argument ([#28812](https://github.com/hashicorp/terraform-provider-aws/issues/28812))
 * resource/aws_transfer_server: Add `protocol_details` argument ([#28621](https://github.com/hashicorp/terraform-provider-aws/issues/28621))
@@ -21,6 +30,7 @@ BUG FIXES:
 * resource/aws_acm_certificate: Update `options.certificate_transparency_logging_preference` in place rather than replacing the resource ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
 * resource/aws_batch_job_definition: Prevents perpetual diff when container properties environment variable has empty value. ([#29820](https://github.com/hashicorp/terraform-provider-aws/issues/29820))
 * resource/aws_elastic_beanstalk_configuration_template: Map errors like `InvalidParameterValue: No Platform named '...' found.` to `resource.NotFoundError` so `terraform refesh` correctly removes the resource from state ([#29863](https://github.com/hashicorp/terraform-provider-aws/issues/29863))
+* resource/aws_flow_log: Fix IAM eventual consistency errors on resource Create ([#29254](https://github.com/hashicorp/terraform-provider-aws/issues/29254))
 * resource/aws_grafana_workspace: Allow removing `vpc_configuration` ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
 * resource/aws_medialive_channel: Fix setting of the `include_fec` attribute in `fec_output_settings` ([#29808](https://github.com/hashicorp/terraform-provider-aws/issues/29808))
 * resource/aws_medialive_channel: Fix setting of the `video_pid` attribute in `m2ts_settings` ([#29824](https://github.com/hashicorp/terraform-provider-aws/issues/29824))
