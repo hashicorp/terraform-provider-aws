@@ -136,7 +136,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 			},
 			"license_metadata": {
 				Computed: true,
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -191,7 +191,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 			},
 			"validity": {
 				Computed: true,
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"begin": {

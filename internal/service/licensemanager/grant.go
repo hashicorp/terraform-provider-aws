@@ -185,7 +185,7 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	in := &licensemanager.DeleteGrantInput{
 		GrantArn: aws.String(d.Id()),
-		Version:  aws.String(*out.Version),
+		Version:  out.Version,
 	}
 
 	_, err = conn.DeleteGrantWithContext(ctx, in)
