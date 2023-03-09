@@ -25,6 +25,14 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"association_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"association_transit_gateway_route_table_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -53,14 +61,6 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Computed: true,
 			},
 			"transit_gateway_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_transit_gateway_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,13 +106,6 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("resource_id", transitGatewayAttachment.ResourceId)
-	d.Set("resource_owner_id", resourceOwnerID)
-	d.Set("resource_type", transitGatewayAttachment.ResourceType)
-	d.Set("state", transitGatewayAttachment.State)
-	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
-	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 	if v := transitGatewayAttachment.Association; v != nil {
 		d.Set("association_state", v.State)
 		d.Set("association_transit_gateway_route_table_id", v.TransitGatewayRouteTableId)
@@ -120,6 +113,13 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		d.Set("association_state", nil)
 		d.Set("association_transit_gateway_route_table_id", nil)
 	}
+	d.Set("resource_id", transitGatewayAttachment.ResourceId)
+	d.Set("resource_owner_id", resourceOwnerID)
+	d.Set("resource_type", transitGatewayAttachment.ResourceType)
+	d.Set("state", transitGatewayAttachment.State)
+	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
+	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
 	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
