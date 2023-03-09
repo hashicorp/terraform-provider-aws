@@ -2,24 +2,18 @@ package licensemanager_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
 func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_received_license.test"
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set", licenseARNKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },

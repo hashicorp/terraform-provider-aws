@@ -3,7 +3,6 @@ package licensemanager_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -21,18 +21,9 @@ import (
 func testAccGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set", licenseARNKey)
-	}
-	principal := os.Getenv(principalKey)
-	if principal == "" {
-		t.Skipf("Environment variable %s is not set", principalKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 	resourceName := "aws_licensemanager_grant_accepter.test"
 	resourceGrantName := "aws_licensemanager_grant.test"
 
@@ -74,18 +65,9 @@ func testAccGrantAccepter_basic(t *testing.T) {
 func testAccGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set to true", licenseARNKey)
-	}
-	principal := os.Getenv(principalKey)
-	if principal == "" {
-		t.Skipf("Environment variable %s is not set", principalKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 	resourceName := "aws_licensemanager_grant_accepter.test"
 
 	providers := make(map[string]*schema.Provider)

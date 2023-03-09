@@ -3,7 +3,6 @@ package licensemanager_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -21,6 +21,12 @@ const (
 	homeRegionKey = "LICENSE_MANAGER_GRANT_HOME_REGION"
 	principalKey  = "LICENSE_MANAGER_GRANT_PRINCIPAL"
 	licenseARNKey = "LICENSE_MANAGER_GRANT_LICENSE_ARN"
+)
+
+const (
+	envVarHomeRegionError    = "The region where the license has been imported into the current account."
+	envVarLicenseARNKeyError = "ARN for a license imported into the current account."
+	envVarPrincipalKeyError  = "ARN of a principal to share the license with. Either a root user, Organization, or Organizational Unit."
 )
 
 func TestAccLicenseManagerGrant_serial(t *testing.T) {
@@ -47,18 +53,9 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 
 func testAccGrant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	principal := os.Getenv(principalKey)
-	if principal == "" {
-		t.Skipf("Environment variable %s is not set", principalKey)
-	}
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set", licenseARNKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
 
@@ -97,18 +94,9 @@ func testAccGrant_basic(t *testing.T) {
 
 func testAccGrant_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	principal := os.Getenv(principalKey)
-	if principal == "" {
-		t.Skipf("Environment variable %s is not set to true", principalKey)
-	}
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set to true", licenseARNKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
 
@@ -132,18 +120,9 @@ func testAccGrant_disappears(t *testing.T) {
 
 func testAccGrant_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	principal := os.Getenv(principalKey)
-	if principal == "" {
-		t.Skipf("Environment variable %s is not set to true", principalKey)
-	}
-	licenseARN := os.Getenv(licenseARNKey)
-	if licenseARN == "" {
-		t.Skipf("Environment variable %s is not set to true", licenseARNKey)
-	}
-	homeRegion := os.Getenv(homeRegionKey)
-	if homeRegion == "" {
-		t.Skipf("Environment variable %s is not set to true", homeRegionKey)
-	}
+	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
+	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
+	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
