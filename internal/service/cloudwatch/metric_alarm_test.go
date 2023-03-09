@@ -432,12 +432,31 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":          "e1",
+						"expression":  "m1",
+						"label":       "cat",
+						"return_data": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":                             "m1",
+						"metric.#":                       "1",
+						"metric.0.metric_name":           "CPUUtilization",
+						"metric.0.namespace":             "AWS/EC2",
+						"metric.0.period":                "120",
+						"metric.0.stat":                  "Average",
+						"metric.0.unit":                  "Count",
+						"metric.0.dimensions.%":          "1",
+						"metric.0.dimensions.InstanceId": "i-abc123",
+					}),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.0.id", "m1"),
 					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
 				),
 			},
@@ -446,6 +465,18 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":          "e1",
+						"expression":  "m1",
+						"label":       "cat",
+						"return_data": "",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":          "e2",
+						"expression":  "e1",
+						"label":       "bug",
+						"return_data": "true",
+					}),
 				),
 			},
 			{
@@ -460,6 +491,12 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":          "e1",
+						"expression":  "ANOMALY_DETECTION_BAND(m1)",
+						"label":       "CPUUtilization (Expected)",
+						"return_data": "true",
+					}),
 				),
 			},
 			{
