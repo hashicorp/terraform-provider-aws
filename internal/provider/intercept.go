@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // An interceptor is functionality invoked during the CRUD request lifecycle.
@@ -186,6 +187,18 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		return ctx, diags
 	}
 
+	serviceName, err := names.HumanFriendly(spName)
+
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName, ok := conns.ResourceNameFromContext(ctx)
+
+	if !ok {
+		resourceName = "<thing>"
+	}
+
 	switch when {
 	case Before:
 		switch why {
@@ -223,8 +236,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					}
 
 					if err != nil {
-						// TODO Add resource name and ID to error.
-						return ctx, sdkdiag.AppendFromErr(diags, err)
+						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
 			}
@@ -264,8 +276,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				}
 
 				if err != nil {
-					// TODO Add resource name and ID to error.
-					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for resource(%s): %s", d.Id(), err)
+					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 				}
 
 				tags = tags.IgnoreAWS().IgnoreConfig(t.IgnoreConfig)

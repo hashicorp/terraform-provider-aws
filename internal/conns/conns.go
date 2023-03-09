@@ -35,14 +35,26 @@ type ServicePackageWithListTags interface {
 
 type contextKey int
 
-var servicePackageNameContextKey contextKey
+var (
+	servicePackageNameContextKey contextKey
+	resourceNameContextKey       contextKey
+)
 
-func NewContext(ctx context.Context, servicePackageName string) context.Context {
+func NewContextWithServicePackageName(ctx context.Context, servicePackageName string) context.Context {
 	return context.WithValue(ctx, servicePackageNameContextKey, servicePackageName)
 }
 
 func ServicePackageNameFromContext(ctx context.Context) (string, bool) {
 	v, ok := ctx.Value(servicePackageNameContextKey).(string)
+	return v, ok
+}
+
+func NewContextWithResourceName(ctx context.Context, resourceName string) context.Context {
+	return context.WithValue(ctx, resourceNameContextKey, resourceName)
+}
+
+func ResourceNameFromContext(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(resourceNameContextKey).(string)
 	return v, ok
 }
 

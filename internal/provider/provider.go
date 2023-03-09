@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
@@ -252,6 +253,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
+	tagsConfigInterceptor := interceptorItem{
+		When: Before,
+		Why:  AllOps,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig), diags
+		}),
+	}
+
 	var errs *multierror.Error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
@@ -259,22 +268,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 
-		stdInterceptors := [...]interceptorItem{
+		stdInterceptors := []interceptorItem{
 			// First interceptor sets service package name in Context.
 			{
 				When: Before,
 				Why:  AllOps,
 				Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-					return conns.NewContext(ctx, servicePackageName), diags
-				}),
-			},
-			// TODO Add an interceptor that adds resource "friendly name" to Context. Useful for error messages.
-			// The second initializes tagging information in Context.
-			{
-				When: Before,
-				Why:  AllOps,
-				Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-					return tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig), diags
+					return conns.NewContextWithServicePackageName(ctx, servicePackageName), diags
 				}),
 			},
 		}
@@ -295,7 +295,20 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := &DataSource{interceptors: stdInterceptors[:]}
+			interceptors := slices.Clone(stdInterceptors)
+			// Append an interceptor that adds resource "friendly name" to Context. Useful for error messages.
+			if v.Name != "" {
+				interceptors = append(interceptors, interceptorItem{
+					When: Before,
+					Why:  AllOps,
+					Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+						return conns.NewContextWithResourceName(ctx, v.Name), diags
+					}),
+				})
+			}
+			// Append the tags configuration interceptor.
+			interceptors = append(interceptors, tagsConfigInterceptor)
+			ds := &DataSource{interceptors: interceptors}
 
 			if v := r.ReadWithoutTimeout; v != nil {
 				r.ReadWithoutTimeout = ds.Read(v)
@@ -332,7 +345,20 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			rs := &Resource{interceptors: stdInterceptors[:]}
+			interceptors := slices.Clone(stdInterceptors)
+			// Append an interceptor that adds resource "friendly name" to Context. Useful for error messages.
+			if v.Name != "" {
+				interceptors = append(interceptors, interceptorItem{
+					When: Before,
+					Why:  AllOps,
+					Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+						return conns.NewContextWithResourceName(ctx, v.Name), diags
+					}),
+				})
+			}
+			// Append the tags configuration interceptor.
+			interceptors = append(interceptors, tagsConfigInterceptor)
+			rs := &Resource{interceptors: interceptors}
 
 			if v.Tags != nil {
 				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
