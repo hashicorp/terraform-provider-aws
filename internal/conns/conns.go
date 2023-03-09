@@ -33,28 +33,31 @@ type ServicePackageWithListTags interface {
 	ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
 }
 
-type contextKey int
+type (
+	servicePackageNameContextKey int
+	resourceNameContextKey       int
+)
 
 var (
-	servicePackageNameContextKey contextKey
-	resourceNameContextKey       contextKey
+	servicePackageNameKey servicePackageNameContextKey
+	resourceNameKey       resourceNameContextKey
 )
 
 func NewContextWithServicePackageName(ctx context.Context, servicePackageName string) context.Context {
-	return context.WithValue(ctx, servicePackageNameContextKey, servicePackageName)
+	return context.WithValue(ctx, servicePackageNameKey, servicePackageName)
 }
 
 func ServicePackageNameFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(servicePackageNameContextKey).(string)
+	v, ok := ctx.Value(servicePackageNameKey).(string)
 	return v, ok
 }
 
 func NewContextWithResourceName(ctx context.Context, resourceName string) context.Context {
-	return context.WithValue(ctx, resourceNameContextKey, resourceName)
+	return context.WithValue(ctx, resourceNameKey, resourceName)
 }
 
 func ResourceNameFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(resourceNameContextKey).(string)
+	v, ok := ctx.Value(resourceNameKey).(string)
 	return v, ok
 }
 

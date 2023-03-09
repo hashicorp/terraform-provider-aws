@@ -166,6 +166,39 @@ func (r *Resource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFu
 	}
 }
 
+// Sets the service package name in Context.
+func newServicePackageNameInterceptorItem(servicePackageName string) interceptorItem {
+	return interceptorItem{
+		When: Before,
+		Why:  AllOps,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return conns.NewContextWithServicePackageName(ctx, servicePackageName), diags
+		}),
+	}
+}
+
+// Sets the resource name in Context.
+func newResourceNameInterceptorItem(resourceName string) interceptorItem {
+	return interceptorItem{
+		When: Before,
+		Why:  AllOps,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return conns.NewContextWithResourceName(ctx, resourceName), diags
+		}),
+	}
+}
+
+// Set provider configured tagging information in Context.
+func newProviderConfigTagsInterceptor() interceptorItem {
+	return interceptorItem{
+		When: Before,
+		Why:  AllOps,
+		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+			return tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig), diags
+		}),
+	}
+}
+
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
