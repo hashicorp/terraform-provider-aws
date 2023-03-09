@@ -44,10 +44,16 @@ func main() {
 			continue
 		}
 
+		// Don't skip excluded packages, instead handle missing values in the template.
+		// if l[names.ColExclude] != "" {
+		// 	continue
+		// }
+
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}
 
+		// See internal/generate/namesconsts/main.go.
 		p := l[names.ColProviderPackageCorrect]
 
 		if l[names.ColProviderPackageActual] != "" {
@@ -65,10 +71,10 @@ func main() {
 		v := &visitor{
 			g: g,
 
-			frameworkDataSources: make([]string, 0),
-			frameworkResources:   make([]string, 0),
-			sdkDataSources:       make(map[string]string),
-			sdkResources:         make(map[string]string),
+			frameworkDataSources: make([]ResourceDatum, 0),
+			frameworkResources:   make([]ResourceDatum, 0),
+			sdkDataSources:       make(map[string]ResourceDatum),
+			sdkResources:         make(map[string]ResourceDatum),
 		}
 
 		v.processDir(dir)
@@ -79,6 +85,7 @@ func main() {
 
 		s := ServiceDatum{
 			ProviderPackage:      p,
+			ProviderNameUpper:    l[names.ColProviderNameUpper],
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
@@ -86,10 +93,10 @@ func main() {
 		}
 
 		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
-			return s.FrameworkDataSources[i] < s.FrameworkDataSources[j]
+			return s.FrameworkDataSources[i].FactoryName < s.FrameworkDataSources[j].FactoryName
 		})
 		sort.SliceStable(s.FrameworkResources, func(i, j int) bool {
-			return s.FrameworkResources[i] < s.FrameworkResources[j]
+			return s.FrameworkResources[i].FactoryName < s.FrameworkResources[j].FactoryName
 		})
 
 		filename := fmt.Sprintf("../../service/%s/%s", p, spdFile)
@@ -123,12 +130,17 @@ func main() {
 	}
 }
 
+type ResourceDatum struct {
+	FactoryName string
+}
+
 type ServiceDatum struct {
 	ProviderPackage      string
-	FrameworkDataSources []string
-	FrameworkResources   []string
-	SDKDataSources       map[string]string
-	SDKResources         map[string]string
+	ProviderNameUpper    string
+	FrameworkDataSources []ResourceDatum
+	FrameworkResources   []ResourceDatum
+	SDKDataSources       map[string]ResourceDatum
+	SDKResources         map[string]ResourceDatum
 }
 
 type TemplateData struct {
@@ -145,8 +157,8 @@ var spsTmpl string
 var (
 	frameworkDataSourceAnnotation = regexp.MustCompile(`^//\s*@FrameworkDataSource\s*$`)
 	frameworkResourceAnnotation   = regexp.MustCompile(`^//\s*@FrameworkResource\s*$`)
-	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
-	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
+	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(([^)]+)\)\s*$`)
+	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(([^)]+)\)\s*$`)
 )
 
 type visitor struct {
@@ -157,10 +169,10 @@ type visitor struct {
 	functionName string
 	packageName  string
 
-	frameworkDataSources []string
-	frameworkResources   []string
-	sdkDataSources       map[string]string
-	sdkResources         map[string]string
+	frameworkDataSources []ResourceDatum
+	frameworkResources   []ResourceDatum
+	sdkDataSources       map[string]ResourceDatum
+	sdkResources         map[string]ResourceDatum
 }
 
 // processDir scans a single service package directory and processes contained Go sources files.
@@ -206,32 +218,46 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := frameworkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			if slices.Contains(v.frameworkDataSources, v.functionName) {
+			if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.frameworkDataSources = append(v.frameworkDataSources, v.functionName)
+				d := ResourceDatum{
+					FactoryName: v.functionName,
+				}
+				v.frameworkDataSources = append(v.frameworkDataSources, d)
 			}
 		} else if m := frameworkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			if slices.Contains(v.frameworkResources, v.functionName) {
+			if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.frameworkResources = append(v.frameworkResources, v.functionName)
+				d := ResourceDatum{
+					FactoryName: v.functionName,
+				}
+				v.frameworkResources = append(v.frameworkResources, d)
 			}
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			name := m[1]
+			args := common.ParseArgs(m[1])
+			name := args.Positional[0]
 
 			if _, ok := v.sdkDataSources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.sdkDataSources[name] = v.functionName
+				d := ResourceDatum{
+					FactoryName: v.functionName,
+				}
+				v.sdkDataSources[name] = d
 			}
 		} else if m := sdkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			name := m[1]
+			args := common.ParseArgs(m[1])
+			name := args.Positional[0]
 
 			if _, ok := v.sdkResources[name]; ok {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.sdkResources[name] = v.functionName
+				d := ResourceDatum{
+					FactoryName: v.functionName,
+				}
+				v.sdkResources[name] = d
 			}
 		}
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_virtual_router")
 func ResourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

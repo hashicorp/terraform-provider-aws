@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_monitoring_subscription")
 func ResourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringSubscriptionCreate,

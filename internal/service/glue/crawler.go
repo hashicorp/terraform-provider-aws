@@ -28,6 +28,7 @@ func targets() []string {
 	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"}
 }
 
+// @SDKResource("aws_glue_crawler")
 func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCrawlerCreate,

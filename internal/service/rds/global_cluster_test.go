@@ -662,7 +662,7 @@ func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds
 			return err
 		}
 
-		return tfrds.WaitForGlobalClusterDeletion(ctx, conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfrds.GlobalClusterRemovalTimeout)
+		return tfrds.WaitForGlobalClusterDeletion(ctx, conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfrds.GlobalClusterClusterDeleteTimeout)
 	}
 }
 

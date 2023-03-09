@@ -31,6 +31,7 @@ const (
 	cloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
 )
 
+// @SDKResource("aws_serverlessapplicationrepository_cloudformation_stack")
 func ResourceCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCloudFormationStackCreate,

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -19,7 +20,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier, key string) (*string, error) {
 	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
@@ -57,6 +58,10 @@ func ListTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).DynamoDBConn(), identifier)
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns dynamodb service tags.
@@ -89,7 +94,8 @@ func KeyValueTags(ctx context.Context, tags []*dynamodb.Tag) tftags.KeyValueTags
 // UpdateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -120,4 +126,8 @@ func UpdateTags(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier 
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).DynamoDBConn(), identifier, oldTags, newTags)
 }

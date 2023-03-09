@@ -27,6 +27,7 @@ const (
 	ResNameExperimentTemplate = "Experiment Template"
 )
 
+// @SDKResource("aws_fis_experiment_template")
 func ResourceExperimentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperimentTemplateCreate,

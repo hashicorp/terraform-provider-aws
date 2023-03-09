@@ -25,6 +25,7 @@ const (
 	policyNamePrefixMaxLen = policyNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,

@@ -9,7 +9,6 @@ on:
     paths:
       - .ci/scripts/providerlint.sh
       - .github/workflows/providerlint.yml
-      - .go-version
       - GNUmakefile
       - go.sum
       - internal/**
@@ -23,7 +22,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: go env
         run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
       - uses: actions/cache@v3
@@ -38,7 +37,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/providerlint && go install .
+      - run: cd .ci/providerlint && go install -buildvcs=false .
       - run: .ci/scripts/providerlint.sh ec2
   providerlintb:
     name: 2 of 2
@@ -48,7 +47,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: go env
         run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
       - uses: actions/cache@v3
@@ -63,5 +62,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/providerlint && go install .
+      - run: cd .ci/providerlint && go install -buildvcs=false .
       - run: make providerlint

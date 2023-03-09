@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_service_discovery_http_namespace")
 func ResourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHTTPNamespaceCreate,

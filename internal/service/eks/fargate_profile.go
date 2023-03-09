@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_eks_fargate_profile")
 func ResourceFargateProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFargateProfileCreate,

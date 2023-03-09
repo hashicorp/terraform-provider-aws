@@ -35,6 +35,7 @@ const (
 	ServerlessMaxNCUs = 128.0
 )
 
+// @SDKResource("aws_neptune_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,

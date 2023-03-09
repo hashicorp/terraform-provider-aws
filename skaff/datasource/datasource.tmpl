@@ -80,6 +80,9 @@ import (
 // 4. Create, read, update, delete functions (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 {{- end }}
+
+// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
+// @SDKDataSource("{{ .ProviderResourceName }}")
 func DataSource{{ .DataSource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}

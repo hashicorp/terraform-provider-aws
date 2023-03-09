@@ -34,7 +34,7 @@ var testAccProviderCognitoUserPoolCustomDomainConfigure sync.Once
 
 // testAccPreCheckUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
 func testAccPreCheckUserPoolCustomDomain(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(cognitoidentityprovider.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(t, cognitoidentityprovider.EndpointsID)
 
 	region := testAccGetUserPoolCustomDomainRegion()
 

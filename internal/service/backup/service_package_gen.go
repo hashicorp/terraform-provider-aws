@@ -5,32 +5,92 @@ package backup
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceFramework,
+			TypeName: "aws_backup_framework",
+		},
+		{
+			Factory:  DataSourcePlan,
+			TypeName: "aws_backup_plan",
+		},
+		{
+			Factory:  DataSourceReportPlan,
+			TypeName: "aws_backup_report_plan",
+		},
+		{
+			Factory:  DataSourceSelection,
+			TypeName: "aws_backup_selection",
+		},
+		{
+			Factory:  DataSourceVault,
+			TypeName: "aws_backup_vault",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceFramework,
+			TypeName: "aws_backup_framework",
+		},
+		{
+			Factory:  ResourceGlobalSettings,
+			TypeName: "aws_backup_global_settings",
+		},
+		{
+			Factory:  ResourcePlan,
+			TypeName: "aws_backup_plan",
+		},
+		{
+			Factory:  ResourceRegionSettings,
+			TypeName: "aws_backup_region_settings",
+		},
+		{
+			Factory:  ResourceReportPlan,
+			TypeName: "aws_backup_report_plan",
+		},
+		{
+			Factory:  ResourceSelection,
+			TypeName: "aws_backup_selection",
+		},
+		{
+			Factory:  ResourceVault,
+			TypeName: "aws_backup_vault",
+		},
+		{
+			Factory:  ResourceVaultLockConfiguration,
+			TypeName: "aws_backup_vault_lock_configuration",
+		},
+		{
+			Factory:  ResourceVaultNotifications,
+			TypeName: "aws_backup_vault_notifications",
+		},
+		{
+			Factory:  ResourceVaultPolicy,
+			TypeName: "aws_backup_vault_policy",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "backup"
+	return names.Backup
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_key_signing_key")
 func ResourceKeySigningKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeySigningKeyCreate,

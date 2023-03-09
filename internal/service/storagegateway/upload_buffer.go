@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_upload_buffer")
 func ResourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadBufferCreate,

@@ -24,6 +24,7 @@ import (
 
 const clusterSnapshotCreateTimeout = 2 * time.Minute
 
+// @SDKResource("aws_db_cluster_snapshot")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
