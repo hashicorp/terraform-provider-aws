@@ -61,7 +61,7 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftServerlessNamespace_defaultIamRole(t *testing.T) {
+func TestAccRedshiftServerlessNamespace_defaultIAMRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -73,7 +73,7 @@ func TestAccRedshiftServerlessNamespace_defaultIamRole(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceConfig_defaultIamRole(rName),
+				Config: testAccNamespaceConfig_defaultIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
@@ -307,7 +307,7 @@ resource "aws_redshiftserverless_namespace" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccNamespaceConfig_defaultIamRole(rName string) string {
+func testAccNamespaceConfig_defaultIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
