@@ -210,7 +210,7 @@ var (
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
-// @SDKResource("aws_sns_topic")
+// @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="id")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
