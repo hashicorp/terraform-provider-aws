@@ -16,12 +16,12 @@ Provides a CloudWatch Metric Alarm resource.
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar5"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 }
@@ -41,12 +41,12 @@ resource "aws_autoscaling_policy" "bat" {
 resource "aws_cloudwatch_metric_alarm" "bat" {
   alarm_name          = "terraform-test-foobar5"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
+  evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = "120"
+  period              = 120
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = 80
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.bar.name
@@ -63,8 +63,8 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "10"
+  evaluation_periods        = 2
+  threshold                 = 10
   alarm_description         = "Request error rate has exceeded 10%"
   insufficient_data_actions = []
 
@@ -81,7 +81,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
     metric {
       metric_name = "RequestCount"
       namespace   = "AWS/ApplicationELB"
-      period      = "120"
+      period      = 120
       stat        = "Sum"
       unit        = "Count"
 
@@ -97,7 +97,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
     metric {
       metric_name = "HTTPCode_ELB_5XX_Count"
       namespace   = "AWS/ApplicationELB"
-      period      = "120"
+      period      = 120
       stat        = "Sum"
       unit        = "Count"
 
@@ -113,7 +113,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   alarm_name                = "terraform-test-foobar"
   comparison_operator       = "GreaterThanUpperThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   threshold_metric_id       = "e1"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
@@ -131,7 +131,7 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -149,10 +149,10 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
 resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
   alarm_name          = "alarmname"
   comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "1"
+  evaluation_periods  = 1
   metric_name         = "HealthyHostCount"
   namespace           = "AWS/NetworkELB"
-  period              = "60"
+  period              = 60
   statistic           = "Average"
   threshold           = var.logstash_servers_count
   alarm_description   = "Number of healthy nodes in Target Group"

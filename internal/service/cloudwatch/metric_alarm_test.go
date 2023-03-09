@@ -612,12 +612,12 @@ func testAccMetricAlarmConfig_basic(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -633,13 +633,13 @@ func testAccMetricAlarmConfig_datapointsTo(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  datapoints_to_alarm       = "2"
-  evaluation_periods        = "2"
+  datapoints_to_alarm       = 2
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -655,12 +655,12 @@ func testAccMetricAlarmConfig_treatMissingData(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "missing"
   insufficient_data_actions = []
@@ -677,12 +677,12 @@ func testAccMetricAlarmConfig_treatMissingDataUpdate(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "breaching"
   insufficient_data_actions = []
@@ -699,12 +699,12 @@ func testAccMetricAlarmConfig_treatMissingDataNoAttr(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -720,12 +720,12 @@ func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentiles(rName strin
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                            = "%s"
   comparison_operator                   = "GreaterThanOrEqualToThreshold"
-  evaluation_periods                    = "2"
+  evaluation_periods                    = 2
   metric_name                           = "CPUUtilization"
   namespace                             = "AWS/EC2"
-  period                                = "120"
+  period                                = 120
   extended_statistic                    = "p88.0"
-  threshold                             = "80"
+  threshold                             = 80
   alarm_description                     = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "evaluate"
   insufficient_data_actions             = []
@@ -742,12 +742,12 @@ func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentilesUpdated(rNam
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                            = "%s"
   comparison_operator                   = "GreaterThanOrEqualToThreshold"
-  evaluation_periods                    = "2"
+  evaluation_periods                    = 2
   metric_name                           = "CPUUtilization"
   namespace                             = "AWS/EC2"
-  period                                = "120"
+  period                                = 120
   extended_statistic                    = "p88.0"
-  threshold                             = "80"
+  threshold                             = 80
   alarm_description                     = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "ignore"
   insufficient_data_actions             = []
@@ -764,12 +764,12 @@ func testAccMetricAlarmConfig_extendedStatistic(rName string, stat string) strin
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   extended_statistic        = "%s"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -785,11 +785,11 @@ func testAccMetricAlarmConfig_missingStatistic(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
-  threshold                 = "80"
+  period                    = 120
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -805,8 +805,8 @@ func testAccMetricAlarmConfig_expression(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "80"
+  evaluation_periods        = 2
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -814,7 +814,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     id          = "e1"
     expression  = "m1"
     label       = "cat"
-    return_data = "true"
+    return_data = true
   }
 
   metric_query {
@@ -823,7 +823,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -843,20 +843,20 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "80"
+  evaluation_periods        = 2
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
   metric_query {
     id          = "m1"
     account_id  = data.aws_caller_identity.current.account_id
-    return_data = "true"
+    return_data = true
 
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -874,7 +874,7 @@ func testAccMetricAlarmConfig_anomalyDetectionExpression(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanUpperThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   threshold_metric_id       = "e1"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
@@ -883,17 +883,17 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     id          = "e1"
     expression  = "ANOMALY_DETECTION_BAND(m1)"
     label       = "CPUUtilization (Expected)"
-    return_data = "true"
+    return_data = true
   }
 
   metric_query {
     id          = "m1"
-    return_data = "true"
+    return_data = true
 
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -911,8 +911,8 @@ func testAccMetricAlarmConfig_expressionUpdated(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "80"
+  evaluation_periods        = 2
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -926,7 +926,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     id          = "e2"
     expression  = "e1"
     label       = "bug"
-    return_data = "true"
+    return_data = true
   }
 
   metric_query {
@@ -935,7 +935,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "p95.45"
       unit        = "Count"
 
@@ -953,8 +953,8 @@ func testAccMetricAlarmConfig_expressionQueryUpdated(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "80"
+  evaluation_periods        = 2
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -962,7 +962,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     id          = "e1"
     expression  = "m1"
     label       = "cat"
-    return_data = "true"
+    return_data = true
   }
 
   metric_query {
@@ -971,7 +971,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Maximum"
       unit        = "Count"
 
@@ -989,8 +989,8 @@ func testAccMetricAlarmConfig_badExpression(rName string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "80"
+  evaluation_periods        = 2
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -1002,7 +1002,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -1058,12 +1058,12 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_description   = "Status checks have failed for system"
   alarm_name          = %[1]q
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
+  evaluation_periods  = 2
   metric_name         = "StatusCheckFailed_System"
   namespace           = "AWS/EC2"
-  period              = "60"
+  period              = 60
   statistic           = "Minimum"
-  threshold           = "0"
+  threshold           = 0
   unit                = "Count"
 
   dimensions = {
@@ -1084,12 +1084,12 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_description   = "Status checks have failed for system"
   alarm_name          = %q
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
+  evaluation_periods  = 2
   metric_name         = "StatusCheckFailed_System"
   namespace           = "AWS/EC2"
-  period              = "60"
+  period              = 60
   statistic           = "Minimum"
-  threshold           = "0"
+  threshold           = 0
   unit                = "Count"
 
   dimensions = {
@@ -1115,12 +1115,12 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_description   = "Status checks have failed, rebooting system."
   alarm_name          = %q
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "5"
+  evaluation_periods  = 5
   metric_name         = "StatusCheckFailed_Instance"
   namespace           = "AWS/EC2"
-  period              = "60"
+  period              = 60
   statistic           = "Minimum"
-  threshold           = "0"
+  threshold           = 0
   unit                = "Count"
 
   dimensions = {
@@ -1135,12 +1135,12 @@ func testAccMetricAlarmConfig_tags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -1160,12 +1160,12 @@ func testAccMetricAlarmConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
