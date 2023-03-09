@@ -52,7 +52,7 @@ data "aws_licensemanager_received_licenses" "test" {
   filter {
     name = "ProductSKU"
     values = [
-		data.aws_licensemanager_received_license.test.product_sku
+      data.aws_licensemanager_received_license.test.product_sku
     ]
   }
 }
