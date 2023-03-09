@@ -268,6 +268,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					return conns.NewContext(ctx, servicePackageName), diags
 				}),
 			},
+			// TODO Add an interceptor that adds resource "friendly name" to Context. Useful for error messages.
 			// The second initializes tagging information in Context.
 			{
 				When: Before,

@@ -223,6 +223,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					}
 
 					if err != nil {
+						// TODO Add resource name and ID to error.
 						return ctx, sdkdiag.AppendFromErr(diags, err)
 					}
 				}
@@ -263,6 +264,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				}
 
 				if err != nil {
+					// TODO Add resource name and ID to error.
 					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for resource(%s): %s", d.Id(), err)
 				}
 
