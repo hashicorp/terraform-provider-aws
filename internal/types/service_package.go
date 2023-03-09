@@ -17,6 +17,7 @@ type ServicePackageResourceTags struct {
 // implemented by a service package.
 type ServicePackageFrameworkDataSource struct {
 	Factory func(context.Context) (datasource.DataSourceWithConfigure, error)
+	Name    string
 	Tags    *ServicePackageResourceTags
 }
 
@@ -24,6 +25,7 @@ type ServicePackageFrameworkDataSource struct {
 // implemented by a service package.
 type ServicePackageFrameworkResource struct {
 	Factory func(context.Context) (resource.ResourceWithConfigure, error)
+	Name    string
 	Tags    *ServicePackageResourceTags
 }
 
@@ -32,6 +34,7 @@ type ServicePackageFrameworkResource struct {
 type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
+	Name     string
 	Tags     *ServicePackageResourceTags
 }
 
@@ -40,5 +43,6 @@ type ServicePackageSDKDataSource struct {
 type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
+	Name     string
 	Tags     *ServicePackageResourceTags
 }
