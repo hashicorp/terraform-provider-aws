@@ -250,9 +250,6 @@ func TestAccMediaLiveChannel_MsSmooth_outputSettings(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						"name": "test-video-name",
 					}),
-					//resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.output_group_settings.0.ms_smooth_group_settings.*", map[string]string{
-					//	"audio_only_timecode_control": "USE_CONFIGURED_CLOCK",
-					//}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.ms_smooth_output_settings.*", map[string]string{
 						"name_modifier": rName,
 					}),
