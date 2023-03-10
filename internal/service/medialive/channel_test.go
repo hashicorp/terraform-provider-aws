@@ -205,6 +205,69 @@ func TestAccMediaLiveChannel_UDP_outputSettings(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveChannel_MsSmooth_outputSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_channel.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccChannelsPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_msSmoothOutputSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "AVC"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "HD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
+						"input_attachment_name": "example-input1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]string{
+						"id": rName,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": rName,
+						"name":                rName,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
+						"name": "test-video-name",
+					}),
+					//resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.output_group_settings.0.ms_smooth_group_settings.*", map[string]string{
+					//	"audio_only_timecode_control": "USE_CONFIGURED_CLOCK",
+					//}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.ms_smooth_output_settings.*", map[string]string{
+						"name_modifier": rName,
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_channel"},
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -852,6 +915,79 @@ resource "aws_medialive_channel" "test" {
                 rate_mode          = "CBR"
               }
             }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccChannelConfig_msSmoothOutputSettings(rName string) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		testAccChannelBaseMultiplexConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = %[1]q
+
+    settings {
+      url = "http://localhost:8000/path"
+    }
+
+    settings {
+      url = "http://localhost:8001/path"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    video_descriptions {
+      name = "test-video-name"
+    }
+
+    audio_descriptions {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+    }
+
+    output_groups {
+      output_group_settings {
+        ms_smooth_group_settings {
+          audio_only_timecode_control = "USE_CONFIGURED_CLOCK"
+          destination {
+            destination_ref_id = %[1]q
+          }
+        }
+      }
+
+      outputs {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          ms_smooth_output_settings {
+            name_modifier = %[1]q
           }
         }
       }
