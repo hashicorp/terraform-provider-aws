@@ -1,0 +1,13 @@
+rules:
+  - id: immediate-dereference-and-wrap
+    fix: $VALUE
+    languages: [go]
+    message: Using AWS SDK for Go pointer conversion functions on dereferenced pointer values is extraneous
+    patterns:
+      - pattern-either:
+          - pattern: aws.Bool(*$VALUE)
+          - pattern: aws.Float64(*$VALUE)
+          - pattern: aws.Int64(*$VALUE)
+          - pattern: aws.String(*$VALUE)
+          - pattern: aws.Time(*$VALUE)
+    severity: WARNING
