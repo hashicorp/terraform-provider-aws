@@ -50,6 +50,10 @@ func ResourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cloudfront_distribution_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -129,6 +133,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
+	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
 	d.Set("domain", d.Id())
 	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)

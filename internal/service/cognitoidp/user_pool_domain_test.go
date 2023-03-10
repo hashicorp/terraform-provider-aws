@@ -35,6 +35,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
+					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
