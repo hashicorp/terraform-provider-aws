@@ -7,15 +7,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
@@ -124,9 +123,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-		_, err := conn.DescribeUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
-			Domain: aws.String(rs.Primary.ID),
-		})
+		_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -141,16 +138,17 @@ func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.DescribeUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
-				Domain: aws.String(rs.Primary.ID),
-			})
+			_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("Cognito User Pool Domain %s still exists", rs.Primary.ID)
 		}
 
 		return nil
