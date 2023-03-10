@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 type pointerStruct struct {
@@ -66,4 +67,11 @@ func wrapAndDereference() valueStruct {
 		// ruleid: pointer-conversion-wrap-and-dereference
 		aTime: *aws.Time(aTime),
 	}
+}
+
+func setID(d *schema.ResourceData) {
+	var value *string
+
+	// ruleid: pointer-conversion-ResourceData-SetId
+	d.SetId(*value)
 }

@@ -64,16 +64,6 @@ rules:
           - pattern: "*$LHS <= $RHS"
     severity: WARNING
 
-  - id: pointer-conversion-ResourceData-SetId
-    fix: d.SetId(aws.ToString($VALUE))
-    languages: [go]
-    message: Prefer AWS Go SDK pointer conversion aws.ToString() function for dereferencing during d.SetId()
-    paths:
-      include:
-        - "/internal"
-    pattern: "d.SetId(*$VALUE)"
-    severity: WARNING
-
   - id: helper-schema-ResourceData-Set-extraneous-value-pointer-conversion
     fix: d.Set($ATTRIBUTE, $APIOBJECT)
     languages: [go]

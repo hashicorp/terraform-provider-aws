@@ -27,3 +27,10 @@ rules:
           - pattern: "*aws.String($VALUE)"
           - pattern: "*aws.Time($VALUE)"
     severity: WARNING
+
+  - id: pointer-conversion-ResourceData-SetId
+    fix: d.SetId(aws.ToString($VALUE))
+    languages: [go]
+    message: Prefer AWS Go SDK pointer conversion aws.ToString() function for dereferencing during d.SetId()
+    pattern: "d.SetId(*$VALUE)"
+    severity: WARNING
