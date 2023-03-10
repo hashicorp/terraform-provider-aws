@@ -1,4 +1,5 @@
-## 4.58.0 (Unreleased)
+## 4.59.0 (Unreleased)
+## 4.58.0 (March 10, 2023)
 
 FEATURES:
 
