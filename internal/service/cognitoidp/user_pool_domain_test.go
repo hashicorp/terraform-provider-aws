@@ -33,6 +33,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket"),

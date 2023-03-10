@@ -42,6 +42,10 @@ func ResourceUserPoolDomain() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"cloudfront_distribution": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cloudfront_distribution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -123,6 +127,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	if desc.CustomDomainConfig != nil {
 		d.Set("certificate_arn", desc.CustomDomainConfig.CertificateArn)
 	}
+	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
 	d.Set("domain", d.Id())
 	d.Set("s3_bucket", desc.S3Bucket)

@@ -68,6 +68,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `aws_account_id` - The AWS account ID for the user pool owner.
+* `cloudfront_distribution` - The Amazon CloudFront endpoint (e.g. `dpp0gtxikpq3y.cloudfront.net`) that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
 * `cloudfront_distribution_arn` - The URL of the CloudFront distribution. This is required to generate the ALIAS `aws_route53_record`
 * `s3_bucket` - The S3 bucket where the static files for this domain are stored.
 * `version` - The app version.
