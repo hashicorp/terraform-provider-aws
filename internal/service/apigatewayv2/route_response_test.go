@@ -1,6 +1,7 @@
 package apigatewayv2_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
@@ -26,12 +28,12 @@ func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy,
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, "id"),
@@ -49,6 +51,7 @@ func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
@@ -58,13 +61,13 @@ func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy,
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
-					testAccCheckRouteResponseDisappears(&apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseDisappears(ctx, &apiId, &routeId, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,6 +76,7 @@ func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
@@ -85,12 +89,12 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy,
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_model(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "response_models.test", modelResourceName, "name"),
@@ -108,37 +112,39 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_apigatewayv2_route_response" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_apigatewayv2_route_response" {
+				continue
+			}
+
+			_, err := conn.GetRouteResponseWithContext(ctx, &apigatewayv2.GetRouteResponseInput{
+				ApiId:           aws.String(rs.Primary.Attributes["api_id"]),
+				RouteId:         aws.String(rs.Primary.Attributes["route_id"]),
+				RouteResponseId: aws.String(rs.Primary.ID),
+			})
+			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("API Gateway v2 route response %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
-			ApiId:           aws.String(rs.Primary.Attributes["api_id"]),
-			RouteId:         aws.String(rs.Primary.Attributes["route_id"]),
-			RouteResponseId: aws.String(rs.Primary.ID),
-		})
-		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("API Gateway v2 route response %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRouteResponseDisappears(apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
+func testAccCheckRouteResponseDisappears(ctx context.Context, apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
-		_, err := conn.DeleteRouteResponse(&apigatewayv2.DeleteRouteResponseInput{
+		_, err := conn.DeleteRouteResponseWithContext(ctx, &apigatewayv2.DeleteRouteResponseInput{
 			ApiId:           apiId,
 			RouteId:         routeId,
 			RouteResponseId: v.RouteResponseId,
@@ -148,7 +154,7 @@ func testAccCheckRouteResponseDisappears(apiId, routeId *string, v *apigatewayv2
 	}
 }
 
-func testAccCheckRouteResponseExists(n string, vApiId, vRouteId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
+func testAccCheckRouteResponseExists(ctx context.Context, n string, vApiId, vRouteId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,11 +165,11 @@ func testAccCheckRouteResponseExists(n string, vApiId, vRouteId *string, v *apig
 			return fmt.Errorf("No API Gateway v2 route response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		routeId := aws.String(rs.Primary.Attributes["route_id"])
-		resp, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
+		resp, err := conn.GetRouteResponseWithContext(ctx, &apigatewayv2.GetRouteResponseInput{
 			ApiId:           apiId,
 			RouteId:         routeId,
 			RouteResponseId: aws.String(rs.Primary.ID),

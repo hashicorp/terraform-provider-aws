@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_transfer_tag")
 func ResourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagCreate,
@@ -45,13 +46,13 @@ func ResourceTag() *schema.Resource {
 }
 
 func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	identifier := d.Get("resource_arn").(string)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := UpdateTagsNoIgnoreSystemWithContext(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 
@@ -61,14 +62,14 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	value, err := GetTagWithContext(ctx, conn, identifier, key)
+	value, err := GetTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", transfer.ServiceID, identifier, key)
@@ -88,14 +89,14 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsNoIgnoreSystemWithContext(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return diag.Errorf("updating %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 
@@ -103,14 +104,14 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsNoIgnoreSystemWithContext(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 

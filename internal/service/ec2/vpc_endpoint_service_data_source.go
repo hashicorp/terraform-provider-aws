@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,16 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpc_endpoint_service")
 func DataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCEndpointServiceRead,
+		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -90,8 +94,9 @@ func DataSourceVPCEndpointService() *schema.Resource {
 	}
 }
 
-func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
@@ -116,7 +121,7 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -129,14 +134,14 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 		input.Filters = nil
 	}
 
-	serviceDetails, serviceNames, err := FindVPCEndpointServices(conn, input)
+	serviceDetails, serviceNames, err := FindVPCEndpointServices(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 VPC Endpoint Services: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Services: %s", err)
 	}
 
 	if len(serviceDetails) == 0 && len(serviceNames) == 0 {
-		return fmt.Errorf("no matching EC2 VPC Endpoint Service found")
+		return sdkdiag.AppendErrorf(diags, "no matching EC2 VPC Endpoint Service found")
 	}
 
 	// Note: AWS Commercial now returns a response with `ServiceNames` and
@@ -147,15 +152,15 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 			if name == serviceName {
 				d.SetId(strconv.Itoa(create.StringHashcode(name)))
 				d.Set("service_name", name)
-				return nil
+				return diags
 			}
 		}
 
-		return fmt.Errorf("no matching EC2 VPC Endpoint Service found")
+		return sdkdiag.AppendErrorf(diags, "no matching EC2 VPC Endpoint Service found")
 	}
 
 	if len(serviceDetails) > 1 {
-		return fmt.Errorf("multiple EC2 VPC Endpoint Services matched; use additional constraints to reduce matches to a single EC2 VPC Endpoint Service")
+		return sdkdiag.AppendErrorf(diags, "multiple EC2 VPC Endpoint Services matched; use additional constraints to reduce matches to a single EC2 VPC Endpoint Service")
 	}
 
 	sd := serviceDetails[0]
@@ -189,11 +194,11 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("supported_ip_address_types", aws.StringValueSlice(sd.SupportedIpAddressTypes))
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set("tags", KeyValueTags(sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", KeyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

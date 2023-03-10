@@ -17,30 +17,31 @@ resource "aws_s3_bucket" "example_source" {
   bucket = "example_source"
 }
 
+data "aws_iam_policy_document" "example_source" {
+  statement {
+    sid    = "AllowAppFlowSourceActions"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example_source",
+      "arn:aws:s3:::example_source/*",
+    ]
+  }
+}
+
 resource "aws_s3_bucket_policy" "example_source" {
   bucket = aws_s3_bucket.example_source.id
-  policy = <<EOF
-{
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Sid": "AllowAppFlowSourceActions",
-            "Principal": {
-                "Service": "appflow.amazonaws.com"
-            },
-            "Action": [
-                "s3:ListBucket",
-                "s3:GetObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::example_source",
-                "arn:aws:s3:::example_source/*"
-            ]
-        }
-    ],
-	"Version": "2012-10-17"
-}
-EOF
+  policy = data.aws_iam_policy_document.example_source.json
 }
 
 resource "aws_s3_object" "example" {
@@ -53,35 +54,33 @@ resource "aws_s3_bucket" "example_destination" {
   bucket = "example_destination"
 }
 
+data "aws_iam_policy_document" "example_destination" {
+  sid    = "AllowAppFlowDestinationActions"
+  effect = "Allow"
+
+  principals {
+    type        = "Service"
+    identifiers = ["appflow.amazonaws.com"]
+  }
+
+  actions = [
+    "s3:PutObject",
+    "s3:AbortMultipartUpload",
+    "s3:ListMultipartUploadParts",
+    "s3:ListBucketMultipartUploads",
+    "s3:GetBucketAcl",
+    "s3:PutObjectAcl",
+  ]
+
+  resources = [
+    "arn:aws:s3:::example_destination",
+    "arn:aws:s3:::example_destination/*",
+  ]
+}
+
 resource "aws_s3_bucket_policy" "example_destination" {
   bucket = aws_s3_bucket.example_destination.id
-  policy = <<EOF
-
-{
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Sid": "AllowAppFlowDestinationActions",
-            "Principal": {
-                "Service": "appflow.amazonaws.com"
-            },
-            "Action": [
-                "s3:PutObject",
-                "s3:AbortMultipartUpload",
-                "s3:ListMultipartUploadParts",
-                "s3:ListBucketMultipartUploads",
-                "s3:GetBucketAcl",
-                "s3:PutObjectAcl"
-            ],
-            "Resource": [
-                "arn:aws:s3:::example_destination",
-                "arn:aws:s3:::example_destination/*"
-            ]
-        }
-    ],
-	"Version": "2012-10-17"
-}
-EOF
+  policy = data.aws_iam_policy_document.example_destination.json
 }
 
 resource "aws_appflow_flow" "example" {
@@ -319,7 +318,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 ##### SAPOData Source Properties
 
-* `object_path` - (Optional) Object path specified in the SAPOData flow source.
+* `object_path` - (Required) Object path specified in the SAPOData flow source.
 
 ##### Veeva Source Properties
 

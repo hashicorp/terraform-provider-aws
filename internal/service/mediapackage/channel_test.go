@@ -1,6 +1,7 @@
 package mediapackage_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,18 +17,19 @@ import (
 )
 
 func TestAccMediaPackageChannel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediapackage", regexp.MustCompile(`channels/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.password", regexp.MustCompile("^[0-9a-f]*$")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.url", regexp.MustCompile("^https://")),
@@ -47,19 +49,20 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 }
 
 func TestAccMediaPackageChannel_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_media_package_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -71,7 +74,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 			{
 				Config: testAccChannelConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -80,19 +83,20 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 }
 
 func TestAccMediaPackageChannel_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_media_package_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_tags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
@@ -106,7 +110,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags(rName, "Environment", "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
 				),
@@ -114,7 +118,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags(rName, "Update", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName),
+					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
 				),
@@ -123,56 +127,58 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
+func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_package_channel" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_media_package_channel" {
+				continue
+			}
+
+			input := &mediapackage.DescribeChannelInput{
+				Id: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.DescribeChannelWithContext(ctx, input)
+			if err == nil {
+				return fmt.Errorf("MediaPackage Channel (%s) not deleted", rs.Primary.ID)
+			}
+
+			if !tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
+				return err
+			}
 		}
 
-		input := &mediapackage.DescribeChannelInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeChannel(input)
-		if err == nil {
-			return fmt.Errorf("MediaPackage Channel (%s) not deleted", rs.Primary.ID)
-		}
-
-		if !tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckChannelExists(name string) resource.TestCheckFunc {
+func testAccCheckChannelExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeChannel(input)
+		_, err := conn.DescribeChannelWithContext(ctx, input)
 
 		return err
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
 
 	input := &mediapackage.ListChannelsInput{}
 
-	_, err := conn.ListChannels(input)
+	_, err := conn.ListChannelsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -40,10 +40,10 @@ resource "aws_apigatewayv2_deployment" "example" {
   description = "Example deployment"
 
   triggers = {
-    redeployment = sha1(join(",", list(
+    redeployment = sha1(join(",", tolist([
       jsonencode(aws_apigatewayv2_integration.example),
       jsonencode(aws_apigatewayv2_route.example),
-    )))
+    ])))
   }
 
   lifecycle {

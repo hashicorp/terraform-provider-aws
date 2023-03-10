@@ -4,19 +4,17 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourcePartition)
-}
-
-// newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
+// @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePartition{}, nil
+	d := &dataSourcePartition{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourcePartition struct {
@@ -29,31 +27,25 @@ func (d *dataSourcePartition) Metadata(_ context.Context, request datasource.Met
 	response.TypeName = "aws_partition"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourcePartition) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"dns_suffix": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"dns_suffix": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"partition": {
-				Type:     types.StringType,
+			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"reverse_dns_prefix": {
-				Type:     types.StringType,
+			"reverse_dns_prefix": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -67,10 +59,10 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 		return
 	}
 
-	data.DNSSuffix = types.String{Value: d.Meta().DNSSuffix}
-	data.ID = types.String{Value: d.Meta().Partition}
-	data.Partition = types.String{Value: d.Meta().Partition}
-	data.ReverseDNSPrefix = types.String{Value: d.Meta().ReverseDNSPrefix}
+	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix)
+	data.ID = types.StringValue(d.Meta().Partition)
+	data.Partition = types.StringValue(d.Meta().Partition)
+	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

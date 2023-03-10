@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindStackByName Retrieve a appstream stack by name
@@ -58,26 +59,38 @@ func FindFleetByName(ctx context.Context, conn *appstream.AppStream, name string
 	return fleet, nil
 }
 
-// FindImageBuilderByName Retrieve a appstream ImageBuilder by name
 func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	input := &appstream.DescribeImageBuildersInput{
-		Names: []*string{aws.String(name)},
+		Names: aws.StringSlice([]string{name}),
 	}
 
-	var result *appstream.ImageBuilder
+	output, err := findImageBuilder(ctx, conn, input)
 
-	err := describeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.Name) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findImageBuilders(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput) ([]*appstream.ImageBuilder, error) {
+	var output []*appstream.ImageBuilder
+
+	err := describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, imageBuilder := range page.ImageBuilders {
-			if imageBuilder == nil {
-				continue
-			}
-			if aws.StringValue(imageBuilder.Name) == name {
-				result = imageBuilder
-				return false
+		for _, v := range page.ImageBuilders {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
@@ -95,14 +108,25 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 		return nil, err
 	}
 
-	if result == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+	return output, nil
+}
+
+func findImageBuilder(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput) (*appstream.ImageBuilder, error) {
+	output, err := findImageBuilders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return result, nil
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 // FindUserByUserNameAndAuthType Retrieve a appstream fleet by Username and authentication type
@@ -113,7 +137,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 
 	var result *appstream.User
 
-	err := describeUsersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
+	err := describeUsersPages(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -158,7 +182,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, f
 	}
 
 	found := false
-	err := listAssociatedStacksPagesWithContext(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+	err := listAssociatedStacksPages(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

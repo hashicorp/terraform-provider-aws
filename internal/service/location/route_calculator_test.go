@@ -1,6 +1,7 @@
 package location_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccLocationRouteCalculator_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_route_calculator.test"
 
@@ -23,12 +25,12 @@ func TestAccLocationRouteCalculator_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "calculator_arn", "geo", fmt.Sprintf("route-calculator/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "calculator_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
@@ -48,6 +50,7 @@ func TestAccLocationRouteCalculator_basic(t *testing.T) {
 }
 
 func TestAccLocationRouteCalculator_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_route_calculator.test"
 
@@ -55,13 +58,13 @@ func TestAccLocationRouteCalculator_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceRouteCalculator(), resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceRouteCalculator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,6 +73,7 @@ func TestAccLocationRouteCalculator_disappears(t *testing.T) {
 }
 
 func TestAccLocationRouteCalculator_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_route_calculator.test"
 
@@ -77,12 +81,12 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -94,7 +98,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 			{
 				Config: testAccRouteCalculatorConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -103,6 +107,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 }
 
 func TestAccLocationRouteCalculator_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_route_calculator.test"
 
@@ -110,12 +115,12 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -128,7 +133,7 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 			{
 				Config: testAccRouteCalculatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -137,7 +142,7 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 			{
 				Config: testAccRouteCalculatorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteCalculatorExists(resourceName),
+					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -146,33 +151,35 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteCalculatorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+func testAccCheckRouteCalculatorDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_location_route_calculator" {
-			continue
-		}
-
-		input := &locationservice.DescribeRouteCalculatorInput{
-			CalculatorName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeRouteCalculator(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_location_route_calculator" {
+				continue
 			}
-			return err
+
+			input := &locationservice.DescribeRouteCalculatorInput{
+				CalculatorName: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.DescribeRouteCalculatorWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("Expected Location Service Route Calculator to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("Expected Location Service Route Calculator to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRouteCalculatorExists(name string) resource.TestCheckFunc {
+func testAccCheckRouteCalculatorExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -183,8 +190,8 @@ func testAccCheckRouteCalculatorExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Location Service Route Calculator is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
-		_, err := conn.DescribeRouteCalculator(&locationservice.DescribeRouteCalculatorInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		_, err := conn.DescribeRouteCalculatorWithContext(ctx, &locationservice.DescribeRouteCalculatorInput{
 			CalculatorName: aws.String(rs.Primary.ID),
 		})
 

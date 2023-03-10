@@ -3,30 +3,56 @@
 package {{ .PackageName }}
 
 import (
-    "context"
+	"context"
+	{{if .HasTimeouts }}"time"{{- end}}
 
-    {{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
-    {{if .EmitResourceImportState }}"github.com/hashicorp/terraform-plugin-framework/path"{{- end}}
-    "github.com/hashicorp/terraform-plugin-framework/resource"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-    "github.com/hashicorp/terraform-plugin-framework/types"
+	{{if .HasTimeouts }}"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"{{- end}}
+	{{range .FrameworkValidatorsPackages }}
+	"github.com/hashicorp/terraform-plugin-framework-validators/{{ . }}"
+	{{- end}}
+	{{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
+	{{if .EmitResourceImportState }}"github.com/hashicorp/terraform-plugin-framework/path"{{- end}}
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	{{if or (gt (len .FrameworkPlanModifierPackages) 0) (gt (len .ProviderPlanModifierPackages) 0) }}"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"{{- end}}
+	{{- range .FrameworkPlanModifierPackages }}
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/{{ . }}"
+	{{- end}}
+	{{if gt (len .FrameworkValidatorsPackages) 0 }}"github.com/hashicorp/terraform-plugin-framework/schema/validator"{{- end}}
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
+	{{- range .ProviderPlanModifierPackages }}
+	fw{{ . }} "github.com/hashicorp/terraform-provider-aws/internal/framework/{{ . }}"
+	{{- end}}
 )
 
-func init() {
-    registerFrameworkResourceFactory(newResource{{ .Name }})
-}
-
-// newResource{{ .Name }} instantiates a new Resource for the {{ .TFTypeName }} resource.
+// @FrameworkResource
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resource{{ .Name }}{}, nil
+	r := &resource{{ .Name }}{}
+	r.SetMigratedFromPluginSDK(true)
+{{- if gt .DefaultCreateTimeout 0 }}
+	r.SetDefaultCreateTimeout({{ .DefaultCreateTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultReadTimeout 0 }}
+	r.SetDefaultReadTimeout({{ .DefaultReadTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultUpdateTimeout 0 }}
+	r.SetDefaultUpdateTimeout({{ .DefaultUpdateTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultDeleteTimeout 0 }}
+	r.SetDefaultDeleteTimeout({{ .DefaultDeleteTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+
+	return r, nil
 }
 
 type resource{{ .Name }} struct {
 	framework.ResourceWithConfigure
+{{- if .HasTimeouts }}
+	framework.WithTimeouts
+{{- end}}
 }
 
 // Metadata should return the full name of the resource, such as
@@ -35,11 +61,30 @@ func (r *resource{{ .Name }}) Metadata(_ context.Context, request resource.Metad
 	response.TypeName = "{{ .TFTypeName }}"
 }
 
-// GetSchema returns the schema for this resource.
-func (r *resource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    schema := {{ .Schema }}
+// Schema returns the schema for this resource.
+func (r *resource{{ .Name }}) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := {{ .Schema }}
+{{if .HasTimeouts }}
+	if s.Blocks == nil {
+		s.Blocks = make(map[string]schema.Block)
+	}
+	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+	{{- if gt .DefaultCreateTimeout 0 }}
+		Create: true,
+	{{- end}}
+	{{- if gt .DefaultReadTimeout 0 }}
+		Read: true,
+	{{- end}}
+	{{- if gt .DefaultUpdateTimeout 0 }}
+		Update: true,
+	{{- end}}
+	{{- if gt .DefaultDeleteTimeout 0 }}
+		Delete: true,
+	{{- end}}
+	})
+{{- end}}
 
-    return schema, nil
+    response.Schema = s
 }
 
 // Create is called when the provider must create a new resource.
@@ -53,7 +98,11 @@ func (r *resource{{ .Name }}) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	data.ID = types.String{Value: "TODO"}
+{{- if gt .DefaultCreateTimeout 0 }}
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+{{- end}}
+
+	data.ID = types.StringValue("TODO")
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -68,6 +117,10 @@ func (r *resource{{ .Name }}) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+{{- if gt .DefaultReadTimeout 0 }}
+	readTimeout := r.ReadTimeout(ctx, data.Timeouts)
+{{- end}}
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -89,6 +142,10 @@ func (r *resource{{ .Name }}) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
+{{- if gt .DefaultUpdateTimeout 0 }}
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+{{- end}}
+
     response.Diagnostics.Append(response.State.Set(ctx, &new)...){{- else}}// Noop.{{- end}}
 }
 
@@ -106,8 +163,12 @@ func (r *resource{{ .Name }}) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
+{{- if gt .DefaultDeleteTimeout 0 }}
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+{{- end}}
+
 	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
-		"id": data.ID.Value,
+		"id": data.ID.ValueString(),
 	})
 }
 
@@ -146,5 +207,6 @@ func (r *resource{{ .Name }}) ModifyPlan(ctx context.Context, request resource.M
 {{- end}}
 
 type resource{{ .Name }}Data struct {
-    {{ .Struct }}
+	{{ .Struct }}
+	{{if .HasTimeouts }}Timeouts timeouts.Value `tfsdk:"timeouts"`{{- end}}
 }

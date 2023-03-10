@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_dx_macsec_key_association
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `encryption_mode` and `request_macsec` arguments and `macsec_capable` and `port_encryption_status` attributes in support of [MACsec](https://docs.aws.amazon.com/directconnect/latest/UserGuide/MACsec.html)
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add `skip_destroy` argument
+```

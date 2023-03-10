@@ -1,6 +1,7 @@
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccGlueConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -26,12 +28,12 @@ func TestAccGlueConnection_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
@@ -52,6 +54,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 }
 
 func TestAccGlueConnection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,12 +66,12 @@ func TestAccGlueConnection_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_tags1(rName, jdbcConnectionUrl, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -81,7 +84,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags2(rName, jdbcConnectionUrl, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -90,7 +93,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags1(rName, jdbcConnectionUrl, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,6 +103,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 }
 
 func TestAccGlueConnection_mongoDB(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,12 +115,12 @@ func TestAccGlueConnection_mongoDB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_mongoDB(rName, connectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", connectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
@@ -136,6 +140,7 @@ func TestAccGlueConnection_mongoDB(t *testing.T) {
 }
 
 func TestAccGlueConnection_kafka(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -147,12 +152,12 @@ func TestAccGlueConnection_kafka(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_kafka(rName, bootstrapServers),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.KAFKA_BOOTSTRAP_SERVERS", bootstrapServers),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "KAFKA"),
@@ -170,6 +175,7 @@ func TestAccGlueConnection_kafka(t *testing.T) {
 }
 
 func TestAccGlueConnection_network(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -179,12 +185,12 @@ func TestAccGlueConnection_network(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_network(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "NETWORK"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
@@ -204,6 +210,7 @@ func TestAccGlueConnection_network(t *testing.T) {
 }
 
 func TestAccGlueConnection_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -215,19 +222,19 @@ func TestAccGlueConnection_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
 				),
 			},
@@ -241,6 +248,7 @@ func TestAccGlueConnection_description(t *testing.T) {
 }
 
 func TestAccGlueConnection_matchCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,12 +260,12 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_matchCriteriaFirst(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.0", "criteria1"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.1", "criteria2"),
@@ -268,7 +276,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_matchCriteriaSecond(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.0", "criteria1"),
 				),
@@ -276,7 +284,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_matchCriteriaThird(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.0", "criteria2"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.1", "criteria3"),
@@ -293,6 +301,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 }
 
 func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -302,12 +311,12 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_physicalRequirements(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.JDBC_CONNECTION_URL"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.PASSWORD"),
@@ -330,6 +339,7 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 }
 
 func TestAccGlueConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -341,14 +351,14 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceConnection(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceConnection(), resourceName),
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -356,7 +366,7 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionExists(resourceName string, connection *glue.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, resourceName string, connection *glue.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -367,13 +377,13 @@ func testAccCheckConnectionExists(resourceName string, connection *glue.Connecti
 			return fmt.Errorf("No Glue Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := tfglue.FindConnectionByName(conn, connectionName, catalogID)
+		output, err := tfglue.FindConnectionByName(ctx, conn, connectionName, catalogID)
 
 		if err != nil {
 			return err
@@ -385,32 +395,34 @@ func testAccCheckConnectionExists(resourceName string, connection *glue.Connecti
 	}
 }
 
-func testAccCheckConnectionDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_connection" {
-			continue
+func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_connection" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfglue.FindConnectionByName(ctx, conn, connectionName, catalogID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = tfglue.FindConnectionByName(conn, connectionName, catalogID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccConnectionConfig_description(rName, jdbcConnectionUrl, description string) string {

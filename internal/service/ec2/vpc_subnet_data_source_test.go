@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCSubnetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,7 +29,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),

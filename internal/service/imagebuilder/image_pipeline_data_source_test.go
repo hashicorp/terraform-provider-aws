@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_pipeline.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
@@ -19,7 +20,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineDataSourceConfig_arn(rName),
@@ -48,6 +49,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_pipeline.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
@@ -56,7 +58,7 @@ func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineDataSourceConfig_containerRecipeARN(rName),

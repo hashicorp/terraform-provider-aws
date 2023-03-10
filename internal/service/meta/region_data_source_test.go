@@ -12,6 +12,8 @@ import (
 )
 
 func TestFindRegionByEC2Endpoint(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -46,6 +48,8 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 }
 
 func TestFindRegionByName(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int

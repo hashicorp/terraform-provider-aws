@@ -54,8 +54,8 @@ In addition to all arguments above, the following attributes are exported:
 * `and` - Return results that match both `Dimension` objects.
 * `cost_category` - Configuration block for the filter that's based on `CostCategory` values. See below.
 * `dimension` - Configuration block for the specific `Dimension` to use for `Expression`. See below.
-* `not` - Return results that match both `Dimension` object.
-* `or` - Return results that match both `Dimension` object.
+* `not` - Return results that do not match the `Dimension` object.
+* `or` - Return results that match either `Dimension` object.
 * `tags` - Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `cost_category`

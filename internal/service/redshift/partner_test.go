@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccRedshiftPartner_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_partner.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -22,12 +24,12 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartnerDestroy,
+		CheckDestroy:             testAccCheckPartnerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartnerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartnerExists(resourceName),
+					testAccCheckPartnerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", "Datacoral"),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", "aws_redshift_cluster.test", "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "id"),
@@ -45,6 +47,7 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 }
 
 func TestAccRedshiftPartner_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_partner.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,13 +55,13 @@ func TestAccRedshiftPartner_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartnerDestroy,
+		CheckDestroy:             testAccCheckPartnerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartnerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartnerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourcePartner(), resourceName),
+					testAccCheckPartnerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourcePartner(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,6 +70,7 @@ func TestAccRedshiftPartner_disappears(t *testing.T) {
 }
 
 func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_partner.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -74,13 +78,13 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartnerDestroy,
+		CheckDestroy:             testAccCheckPartnerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartnerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartnerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
+					testAccCheckPartnerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,30 +92,32 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 	})
 }
 
-func testAccCheckPartnerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_partner" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_partner" {
+				continue
+			}
+			_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Partner %s still exists", rs.Primary.ID)
 		}
-		_, err := tfredshift.FindPartnerById(conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Partner %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPartnerExists(name string) resource.TestCheckFunc {
+func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -122,9 +128,9 @@ func testAccCheckPartnerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Redshift Partner ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		_, err := tfredshift.FindPartnerById(conn, rs.Primary.ID)
+		_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

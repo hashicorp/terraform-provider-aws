@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
@@ -50,12 +51,12 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_opensearch_domain.test", &domain),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
 					resource.TestCheckResourceAttr("aws_opensearch_domain.test", "engine_version", "OpenSearch_1.1"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)

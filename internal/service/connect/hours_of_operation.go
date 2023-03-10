@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_hours_of_operation")
 func ResourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceHoursOfOperationCreate,
-		ReadContext:   resourceHoursOfOperationRead,
-		UpdateContext: resourceHoursOfOperationUpdate,
-		DeleteContext: resourceHoursOfOperationDelete,
+		CreateWithoutTimeout: resourceHoursOfOperationCreate,
+		ReadWithoutTimeout:   resourceHoursOfOperationRead,
+		UpdateWithoutTimeout: resourceHoursOfOperationUpdate,
+		DeleteWithoutTimeout: resourceHoursOfOperationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -124,9 +125,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 }
 
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -165,7 +166,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -206,7 +207,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
 
-	tags := KeyValueTags(resp.HoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.HoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -221,7 +222,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -239,13 +240,13 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating HoursOfOperation (%s): %w", d.Id(), err))
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -254,7 +255,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 

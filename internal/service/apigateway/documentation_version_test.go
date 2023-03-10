@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)
@@ -28,12 +30,12 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationVersionDestroy,
+		CheckDestroy:             testAccCheckDocumentationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationVersionExists(resourceName, &conf),
+					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
@@ -48,6 +50,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)
@@ -63,12 +66,12 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationVersionDestroy,
+		CheckDestroy:             testAccCheckDocumentationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationVersionExists(resourceName, &conf),
+					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
@@ -82,7 +85,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 			{
 				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, uDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationVersionExists(resourceName, &conf),
+					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
 					resource.TestCheckResourceAttr(resourceName, "description", uDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
@@ -93,6 +96,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 }
 
 func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.DocumentationVersion
 
 	rString := sdkacctest.RandString(8)
@@ -105,13 +109,13 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationVersionDestroy,
+		CheckDestroy:             testAccCheckDocumentationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationVersionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
+					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +123,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentationVersionExists(n string, res *apigateway.DocumentationVersion) resource.TestCheckFunc {
+func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *apigateway.DocumentationVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,7 +134,7 @@ func testAccCheckDocumentationVersionExists(n string, res *apigateway.Documentat
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		apiId, version, err := tfapigateway.DecodeDocumentationVersionID(rs.Primary.ID)
 		if err != nil {
@@ -141,7 +145,7 @@ func testAccCheckDocumentationVersionExists(n string, res *apigateway.Documentat
 			DocumentationVersion: aws.String(version),
 			RestApiId:            aws.String(apiId),
 		}
-		docVersion, err := conn.GetDocumentationVersion(req)
+		docVersion, err := conn.GetDocumentationVersionWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -152,34 +156,36 @@ func testAccCheckDocumentationVersionExists(n string, res *apigateway.Documentat
 	}
 }
 
-func testAccCheckDocumentationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckDocumentationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_documentation_version" {
-			continue
-		}
-
-		version, apiId, err := tfapigateway.DecodeDocumentationVersionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		req := &apigateway.GetDocumentationVersionInput{
-			DocumentationVersion: aws.String(version),
-			RestApiId:            aws.String(apiId),
-		}
-		_, err = conn.GetDocumentationVersion(req)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_documentation_version" {
+				continue
 			}
-			return err
-		}
 
-		return fmt.Errorf("API Gateway Documentation Version %q still exists.", rs.Primary.ID)
+			version, apiId, err := tfapigateway.DecodeDocumentationVersionID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			req := &apigateway.GetDocumentationVersionInput{
+				DocumentationVersion: aws.String(version),
+				RestApiId:            aws.String(apiId),
+			}
+			_, err = conn.GetDocumentationVersionWithContext(ctx, req)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("API Gateway Documentation Version %q still exists.", rs.Primary.ID)
+		}
+		return nil
 	}
-	return nil
 }
 
 func testAccDocumentationVersionConfig_basic(version, apiName string) string {

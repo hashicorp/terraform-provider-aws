@@ -21,18 +21,14 @@ const eventualConsistencyTimeout = 5 * time.Minute
 // CreateTags creates ec2 service tags for new resources.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func CreateTags(conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
-	return CreateTagsWithContext(context.Background(), conn, identifier, tagsMap)
-}
-
-func CreateTagsWithContext(ctx context.Context, conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
-	tags := tftags.New(tagsMap)
+func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
+	tags := tftags.New(ctx, tagsMap)
 	input := &ec2.CreateTagsInput{
 		Resources: aws.StringSlice([]string{identifier}),
 		Tags:      Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := tfresource.RetryWhenNotFoundContext(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNotFound(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
 		output, err := conn.CreateTagsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {

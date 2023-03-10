@@ -8,6 +8,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "read_capacity", resourceName, "read_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "write_capacity", resourceName, "write_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hash_key", resourceName, "hash_key"),

@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -20,7 +21,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedServicesDataSourceConfig_basic(servicePrincipal),
@@ -36,6 +37,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 }
 
 func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
@@ -45,7 +47,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedServicesDataSourceConfig_empty(),
@@ -59,6 +61,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 }
 
 func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -70,7 +73,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedServicesDataSourceConfig_multiple(servicePrincipal, servicePrincipal2),

@@ -7,20 +7,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceService)
-}
-
-// newDataSourceService instantiates a new DataSource for the aws_service data source.
+// @FrameworkDataSource
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceService{}, nil
+	d := &dataSourceService{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceService struct {
@@ -33,52 +31,42 @@ func (d *dataSourceService) Metadata(_ context.Context, request datasource.Metad
 	response.TypeName = "aws_service"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceService) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"dns_name": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"dns_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"partition": {
-				Type:     types.StringType,
+			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": {
-				Type:     types.StringType,
+			"region": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"reverse_dns_name": {
-				Type:     types.StringType,
+			"reverse_dns_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"reverse_dns_prefix": {
-				Type:     types.StringType,
+			"reverse_dns_prefix": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"service_id": {
-				Type:     types.StringType,
+			"service_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"supported": {
-				Type:     types.BoolType,
+			"supported": schema.BoolAttribute{
 				Computed: true,
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -93,7 +81,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if !data.ReverseDNSName.IsNull() {
-		v := data.ReverseDNSName.Value
+		v := data.ReverseDNSName.ValueString()
 		serviceParts := strings.Split(v, ".")
 		n := len(serviceParts)
 
@@ -103,13 +91,13 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.String{Value: serviceParts[n-2]}
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(serviceParts[0:n-2], ".")}
-		data.ServiceID = types.String{Value: serviceParts[n-1]}
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
 	if !data.DNSName.IsNull() {
-		v := data.DNSName.Value
+		v := data.DNSName.ValueString()
 		serviceParts := slices.Reverse(strings.Split(v, "."))
 		n := len(serviceParts)
 
@@ -119,13 +107,13 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.String{Value: serviceParts[n-2]}
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(serviceParts[0:n-2], ".")}
-		data.ServiceID = types.String{Value: serviceParts[n-1]}
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
 	if data.Region.IsNull() {
-		data.Region = types.String{Value: d.Meta().Region}
+		data.Region = types.StringValue(d.Meta().Region)
 	}
 
 	if data.ServiceID.IsNull() {
@@ -136,25 +124,25 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 
 	if data.ReverseDNSPrefix.IsNull() {
 		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reverse(dnsParts), ".")}
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 
-	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.Value, data.Region.Value, data.ServiceID.Value)
-	data.ReverseDNSName = types.String{Value: reverseDNSName}
-	data.DNSName = types.String{Value: strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), "."))}
+	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.ValueString(), data.Region.ValueString(), data.ServiceID.ValueString())
+	data.ReverseDNSName = types.StringValue(reverseDNSName)
+	data.DNSName = types.StringValue(strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), ".")))
 
-	data.Supported = types.Bool{Value: true}
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.Value); ok {
-		data.Partition = types.String{Value: partition.ID()}
+	data.Supported = types.BoolValue(true)
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
+		data.Partition = types.StringValue(partition.ID())
 
-		if _, ok := partition.Services()[data.ServiceID.Value]; !ok {
-			data.Supported.Value = false
+		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
+			data.Supported = types.BoolValue(false)
 		}
 	} else {
-		data.Partition = types.String{Null: true}
+		data.Partition = types.StringNull()
 	}
 
-	data.ID = types.String{Value: reverseDNSName}
+	data.ID = types.StringValue(reverseDNSName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

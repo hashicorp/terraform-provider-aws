@@ -24,40 +24,39 @@ resource "aws_s3_bucket_acl" "billing_logs_acl" {
   acl    = "private"
 }
 
+data "aws_iam_policy_document" "allow_billing_logging" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_billing_service_account.main.arn]
+    }
+
+    actions = [
+      "s3:GetBucketAcl",
+      "s3:GetBucketPolicy",
+    ]
+
+    resources = [aws_s3_bucket.billing_logs.arn]
+  }
+
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_billing_service_account.main.arn]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.billing_logs.arn}/*"]
+  }
+}
+
 resource "aws_s3_bucket_policy" "allow_billing_logging" {
   bucket = aws_s3_bucket.billing_logs.id
-  policy = <<POLICY
-{
-  "Id": "Policy",
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetBucketAcl", "s3:GetBucketPolicy"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-billing-tf-test-bucket",
-      "Principal": {
-        "AWS": [
-          "${data.aws_billing_service_account.main.arn}"
-        ]
-      }
-    },
-    {
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-billing-tf-test-bucket/*",
-      "Principal": {
-        "AWS": [
-          "${data.aws_billing_service_account.main.arn}"
-        ]
-      }
-    }
-  ]
-}
-POLICY
+  policy = data.aws_iam_policy_document.allow_billing_logging.json
 }
 ```
 

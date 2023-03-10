@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivs_recording_configuration")
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,
@@ -120,7 +121,7 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	in := &ivs.CreateRecordingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
@@ -135,7 +136,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -168,7 +169,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
 
@@ -196,7 +197,7 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
 	}
@@ -217,7 +218,7 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
 

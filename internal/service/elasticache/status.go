@@ -23,9 +23,9 @@ const (
 )
 
 // StatusReplicationGroup fetches the Replication Group and its Status
-func StatusReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		rg, err := FindReplicationGroupByID(conn, replicationGroupID)
+		rg, err := FindReplicationGroupByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -39,9 +39,9 @@ func StatusReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID st
 
 // StatusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func StatusReplicationGroupMemberClusters(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusters, err := FindReplicationGroupMemberClustersByID(conn, replicationGroupID)
+		clusters, err := FindReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -74,9 +74,9 @@ const (
 )
 
 // StatusCacheCluster fetches the Cache Cluster and its Status
-func StatusCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
+func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := FindCacheClusterByID(conn, cacheClusterID)
+		c, err := FindCacheClusterByID(ctx, conn, cacheClusterID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -117,9 +117,9 @@ const (
 )
 
 // statusGlobalReplicationGroupMember fetches a Global Replication Group Member and its Status
-func statusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		member, err := FindGlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
+		member, err := FindGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -132,9 +132,9 @@ func statusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalRep
 }
 
 // StatusUser fetches the ElastiCache user and its Status
-func StatusUser(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
+func StatusUser(ctx context.Context, conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		user, err := FindUserByID(conn, userId)
+		user, err := FindUserByID(ctx, conn, userId)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

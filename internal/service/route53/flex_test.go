@@ -8,6 +8,8 @@ import (
 )
 
 func TestFlattenResourceRecords(t *testing.T) {
+	t.Parallel()
+
 	original := []string{
 		`127.0.0.1`,
 		`"abc def"`,

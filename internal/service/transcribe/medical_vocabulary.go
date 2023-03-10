@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transcribe_medical_vocabulary")
 func ResourceMedicalVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMedicalVocabularyCreate,
@@ -73,7 +74,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 }
 
 func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	vocabularyName := d.Get("vocabulary_name").(string)
 	in := &transcribe.CreateMedicalVocabularyInput{
@@ -83,7 +84,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -108,7 +109,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindMedicalVocabularyByName(ctx, conn, d.Id())
 
@@ -157,7 +158,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateMedicalVocabularyInput{
@@ -192,7 +193,7 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 

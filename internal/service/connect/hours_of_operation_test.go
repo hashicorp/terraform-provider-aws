@@ -1,6 +1,7 @@
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccHoursOfOperation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -28,12 +30,12 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHoursOfOperationDestroy,
+		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
@@ -63,7 +65,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 			{
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
@@ -90,6 +92,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 }
 
 func testAccHoursOfOperation_updateConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -101,12 +104,12 @@ func testAccHoursOfOperation_updateConfig(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHoursOfOperationDestroy,
+		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
 						"day":                  "MONDAY",
@@ -127,7 +130,7 @@ func testAccHoursOfOperation_updateConfig(t *testing.T) {
 			{
 				Config: testAccHoursOfOperationConfig_multipleConfig(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config.*", map[string]string{
 						"day":                  "MONDAY",
@@ -154,6 +157,7 @@ func testAccHoursOfOperation_updateConfig(t *testing.T) {
 }
 
 func testAccHoursOfOperation_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -165,12 +169,12 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHoursOfOperationDestroy,
+		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
 				),
@@ -183,7 +187,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 			{
 				Config: testAccHoursOfOperationConfig_tags(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -192,7 +196,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 			{
 				Config: testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -204,6 +208,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 }
 
 func testAccHoursOfOperation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -213,13 +218,13 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHoursOfOperationDestroy,
+		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHoursOfOperationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
+					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -227,7 +232,7 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHoursOfOperationExists(resourceName string, function *connect.DescribeHoursOfOperationOutput) resource.TestCheckFunc {
+func testAccCheckHoursOfOperationExists(ctx context.Context, resourceName string, function *connect.DescribeHoursOfOperationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -243,14 +248,14 @@ func testAccCheckHoursOfOperationExists(resourceName string, function *connect.D
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeHoursOfOperationInput{
 			HoursOfOperationId: aws.String(hoursOfOperationID),
 			InstanceId:         aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeHoursOfOperation(params)
+		getFunction, err := conn.DescribeHoursOfOperationWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -261,37 +266,39 @@ func testAccCheckHoursOfOperationExists(resourceName string, function *connect.D
 	}
 }
 
-func testAccCheckHoursOfOperationDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_hours_of_operation" {
-			continue
+func testAccCheckHoursOfOperationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_hours_of_operation" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+
+			instanceID, hoursOfOperationID, err := tfconnect.HoursOfOperationParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			params := &connect.DescribeHoursOfOperationInput{
+				HoursOfOperationId: aws.String(hoursOfOperationID),
+				InstanceId:         aws.String(instanceID),
+			}
+
+			_, err = conn.DescribeHoursOfOperationWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceID, hoursOfOperationID, err := tfconnect.HoursOfOperationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		params := &connect.DescribeHoursOfOperationInput{
-			HoursOfOperationId: aws.String(hoursOfOperationID),
-			InstanceId:         aws.String(instanceID),
-		}
-
-		_, err = conn.DescribeHoursOfOperation(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccHoursOfOperationConfig_base(rName string) string {

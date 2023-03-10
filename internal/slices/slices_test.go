@@ -36,6 +36,8 @@ func TestReverse(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Reverse(test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -78,6 +80,8 @@ func TestRemoveAll(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := RemoveAll(test.input, "one")
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -112,6 +116,8 @@ func TestApplyToAll(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ApplyToAll(test.input, strings.ToUpper)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {

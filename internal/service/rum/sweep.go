@@ -23,17 +23,18 @@ func init() {
 }
 
 func sweepAppMonitors(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RUMConn
+	conn := client.(*conns.AWSClient).RUMConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.ListAppMonitorsPages(&cloudwatchrum.ListAppMonitorsInput{}, func(resp *cloudwatchrum.ListAppMonitorsOutput, lastPage bool) bool {
+	err = conn.ListAppMonitorsPagesWithContext(ctx, &cloudwatchrum.ListAppMonitorsInput{}, func(resp *cloudwatchrum.ListAppMonitorsOutput, lastPage bool) bool {
 		if len(resp.AppMonitorSummaries) == 0 {
 			log.Print("[DEBUG] No RUM App Monitors to sweep")
 			return !lastPage
@@ -55,7 +56,7 @@ func sweepAppMonitors(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping RUM App Monitors for %s: %w", region, err))
 	}
 

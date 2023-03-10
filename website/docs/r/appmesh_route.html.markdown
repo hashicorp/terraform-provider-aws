@@ -193,6 +193,7 @@ The `grpc_route`'s `match` object supports the following:
 * `metadata` - (Optional) Data to match from the gRPC request.
 * `method_name` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `service_name`.
 * `service_name` - (Optional) Fully qualified domain name for the service to match from the request.
+* `port`- (Optional) The port number to match from the request.
 
 The `metadata` object supports the following:
 
@@ -204,6 +205,7 @@ The `metadata`'s `match` object supports the following:
 
 * `exact` - (Optional) Value sent by the client must match the specified value exactly. Must be between 1 and 255 characters in length.
 * `prefix` - (Optional) Value sent by the client must begin with the specified characters. Must be between 1 and 255 characters in length.
+* `port`- (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the value sent by the client must be included in.
 * `regex` - (Optional) Value sent by the client must include the specified characters. Must be between 1 and 255 characters in length.
 * `suffix` - (Optional) Value sent by the client must end with the specified characters. Must be between 1 and 255 characters in length.
@@ -232,6 +234,7 @@ The `http2_route` and `http_route`'s `match` object supports the following:
 
 * `prefix` - (Required) Path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
+* `port`- (Optional) The port number to match from the request.
 * `header` - (Optional) Client request headers to match on.
 * `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
 * `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
@@ -265,6 +268,7 @@ The `weighted_target` object supports the following:
 
 * `virtual_node` - (Required) Virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
 * `weight` - (Required) Relative weight of the weighted target. An integer between 0 and 100.
+* `port` - (Optional) The targeted port of the weighted object.
 
 The `header` object supports the following:
 
@@ -276,6 +280,7 @@ The `header`'s `match` object supports the following:
 
 * `exact` - (Optional) Header value sent by the client must match the specified value exactly.
 * `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
+* `port`- (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
 * `regex` - (Optional) Header value sent by the client must include the specified characters.
 * `suffix` - (Optional) Header value sent by the client must end with the specified characters.

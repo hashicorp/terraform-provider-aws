@@ -11,6 +11,8 @@ import (
 )
 
 func TestNotFound(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -41,7 +43,10 @@ func TestNotFound(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfresource.NotFound(testCase.Err)
 
 			if got != testCase.Expected {
@@ -52,6 +57,8 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestTimedOut(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -89,7 +96,10 @@ func TestTimedOut(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfresource.TimedOut(testCase.Err)
 
 			if got != testCase.Expected {
@@ -100,6 +110,8 @@ func TestTimedOut(t *testing.T) {
 }
 
 func TestSetLastError(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -155,7 +167,10 @@ func TestSetLastError(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			tfresource.SetLastError(testCase.Err, testCase.LastErr)
 
 			if testCase.Err != nil {

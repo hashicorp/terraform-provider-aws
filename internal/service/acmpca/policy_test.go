@@ -1,6 +1,7 @@
 package acmpca_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,19 +14,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccACMPCAPolicy_Basic(t *testing.T) {
+func TestAccACMPCAPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(resourceName),
+					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -38,31 +40,33 @@ func TestAccACMPCAPolicy_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acmpca_policy" {
+				continue
+			}
+
+			_, err := tfacmpca.FindPolicyByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ACM PCA Policy %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ACM PCA Policy %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -73,9 +77,9 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ACM PCA Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
-		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
+		_, err := tfacmpca.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

@@ -18,9 +18,7 @@ import (
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
-	ctx := context.Background()
-
+func deleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
 	resource, err := factory(ctx)
 
 	if err != nil {
@@ -29,20 +27,17 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
-	schema, diags := resource.GetSchema(ctx)
-
-	if diags.HasError() {
-		return fwdiag.DiagnosticsError(diags)
-	}
+	schemaResp := fwresource.SchemaResponse{}
+	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
 
 	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
-		Schema: schema,
+		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		Schema: schemaResp.Schema,
 	}
 
 	for name, v := range is.Attributes {
-		if strings.Contains(name, ".") {
+		if name == "%" || strings.Contains(name, ".") {
 			continue
 		}
 
@@ -61,7 +56,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	return nil
 }
 
-func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
+func CheckFrameworkResourceDisappears(ctx context.Context, provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -72,6 +67,6 @@ func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(conte
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteFrameworkResource(factory, rs.Primary, provo.Meta())
+		return deleteFrameworkResource(ctx, factory, rs.Primary, provo.Meta())
 	}
 }

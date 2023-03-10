@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
@@ -18,8 +19,8 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,6 +40,7 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
@@ -46,8 +48,8 @@ func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
