@@ -75,3 +75,10 @@ func setID(d *schema.ResourceData) {
 	// ruleid: pointer-conversion-ResourceData-SetId
 	d.SetId(*value)
 }
+
+func intConversion() int {
+	var i *int64
+
+	// ruleid: int64-pointer-dereference-and-convert
+	return int(*i)
+}
