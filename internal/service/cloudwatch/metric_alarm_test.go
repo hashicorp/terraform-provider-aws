@@ -428,6 +428,25 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
+				Config: testAccMetricAlarmConfig_metricQueryExpressionQuery(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						"id":          "m1",
+						"expression":  "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = 'ProcessTask'",
+						"period":      "60",
+						"label":       "cat",
+						"return_data": "true",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
@@ -437,6 +456,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 						"expression":  "m1",
 						"label":       "cat",
 						"return_data": "true",
+						"period":      "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						"id":                             "m1",
@@ -448,8 +468,14 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 						"metric.0.unit":                  "Count",
 						"metric.0.dimensions.%":          "1",
 						"metric.0.dimensions.InstanceId": "i-abc123",
+						"period":                         "",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
@@ -458,7 +484,13 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.0.id", "m1"),
 					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "metric_query.0.period"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
@@ -470,14 +502,21 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 						"expression":  "m1",
 						"label":       "cat",
 						"return_data": "",
+						"period":      "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						"id":          "e2",
 						"expression":  "e1",
 						"label":       "bug",
 						"return_data": "true",
+						"period":      "",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
@@ -485,6 +524,11 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
@@ -496,6 +540,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 						"expression":  "ANOMALY_DETECTION_BAND(m1)",
 						"label":       "CPUUtilization (Expected)",
 						"return_data": "true",
+						"period":      "",
 					}),
 				),
 			},
@@ -861,6 +906,27 @@ resource "aws_cloudwatch_metric_alarm" "test" {
         InstanceId = "i-abc123"
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_metricQueryExpressionQuery(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = "%s"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 3
+  datapoints_to_alarm = 3
+  threshold           = 30000
+  treat_missing_data  = "breaching"
+
+  metric_query {
+    id          = "m1"
+    expression  = "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = 'ProcessTask'"
+    period      = 60
+    label       = "cat"
+    return_data = true
   }
 }
 `, rName)

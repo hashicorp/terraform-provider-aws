@@ -184,6 +184,7 @@ The following arguments are supported:
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
+  Valid values are `10`, `30`, or any multiple of `60`.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
    Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
@@ -198,11 +199,9 @@ The following arguments are supported:
 * `unit` - (Optional) The unit for the alarm's associated metric.
 * `extended_statistic` - (Optional) The percentile statistic for the metric associated with the alarm. Specify a value between p0.0 and p100.
 * `treat_missing_data` - (Optional) Sets how this alarm is to handle missing data points. The following values are supported: `missing`, `ignore`, `breaching` and `notBreaching`. Defaults to `missing`.
-* `evaluate_low_sample_count_percentiles` - (Optional) Used only for alarms
-based on percentiles. If you specify `ignore`, the alarm state will not
-change during periods with too few data points to be statistically significant.
-If you specify `evaluate` or omit this parameter, the alarm will always be
-evaluated and possibly change state no matter how many data points are available.
+* `evaluate_low_sample_count_percentiles` - (Optional) Used only for alarms based on percentiles.
+  If you specify `ignore`, the alarm state will not change during periods with too few data points to be statistically significant.
+  If you specify `evaluate` or omit this parameter, the alarm will always be evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -217,8 +216,11 @@ The following values are supported: `ignore`, and `evaluate`.
 * `account_id` - (Optional) The ID of the account where the metrics are located, if this is a cross-account alarm.
 * `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
 * `label` - (Optional) A human-readable label for this metric or expression. This is especially useful if this is an expression, so that you know what the value represents.
-* `return_data` (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
-* `metric` (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
+* `metric` - (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
+* `period` - (Optional) Granularity in seconds of returned data points.
+  For metrics with regular resolution, valid values are any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
+* `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
 
@@ -229,7 +231,9 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `namespace` - (Required) The namespace for this metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
-* `period` - (Required) The period in seconds over which the specified `stat` is applied.
+* `period` - (Required) Granularity in seconds of returned data points.
+  For metrics with regular resolution, valid values are any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
 * `stat` - (Required) The statistic to apply to this metric.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
