@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dynamodb_table")
 func DataSourceTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableRead,

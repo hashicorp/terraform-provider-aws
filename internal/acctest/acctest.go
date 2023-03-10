@@ -126,6 +126,26 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 	return factories
 }
 
+func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
+
+	for _, name := range providerNames {
+		providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		factories[name] = func() (tfprotov5.ProviderServer, error) { //nolint:unparam
+			return providerServerFactory(), nil
+		}
+
+		providers[name] = p
+	}
+
+	return factories
+}
+
 func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
@@ -156,6 +176,10 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
+}
+
+func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
@@ -220,10 +244,12 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		err := sdkdiag.DiagnosticsError(Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)))
+		// TODO: take `ctx` as a parameter instead
+		ctx := Context(t)
 
-		if err != nil {
-			t.Fatal(err)
+		diags := Provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+		if err := sdkdiag.DiagnosticsError(diags); err != nil {
+			t.Fatalf("configuring provider: %s", err)
 		}
 	})
 }
@@ -583,6 +609,47 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 	}
 }
 
+func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
+		}
+
+		if v != value {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q expected %#v, got %#v", name, key, jmesPath, value, v)
+		}
+
+		return nil
+	}
+}
+
 func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySecond string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		first, err := PrimaryInstanceState(s, nameFirst)
@@ -611,9 +678,14 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
 		}
 
-		value, ok := result.(string)
-		if !ok {
-			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected single string, got %#v", nameFirst, keyFirst, jmesPath, result)
+		var value string
+		switch x := result.(type) {
+		case string:
+			value = x
+		case float64:
+			value = strconv.FormatFloat(x, 'f', -1, 64)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
 
 		vSecond, okSecond := second.Attributes[keySecond]
@@ -1124,14 +1196,34 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
+func NamedProviderFunc(name string, providers map[string]*schema.Provider) func() *schema.Provider {
+	return func() *schema.Provider {
+		return NamedProvider(name, providers)
+	}
+}
+
+func NamedProvider(name string, providers map[string]*schema.Provider) *schema.Provider {
+	if name == "" {
+		log.Printf("[ERROR] No name passed")
+	}
+
+	p, ok := providers[name]
+	if !ok {
+		log.Printf("[ERROR] No provider named %q found", name)
+		return nil
+	}
+
+	return p
+}
+
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(ctx, d, meta)
+			diags = resource.DeleteContext(ctx, d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 		} else {
-			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 		}
 
 		for i := range diags {
@@ -1143,7 +1235,7 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 		return nil
 	}
 
-	return resource.Delete(d, meta)
+	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
 func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
@@ -1172,6 +1264,23 @@ func CheckWithProviders(f TestCheckWithProviderFunc, providers *[]*schema.Provid
 				continue
 			}
 			log.Printf("[DEBUG] Calling check with provider %d (total: %d)", i, numberOfProviders)
+			if err := f(s, provo); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		numberOfProviders := len(providers)
+		for k, provo := range providers {
+			if provo.Meta() == nil {
+				log.Printf("[DEBUG] Skipping empty provider %q (total: %d)", k, numberOfProviders)
+				continue
+			}
+			log.Printf("[DEBUG] Calling check with provider %q (total: %d)", k, numberOfProviders)
 			if err := f(s, provo); err != nil {
 				return err
 			}
@@ -2109,4 +2218,80 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t 
 			RunSerialTests1Level(t, m, d)
 		})
 	}
+}
+
+// TestNoMatchResourceAttr ensures a value matching a regular expression is
+// NOT stored in state for the given name and key combination. Same as resource.TestMatchResourceAttr()
+// except negative.
+func TestNoMatchResourceAttr(name, key string, r *regexp.Regexp) resource.TestCheckFunc {
+	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
+		is, err := primaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		return testNoMatchResourceAttr(is, name, key, r)
+	})
+}
+
+// testNoMatchResourceAttr is same as testMatchResourceAttr in
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// except negative.
+func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key string, r *regexp.Regexp) error {
+	if r.MatchString(is.Attributes[key]) {
+		return fmt.Errorf(
+			"%s: Attribute '%s' did match %q and should not, got %#v",
+			name,
+			key,
+			r.String(),
+			is.Attributes[key])
+	}
+
+	return nil
+}
+
+// checkIfIndexesIntoTypeSet is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		err := f(s)
+		if err != nil && s.IsBinaryDrivenTest && indexesIntoTypeSet(key) {
+			return fmt.Errorf("Error in test check: %s\nTest check address %q likely indexes into TypeSet\nThis is currently not possible in the SDK", err, key)
+		}
+		return err
+	}
+}
+
+// indexesIntoTypeSet is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func indexesIntoTypeSet(key string) bool {
+	for _, part := range strings.Split(key, ".") {
+		if i, err := strconv.Atoi(part); err == nil && i > 100 {
+			return true
+		}
+	}
+	return false
+}
+
+// primaryInstanceState is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	ms := s.RootModule()
+	return modulePrimaryInstanceState(ms, name)
+}
+
+// modulePrimaryInstanceState is copied from
+// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
+	rs, ok := ms.Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s in %s", name, ms.Path)
+	}
+
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
+	}
+
+	return is, nil
 }

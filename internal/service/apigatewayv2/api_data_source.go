@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_apigatewayv2_api")
 func DataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIRead,

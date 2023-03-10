@@ -1020,6 +1020,9 @@ service/transitgateway:
 service/translate:
   - 'internal/service/translate/**/*'
   - 'website/**/translate_*'
+service/verifiedaccess:
+  - 'internal/service/ec2/**/verifiedaccess_*'
+  - 'website/**/verifiedaccess*'
 service/voiceid:
   - 'internal/service/voiceid/**/*'
   - 'website/**/voiceid_*'

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_realtime_log_config")
 func DataSourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRealtimeLogConfigRead,

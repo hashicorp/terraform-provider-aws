@@ -34,6 +34,7 @@ import (
 
 const objectCreationTimeout = 2 * time.Minute
 
+// @SDKResource("aws_s3_object")
 func ResourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,

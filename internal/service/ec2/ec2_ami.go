@@ -30,6 +30,7 @@ const (
 	amiRetryMinTimeout = 3 * time.Second
 )
 
+// @SDKResource("aws_ami")
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,

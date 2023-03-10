@@ -35,6 +35,7 @@ const (
 	entityRecognizerTagKey = "tf-aws_comprehend_entity_recognizer"
 )
 
+// @SDKResource("aws_comprehend_entity_recognizer")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,

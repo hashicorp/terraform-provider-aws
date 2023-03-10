@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_provisioning_artifact")
 func ResourceProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningArtifactCreate,

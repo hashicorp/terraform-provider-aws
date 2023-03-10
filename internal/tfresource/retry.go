@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // Retryable is a function that is used to decide if a function's error is retryable or not.
@@ -73,7 +74,17 @@ func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, 
 	})
 }
 
-var errFoundResource = errors.New(`found resource`)
+func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (interface{}, error), needle string) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[T](err, needle) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+var ErrFoundResource = errors.New(`found resource`)
 
 // RetryUntilNotFound retries the specified function until it returns a resource.NotFoundError.
 func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
@@ -86,7 +97,7 @@ func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (in
 			return false, err
 		}
 
-		return true, errFoundResource
+		return true, ErrFoundResource
 	})
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_imagebuilder_infrastructure_configuration")
 func ResourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInfrastructureConfigurationCreate,

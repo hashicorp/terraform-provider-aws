@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_servicecatalog_constraint")
 func DataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConstraintRead,

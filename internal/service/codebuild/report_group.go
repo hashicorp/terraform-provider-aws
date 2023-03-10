@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_report_group")
 func ResourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,

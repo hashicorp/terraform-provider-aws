@@ -38,6 +38,7 @@ const (
 	resNameBucket = "Bucket"
 )
 
+// @SDKResource("aws_s3_bucket")
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,

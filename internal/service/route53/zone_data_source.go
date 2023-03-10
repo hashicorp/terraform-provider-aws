@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route53_zone")
 func DataSourceZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceZoneRead,

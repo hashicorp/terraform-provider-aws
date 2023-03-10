@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_nfs_file_share")
 func ResourceNFSFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNFSFileShareCreate,

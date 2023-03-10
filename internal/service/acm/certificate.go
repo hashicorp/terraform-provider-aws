@@ -44,6 +44,7 @@ const (
 	certificateValidationMethodNone = "NONE"
 )
 
+// @SDKResource("aws_acm_certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -137,27 +138,18 @@ func ResourceCertificate() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ForceNew:      true,
 							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateFunc:  validation.StringInSlice(acm.CertificateTransparencyLoggingPreference_Values(), false),
 							ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 						},
 					},
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if _, ok := d.GetOk("private_key"); ok {
-						// ignore diffs for imported certs; they have a different logging preference
-						// default to requested certs which can't be changed by the ImportCertificate API
-						return true
-					}
-					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
-					return old == "1" && new == "0"
 				},
 			},
 			"pending_renewal": {
@@ -278,7 +270,7 @@ func ResourceCertificate() *schema.Resource {
 					}
 
 					if err := diff.SetNew("domain_validation_options", schema.NewSet(domainValidationOptionsHash, domainValidationOptionsList)); err != nil {
-						return fmt.Errorf("error setting new domain_validation_options diff: %w", err)
+						return fmt.Errorf("setting new domain_validation_options diff: %w", err)
 					}
 				}
 
@@ -290,7 +282,7 @@ func ResourceCertificate() *schema.Resource {
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domainName)
 						if err := diff.SetNew("subject_alternative_names", sanSet); err != nil {
-							return fmt.Errorf("error setting new subject_alternative_names diff: %w", err)
+							return fmt.Errorf("setting new subject_alternative_names diff: %w", err)
 						}
 					}
 				}
@@ -336,7 +328,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, v2 := d.GetOk("validation_method")
 
 		if !v1 && !v2 {
-			return diag.FromErr(errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate"))
+			return diag.Errorf("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
 		domainName := d.Get("domain_name").(string)
@@ -375,7 +367,6 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.Tags = Tags(tags.IgnoreAWS())
 		}
 
-		log.Printf("[DEBUG] Requesting ACM Certificate: %s", input)
 		output, err := conn.RequestCertificateWithContext(ctx, input)
 
 		if err != nil {
@@ -468,6 +459,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("options", nil)
 	}
+	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
 		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
@@ -481,8 +473,6 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
-
-	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 
 	tags, err := ListTags(ctx, conn, d.Id())
 
@@ -523,25 +513,37 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.CertificateChain = []byte(chain.(string))
 			}
 
-			log.Printf("[INFO] Re-importing ACM Certificate (%s)", d.Id())
 			_, err := conn.ImportCertificateWithContext(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("re-importing ACM Certificate (%s): %s", d.Id(), err)
+				return diag.Errorf("importing ACM Certificate (%s): %s", d.Id(), err)
 			}
 		}
 	} else if d.Get("pending_renewal").(bool) {
-		log.Printf("[INFO] Renewing ACM Certificate (%s)", d.Id())
 		_, err := conn.RenewCertificateWithContext(ctx, &acm.RenewCertificateInput{
 			CertificateArn: aws.String(d.Get("arn").(string)),
 		})
+
 		if err != nil {
 			return diag.Errorf("renewing ACM Certificate (%s): %s", d.Id(), err)
 		}
 
-		_, err = WaitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout)
-		if err != nil {
+		if _, err := WaitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout); err != nil {
 			return diag.Errorf("waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("options") {
+		_, n := d.GetChange("options")
+		input := &acm.UpdateCertificateOptionsInput{
+			CertificateArn: aws.String(d.Get("arn").(string)),
+			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
+		}
+
+		_, err := conn.UpdateCertificateOptionsWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating ACM Certificate options (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -855,6 +857,20 @@ func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.
 	return output, nil
 }
 
+func findCertificateRenewalByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.RenewalSummary, error) {
+	certificate, err := FindCertificateByARN(ctx, conn, arn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if certificate.RenewalSummary == nil {
+		return nil, tfresource.NewEmptyResultError(arn)
+	}
+
+	return certificate.RenewalSummary, nil
+}
+
 func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		certificate, err := FindCertificateByARN(ctx, conn, arn)
@@ -911,7 +927,7 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.AC
 
 func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificate, err := FindCertificateByARN(ctx, conn, arn)
+		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -921,18 +937,11 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) re
 			return nil, "", err
 		}
 
-		if certificate.RenewalSummary == nil {
-			return nil, "", nil
-		}
-		if aws.StringValue(certificate.RenewalSummary.RenewalStatus) == acm.RenewalStatusFailed {
-			return certificate, acm.RenewalStatusFailed, fmt.Errorf("renewing ACM Certificate (%s) failed: %s", arn, aws.StringValue(certificate.RenewalSummary.RenewalStatusReason))
-		}
-
-		return certificate, aws.StringValue(certificate.RenewalSummary.RenewalStatus), nil
+		return output, aws.StringValue(output.RenewalStatus), nil
 	}
 }
 
-func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.RenewalSummary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{acm.RenewalStatusPendingAutoRenewal},
 		Target:  []string{acm.RenewalStatusSuccess},
@@ -942,7 +951,11 @@ func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
+	if output, ok := outputRaw.(*acm.RenewalSummary); ok {
+		if aws.StringValue(output.RenewalStatus) == acm.RenewalStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.RenewalStatusReason)))
+		}
+
 		return output, err
 	}
 

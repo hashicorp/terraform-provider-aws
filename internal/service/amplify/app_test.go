@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -642,9 +643,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("AWS Amplify is not supported in GovCloud partition")
-	}
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func testAccCheckAppNotRecreated(before, after *amplify.App) resource.TestCheckFunc {

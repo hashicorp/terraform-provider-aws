@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_carrier_gateway")
 func ResourceCarrierGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCarrierGatewayCreate,

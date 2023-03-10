@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_instance")
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

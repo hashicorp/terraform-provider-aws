@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_guardduty_invite_accepter")
 func ResourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInviteAccepterCreate,

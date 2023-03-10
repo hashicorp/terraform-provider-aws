@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_dev_endpoint")
 func ResourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevEndpointCreate,

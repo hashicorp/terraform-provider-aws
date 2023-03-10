@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/appsync/appsynciface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -28,6 +29,10 @@ func ListTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier stri
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).AppSyncConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns appsync service tags.
@@ -43,7 +48,8 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 // UpdateTags updates appsync service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -74,4 +80,8 @@ func UpdateTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier st
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AppSyncConn(), identifier, oldTags, newTags)
 }

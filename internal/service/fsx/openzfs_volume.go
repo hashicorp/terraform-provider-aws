@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_openzfs_volume")
 func ResourceOpenzfsVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOepnzfsVolumeCreate,

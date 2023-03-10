@@ -102,6 +102,11 @@ const (
 )
 
 const (
+	DBSnapshotAvailable = "available"
+	DBSnapshotCreating  = "creating"
+)
+
+const (
 	ClusterEngineAurora           = "aurora"
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"

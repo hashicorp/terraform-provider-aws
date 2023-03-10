@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_gamelift_build")
 func ResourceBuild() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBuildCreate,

@@ -33,6 +33,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_db_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -120,9 +121,10 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -293,6 +295,26 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"listener_endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hosted_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -317,14 +339,16 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 5, 10, 15, 30, 60}),
 			},
 			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -1643,6 +1667,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("port", v.Endpoint.Port)
 	}
 
+	if v.ListenerEndpoint != nil {
+		if err := d.Set("listener_endpoint", []interface{}{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
+		}
+	} else {
+		d.Set("listener_endpoint", nil)
+	}
+
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
 	tags, err := ListTags(ctx, conn, arn)
@@ -2583,4 +2615,26 @@ func dbInstanceValidBlueGreenEngines() []string {
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
 	}
+}
+
+func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Address; v != nil {
+		tfMap["address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

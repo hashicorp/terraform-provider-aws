@@ -26,6 +26,7 @@ const (
 	documentPermissionsBatchLimit = 20
 )
 
+// @SDKResource("aws_ssm_document")
 func ResourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,

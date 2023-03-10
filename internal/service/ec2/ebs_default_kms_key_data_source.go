@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ebs_default_kms_key")
 func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSDefaultKMSKeyRead,
