@@ -302,7 +302,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkDataSources(ctx) {
-			v, err := v(ctx)
+			v, err := v.Factory(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating data source", map[string]interface{}{
@@ -332,7 +332,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
-			v, err := v(ctx)
+			v, err := v.Factory(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating resource", map[string]interface{}{

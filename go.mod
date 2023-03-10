@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.213
+	github.com/aws/aws-sdk-go v1.44.216
 	github.com/aws/aws-sdk-go-v2 v1.17.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.23
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.1
@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.87.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4
@@ -20,20 +20,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.5
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.4
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.4
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.4
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.0
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -62,9 +63,9 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
-	golang.org/x/crypto v0.6.0
+	golang.org/x/crypto v0.7.0
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
-	golang.org/x/tools v0.2.0
+	golang.org/x/tools v0.6.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
@@ -128,9 +129,9 @@ require (
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
 	google.golang.org/grpc v1.53.0 // indirect

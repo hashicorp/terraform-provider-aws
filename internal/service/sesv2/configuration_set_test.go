@@ -215,6 +215,82 @@ func TestAccSESV2ConfigurationSet_suppressedReasons(t *testing.T) {
 	})
 }
 
+func TestAccSESV2ConfigurationSet_engagementMetrics(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_engagementMetrics(rName, string(types.FeatureStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.0.engagement_metrics", string(types.FeatureStatusEnabled)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationSetConfig_engagementMetrics(rName, string(types.FeatureStatusDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.0.engagement_metrics", string(types.FeatureStatusDisabled)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_optimizedSharedDelivery(rName, string(types.FeatureStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.0.optimized_shared_delivery", string(types.FeatureStatusEnabled)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationSetConfig_optimizedSharedDelivery(rName, string(types.FeatureStatusDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.0.optimized_shared_delivery", string(types.FeatureStatusDisabled)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -363,6 +439,34 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, suppressedReason)
+}
+
+func testAccConfigurationSetConfig_engagementMetrics(rName, engagementMetrics string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  vdm_options {
+    dashboard_options {
+      engagement_metrics = %[2]q
+    }
+  }
+}
+`, rName, engagementMetrics)
+}
+
+func testAccConfigurationSetConfig_optimizedSharedDelivery(rName, optimizedSharedDelivery string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  vdm_options {
+    guardian_options {
+      optimized_shared_delivery = %[2]q
+    }
+  }
+}
+`, rName, optimizedSharedDelivery)
 }
 
 func testAccConfigurationSetConfig_tags1(rName, tagKey1, tagValue1 string) string {

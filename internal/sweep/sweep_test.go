@@ -125,6 +125,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
