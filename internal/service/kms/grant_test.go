@@ -390,9 +390,9 @@ data "aws_iam_policy_document" "test" {
 func testAccGrantConfig_base_role(rName string) string {
 	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name               = %[1]q
-	path               = "/service-role/"
-	assume_role_policy = data.aws_iam_policy_document.test.json
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 `, rName))
 }
