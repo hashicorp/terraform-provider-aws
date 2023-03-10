@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -75,16 +75,18 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
-
+	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
@@ -95,12 +97,11 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
-					//lintignore:AWSAT001 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11666
-					resource.TestMatchResourceAttr(resourceName, "cloudfront_distribution_arn", regexp.MustCompile(`[a-z0-9]+.cloudfront.net$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
+					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain", acmCertificateResourceName, "domain_name"),
-					resource.TestMatchResourceAttr(resourceName, "s3_bucket", regexp.MustCompile(`^.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", cognitoUserPoolResourceName, "id"),
-					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
@@ -171,9 +172,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
-	return acctest.ConfigCompose(
-		testAccUserPoolCustomDomainRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
   private_zone = false
@@ -183,27 +182,6 @@ resource "aws_acm_certificate" "test" {
   domain_name       = %[2]q
   validation_method = "DNS"
 }
-
-#
-# for_each acceptance testing requires:
-# https://github.com/hashicorp/terraform-plugin-sdk/issues/536
-#
-# resource "aws_route53_record" "test" {
-#   for_each = {
-#     for dvo in aws_acm_certificate.test.domain_validation_options: dvo.domain_name => {
-#       name   = dvo.resource_record_name
-#       record = dvo.resource_record_value
-#       type   = dvo.resource_record_type
-#     }
-#   }
-
-#   allow_overwrite = true
-#   name            = each.value.name
-#   records         = [each.value.record]
-#   ttl             = 60
-#   type            = each.value.type
-#   zone_id         = data.aws_route53_zone.test.zone_id
-# }
 
 resource "aws_route53_record" "test" {
   allow_overwrite = true
@@ -228,5 +206,5 @@ resource "aws_cognito_user_pool_domain" "test" {
   domain          = aws_acm_certificate.test.domain_name
   user_pool_id    = aws_cognito_user_pool.test.id
 }
-`, rootDomain, domain, poolName))
+`, rootDomain, domain, poolName)
 }
