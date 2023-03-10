@@ -267,8 +267,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			r.Retryable = aws.Bool(true)
 		}
 	})
-	
-	//Potential fix for https://github.com/hashicorp/terraform-provider-aws/issues/18018
+
 	client.apigatewayv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Many operations can return an error such as:
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
