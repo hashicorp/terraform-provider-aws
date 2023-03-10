@@ -20,7 +20,7 @@ ENHANCEMENTS:
 * data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
 * resource/aws_connect_instance: Add `multi_party_conference_enabled` argument ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
-resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution_zone_id` attribute ([#27790](https://github.com/hashicorp/terraform-provider-aws/pull/27790))
+* resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution_zone_id` attribute ([#27790](https://github.com/hashicorp/terraform-provider-aws/pull/27790))
 
 ## 4.39.0 (November 10, 2022)
 
