@@ -620,10 +620,6 @@ func ResourceFlow() *schema.Resource {
 																	},
 																},
 															},
-															"preserve_source_data_typing": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
 														},
 													},
 												},
