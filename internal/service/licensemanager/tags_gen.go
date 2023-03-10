@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/licensemanager/licensemanageriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -30,22 +31,23 @@ func Tags(tags tftags.KeyValueTags) []*licensemanager.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from licensemanager service tags.
-func KeyValueTags(tags []*licensemanager.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*licensemanager.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates licensemanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn licensemanageriface.LicenseManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn licensemanageriface.LicenseManagerAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &licensemanager.UntagResourceInput{
@@ -74,4 +76,8 @@ func UpdateTags(ctx context.Context, conn licensemanageriface.LicenseManagerAPI,
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LicenseManagerConn(), identifier, oldTags, newTags)
 }

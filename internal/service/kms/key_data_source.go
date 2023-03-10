@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_key")
 func DataSourceKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyRead,

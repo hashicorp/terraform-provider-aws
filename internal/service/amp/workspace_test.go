@@ -22,7 +22,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -123,7 +123,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),

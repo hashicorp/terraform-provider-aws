@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ebs_snapshot_import")
 func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotImportCreate,
@@ -189,7 +190,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.ImportSnapshotInput{
 		ClientToken:       aws.String(resource.UniqueId()),
@@ -299,7 +300,7 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

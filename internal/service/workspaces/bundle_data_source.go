@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_workspaces_bundle")
 func DataSourceBundle() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,

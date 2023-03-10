@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_task")
 func ResourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
@@ -220,7 +221,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),

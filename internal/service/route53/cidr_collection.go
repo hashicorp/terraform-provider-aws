@@ -24,10 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceCIDRCollection)
-}
-
+// @FrameworkResource
 func newResourceCIDRCollection(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCIDRCollection{}
 

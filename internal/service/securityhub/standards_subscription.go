@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_standards_subscription")
 func ResourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsSubscriptionCreate,

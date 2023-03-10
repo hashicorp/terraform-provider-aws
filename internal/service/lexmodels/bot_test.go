@@ -35,7 +35,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,7 +105,7 @@ func testAccBot_createVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -152,7 +152,7 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -213,7 +213,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -270,7 +270,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -318,7 +318,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -366,7 +366,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -414,7 +414,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -463,7 +463,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -511,7 +511,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -568,7 +568,7 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -620,7 +620,7 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -668,7 +668,7 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -716,7 +716,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

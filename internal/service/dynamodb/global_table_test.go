@@ -77,7 +77,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 			testAccGlobalTablePreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGlobalTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

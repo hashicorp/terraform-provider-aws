@@ -22,6 +22,7 @@ const (
 	memberStatusResigned   = "Resigned"
 )
 
+// @SDKResource("aws_securityhub_member")
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,

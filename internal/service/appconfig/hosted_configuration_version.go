@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_appconfig_hosted_configuration_version")
 func ResourceHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConfigurationVersionCreate,

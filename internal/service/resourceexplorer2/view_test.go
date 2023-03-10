@@ -24,7 +24,7 @@ func testAccView_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
@@ -57,7 +57,7 @@ func testAccView_defaultView(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
@@ -99,7 +99,7 @@ func testAccView_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
@@ -108,7 +108,7 @@ func testAccView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfresourceexplorer2.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,7 +123,7 @@ func testAccView_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
@@ -172,7 +172,7 @@ func testAccView_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckViewDestroy(ctx),

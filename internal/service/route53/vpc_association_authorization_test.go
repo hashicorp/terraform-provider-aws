@@ -25,7 +25,7 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +54,7 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

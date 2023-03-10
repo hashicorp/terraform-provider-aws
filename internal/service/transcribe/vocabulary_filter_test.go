@@ -31,7 +31,7 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -70,7 +70,7 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -103,7 +103,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -145,7 +145,7 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -194,7 +194,7 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),

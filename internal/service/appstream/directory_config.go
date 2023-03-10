@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_appstream_directory_config")
 func ResourceDirectoryConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryConfigCreate,

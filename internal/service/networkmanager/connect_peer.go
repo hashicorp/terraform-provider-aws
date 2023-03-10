@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_connect_peer")
 func ResourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
@@ -177,7 +178,7 @@ func ResourceConnectPeer() *schema.Resource {
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
 	insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
@@ -280,7 +281,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
 	d.Set("state", connectPeer.State)
 
-	tags := KeyValueTags(connectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, connectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("settings tags: %s", err)

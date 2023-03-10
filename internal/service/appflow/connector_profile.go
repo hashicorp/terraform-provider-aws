@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appflow_connector_profile")
 func ResourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,

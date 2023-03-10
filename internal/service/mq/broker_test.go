@@ -245,7 +245,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -324,7 +324,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -356,7 +356,7 @@ func TestAccMQBroker_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -411,7 +411,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -495,7 +495,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -624,7 +624,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -745,7 +745,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -784,7 +784,7 @@ func TestAccMQBroker_EncryptionOptions_managedKeyDisabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -822,7 +822,7 @@ func TestAccMQBroker_EncryptionOptions_managedKeyEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -860,7 +860,7 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -938,7 +938,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -996,7 +996,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1040,7 +1040,7 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1079,7 +1079,7 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1125,7 +1125,7 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1171,7 +1171,7 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1210,7 +1210,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
@@ -1277,7 +1277,7 @@ func TestAccMQBroker_ldap(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),

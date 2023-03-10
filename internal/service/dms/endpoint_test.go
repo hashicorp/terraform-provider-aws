@@ -288,6 +288,10 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				),
 			},
 			{
+				Config:   testAccEndpointConfig_s3(rName),
+				PlanOnly: true,
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -295,6 +299,57 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 			},
 			{
 				Config: testAccEndpointConfig_s3Update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
+				),
+			},
+			{
+				Config:   testAccEndpointConfig_s3Update(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet`)),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
+				),
+			},
+			{
+				Config:             testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=false;"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
@@ -306,6 +361,24 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
 				),
+			},
+			{
+				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet=true`)),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
+				),
+			},
+			{
+				Config:   testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=true"),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -342,7 +415,31 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName),
+				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "", ","),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
+				),
+			},
+			{
+				// settings-only change should trigger diff
+				Config:             testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "", "."),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// inconsequential eca change should not trigger diff
+				Config:   testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "csv_delimiter=,", ","),
+				PlanOnly: true,
+			},
+			{
+				// eca-only change should trigger diff
+				Config:             testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "dataFormat=parquet;", ","),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "dataFormat=parquet;", "."),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
@@ -1533,7 +1630,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_db2(t *testing.T) {
+func TestAccDMSEndpoint_db2_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1569,6 +1666,74 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_azureSQLManagedInstance(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_azureSQLManagedInstance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccEndpointConfig_azureSQLManagedInstanceUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3342"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_db2_secretID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_db2SecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -2405,7 +2570,7 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 `, rName)
 }
 
-func testAccEndpointConfig_s3ExtraConnectionAttributes(rName string) string {
+func testAccEndpointConfig_s3ExtraConnectionAttributes(rName, eca, csvDelimiter string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2414,13 +2579,14 @@ resource "aws_dms_endpoint" "test" {
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
-  extra_connection_attributes = "dataFormat=parquet;"
+  extra_connection_attributes = %[2]q
 
   s3_settings {
     service_access_role_arn = aws_iam_role.iam_role.arn
     bucket_name             = "bucket_name"
     bucket_folder           = "bucket_folder"
     compression_type        = "GZIP"
+    csv_delimiter           = %[3]q
   }
 
   tags = {
@@ -2480,7 +2646,7 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 }
 EOF
 }
-`, rName)
+`, rName, eca, csvDelimiter)
 }
 
 func testAccEndpointConfig_s3ConnSSEKMSKeyARN(rName string) string {
@@ -2650,7 +2816,7 @@ resource "aws_dms_endpoint" "test" {
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
-  extra_connection_attributes = "detachTargetOnLobLookupFailureParquet=false"
+  extra_connection_attributes = ""
 
   tags = {
     Name   = %[1]q
@@ -2718,6 +2884,85 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 EOF
 }
 `, rName)
+}
+
+func testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName string, eca string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "s3"
+  ssl_mode                    = "none"
+  extra_connection_attributes = %[2]q
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+
+  s3_settings {
+    service_access_role_arn   = aws_iam_role.iam_role.arn
+    external_table_definition = "new-external_table_definition"
+    csv_row_delimiter         = "\\r"
+    csv_delimiter             = "."
+    bucket_folder             = "new-bucket_folder"
+    bucket_name               = "new-bucket_name"
+    compression_type          = "GZIP"
+  }
+}
+
+resource "aws_iam_role" "iam_role" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_s3_access" {
+  name = %[1]q
+  role = aws_iam_role.iam_role.name
+
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:CreateBucket",
+				"s3:ListBucket",
+				"s3:DeleteBucket",
+				"s3:GetBucketLocation",
+				"s3:GetObject",
+				"s3:PutObject",
+				"s3:DeleteObject",
+				"s3:GetObjectVersion",
+				"s3:GetBucketPolicy",
+				"s3:PutBucketPolicy",
+				"s3:DeleteBucketPolicy"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, rName, eca)
 }
 
 func testAccEndpointConfig_openSearchBase(rName string) string {
@@ -3562,6 +3807,28 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
+func testAccEndpointConfig_db2SecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "db2"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfig_db2Update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
@@ -3572,6 +3839,54 @@ resource "aws_dms_endpoint" "test" {
   extra_connection_attributes = "extra"
   password                    = "tftestupdate"
   port                        = 27019
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_azureSQLManagedInstance(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "azure-sql-managed-instance"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 3342
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_azureSQLManagedInstanceUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "azure-sql-managed-instance"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 3342
   server_name                 = "tftestupdate"
   ssl_mode                    = "none"
 

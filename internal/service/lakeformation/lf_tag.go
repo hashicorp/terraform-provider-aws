@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_lakeformation_lf_tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLFTagCreate,

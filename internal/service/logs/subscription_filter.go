@@ -21,10 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_subscription_filter", resourceSubscriptionFilter)
-}
-
+// @SDKResource("aws_cloudwatch_log_subscription_filter")
 func resourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubscriptionFilterPut,

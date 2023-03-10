@@ -21,6 +21,7 @@ const (
 	defaultACLRuleNumberIPv6 = 32768
 )
 
+// @SDKResource("aws_default_network_acl")
 func ResourceDefaultNetworkACL() *schema.Resource {
 	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,
@@ -33,7 +34,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
 		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
-		DeleteContext:        resourceDefaultNetworkACLDelete, // nosemgrep:ci.avoid-context-CRUD-handlers
+		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -119,8 +120,8 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
-	oldTags := KeyValueTags(nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
