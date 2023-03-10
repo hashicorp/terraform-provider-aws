@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_elasticsearch_domain: Remove validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised
+resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised
 ```
