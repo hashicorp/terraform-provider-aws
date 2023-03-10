@@ -8,17 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/imagebuilder/imagebuilderiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists imagebuilder service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn imagebuilderiface.ImagebuilderAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &imagebuilder.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -26,10 +23,14 @@ func ListTagsWithContext(ctx context.Context, conn imagebuilderiface.Imagebuilde
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(), identifier)
 }
 
 // map[string]*string handling
@@ -40,19 +41,17 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 }
 
 // KeyValueTags creates KeyValueTags from imagebuilder service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
 }
 
 // UpdateTags updates imagebuilder service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn imagebuilderiface.ImagebuilderAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &imagebuilder.UntagResourceInput{
@@ -81,4 +80,8 @@ func UpdateTagsWithContext(ctx context.Context, conn imagebuilderiface.Imagebuil
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(), identifier, oldTags, newTags)
 }

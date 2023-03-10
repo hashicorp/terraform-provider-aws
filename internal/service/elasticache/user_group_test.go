@@ -1,6 +1,7 @@
 package elasticache_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccElastiCacheUserGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -24,12 +26,12 @@ func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -45,6 +47,7 @@ func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheUserGroup_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -53,12 +56,12 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -67,7 +70,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -76,7 +79,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -87,6 +90,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 }
 
 func TestAccElastiCacheUserGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -95,12 +99,12 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -108,7 +112,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -117,7 +121,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -127,6 +131,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 }
 
 func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -135,13 +140,13 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
+					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,36 +154,40 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserGroupDestroy(s *terraform.State) error {
-	return testAccCheckUserGroupDestroyWithProvider(s, acctest.Provider)
-}
-
-func testAccCheckUserGroupDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elasticache_user_group" {
-			continue
-		}
-
-		_, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
-				return nil
-			}
-		}
-
-		return err
+func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckUserGroupDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
-
-	return nil
 }
 
-func testAccCheckUserGroupExists(n string, v *elasticache.UserGroup) resource.TestCheckFunc {
-	return testAccCheckUserGroupExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckUserGroupDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elasticache_user_group" {
+				continue
+			}
+
+			_, err := tfelasticache.FindUserGroupByID(ctx, conn, rs.Primary.ID)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
+					return nil
+				}
+			}
+
+			return err
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckUserGroupExistsWithProvider(n string, v *elasticache.UserGroup, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckUserGroupExists(ctx context.Context, n string, v *elasticache.UserGroup) resource.TestCheckFunc {
+	return testAccCheckUserGroupExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckUserGroupExistsWithProvider(ctx context.Context, n string, v *elasticache.UserGroup, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -190,8 +199,8 @@ func testAccCheckUserGroupExistsWithProvider(n string, v *elasticache.UserGroup,
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		resp, err := tfelasticache.FindUserGroupByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User Group (%s) not found: %w", rs.Primary.ID, err)
 		}

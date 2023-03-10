@@ -17,12 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_email_identity")
 func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,
@@ -83,11 +85,11 @@ func ResourceEmailIdentity() *schema.Resource {
 							Computed: true,
 						},
 						"next_signing_key_length": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateFunc:  validation.StringInSlice(dkimSigningKeyLengthValues(types.DkimSigningKeyLength("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
+							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
 						},
 						"signing_attributes_origin": {
 							Type:     schema.TypeString,
@@ -131,7 +133,7 @@ const (
 )
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(d.Get("email_identity").(string)),
@@ -146,7 +148,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -167,7 +169,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
 
@@ -230,7 +232,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	if d.HasChanges("configuration_set_name") {
 		in := &sesv2.PutEmailIdentityConfigurationSetAttributesInput{
@@ -278,7 +280,7 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 EmailIdentity %s", d.Id())
 
@@ -385,14 +387,4 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 	}
 
 	return m
-}
-
-func dkimSigningKeyLengthValues(in []types.DkimSigningKeyLength) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
 }

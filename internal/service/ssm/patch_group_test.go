@@ -1,6 +1,7 @@
 package ssm_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccSSMPatchGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
@@ -21,12 +23,12 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchGroupDestroy,
+		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(resourceName),
+					testAccCheckPatchGroupExists(ctx, resourceName),
 				),
 			},
 		},
@@ -34,6 +36,7 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 }
 
 func TestAccSSMPatchGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
@@ -46,8 +49,8 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
+					testAccCheckPatchGroupExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -56,6 +59,7 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 }
 
 func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName1 := "aws_ssm_patch_group.test1"
 	resourceName2 := "aws_ssm_patch_group.test2"
@@ -65,48 +69,50 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchGroupDestroy,
+		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_multipleBaselines(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(resourceName1),
-					testAccCheckPatchGroupExists(resourceName2),
-					testAccCheckPatchGroupExists(resourceName3),
+					testAccCheckPatchGroupExists(ctx, resourceName1),
+					testAccCheckPatchGroupExists(ctx, resourceName2),
+					testAccCheckPatchGroupExists(ctx, resourceName3),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPatchGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssm_patch_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssm_patch_group" {
+				continue
+			}
+
+			patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
+			if err != nil {
+				return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			group, err := tfssm.FindPatchGroup(ctx, conn, patchGroup, baselineId)
+
+			if err != nil {
+				return fmt.Errorf("error describing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			if group != nil {
+				return fmt.Errorf("SSM Patch Group %q still exists", rs.Primary.ID)
+			}
 		}
 
-		patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		group, err := tfssm.FindPatchGroup(conn, patchGroup, baselineId)
-
-		if err != nil {
-			return fmt.Errorf("error describing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		if group != nil {
-			return fmt.Errorf("SSM Patch Group %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPatchGroupExists(n string) resource.TestCheckFunc {
+func testAccCheckPatchGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -122,9 +128,9 @@ func testAccCheckPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
-		group, err := tfssm.FindPatchGroup(conn, patchGroup, baselineId)
+		group, err := tfssm.FindPatchGroup(ctx, conn, patchGroup, baselineId)
 
 		if err != nil {
 			return fmt.Errorf("error reading SSM Patch Group (%s): %w", rs.Primary.ID, err)

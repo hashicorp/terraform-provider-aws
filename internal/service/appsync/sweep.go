@@ -36,18 +36,19 @@ func init() {
 }
 
 func sweepGraphQLAPIs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListGraphqlApisInput{}
 
 	for {
-		output, err := conn.ListGraphqlApis(input)
+		output, err := conn.ListGraphqlApisWithContext(ctx, input)
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
 			return nil
@@ -78,7 +79,7 @@ func sweepGraphQLAPIs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync GraphQL API %s: %w", region, err))
 	}
 
@@ -91,18 +92,19 @@ func sweepGraphQLAPIs(region string) error {
 }
 
 func sweepDomainNames(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
 
 	for {
-		output, err := conn.ListDomainNames(input)
+		output, err := conn.ListDomainNamesWithContext(ctx, input)
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, err)
 			return nil
@@ -133,7 +135,7 @@ func sweepDomainNames(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name %s: %w", region, err))
 	}
 
@@ -146,18 +148,19 @@ func sweepDomainNames(region string) error {
 }
 
 func sweepDomainNameAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
 
 	for {
-		output, err := conn.ListDomainNames(input)
+		output, err := conn.ListDomainNamesWithContext(ctx, input)
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, err)
 			return nil
@@ -188,7 +191,7 @@ func sweepDomainNameAssociations(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name Association %s: %w", region, err))
 	}
 

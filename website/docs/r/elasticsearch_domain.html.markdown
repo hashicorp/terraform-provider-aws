@@ -73,28 +73,28 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "example"
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
 
-  policy_document = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "es.amazonaws.com"
-      },
-      "Action": [
-        "logs:PutLogEvents",
-        "logs:PutLogEventsBatch",
-        "logs:CreateLogStream"
-      ],
-      "Resource": "arn:aws:logs:*"
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
     }
-  ]
+
+    actions = [
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+      "logs:CreateLogStream",
+    ]
+
+    resources = ["arn:aws:logs:*"]
+  }
 }
-CONFIG
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_name     = "example"
+  policy_document = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_elasticsearch_domain" "example" {
@@ -347,7 +347,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 * `update` - (Default `60m`)

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_query_log_config_association")
 func ResourceQueryLogConfigAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogConfigAssociationCreate,
@@ -23,7 +24,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceQueryLogConfigAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,7 +43,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 }
 
 func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
@@ -65,7 +66,7 @@ func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	queryLogConfigAssociation, err := FindResolverQueryLogConfigAssociationByID(ctx, conn, d.Id())
 
@@ -86,7 +87,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association: %s", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfigWithContext(ctx, &route53resolver.DisassociateResolverQueryLogConfigInput{

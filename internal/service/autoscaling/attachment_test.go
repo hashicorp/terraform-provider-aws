@@ -1,6 +1,7 @@
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccAutoScalingAttachment_elb(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_attachment.test"
 
@@ -22,12 +24,12 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByLoadBalancerNameExists(resourceName),
+					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resourceName),
 				),
 			},
 		},
@@ -35,6 +37,7 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 }
 
 func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_attachment.test"
 
@@ -42,12 +45,12 @@ func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_targetGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByTargetGroupARNExists(resourceName),
+					testAccCheckAttachmentByTargetGroupARNExists(ctx, resourceName),
 				),
 			},
 		},
@@ -55,6 +58,7 @@ func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 }
 
 func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_autoscaling_attachment.test.0"
 	resource11Name := "aws_autoscaling_attachment.test.10"
@@ -63,7 +67,7 @@ func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Create all the ELBs first.
 			{
@@ -72,8 +76,8 @@ func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
 			{
 				Config: testAccAttachmentConfig_multipleELBs(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
-					testAccCheckAttachmentByLoadBalancerNameExists(resource11Name),
+					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resource1Name),
+					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resource11Name),
 				),
 			},
 			{
@@ -84,6 +88,7 @@ func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
 }
 
 func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_autoscaling_attachment.test.0"
 	resource11Name := "aws_autoscaling_attachment.test.10"
@@ -92,7 +97,7 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Create all the target groups first.
 			{
@@ -101,8 +106,8 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 			{
 				Config: testAccAttachmentConfig_multipleTargetGroups(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByTargetGroupARNExists(resource1Name),
-					testAccCheckAttachmentByTargetGroupARNExists(resource11Name),
+					testAccCheckAttachmentByTargetGroupARNExists(ctx, resource1Name),
+					testAccCheckAttachmentByTargetGroupARNExists(ctx, resource11Name),
 				),
 			},
 			{
@@ -112,66 +117,68 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 	})
 }
 
-func testAccCheckAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_attachment" {
+				continue
+			}
+
+			var err error
+
+			if targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]; targetGroupARN == "" {
+				targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
+
+				err = tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
+			} else {
+				err = tfautoscaling.FindAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
+			}
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Auto Scaling Group Attachment %s still exists", rs.Primary.ID)
 		}
 
-		var err error
-
-		if targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]; targetGroupARN == "" {
-			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
-
-			err = tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
-		} else {
-			err = tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
-		}
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Auto Scaling Group Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAttachmentByLoadBalancerNameExists(n string) resource.TestCheckFunc {
+func testAccCheckAttachmentByLoadBalancerNameExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		return tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
+		return tfautoscaling.FindAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
 	}
 }
 
-func testAccCheckAttachmentByTargetGroupARNExists(n string) resource.TestCheckFunc {
+func testAccCheckAttachmentByTargetGroupARNExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]
 		if targetGroupARN == "" {
 			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
 		}
 
-		return tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
+		return tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
 	}
 }
 

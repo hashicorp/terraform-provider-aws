@@ -1,6 +1,7 @@
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	topicName := sdkacctest.RandomWithPrefix("test-topic")
 	resourceName := "aws_ses_identity_notification_topic.test"
@@ -23,28 +25,28 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityNotificationTopicDestroy,
+		CheckDestroy:             testAccCheckIdentityNotificationTopicDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_basic, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_update, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_headers, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityNotificationTopicExists(resourceName),
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
 			},
 			{
@@ -56,35 +58,37 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityNotificationTopicDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_identity_notification_topic" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_identity_notification_topic" {
+				continue
+			}
+
+			identity := rs.Primary.Attributes["identity"]
+			params := &ses.GetIdentityNotificationAttributesInput{
+				Identities: []*string{aws.String(identity)},
+			}
+
+			log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
+
+			response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
+			if err != nil {
+				return err
+			}
+
+			if response.NotificationAttributes[identity] != nil {
+				return fmt.Errorf("SES Identity Notification Topic %s still exists. Failing!", identity)
+			}
 		}
 
-		identity := rs.Primary.Attributes["identity"]
-		params := &ses.GetIdentityNotificationAttributesInput{
-			Identities: []*string{aws.String(identity)},
-		}
-
-		log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
-
-		response, err := conn.GetIdentityNotificationAttributes(params)
-		if err != nil {
-			return err
-		}
-
-		if response.NotificationAttributes[identity] != nil {
-			return fmt.Errorf("SES Identity Notification Topic %s still exists. Failing!", identity)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFunc {
+func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,7 +100,7 @@ func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFun
 		}
 
 		identity := rs.Primary.Attributes["identity"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.GetIdentityNotificationAttributesInput{
 			Identities: []*string{aws.String(identity)},
@@ -104,7 +108,7 @@ func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFun
 
 		log.Printf("[DEBUG] Testing SES Identity Notification Topic Exists: %#v", params)
 
-		response, err := conn.GetIdentityNotificationAttributes(params)
+		response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
 		if err != nil {
 			return err
 		}

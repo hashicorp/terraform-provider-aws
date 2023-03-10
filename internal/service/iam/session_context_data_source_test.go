@@ -12,6 +12,8 @@ import (
 )
 
 func TestAssumedRoleRoleSessionName(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name                string
 		ARN                 string
@@ -82,7 +84,10 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			role, session := tfiam.RoleNameSessionFromARN(testCase.ARN)
 
 			if testCase.ExpectedRoleName != role || testCase.ExpectedSessionName != session {

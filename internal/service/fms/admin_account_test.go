@@ -1,6 +1,7 @@
 package fms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,17 +15,18 @@ import (
 )
 
 func testAccAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_fms_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			testAccPreCheckAdmin(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAdminAccountDestroy,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAdminAccountConfig_basic(),
@@ -36,32 +38,34 @@ func testAccAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn
+func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_fms_admin_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fms_admin_account" {
+				continue
+			}
+
+			output, err := conn.GetAdminAccountWithContext(ctx, &fms.GetAdminAccountInput{})
+
+			if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if aws.StringValue(output.RoleStatus) == fms.AccountRoleStatusDeleted {
+				continue
+			}
+
+			return fmt.Errorf("FMS Admin Account (%s) still exists with status: %s", aws.StringValue(output.AdminAccount), aws.StringValue(output.RoleStatus))
 		}
 
-		output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
-
-		if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(output.RoleStatus) == fms.AccountRoleStatusDeleted {
-			continue
-		}
-
-		return fmt.Errorf("FMS Admin Account (%s) still exists with status: %s", aws.StringValue(output.AdminAccount), aws.StringValue(output.RoleStatus))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccAdminAccountConfig_basic() string {

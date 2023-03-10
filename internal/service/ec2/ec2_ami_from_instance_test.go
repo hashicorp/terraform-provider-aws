@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccEC2AMIFromInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
@@ -21,12 +22,12 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -42,6 +43,7 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 }
 
 func TestAccEC2AMIFromInstance_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
@@ -50,12 +52,12 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -63,7 +65,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -72,7 +74,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -82,6 +84,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 }
 
 func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
@@ -90,13 +93,13 @@ func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
+					testAccCheckAMIExists(ctx, resourceName, &image),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -12,26 +12,24 @@ import (
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/exp/slices"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceIPRanges)
-}
-
-// newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.
+// @FrameworkDataSource
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceIPRanges{}, nil
+	d := &dataSourceIPRanges{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceIPRanges struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -40,55 +38,40 @@ func (d *dataSourceIPRanges) Metadata(_ context.Context, request datasource.Meta
 	response.TypeName = "aws_ip_ranges"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceIPRanges) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"cidr_blocks": {
-				Type:     types.ListType{ElemType: types.StringType},
+// Schema returns the schema for this data source.
+func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"cidr_blocks": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"create_date": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6_cidr_blocks": {
-				Type:     types.ListType{ElemType: types.StringType},
+			"ipv6_cidr_blocks": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+			"regions": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+			"services": schema.SetAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+			},
+			"sync_token": schema.Int64Attribute{
 				Computed: true,
 			},
-			"regions": {
-				Type:     types.SetType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"services": {
-				Type:     types.SetType{ElemType: types.StringType},
-				Required: true,
-			},
-			"sync_token": {
-				Type:     types.Int64Type,
-				Computed: true,
-			},
-			"url": {
-				Type:     types.StringType,
+			"url": schema.StringAttribute{
 				Optional: true,
 			},
 		},
-	}
-
-	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceIPRanges) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
 	}
 }
 
@@ -109,7 +92,7 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 		// Data sources make no use of AttributePlanModifiers to set default values.
 		url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
 	} else {
-		url = data.URL.Value
+		url = data.URL.ValueString()
 	}
 
 	bytes, err := readAll(ctx, url)
@@ -165,12 +148,12 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 
 	sort.Strings(ipv6Prefixes)
 
-	data.CreateDate = types.String{Value: ipRanges.CreateDate}
-	data.ID = types.String{Value: ipRanges.SyncToken}
-	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv4Prefixes)
-	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv6Prefixes)
-	data.SyncToken = types.Int64{Value: int64(syncToken)}
-	data.URL = types.String{Value: url}
+	data.CreateDate = types.StringValue(ipRanges.CreateDate)
+	data.ID = types.StringValue(ipRanges.SyncToken)
+	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv4Prefixes)
+	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv6Prefixes)
+	data.SyncToken = types.Int64Value(int64(syncToken))
+	data.URL = types.StringValue(url)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

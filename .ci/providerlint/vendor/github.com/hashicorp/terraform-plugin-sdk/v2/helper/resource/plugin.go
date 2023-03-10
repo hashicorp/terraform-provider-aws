@@ -3,7 +3,7 @@ package resource
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -157,6 +157,13 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 		host = v
 	}
 
+	// schema.Provider have a global stop context that is created outside
+	// the server context and have their own associated goroutine. Since
+	// Terraform does not call the StopProvider RPC to stop the server in
+	// reattach mode, ensure that we save these servers to later call that
+	// RPC and end those goroutines.
+	legacyProviderServers := make([]*schema.GRPCProviderServer, 0, len(factories.legacy))
+
 	// Spin up gRPC servers for every provider factory, start a
 	// WaitGroup to listen for all of the close channels.
 	var wg sync.WaitGroup
@@ -180,18 +187,24 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 		// shut down.
 		wg.Add(1)
 
+		grpcProviderServer := schema.NewGRPCProviderServer(provider)
+		legacyProviderServers = append(legacyProviderServers, grpcProviderServer)
+
+		// Ensure StopProvider is always called when returning early.
+		defer grpcProviderServer.StopProvider(ctx, nil) //nolint:errcheck // does not return errors
+
 		// configure the settings our plugin will be served with
 		// the GRPCProviderFunc wraps a non-gRPC provider server
 		// into a gRPC interface, and the logger just discards logs
 		// from go-plugin.
 		opts := &plugin.ServeOpts{
 			GRPCProviderFunc: func() tfprotov5.ProviderServer {
-				return schema.NewGRPCProviderServer(provider)
+				return grpcProviderServer
 			},
 			Logger: hclog.New(&hclog.LoggerOptions{
 				Name:   "plugintest",
 				Level:  hclog.Trace,
-				Output: ioutil.Discard,
+				Output: io.Discard,
 			}),
 			NoLogOutputOverride: true,
 			UseTFLogSink:        t,
@@ -279,7 +292,7 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 			Logger: hclog.New(&hclog.LoggerOptions{
 				Name:   "plugintest",
 				Level:  hclog.Trace,
-				Output: ioutil.Discard,
+				Output: io.Discard,
 			}),
 			NoLogOutputOverride: true,
 			UseTFLogSink:        t,
@@ -364,7 +377,7 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 			Logger: hclog.New(&hclog.LoggerOptions{
 				Name:   "plugintest",
 				Level:  hclog.Trace,
-				Output: ioutil.Discard,
+				Output: io.Discard,
 			}),
 			NoLogOutputOverride: true,
 			UseTFLogSink:        t,
@@ -429,6 +442,12 @@ func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *pl
 	// cancel the servers so they'll return. Otherwise, this closeCh won't
 	// get closed, and we'll hang here.
 	cancel()
+
+	// For legacy providers, call the StopProvider RPC so the StopContext
+	// goroutine is cleaned up properly.
+	for _, legacyProviderServer := range legacyProviderServers {
+		legacyProviderServer.StopProvider(ctx, nil) //nolint:errcheck // does not return errors
+	}
 
 	logging.HelperResourceTrace(ctx, "Waiting for providers to stop")
 

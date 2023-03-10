@@ -177,7 +177,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *prometheusservice.Prometheu
 	return nil, err
 }
 
-func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeCreating},
 		Target:  []string{prometheusservice.LoggingConfigurationStatusCodeActive},

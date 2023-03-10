@@ -20,38 +20,36 @@ import (
 )
 
 func TestAccInspector2OrganizationConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccOrganizationConfiguration_basic,
 		"disappears": testAccOrganizationConfiguration_disappears,
 		"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
 				),
@@ -61,24 +59,25 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 }
 
 func testAccOrganizationConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,23 +86,24 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 }
 
 func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "true"),
 				),
@@ -112,59 +112,60 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-	ctx := context.Background()
+func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
-	enabledDelAdAcct := false
+		enabledDelAdAcct := false
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector2_organization_configuration" {
-			continue
-		}
-
-		out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
-
-		if errs.MessageContains(err, "AccessDenied", "Invoking account does not") {
-			if err := testEnableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-				return err
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector2_organization_configuration" {
+				continue
 			}
 
-			enabledDelAdAcct = true
+			out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
-			out, err = conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
-		}
+			if errs.MessageContains(err, "AccessDenied", "Invoking account does not") {
+				if err := testEnableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+					return err
+				}
 
-		if err != nil {
+				enabledDelAdAcct = true
+
+				out, err = conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+			}
+
+			if err != nil {
+				if enabledDelAdAcct {
+					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+						return err
+					}
+				}
+
+				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
+			}
+
+			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) {
+				if enabledDelAdAcct {
+					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+						return err
+					}
+				}
+
+				return nil
+			}
+
 			if enabledDelAdAcct {
 				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
 					return err
 				}
 			}
 
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) {
-			if enabledDelAdAcct {
-				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		}
-
-		if enabledDelAdAcct {
-			if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-				return err
-			}
-		}
-
-		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
 func testEnableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) error {
@@ -197,7 +198,7 @@ func testDisableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Clie
 	return nil
 }
 
-func testAccCheckOrganizationConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckOrganizationConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -208,8 +209,8 @@ func testAccCheckOrganizationConfigurationExists(name string) resource.TestCheck
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+
 		_, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
 		if err != nil {

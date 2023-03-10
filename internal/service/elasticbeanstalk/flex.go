@@ -15,7 +15,7 @@ func flattenASG(list []*elasticbeanstalk.AutoScalingGroup) []string {
 	return strs
 }
 
-func flattenELB(list []*elasticbeanstalk.LoadBalancer) []string {
+func flattenLoadBalancers(list []*elasticbeanstalk.LoadBalancer) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {
@@ -35,7 +35,7 @@ func flattenInstances(list []*elasticbeanstalk.Instance) []string {
 	return strs
 }
 
-func flattenLc(list []*elasticbeanstalk.LaunchConfiguration) []string {
+func flattenLaunchConfigurations(list []*elasticbeanstalk.LaunchConfiguration) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {
@@ -45,7 +45,7 @@ func flattenLc(list []*elasticbeanstalk.LaunchConfiguration) []string {
 	return strs
 }
 
-func flattenSQS(list []*elasticbeanstalk.Queue) []string {
+func flattenQueues(list []*elasticbeanstalk.Queue) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.URL != nil {
@@ -55,7 +55,7 @@ func flattenSQS(list []*elasticbeanstalk.Queue) []string {
 	return strs
 }
 
-func flattenTrigger(list []*elasticbeanstalk.Trigger) []string {
+func flattenTriggers(list []*elasticbeanstalk.Trigger) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {

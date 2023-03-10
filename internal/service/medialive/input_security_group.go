@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_medialive_input_security_group")
 func ResourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
@@ -76,14 +77,14 @@ const (
 )
 
 func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputSecurityGroupInput{
 		WhitelistRules: expandWhitelistRules(d.Get("whitelist_rules").(*schema.Set).List()),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -108,7 +109,7 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
 
@@ -147,7 +148,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputSecurityGroupInput{
@@ -181,7 +182,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive InputSecurityGroup %s", d.Id())
 

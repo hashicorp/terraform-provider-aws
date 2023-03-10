@@ -1,6 +1,7 @@
 package ssoadmin_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
@@ -24,17 +26,17 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckInstances(t)
+			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(resourceName),
+					testAccCheckAccountAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexp.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
@@ -50,6 +52,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 }
 
 func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	userName := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
@@ -57,17 +60,17 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckInstances(t)
+			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicUser(userName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(resourceName),
+					testAccCheckAccountAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexp.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
@@ -83,6 +86,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 }
 
 func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
@@ -90,18 +94,18 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckInstances(t)
+			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
+					testAccCheckAccountAssignmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,45 +113,47 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountAssignmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssoadmin_account_assignment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssoadmin_account_assignment" {
+				continue
+			}
+
+			idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
+
+			if err != nil {
+				return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			principalID := idParts[0]
+			principalType := idParts[1]
+			targetID := idParts[2]
+			permissionSetArn := idParts[4]
+			instanceArn := idParts[5]
+
+			accountAssignment, err := tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading SSO Account Assignment for Principal (%s): %w", principalID, err)
+			}
+
+			if accountAssignment != nil {
+				return fmt.Errorf("SSO Account Assignment for Principal (%s) still exists", principalID)
+			}
 		}
 
-		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		principalID := idParts[0]
-		principalType := idParts[1]
-		targetID := idParts[2]
-		permissionSetArn := idParts[4]
-		instanceArn := idParts[5]
-
-		accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
-
-		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading SSO Account Assignment for Principal (%s): %w", principalID, err)
-		}
-
-		if accountAssignment != nil {
-			return fmt.Errorf("SSO Account Assignment for Principal (%s) still exists", principalID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccountAssignmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAccountAssignmentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -158,7 +164,7 @@ func testAccCheckAccountAssignmentExists(resourceName string) resource.TestCheck
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 
@@ -172,7 +178,7 @@ func testAccCheckAccountAssignmentExists(resourceName string) resource.TestCheck
 		permissionSetArn := idParts[4]
 		instanceArn := idParts[5]
 
-		accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+		accountAssignment, err := tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 		if err != nil {
 			return err

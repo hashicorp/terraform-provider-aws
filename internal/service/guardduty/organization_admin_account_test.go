@@ -1,6 +1,7 @@
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,21 +15,22 @@ import (
 )
 
 func testAccOrganizationAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
@@ -41,44 +43,46 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_organization_admin_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_organization_admin_account" {
+				continue
+			}
+
+			adminAccount, err := tfguardduty.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
+
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "organization is not in use") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if adminAccount == nil {
+				continue
+			}
+
+			return fmt.Errorf("expected GuardDuty Organization Admin Account (%s) to be removed", rs.Primary.ID)
 		}
 
-		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(conn, rs.Primary.ID)
-
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "organization is not in use") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if adminAccount == nil {
-			continue
-		}
-
-		return fmt.Errorf("expected GuardDuty Organization Admin Account (%s) to be removed", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
-		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

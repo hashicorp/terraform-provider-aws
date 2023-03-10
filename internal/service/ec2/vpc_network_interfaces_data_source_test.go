@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccVPCNetworkInterfacesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_filter(rName),
@@ -30,13 +31,14 @@ func TestAccVPCNetworkInterfacesDataSource_filter(t *testing.T) {
 }
 
 func TestAccVPCNetworkInterfacesDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_tags(rName),
@@ -49,13 +51,14 @@ func TestAccVPCNetworkInterfacesDataSource_tags(t *testing.T) {
 }
 
 func TestAccVPCNetworkInterfacesDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_empty(rName),

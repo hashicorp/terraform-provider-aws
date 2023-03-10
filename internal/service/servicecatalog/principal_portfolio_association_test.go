@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -18,6 +19,7 @@ import (
 // add sweeper to delete known test servicecat principal portfolio associations
 
 func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,12 +27,12 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy,
+		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPrincipalPortfolioAssociationExists(resourceName),
+					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", "arn"),
 				),
@@ -45,6 +47,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,13 +55,13 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy,
+		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPrincipalPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourcePrincipalPortfolioAssociation(), resourceName),
+					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourcePrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,35 +69,37 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 	})
 }
 
-func testAccCheckPrincipalPortfolioAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
+				continue
+			}
+
+			acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
+
+			if err != nil {
+				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
+
+			if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association to be destroyed (%s): %w", rs.Primary.ID, err)
+			}
 		}
 
-		acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
-
-		if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association to be destroyed (%s): %w", rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPrincipalPortfolioAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -108,9 +113,9 @@ func testAccCheckPrincipalPortfolioAssociationExists(resourceName string) resour
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
+		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association existence (%s): %w", rs.Primary.ID, err)

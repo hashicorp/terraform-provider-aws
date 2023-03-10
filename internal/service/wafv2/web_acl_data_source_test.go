@@ -12,12 +12,13 @@ import (
 )
 
 func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 	datasourceName := "data.aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

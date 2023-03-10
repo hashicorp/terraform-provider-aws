@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -22,12 +24,12 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(resourceName),
+					testAccCheckConnectionAssociationExists(ctx, resourceName),
 				),
 			},
 		},
@@ -35,6 +37,7 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -42,12 +45,12 @@ func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_lagOn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(resourceName),
+					testAccCheckConnectionAssociationExists(ctx, resourceName),
 				),
 			},
 		},
@@ -55,6 +58,7 @@ func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 }
 
 func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName1 := "aws_dx_connection_association.test1"
 	resourceName2 := "aws_dx_connection_association.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,46 +67,48 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(resourceName1),
-					testAccCheckConnectionAssociationExists(resourceName2),
+					testAccCheckConnectionAssociationExists(ctx, resourceName1),
+					testAccCheckConnectionAssociationExists(ctx, resourceName2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckConnectionAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_connection_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_connection_association" {
+				continue
+			}
+
+			err := tfdirectconnect.FindConnectionAssociationExists(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Direct Connect Connection (%s) LAG (%s) Association still exists", rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 		}
 
-		err := tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Direct Connect Connection (%s) LAG (%s) Association still exists", rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckConnectionAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -113,7 +119,7 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("No ID is set")
 		}
 
-		return tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		return tfdirectconnect.FindConnectionAssociationExists(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}
 }
 

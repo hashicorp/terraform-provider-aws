@@ -140,7 +140,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_directory_service_region` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_directory_service_region` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 - `create` - (Default `180 minutes`) Used for Region addition
 - `update` - (Default `90 minutes`) Used for replicated directory update

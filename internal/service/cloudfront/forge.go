@@ -2,9 +2,7 @@ package cloudfront
 
 import (
 	"sort"
-)
-
-// There are several parts of the AWS API that will sort lists of strings,
+) // There are several parts of the AWS API that will sort lists of strings,
 // causing diffs between resources that use lists. This avoids a bit of
 // code duplication for pre-sorts that can be used for things like hash
 // functions, etc.

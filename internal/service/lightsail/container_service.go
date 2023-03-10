@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lightsail_container_service")
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceCreate,
-		ReadContext:   resourceContainerServiceRead,
-		UpdateContext: resourceContainerServiceUpdate,
-		DeleteContext: resourceContainerServiceDelete,
+		CreateWithoutTimeout: resourceContainerServiceCreate,
+		ReadWithoutTimeout:   resourceContainerServiceRead,
+		UpdateWithoutTimeout: resourceContainerServiceUpdate,
+		DeleteWithoutTimeout: resourceContainerServiceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -162,9 +163,9 @@ func ResourceContainerService() *schema.Resource {
 }
 
 func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	serviceName := d.Get("name").(string)
 
 	input := &lightsail.CreateContainerServiceInput{
@@ -217,7 +218,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -254,7 +255,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", cs.State)
 	d.Set("url", cs.Url)
 
-	tags := KeyValueTags(cs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
@@ -267,7 +268,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
@@ -299,7 +300,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("error updating Lightsail Container Service (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -308,7 +309,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.DeleteContainerServiceInput{
 		ServiceName: aws.String(d.Id()),

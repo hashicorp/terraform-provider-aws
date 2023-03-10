@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_acm_certificate_validation")
 func ResourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,
@@ -45,7 +46,7 @@ func ResourceCertificateValidation() *schema.Resource {
 }
 
 func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := FindCertificateByARN(ctx, conn, arn)
@@ -98,7 +99,7 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := FindCertificateValidationByARN(ctx, conn, arn)

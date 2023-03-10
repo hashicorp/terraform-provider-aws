@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccLightsailLoadBalancerCertificateAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
@@ -19,12 +20,12 @@ func TestAccLightsailLoadBalancerCertificateAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerCertificateDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerCertificateAttachmentConfig_basic(lbName, cName, domainName),

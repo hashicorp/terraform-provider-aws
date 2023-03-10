@@ -3,12 +3,12 @@ subcategory: "FSx"
 layout: "aws"
 page_title: "AWS: aws_fsx_file_cache"
 description: |-
-  Terraform resource for managing an AWS FSx File Cache.
+  Terraform resource for managing an Amazon File Cache cache.
 ---
 
 # Resource: aws_fsx_file_cache
 
-Terraform resource for managing an AWS FSx File Cache.
+Terraform resource for managing an Amazon File Cache cache.
 See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
 ## Example Usage
 
@@ -107,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -115,7 +115,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Cache can be imported using the resource `id`.
+Amazon File Cache cache can be imported using the resource `id`.
 
 ```
 $ terraform import aws_fsx_file_cache.example fc-8012925589

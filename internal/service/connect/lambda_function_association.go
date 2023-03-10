@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_lambda_function_association")
 func ResourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceLambdaFunctionAssociationCreate,
-		ReadContext:   resourceLambdaFunctionAssociationRead,
-		DeleteContext: resourceLambdaFunctionAssociationDelete,
+		CreateWithoutTimeout: resourceLambdaFunctionAssociationCreate,
+		ReadWithoutTimeout:   resourceLambdaFunctionAssociationRead,
+		DeleteWithoutTimeout: resourceLambdaFunctionAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,7 +41,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceId := d.Get("instance_id").(string)
 	functionArn := d.Get("function_arn").(string)
@@ -61,7 +62,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 
@@ -88,7 +89,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {

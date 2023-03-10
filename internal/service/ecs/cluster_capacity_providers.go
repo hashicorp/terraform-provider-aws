@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ecs_cluster_capacity_providers")
 func ResourceClusterCapacityProviders() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCapacityProvidersPut,
-		ReadContext:   resourceClusterCapacityProvidersRead,
-		UpdateContext: resourceClusterCapacityProvidersPut,
-		DeleteContext: resourceClusterCapacityProvidersDelete,
+		CreateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		ReadWithoutTimeout:   resourceClusterCapacityProvidersRead,
+		UpdateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		DeleteWithoutTimeout: resourceClusterCapacityProvidersDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +74,7 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 }
 
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 
@@ -101,7 +102,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
 
@@ -136,7 +137,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	input := &ecs.PutClusterCapacityProvidersInput{
 		Cluster:                         aws.String(d.Id()),

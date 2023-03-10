@@ -11,9 +11,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-	ctx := context.Background()
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
 
 	input := &comprehend.ListEntityRecognizersInput{}
 

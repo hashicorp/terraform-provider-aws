@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_rule")
 func ResourceFirewallRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleCreate,
@@ -25,7 +26,7 @@ func ResourceFirewallRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,7 +81,7 @@ func ResourceFirewallRule() *schema.Resource {
 }
 
 func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
@@ -123,7 +124,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -157,7 +158,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -199,7 +200,7 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -244,10 +245,30 @@ func FirewallRuleParseResourceID(id string) (string, string, error) {
 }
 
 func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID, firewallDomainListID string) (*route53resolver.FirewallRule, error) {
+	output, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
+		return aws.StringValue(rule.FirewallDomainListId) == firewallDomainListID
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(firewallRuleGroupID)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, firewallRuleGroupID)
+	}
+
+	return output[0], nil
+}
+
+func findFirewallRules(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID string, f func(*route53resolver.FirewallRule) bool) ([]*route53resolver.FirewallRule, error) {
 	input := &route53resolver.ListFirewallRulesInput{
 		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
 	}
-	var output *route53resolver.FirewallRule
+	var output []*route53resolver.FirewallRule
 
 	err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
 		if page == nil {
@@ -255,10 +276,8 @@ func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Rou
 		}
 
 		for _, v := range page.FirewallRules {
-			if aws.StringValue(v.FirewallDomainListId) == firewallDomainListID {
-				output = v
-
-				return false
+			if f(v) {
+				output = append(output, v)
 			}
 		}
 
@@ -274,10 +293,6 @@ func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Rou
 
 	if err != nil {
 		return nil, err
-	}
-
-	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil

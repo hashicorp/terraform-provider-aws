@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_dedicated_ip_pool")
 func ResourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPPoolCreate,
@@ -70,7 +71,7 @@ const (
 )
 
 func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
 		PoolName: aws.String(d.Get("pool_name").(string)),
@@ -80,7 +81,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -98,7 +99,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -135,7 +136,7 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	if d.HasChanges("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -149,7 +150,7 @@ func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPPool %s", d.Id())
 	_, err := conn.DeleteDedicatedIpPool(ctx, &sesv2.DeleteDedicatedIpPoolInput{

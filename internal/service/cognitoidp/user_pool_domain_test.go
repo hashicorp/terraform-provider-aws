@@ -1,6 +1,7 @@
 package cognitoidp_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -18,19 +19,20 @@ import (
 )
 
 func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolDomainExists("aws_cognito_user_pool_domain.main"),
+					testAccCheckUserPoolDomainExists(ctx, "aws_cognito_user_pool_domain.main"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_domain.main", "domain", domainName),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "name", poolName),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "aws_account_id"),
@@ -49,6 +51,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 }
 
 func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
+	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
@@ -58,15 +61,15 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolDomainExists(resourceName),
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
 					//lintignore:AWSAT001 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11666
@@ -87,21 +90,22 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 }
 
 func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolDomainExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,7 +113,7 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
+func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -120,9 +124,9 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
+		_, err := conn.DescribeUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(rs.Primary.ID),
 		})
 
@@ -130,27 +134,29 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_pool_domain" {
-			continue
-		}
-
-		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
-			Domain: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cognito_user_pool_domain" {
+				continue
 			}
-			return err
-		}
-	}
 
-	return nil
+			_, err := conn.DescribeUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
+				Domain: aws.String(rs.Primary.ID),
+			})
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccUserPoolDomainConfig_basic(domainName, poolName string) string {

@@ -6,25 +6,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceRegions)
-}
-
-// newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
+// @FrameworkDataSource
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegions{}, nil
+	d := &dataSourceRegions{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegions struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -33,38 +31,25 @@ func (d *dataSourceRegions) Metadata(_ context.Context, request datasource.Metad
 	response.TypeName = "aws_regions"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceRegions) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"all_regions": {
-				Type:     types.BoolType,
+// Schema returns the schema for this data source.
+func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"all_regions": schema.BoolAttribute{
 				Optional: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"names": {
-				Type:     types.SetType{ElemType: types.StringType},
-				Computed: true,
+			"names": schema.SetAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
 		},
-		Blocks: map[string]tfsdk.Block{
+		Blocks: map[string]schema.Block{
 			"filter": tfec2.CustomFiltersBlock(),
 		},
-	}
-
-	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceRegions) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
 	}
 }
 
@@ -79,15 +64,14 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
+	conn := d.Meta().EC2Conn()
+
 	input := &ec2.DescribeRegionsInput{
-		Filters: tfec2.BuildCustomFilters(ctx, data.Filters),
+		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
+		Filters:    tfec2.BuildCustomFilters(ctx, data.Filters),
 	}
 
-	if !data.AllRegions.IsNull() {
-		input.AllRegions = aws.Bool(data.AllRegions.Value)
-	}
-
-	output, err := d.meta.EC2Conn.DescribeRegionsWithContext(ctx, input)
+	output, err := conn.DescribeRegionsWithContext(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Regions", err.Error())
@@ -100,8 +84,8 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	data.ID = types.String{Value: d.meta.Partition}
-	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
+	data.ID = types.StringValue(d.Meta().Partition)
+	data.Names = flex.FlattenFrameworkStringValueSetLegacy(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

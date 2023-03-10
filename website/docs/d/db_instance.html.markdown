@@ -61,6 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 * `publicly_accessible` - Accessibility options for the DB instance.
 * `resource_id` - RDS Resource ID of this instance.
 * `storage_encrypted` - Whether the DB instance is encrypted.
+* `storage_throughput` - Storage throughput value for the DB instance.
 * `storage_type` - Storage type associated with DB instance.
 * `timezone` - Time zone of the DB instance.
 * `vpc_security_groups` - Provides a list of VPC security group elements that the DB instance belongs to.

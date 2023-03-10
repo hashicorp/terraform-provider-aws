@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_rule")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -29,7 +30,7 @@ func ResourceRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -104,9 +105,9 @@ func ResourceRule() *schema.Resource {
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverRuleInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-rule-")),
@@ -146,7 +147,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -176,7 +177,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("setting target_ip: %s", err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)
@@ -197,7 +198,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		input := &route53resolver.UpdateResolverRuleInput{
@@ -231,7 +232,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Rule (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -240,7 +241,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule: %s", d.Id())
 	_, err := conn.DeleteResolverRuleWithContext(ctx, &route53resolver.DeleteResolverRuleInput{

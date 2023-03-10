@@ -13,9 +13,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_routing_profile")
 func DataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRoutingProfileRead,
+		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -100,7 +101,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 }
 
 func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -158,7 +159,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("queue_configs", queueConfigs)
 
-	if err := d.Set("tags", KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

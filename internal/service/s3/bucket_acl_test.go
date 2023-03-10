@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,8 @@ import (
 )
 
 func TestBucketACLParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		InputID             string
@@ -220,7 +223,10 @@ func TestBucketACLParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotBucket, gotExpectedBucketOwner, gotAcl, err := tfs3.BucketACLParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectError {
@@ -247,6 +253,7 @@ func TestBucketACLParseResourceID(t *testing.T) {
 }
 
 func TestAccS3BucketACL_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -254,12 +261,12 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
@@ -280,6 +287,7 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 }
 
 func TestAccS3BucketACL_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -287,15 +295,15 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
 					// will result in a missing Bucket ACL resource
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -304,6 +312,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 }
 
 func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
@@ -312,19 +321,19 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, s3.BucketCannedACLPublicRead),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", s3.BucketCannedACLPublicRead),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_migrate(bucketName, s3.BucketCannedACLPublicRead),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPublicRead),
 				),
 			},
@@ -333,6 +342,7 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 }
 
 func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
@@ -341,19 +351,19 @@ func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, s3.BucketCannedACLPublicRead),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", s3.BucketCannedACLPublicRead),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_migrate(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 				),
 			},
@@ -362,6 +372,7 @@ func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 }
 
 func TestAccS3BucketACL_migrate_grantsNoChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
@@ -370,12 +381,12 @@ func TestAccS3BucketACL_migrate_grantsNoChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_aclGrants(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "grant.*", map[string]string{
 						"permissions.#": "2",
@@ -388,7 +399,7 @@ func TestAccS3BucketACL_migrate_grantsNoChange(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_migrateGrantsNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -411,6 +422,7 @@ func TestAccS3BucketACL_migrate_grantsNoChange(t *testing.T) {
 }
 
 func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
@@ -419,19 +431,19 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, s3.BucketCannedACLPublicRead),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", s3.BucketCannedACLPublicRead),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_migrateGrantsChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -457,6 +469,7 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 }
 
 func TestAccS3BucketACL_updateACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -464,19 +477,19 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPublicRead),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPublicRead),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 				),
 			},
@@ -490,6 +503,7 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 }
 
 func TestAccS3BucketACL_updateGrant(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -497,12 +511,12 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -528,7 +542,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grantsUpdate(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -559,6 +573,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 }
 
 func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -566,12 +581,12 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 				),
@@ -579,7 +594,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 				),
@@ -594,6 +609,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 }
 
 func TestAccS3BucketACL_grantToACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
@@ -601,12 +617,12 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 				),
@@ -614,7 +630,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, s3.BucketCannedACLPrivate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(resourceName),
+					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 				),
@@ -628,7 +644,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketACLExists(n string) resource.TestCheckFunc {
+func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -639,7 +655,7 @@ func testAccCheckBucketACLExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		bucket, expectedBucketOwner, _, err := tfs3.BucketACLParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -654,7 +670,7 @@ func testAccCheckBucketACLExists(n string) resource.TestCheckFunc {
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := conn.GetBucketAcl(input)
+		output, err := conn.GetBucketAclWithContext(ctx, input)
 
 		if err != nil {
 			return err

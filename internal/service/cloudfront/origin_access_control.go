@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_origin_access_control")
 func ResourceOriginAccessControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginAccessControlCreate,
@@ -69,7 +70,7 @@ const (
 )
 
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	in := &cloudfront.CreateOriginAccessControlInput{
 		OriginAccessControlConfig: &cloudfront.OriginAccessControlConfig{
@@ -96,7 +97,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	out, err := findOriginAccessControlByID(ctx, conn, d.Id())
 
@@ -127,7 +128,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	in := &cloudfront.UpdateOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
@@ -151,7 +152,7 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control %s", d.Id())
 

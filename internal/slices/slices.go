@@ -1,5 +1,7 @@
 package slices
 
+import "golang.org/x/exp/slices"
+
 // Reverse returns a reversed copy of the slice.
 func Reverse[S ~[]E, E any](s S) S {
 	v := S([]E{})
@@ -34,4 +36,19 @@ func ApplyToAll[T, U any](s []T, f func(T) U) []U {
 	}
 
 	return v
+}
+
+type FilterFunc[T any] func(T) bool
+
+// Filter returns a new slice containing all values that return `true` for the filter function `f`
+func Filter[T any](s []T, f FilterFunc[T]) []T {
+	v := make([]T, 0, len(s))
+
+	for _, e := range s {
+		if f(e) {
+			v = append(v, e)
+		}
+	}
+
+	return slices.Clip(v)
 }

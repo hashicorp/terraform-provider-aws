@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_globalaccelerator_listener")
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -24,7 +25,7 @@ func ResourceListener() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -75,7 +76,7 @@ func ResourceListener() *schema.Resource {
 }
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.CreateListenerInput{
@@ -103,7 +104,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	listener, err := FindListenerByARN(ctx, conn, d.Id())
 
@@ -134,7 +135,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.UpdateListenerInput{
@@ -159,7 +160,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Listener: %s", d.Id())
