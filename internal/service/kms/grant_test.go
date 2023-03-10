@@ -52,7 +52,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	servicePrincipal := "dynamodb.us-west-1.amazonaws.com"
+	servicePrincipal := "dynamodb.us-west-1.amazonaws.com" //lintignore:AWSAT003
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
