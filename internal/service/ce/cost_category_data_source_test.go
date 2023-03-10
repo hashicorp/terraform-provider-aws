@@ -38,9 +38,7 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 }
 
 func testAccCostCategoryDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCostCategoryConfig_basic(rName),
-		`
+	return acctest.ConfigCompose(testAccCostCategoryConfig_basic(rName), `
 data "aws_ce_cost_category" "test" {
   cost_category_arn = aws_ce_cost_category.test.arn
 }

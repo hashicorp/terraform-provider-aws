@@ -15,11 +15,193 @@ import (
 
 // @SDKDataSource("aws_ce_cost_category")
 func DataSourceCostCategory() *schema.Resource {
+	schemaCostCategoryRuleExpressionComputed := func() *schema.Resource {
+		return &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cost_category": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"dimension": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+	schemaCostCategoryRuleComputed := func() *schema.Resource {
+		return &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"and": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     schemaCostCategoryRuleExpressionComputed(),
+				},
+				"cost_category": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"dimension": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"not": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     schemaCostCategoryRuleExpressionComputed(),
+				},
+				"or": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     schemaCostCategoryRuleExpressionComputed(),
+				},
+				"tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"match_options": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"values": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCostCategoryRead,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Schema: map[string]*schema.Schema{
 			"cost_category_arn": {
 				Type:     schema.TypeString,
@@ -127,191 +309,6 @@ func DataSourceCostCategory() *schema.Resource {
 				},
 			},
 			"tags": tftags.TagsSchemaComputed(),
-		},
-	}
-}
-
-func schemaCostCategoryRuleComputed() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"and": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     schemaCostCategoryRuleExpressionComputed(),
-			},
-			"cost_category": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"dimension": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"not": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     schemaCostCategoryRuleExpressionComputed(),
-			},
-			"or": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     schemaCostCategoryRuleExpressionComputed(),
-			},
-			"tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cost_category": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"dimension": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 		},
 	}
 }
