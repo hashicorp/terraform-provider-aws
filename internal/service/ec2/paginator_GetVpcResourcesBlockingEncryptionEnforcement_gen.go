@@ -93,7 +93,7 @@ func (p *getVpcResourcesBlockingEncryptionEnforcementPaginator) NextPage(ctx con
 	if p.options.StopOnDuplicateToken &&
 		prevToken != nil &&
 		p.nextToken != nil &&
-		*prevToken == *p.nextToken { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

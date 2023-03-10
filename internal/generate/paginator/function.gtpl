@@ -82,7 +82,7 @@ func (p *{{ .Name }}Paginator) NextPage(ctx context.Context, optFns ...func(*ec2
 	if p.options.StopOnDuplicateToken &&
 		prevToken != nil &&
 		p.nextToken != nil &&
-		*prevToken == *p.nextToken { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
