@@ -619,8 +619,8 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.InstanceType = aws.String(v)
 		}
 
-		if v, ok := data["variant_name"]; ok {
-			l.VariantName = aws.String(v.(string))
+		if v, ok := data["variant_name"].(string); ok && v != "" {
+			l.VariantName = aws.String(v)
 		} else {
 			l.VariantName = aws.String(resource.UniqueId())
 		}
