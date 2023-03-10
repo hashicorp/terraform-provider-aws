@@ -182,7 +182,7 @@ The `ebs` block supports the following:
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
+  This must be set with a `volume_type` of `"io1/io2/gp3"`.
 * `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
