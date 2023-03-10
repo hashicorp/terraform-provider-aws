@@ -12,6 +12,8 @@ BUG FIXES:
 
 * resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
 * resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
+* resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
+* resource/aws_lightsail_instance: Fix `name` validation to allow instances to start with a numeric character ([#29903](https://github.com/hashicorp/terraform-provider-aws/issues/29903))
 * resource/aws_opensearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_sagemaker_endpoint_configuration: Fix `variant_name` generation when unset ([#29915](https://github.com/hashicorp/terraform-provider-aws/issues/29915))
 
