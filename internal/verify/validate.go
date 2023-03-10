@@ -47,11 +47,15 @@ func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error
 		return ws, errors
 	}
 
-	if !servicePrincipalRegexp.MatchString(value) {
+	if !IsServicePrincipal(value) {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
 	}
 
 	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
 }
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
