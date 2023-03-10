@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_default_subnet")
 func ResourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -231,8 +232,8 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
-	oldTags := KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

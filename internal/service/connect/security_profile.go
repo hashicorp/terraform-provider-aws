@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_security_profile")
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityProfileCreate,
@@ -74,7 +75,7 @@ func ResourceSecurityProfile() *schema.Resource {
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	securityProfileName := d.Get("name").(string)
@@ -160,7 +161,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	tags := KeyValueTags(resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

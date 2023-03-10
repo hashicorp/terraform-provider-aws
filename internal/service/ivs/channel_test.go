@@ -29,7 +29,7 @@ func TestAccIVSChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVS, t)
+			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -65,7 +65,7 @@ func TestAccIVSChannel_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVS, t)
+			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -119,7 +119,7 @@ func TestAccIVSChannel_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVS, t)
+			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -161,7 +161,7 @@ func TestAccIVSChannel_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -190,7 +190,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccChannelPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),

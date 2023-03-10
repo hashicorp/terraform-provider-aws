@@ -1075,11 +1075,11 @@ func testAccImageRecipeConfig_component(rName string) string {
 		testAccImageRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_imagebuilder_component" "aws-cli-version-2-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/aws-cli-version-2-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/aws-cli-version-2-linux/x.x.x"
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
 }
 
 resource "aws_imagebuilder_image_recipe" "test" {

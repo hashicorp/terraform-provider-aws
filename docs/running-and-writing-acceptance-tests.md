@@ -571,7 +571,7 @@ If you add a new test that has preconditions which are checked by an existing pr
 
 These are some of the standard provider PreChecks:
 
-* `acctest.PreCheckPartitionHasService(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `acctest.PreCheckPartitionHasService(t *testing.T, serviceID string)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
 * `acctest.PreCheckOrganizationsAccount(ctx context.Context, t *testing.T)` checks whether the current account can perform AWS Organizations tests.
 * `acctest.PreCheckAlternateAccount(t *testing.T)` checks whether the environment is set up for tests across accounts.
 * `acctest.PreCheckMultipleRegion(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
@@ -584,7 +584,7 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
     // ... additional checks follow ...
   })
 }
@@ -831,7 +831,7 @@ resource "aws_example_thing" "test" {
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
 - In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
-- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t)`
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -848,7 +848,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheckOrganizationsAccount(ctx, t)
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
@@ -894,7 +894,7 @@ Searching for usage of `acctest.PreCheckOrganizationsAccount` in the codebase wi
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
 - In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(ctx, t)`
-- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2)` (where the last parameter is number of regions, 2 or 3)
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2)` (where the last parameter is number of regions, 2 or 3)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -912,7 +912,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheckMultipleRegion(t, 2)
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
@@ -994,7 +994,7 @@ var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
 func testAccPreCheckPricing(t *testing.T) {
-  acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
+  acctest.PreCheckPartitionHasService(t, pricing.EndpointsID)
 
   // Since we are outside the scope of the Terraform configuration we must
   // call Configure() to properly initialize the provider configuration.

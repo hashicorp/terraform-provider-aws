@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_cluster_iam_roles")
 func ResourceClusterIAMRoles() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterIAMRolesCreate,

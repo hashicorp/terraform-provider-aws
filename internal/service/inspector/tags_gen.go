@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -21,10 +22,14 @@ func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier 
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -46,12 +51,12 @@ func Tags(tags tftags.KeyValueTags) []*inspector.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from inspector service tags.
-func KeyValueTags(tags []*inspector.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*inspector.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }

@@ -369,7 +369,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(names.RolesAnywhereEndpointID, t)
+	acctest.PreCheckPartitionHasService(t, names.RolesAnywhereEndpointID)
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient()
 

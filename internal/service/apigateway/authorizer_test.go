@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -16,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
@@ -316,7 +315,7 @@ func TestAccAPIGatewayAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthorizerExists(ctx context.Context, n string, res *apigateway.Authorizer) resource.TestCheckFunc {
+func testAccCheckAuthorizerExists(ctx context.Context, n string, v *apigateway.Authorizer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -329,16 +328,13 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, res *apigateway
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetAuthorizerInput{
-			AuthorizerId: aws.String(rs.Primary.ID),
-			RestApiId:    aws.String(rs.Primary.Attributes["rest_api_id"]),
-		}
-		describe, err := conn.GetAuthorizerWithContext(ctx, req)
+		output, err := tfapigateway.FindAuthorizerByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
+
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -353,25 +349,17 @@ func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			req := &apigateway.GetAuthorizerInput{
-				AuthorizerId: aws.String(rs.Primary.ID),
-				RestApiId:    aws.String(rs.Primary.Attributes["rest_api_id"]),
-			}
-			_, err := conn.GetAuthorizerWithContext(ctx, req)
+			_, err := tfapigateway.FindAuthorizerByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
 
-			if err == nil {
-				return fmt.Errorf("API Gateway Authorizer still exists")
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != apigateway.ErrCodeNotFoundException {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Authorizer %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -389,7 +377,7 @@ func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccAuthorizerBaseConfig(rName string) string {
+func testAccAuthorizerConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -466,18 +454,18 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccAuthorizerConfig_lambda(rName string) string {
-	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                   = %[1]q
   rest_api_id            = aws_api_gateway_rest_api.test.id
   authorizer_uri         = aws_lambda_function.test.invoke_arn
   authorizer_credentials = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccAuthorizerConfig_lambdaUpdate(rName string) string {
-	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                             = "%[1]s_modified"
   rest_api_id                      = aws_api_gateway_rest_api.test.id
@@ -486,11 +474,11 @@ resource "aws_api_gateway_authorizer" "test" {
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression   = ".*"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAuthorizerConfig_lambdaNoCache(rName string) string {
-	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                             = "%[1]s_modified"
   rest_api_id                      = aws_api_gateway_rest_api.test.id
@@ -499,7 +487,7 @@ resource "aws_api_gateway_authorizer" "test" {
   authorizer_result_ttl_in_seconds = 0
   identity_validation_expression   = ".*"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAuthorizerConfig_cognito(rName string) string {
@@ -586,24 +574,24 @@ resource "aws_api_gateway_authorizer" "test" {
 }
 
 func testAccAuthorizerConfig_authTypeValidationDefaultToken(rName string) string {
-	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
-  name                   = "%s"
+  name                   = %[1]q
   rest_api_id            = aws_api_gateway_rest_api.test.id
   authorizer_credentials = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccAuthorizerConfig_authTypeValidationRequest(rName string) string {
-	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
-  name                   = "%s"
+  name                   = %[1]q
   type                   = "REQUEST"
   rest_api_id            = aws_api_gateway_rest_api.test.id
   authorizer_credentials = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccAuthorizerConfig_authTypeValidationCognito(rName string) string {

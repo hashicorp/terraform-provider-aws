@@ -23,6 +23,7 @@ const (
 	customerPolicyAttachmentTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,

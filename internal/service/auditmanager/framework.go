@@ -26,10 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceFramework)
-}
-
+// @FrameworkResource
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
 }
@@ -133,7 +130,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, plan.Tags))
 	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if len(tags) > 0 {
@@ -398,7 +395,7 @@ func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, meta *co
 
 	defaultTagsConfig := meta.DefaultTagsConfig
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null

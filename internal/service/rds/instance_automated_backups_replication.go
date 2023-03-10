@@ -22,6 +22,7 @@ const (
 	InstanceAutomatedBackupsReplicationDeleteTimeout = 75 * time.Minute
 )
 
+// @SDKResource("aws_db_instance_automated_backups_replication")
 func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceAutomatedBackupsReplicationCreate,

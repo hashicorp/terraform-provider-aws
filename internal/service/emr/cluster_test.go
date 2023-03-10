@@ -1696,7 +1696,7 @@ func testAccDeleteManagedSecurityGroups(ctx context.Context, conn *ec2.EC2, vpc 
 	}
 
 	for groupName := range managedSecurityGroups {
-		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, conn, groupName, aws.StringValue(vpc.VpcId))
+		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, groupName, aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
 
 		if err != nil {
 			return fmt.Errorf("error describing EMR Managed Security Group (%s): %w", groupName, err)

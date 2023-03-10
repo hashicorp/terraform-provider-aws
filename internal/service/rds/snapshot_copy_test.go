@@ -3,7 +3,6 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -134,23 +133,24 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
+			_, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 
-			_, err := tfrds.FindSnapshot(ctx, conn, rs.Primary.ID)
-
-			// verify error is what we want
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS DB Snapshot Copy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSnapshotCopyExists(ctx context.Context, n string, ci *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,23 +158,24 @@ func testAccCheckSnapshotCopyExists(ctx context.Context, n string, ci *rds.DBSna
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no RDS DB Snapshot ID is set")
+			return fmt.Errorf("No RDS DB Snapshot Copy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		out, err := tfrds.FindSnapshot(ctx, conn, rs.Primary.ID)
+		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		ci = out
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccSnapshotCopyBaseConfig(rName string) string {
+func testAccSnapshotCopyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -191,10 +192,10 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_engine_version.default.engine
   engine_version          = data.aws_rds_engine_version.default.version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
+  name                    = "test"
   identifier              = %[1]q
-  password                = "barbarbarbar"
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   maintenance_window      = "Fri:09:00-Fri:09:30"
   backup_retention_period = 0
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
@@ -208,9 +209,7 @@ resource "aws_db_snapshot" "test" {
 }
 
 func testAccSnapshotCopyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
@@ -218,9 +217,7 @@ resource "aws_db_snapshot_copy" "test" {
 }
 
 func testAccSnapshotCopyConfig_tags1(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
@@ -232,9 +229,7 @@ resource "aws_db_snapshot_copy" "test" {
 }
 
 func testAccSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"

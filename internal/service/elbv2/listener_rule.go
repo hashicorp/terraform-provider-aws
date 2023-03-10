@@ -36,6 +36,8 @@ const (
 	listenerActionOrderMax = 50_000
 )
 
+// @SDKResource("aws_alb_listener_rule")
+// @SDKResource("aws_lb_listener_rule")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
@@ -493,7 +495,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	listenerArn := d.Get("listener_arn").(string)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	params := &elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerArn),

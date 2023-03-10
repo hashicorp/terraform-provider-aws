@@ -731,6 +731,7 @@ resource "aws_s3_bucket" "destination" {
 func TestExpandAnalyticsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.AnalyticsFilter
@@ -841,7 +842,7 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.ExpandAnalyticsFilter(tc.Input)
+		value := tfs3.ExpandAnalyticsFilter(ctx, tc.Input)
 
 		if value == nil {
 			if tc.Expected == nil {
@@ -1023,6 +1024,7 @@ func TestExpandStorageClassAnalysis(t *testing.T) {
 func TestFlattenAnalyticsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    *s3.AnalyticsFilter
 		Expected []map[string]interface{}
@@ -1134,7 +1136,7 @@ func TestFlattenAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.FlattenAnalyticsFilter(tc.Input)
+		value := tfs3.FlattenAnalyticsFilter(ctx, tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)

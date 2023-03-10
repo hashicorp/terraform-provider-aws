@@ -305,6 +305,7 @@ var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 	endpoints.UsWest2RegionID:  "520713654638",
 }
 
+// @SDKDataSource("aws_sagemaker_prebuilt_ecr_image")
 func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,

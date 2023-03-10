@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ce_cost_category")
 func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCostCategoryRead,

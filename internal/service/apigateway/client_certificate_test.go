@@ -6,14 +6,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
@@ -120,7 +119,7 @@ func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClientCertificateExists(ctx context.Context, n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
+func testAccCheckClientCertificateExists(ctx context.Context, n string, v *apigateway.ClientCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -133,15 +132,13 @@ func testAccCheckClientCertificateExists(ctx context.Context, n string, res *api
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetClientCertificateInput{
-			ClientCertificateId: aws.String(rs.Primary.ID),
-		}
-		out, err := conn.GetClientCertificateWithContext(ctx, req)
+		output, err := tfapigateway.FindClientCertificateByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *out
+		*v = *output
 
 		return nil
 	}
@@ -156,23 +153,17 @@ func testAccCheckClientCertificateDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			req := &apigateway.GetClientCertificateInput{
-				ClientCertificateId: aws.String(rs.Primary.ID),
-			}
-			out, err := conn.GetClientCertificateWithContext(ctx, req)
-			if err == nil {
-				return fmt.Errorf("API Gateway Client Certificate still exists: %s", out)
+			_, err := tfapigateway.FindClientCertificateByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if awsErr.Code() != apigateway.ErrCodeNotFoundException {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Client Certificate %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -197,7 +188,7 @@ resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
-    %q = %q
+    %[1]q = %[2]q
   }
 }
 `, tagKey1, tagValue1)
@@ -209,8 +200,8 @@ resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
-    %q = %q
-    %q = %q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)

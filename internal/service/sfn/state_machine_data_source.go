@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_sfn_state_machine")
 func DataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineRead,

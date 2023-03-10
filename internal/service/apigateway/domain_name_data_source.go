@@ -19,6 +19,7 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
+// @SDKDataSource("aws_api_gateway_domain_name")
 func DataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainNameRead,
@@ -136,7 +137,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 	d.Set("security_policy", domainName.SecurityPolicy)
 
-	if err := d.Set("tags", KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

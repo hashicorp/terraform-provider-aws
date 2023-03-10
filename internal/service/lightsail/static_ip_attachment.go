@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_lightsail_static_ip_attachment")
 func ResourceStaticIPAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStaticIPAttachmentCreate,

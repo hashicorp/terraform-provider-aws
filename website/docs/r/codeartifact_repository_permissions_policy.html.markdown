@@ -27,22 +27,23 @@ resource "aws_codeartifact_repository" "example" {
   domain     = aws_codeartifact_domain.example.domain
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["codeartifact:CreateRepository"]
+    resources = [aws_codeartifact_domain.example.arn]
+  }
+}
 resource "aws_codeartifact_repository_permissions_policy" "example" {
   repository      = aws_codeartifact_repository.example.repository
   domain          = aws_codeartifact_domain.example.domain
-  policy_document = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "codeartifact:CreateRepository",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Resource": "${aws_codeartifact_domain.example.arn}"
-        }
-    ]
-}
-EOF
+  policy_document = data.aws_iam_policy_document.example.json
 }
 ```
 

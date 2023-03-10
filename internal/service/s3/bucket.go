@@ -38,6 +38,7 @@ const (
 	resNameBucket = "Bucket"
 )
 
+// @SDKResource("aws_s3_bucket")
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -1223,12 +1224,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
 	if lifecycle, ok := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput); ok {
-		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(lifecycle.Rules)); err != nil {
+		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(ctx, lifecycle.Rules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting lifecycle_rule: %s", err)
 		}
 	} else {
@@ -1252,12 +1253,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
 	if replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput); ok {
-		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
+		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(ctx, replication.ReplicationConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting replication_configuration: %s", err)
 		}
 	} else {
@@ -1758,7 +1759,7 @@ func resourceBucketInternalLifecycleUpdate(ctx context.Context, conn *s3.S3, d *
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := Tags(tftags.New(r["tags"]).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, r["tags"]).IgnoreAWS())
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
@@ -2009,7 +2010,7 @@ func resourceBucketInternalReplicationConfigurationUpdate(ctx context.Context, c
 
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(d.Id()),
-		ReplicationConfiguration: expandBucketReplicationConfiguration(replicationConfiguration),
+		ReplicationConfiguration: expandBucketReplicationConfiguration(ctx, replicationConfiguration),
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
@@ -2306,7 +2307,7 @@ func flattenBucketLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []
 	return []interface{}{m}
 }
 
-func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface{} {
+func flattenBucketLifecycleRules(ctx context.Context, lifecycleRules []*s3.LifecycleRule) []interface{} {
 	if len(lifecycleRules) == 0 {
 		return []interface{}{}
 	}
@@ -2341,7 +2342,7 @@ func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface
 				}
 				// Tag
 				if len(filter.And.Tags) > 0 {
-					rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
+					rule["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
 				}
 			} else {
 				// Prefix
@@ -2350,7 +2351,7 @@ func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface
 				}
 				// Tag
 				if filter.Tag != nil {
-					rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
+					rule["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
 				}
 			}
 		}
@@ -2536,7 +2537,7 @@ func flattenObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interfac
 
 // Replication Configuration functions
 
-func expandBucketReplicationConfiguration(l []interface{}) *s3.ReplicationConfiguration {
+func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) *s3.ReplicationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2553,13 +2554,13 @@ func expandBucketReplicationConfiguration(l []interface{}) *s3.ReplicationConfig
 	}
 
 	if v, ok := tfMap["rules"].(*schema.Set); ok && v.Len() > 0 {
-		rc.Rules = expandBucketReplicationConfigurationRules(v.List())
+		rc.Rules = expandBucketReplicationConfigurationRules(ctx, v.List())
 	}
 
 	return rc
 }
 
-func expandBucketReplicationConfigurationRules(l []interface{}) []*s3.ReplicationRule {
+func expandBucketReplicationConfigurationRules(ctx context.Context, l []interface{}) []*s3.ReplicationRule {
 	var rules []*s3.ReplicationRule
 
 	for _, tfMapRaw := range l {
@@ -2597,7 +2598,7 @@ func expandBucketReplicationConfigurationRules(l []interface{}) []*s3.Replicatio
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 
 			filter := v[0].(map[string]interface{})
-			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
+			tags := Tags(tftags.New(ctx, filter["tags"]).IgnoreAWS())
 
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
@@ -2715,7 +2716,7 @@ func expandBucketReplicationConfigurationRulesSourceSelectionCriteria(l []interf
 	return ruleSsc
 }
 
-func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []interface{} {
+func flattenBucketReplicationConfiguration(ctx context.Context, r *s3.ReplicationConfiguration) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
@@ -2727,7 +2728,7 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []int
 	}
 
 	if len(r.Rules) > 0 {
-		m["rules"] = flattenBucketReplicationConfigurationReplicationRules(r.Rules)
+		m["rules"] = flattenBucketReplicationConfigurationReplicationRules(ctx, r.Rules)
 	}
 
 	return []interface{}{m}
@@ -2787,7 +2788,7 @@ func flattenBucketReplicationConfigurationReplicationRuleDestination(d *s3.Desti
 	return []interface{}{m}
 }
 
-func flattenBucketReplicationConfigurationReplicationRuleFilter(filter *s3.ReplicationRuleFilter) []interface{} {
+func flattenBucketReplicationConfigurationReplicationRuleFilter(ctx context.Context, filter *s3.ReplicationRuleFilter) []interface{} {
 	if filter == nil {
 		return []interface{}{}
 	}
@@ -2799,12 +2800,12 @@ func flattenBucketReplicationConfigurationReplicationRuleFilter(filter *s3.Repli
 	}
 
 	if filter.Tag != nil {
-		m["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
 	}
 
 	if filter.And != nil {
 		m["prefix"] = aws.StringValue(filter.And.Prefix)
-		m["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
@@ -2840,7 +2841,7 @@ func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteria
 	return []interface{}{m}
 }
 
-func flattenBucketReplicationConfigurationReplicationRules(rules []*s3.ReplicationRule) []interface{} {
+func flattenBucketReplicationConfigurationReplicationRules(ctx context.Context, rules []*s3.ReplicationRule) []interface{} {
 	var results []interface{}
 
 	for _, rule := range rules {
@@ -2873,7 +2874,7 @@ func flattenBucketReplicationConfigurationReplicationRules(rules []*s3.Replicati
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenBucketReplicationConfigurationReplicationRuleFilter(rule.Filter)
+			m["filter"] = flattenBucketReplicationConfigurationReplicationRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.DeleteMarkerReplication != nil {

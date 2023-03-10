@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_securityhub_invite_accepter")
 func ResourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInviteAccepterCreate,

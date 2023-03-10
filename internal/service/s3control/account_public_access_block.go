@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3_account_public_access_block", resourceAccountPublicAccessBlock)
-}
-
+// @SDKResource("aws_s3_account_public_access_block")
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,

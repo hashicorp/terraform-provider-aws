@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_elasticsearch_domain_saml_options")
 func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,

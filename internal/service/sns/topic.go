@@ -2,7 +2,6 @@ package sns
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -24,7 +23,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/jmespath/go-jmespath"
 )
 
 var (
@@ -152,6 +150,12 @@ var (
 				return json
 			},
 		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+		},
 		"sqs_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -169,6 +173,12 @@ var (
 		},
 		"tags":     tftags.TagsSchema(),
 		"tags_all": tftags.TagsSchemaComputed(),
+		"tracing_config": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
@@ -192,12 +202,15 @@ var (
 		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                 TopicAttributeNameOwner,
 		"policy":                                TopicAttributeNamePolicy,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        TopicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -221,7 +234,7 @@ func ResourceTopic() *schema.Resource {
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -354,59 +367,6 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	return nil
-}
-
-// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
-// Assumes that non-"AWS" Principals are valid
-// The value can be a single string or a slice of strings
-// Valid strings are either an ARN or an AWS account ID
-func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
-	var policyData any
-	err := json.Unmarshal([]byte(policy), &policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	principals, ok := result.([]any)
-	if !ok {
-		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
-	}
-
-	for _, principal := range principals {
-		switch x := principal.(type) {
-		case string:
-			if !isValidAWSPrincipal(x) {
-				return false, nil
-			}
-		case []string:
-			for _, s := range x {
-				if !isValidAWSPrincipal(s) {
-					return false, nil
-				}
-			}
-		}
-	}
-
-	return true, nil
-}
-
-// isValidAWSPrincipal returns true if a string is either an ARN, an AWS account ID, or `*`
-func isValidAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
-	if principal == "*" {
-		return true
-	}
-	if arn.IsARN(principal) {
-		return true
-	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
-		return true
-	}
-	return false
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

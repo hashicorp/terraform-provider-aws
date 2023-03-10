@@ -2,6 +2,7 @@ package flex
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -61,11 +62,20 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
-// Expands a map of string to interface to a map of string to *int32
+// Expands a map of string to interface to a map of string to int32
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	intMap := make(map[string]int32, len(m))
 	for k, v := range m {
 		intMap[k] = int32(v.(int))
+	}
+	return intMap
+}
+
+// Expands a map of string to interface to a map of string to *int64
+func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
+	intMap := make(map[string]*int64, len(m))
+	for k, v := range m {
+		intMap[k] = aws.Int64(int64(v.(int)))
 	}
 	return intMap
 }
@@ -206,4 +216,10 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 	}
 
 	return strings.Join(idParts, ResourceIdSeparator), nil
+}
+
+// StringToBoolValue converts a string pointer to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringToBoolValue(v *string) bool {
+	return aws.StringValue(v) == strconv.FormatBool(true)
 }
