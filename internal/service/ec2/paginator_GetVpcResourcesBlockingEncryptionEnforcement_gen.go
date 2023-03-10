@@ -45,7 +45,7 @@ func newGetVpcResourcesBlockingEncryptionEnforcementPaginator(client getVpcResou
 
 	options := getVpcResourcesBlockingEncryptionEnforcementPaginatorOptions{}
 	if params.MaxResults != nil {
-		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
 	}
 
 	for _, fn := range optFns {
@@ -72,7 +72,7 @@ func (p *getVpcResourcesBlockingEncryptionEnforcementPaginator) NextPage(ctx con
 		return nil, fmt.Errorf("no more pages available")
 	}
 
-	params := *p.params // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	params := *p.params // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
 	params.NextToken = p.nextToken
 
 	var limit *int32

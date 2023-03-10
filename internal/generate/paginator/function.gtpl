@@ -34,7 +34,7 @@ func new{{ .AWSName }}Paginator(client {{ .Name }}APIClient, params *ec2.{{ .AWS
 
 	options := {{ .Name }}PaginatorOptions{}
 	if params.MaxResults != nil {
-		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
 	}
 
 	for _, fn := range optFns {
@@ -61,7 +61,7 @@ func (p *{{ .Name }}Paginator) NextPage(ctx context.Context, optFns ...func(*ec2
 		return nil, fmt.Errorf("no more pages available")
 	}
 
-	params := *p.params // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	params := *p.params // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
 	params.NextToken = p.nextToken
 
 	var limit *int32
