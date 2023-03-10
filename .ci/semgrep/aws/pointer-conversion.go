@@ -24,15 +24,46 @@ func dereferenceAndWrap() pointerStruct {
 	)
 
 	return pointerStruct{
-		// ruleid: immediate-dereference-and-wrap
+		// ruleid: pointer-conversion-dereference-and-wrap
 		aBool: aws.Bool(*aBool),
-		// ruleid: immediate-dereference-and-wrap
+		// ruleid: pointer-conversion-dereference-and-wrap
 		aFloat: aws.Float64(*aFloat),
-		// ruleid: immediate-dereference-and-wrap
+		// ruleid: pointer-conversion-dereference-and-wrap
 		anInt: aws.Int64(*anInt),
-		// ruleid: immediate-dereference-and-wrap
+		// ruleid: pointer-conversion-dereference-and-wrap
 		aString: aws.String(*aString),
-		// ruleid: immediate-dereference-and-wrap
+		// ruleid: pointer-conversion-dereference-and-wrap
 		aTime: aws.Time(*aTime),
+	}
+}
+
+type valueStruct struct {
+	aBool   bool
+	aFloat  float64
+	anInt   int64
+	aString string
+	aTime   time.Time
+}
+
+func wrapAndDereference() valueStruct {
+	var (
+		aBool   bool
+		aFloat  float64
+		anInt   int64
+		aString string
+		aTime   time.Time
+	)
+
+	return valueStruct{
+		// ruleid: pointer-conversion-wrap-and-dereference
+		aBool: *aws.Bool(aBool),
+		// ruleid: pointer-conversion-wrap-and-dereference
+		aFloat: *aws.Float64(aFloat),
+		// ruleid: pointer-conversion-wrap-and-dereference
+		anInt: *aws.Int64(anInt),
+		// ruleid: pointer-conversion-wrap-and-dereference
+		aString: *aws.String(aString),
+		// ruleid: pointer-conversion-wrap-and-dereference
+		aTime: *aws.Time(aTime),
 	}
 }
