@@ -545,7 +545,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", computeArnWithoutRevision(*taskDefinition.TaskDefinitionArn))
+	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
@@ -605,7 +605,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", computeArnWithoutRevision(*taskDefinition.TaskDefinitionArn))
+	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
 
@@ -1250,7 +1250,18 @@ func flattenTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[strin
 	return []map[string]interface{}{m}
 }
 
-func computeArnWithoutRevision(taskDefinitionArn string) string {
-	arnRegexp := regexp.MustCompile(`:\d+$`)
-	return arnRegexp.ReplaceAllString(taskDefinitionArn, "")
+// StripRevision strips the trailing revision number from a task definition ARN
+//
+// Invalid ARNs will return an empty string. ARNs with an unexpected number of
+// separators in the resource section are returned unmodified.
+func StripRevision(s string) string {
+	tdArn, err := arn.Parse(s)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(tdArn.Resource, ":")
+	if len(parts) == 2 {
+		tdArn.Resource = parts[0]
+	}
+	return tdArn.String()
 }
