@@ -533,10 +533,10 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
-					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "false"),
 				),
 			},
 			{
@@ -550,10 +550,10 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table2"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
-					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "false"),
 				),
 			},
 		},
@@ -2961,7 +2961,7 @@ resource "aws_glue_crawler" "test" {
     connection_name           = aws_glue_connection.test.name
     delta_tables              = [%[3]q]
     write_manifest            = false
-    create_native_delta_table = false
+    create_native_delta_table = true
   }
 }
 `, rName, connectionUrl, tableName))
