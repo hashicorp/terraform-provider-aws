@@ -1105,7 +1105,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed: true,
 													},
 													"event_id": {
-														Type:     schema.TypeInt,
+														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
 													},
