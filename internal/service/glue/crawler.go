@@ -113,7 +113,7 @@ func ResourceCrawler() *schema.Resource {
 						},
 						"create_native_delta_table": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
 						},
 						"delta_tables": {
 							Type:     schema.TypeSet,

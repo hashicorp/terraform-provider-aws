@@ -528,12 +528,12 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table1"),
+				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table1", "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
@@ -545,7 +545,7 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table2"),
+				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table2", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
@@ -2933,7 +2933,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, connectionUrl, path1, path2))
 }
 
-func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName string) string {
+func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName, createNativeDeltaTable string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2961,10 +2961,10 @@ resource "aws_glue_crawler" "test" {
     connection_name           = aws_glue_connection.test.name
     delta_tables              = [%[3]q]
     write_manifest            = false
-    create_native_delta_table = true
+    create_native_delta_table = %[4]s
   }
 }
-`, rName, connectionUrl, tableName))
+`, rName, connectionUrl, tableName, createNativeDeltaTable))
 }
 
 func testAccCrawlerConfig_lakeformation(rName string, use bool) string {
