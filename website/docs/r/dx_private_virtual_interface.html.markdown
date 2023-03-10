@@ -47,8 +47,8 @@ The MTU of a virtual private interface can be either `1500` or `9001` (jumbo fra
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
-* `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 * `arn` - The ARN of the virtual interface.
+* `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 * `jumbo_frame_capable` - Indicates whether jumbo frames (9001 MTU) are supported.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
