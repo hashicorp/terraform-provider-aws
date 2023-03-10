@@ -82,3 +82,19 @@ func intConversion() int {
 	// ruleid: int64-pointer-dereference-and-convert
 	return int(*i)
 }
+
+func assignment() string {
+	var ptr *string
+
+	// ruleid: pointer-conversion-on-assignment
+	val := *ptr
+
+	return val
+}
+
+func assignmentToRef(ref *string) {
+	var ptr *string
+
+	// ok: pointer-conversion-on-assignment
+	*ref = *ptr
+}
