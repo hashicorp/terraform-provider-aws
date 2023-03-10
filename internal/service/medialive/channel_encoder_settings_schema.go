@@ -1087,7 +1087,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"audio_only_timecodec_control": {
+													"audio_only_timecode_control": {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
