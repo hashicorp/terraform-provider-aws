@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_virtual_mfa_device")
 func ResourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,

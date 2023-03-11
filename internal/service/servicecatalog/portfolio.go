@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_servicecatalog_portfolio")
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,

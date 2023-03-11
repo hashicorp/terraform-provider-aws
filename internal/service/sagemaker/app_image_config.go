@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_app_image_config")
 func ResourceAppImageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppImageConfigCreate,

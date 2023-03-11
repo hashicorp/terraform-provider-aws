@@ -27,6 +27,7 @@ const (
 	FleetDeletedDefaultTimeout = 20 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_fleet")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,

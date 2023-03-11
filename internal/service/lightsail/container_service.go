@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lightsail_container_service")
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceCreate,

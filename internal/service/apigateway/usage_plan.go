@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_usage_plan")
 func ResourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,

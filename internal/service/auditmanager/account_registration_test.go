@@ -80,7 +80,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 				Config: testAccAccountRegistrationConfig_deregisterOnDestroy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceAccountRegistration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceAccountRegistration, resourceName),
 				),
 			},
 			{

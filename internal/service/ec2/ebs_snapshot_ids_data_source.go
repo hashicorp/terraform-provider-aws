@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ebs_snapshot_ids")
 func DataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSSnapshotIDsRead,

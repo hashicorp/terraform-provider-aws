@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_efs_backup_policy")
 func ResourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupPolicyCreate,

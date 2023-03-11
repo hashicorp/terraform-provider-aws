@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_devicefarm_test_grid_project")
 func ResourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,

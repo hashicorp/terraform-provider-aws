@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudtrail_event_data_store")
 func ResourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,

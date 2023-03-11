@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_organizational_unit")
 func ResourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,

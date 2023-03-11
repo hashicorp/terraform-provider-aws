@@ -37,6 +37,7 @@ const (
 	cacheClusterCreatedTimeout = 40 * time.Minute
 )
 
+// @SDKResource("aws_elasticache_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,

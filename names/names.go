@@ -33,8 +33,8 @@ const (
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
 	MediaLiveEndpointID                  = "medialive"
-	OpenSearchServerlessEndpointID       = "aoss"
 	ObservabilityAccessManagerEndpointID = "oam"
+	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
@@ -42,6 +42,7 @@ const (
 	SchedulerEndpointID                  = "scheduler"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
+	SSMContactsEndpointId                = "ssm-contacts"
 	TranscribeEndpointID                 = "transcribe"
 )
 

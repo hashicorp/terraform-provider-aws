@@ -2,12 +2,12 @@
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 {{- if not ( .ContextOnly ) }}
-func {{ .ListTagsFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
+func {{ .ListTagsFunc }}(conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
 	return {{ .ListTagsFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 }
 
 {{ end }}
-func {{ if .ContextOnly }}{{ .ListTagsFunc }}{{ else }}{{ .ListTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
+func {{ if .ContextOnly }}{{ .ListTagsFunc }}{{ else }}{{ .ListTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []*{{ .TagPackage  }}.Filter{
@@ -51,4 +51,8 @@ func {{ if .ContextOnly }}{{ .ListTagsFunc }}{{ else }}{{ .ListTagsFunc }}WithCo
 	}
 
 	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+}
+
+func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+	return  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 }

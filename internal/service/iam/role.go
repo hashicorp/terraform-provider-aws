@@ -33,6 +33,7 @@ const (
 	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_role")
 func ResourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,

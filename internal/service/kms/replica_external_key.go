@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_replica_external_key")
 func ResourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaExternalKeyCreate,

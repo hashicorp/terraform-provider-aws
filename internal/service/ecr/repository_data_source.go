@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKDataSource("aws_ecr_repository")
 func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,

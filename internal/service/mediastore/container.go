@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_media_store_container")
 func ResourceContainer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerCreate,

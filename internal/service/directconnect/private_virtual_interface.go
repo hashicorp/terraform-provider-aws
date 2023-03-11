@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_private_virtual_interface")
 func ResourcePrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrivateVirtualInterfaceCreate,

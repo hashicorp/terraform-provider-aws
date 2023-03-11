@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/wafv2/wafv2iface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -26,6 +27,10 @@ func ListTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) 
 	}
 
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -60,7 +65,8 @@ func KeyValueTags(ctx context.Context, tags []*wafv2.Tag) tftags.KeyValueTags {
 // UpdateTags updates wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -91,4 +97,8 @@ func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(), identifier, oldTags, newTags)
 }

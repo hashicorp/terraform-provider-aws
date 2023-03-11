@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_identitystore_group")
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_codeartifact_authorization_token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,

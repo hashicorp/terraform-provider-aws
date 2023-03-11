@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_cache_policy")
 func DataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCachePolicyRead,

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_virtual_gateway")
 func ResourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualGatewayCreate,

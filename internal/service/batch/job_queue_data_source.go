@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_batch_job_queue")
 func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,

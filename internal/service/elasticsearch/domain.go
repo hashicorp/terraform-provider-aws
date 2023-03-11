@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticsearch_domain")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -393,7 +394,7 @@ func ResourceDomain() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(125, 1000),
+							ValidateFunc: validation.IntAtLeast(125),
 						},
 						"volume_size": {
 							Type:     schema.TypeInt,

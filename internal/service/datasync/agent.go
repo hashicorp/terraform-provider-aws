@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_agent")
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,

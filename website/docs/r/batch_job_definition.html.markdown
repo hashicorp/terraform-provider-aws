@@ -16,42 +16,53 @@ Provides a Batch Job Definition resource.
 resource "aws_batch_job_definition" "test" {
   name = "tf_test_batch_job_definition"
   type = "container"
+  container_properties = jsonencode({
+    command = ["ls", "-la"],
+    image   = "busybox"
 
-  container_properties = <<CONTAINER_PROPERTIES
-{
-	"command": ["ls", "-la"],
-	"image": "busybox",
-	"resourceRequirements": [
-    {"type": "VCPU", "value": "0.25"},
-    {"type": "MEMORY", "value": "512"}
-  ],
-	"volumes": [
+    resourceRequirements = [
       {
-        "host": {
-          "sourcePath": "/tmp"
-        },
-        "name": "tmp"
-      }
-    ],
-	"environment": [
-		{"name": "VARNAME", "value": "VARVAL"}
-	],
-	"mountPoints": [
-		{
-          "sourceVolume": "tmp",
-          "containerPath": "/tmp",
-          "readOnly": false
-        }
-	],
-    "ulimits": [
+        type  = "VCPU"
+        value = "0.25"
+      },
       {
-        "hardLimit": 1024,
-        "name": "nofile",
-        "softLimit": 1024
+        type  = "MEMORY"
+        value = "512"
       }
     ]
-}
-CONTAINER_PROPERTIES
+
+    volumes = [
+      {
+        host = {
+          sourcePath = "/tmp"
+        }
+        name = "tmp"
+      }
+    ]
+
+    environment = [
+      {
+        name  = "VARNAME"
+        value = "VARVAL"
+      }
+    ]
+
+    mountPoints = [
+      {
+        sourceVolume  = "tmp"
+        containerPath = "/tmp"
+        readOnly      = false
+      }
+    ]
+
+    ulimits = [
+      {
+        hardLimit = 1024
+        name      = "nofile"
+        softLimit = 1024
+      }
+    ]
+  })
 }
 ```
 
@@ -82,24 +93,32 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 resource "aws_batch_job_definition" "test" {
   name = "tf_test_batch_job_definition"
   type = "container"
+
   platform_capabilities = [
     "FARGATE",
   ]
 
-  container_properties = <<CONTAINER_PROPERTIES
-{
-  "command": ["echo", "test"],
-  "image": "busybox",
-  "fargatePlatformConfiguration": {
-    "platformVersion": "LATEST"
-  },
-  "resourceRequirements": [
-    {"type": "VCPU", "value": "0.25"},
-    {"type": "MEMORY", "value": "512"}
-  ],
-  "executionRoleArn": "${aws_iam_role.ecs_task_execution_role.arn}"
-}
-CONTAINER_PROPERTIES
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+
+    fargatePlatformConfiguration = {
+      platformVersion = "LATEST"
+    }
+
+    resourceRequirements = [
+      {
+        type  = "VCPU"
+        value = "0.25"
+      },
+      {
+        type  = "MEMORY"
+        value = "512"
+      }
+    ]
+
+    executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
+  })
 }
 ```
 

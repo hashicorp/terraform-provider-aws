@@ -842,6 +842,7 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 	return []map[string]interface{}{m}
 }
 
+// @SDKResource("aws_kinesis_firehose_delivery_stream")
 func ResourceDeliveryStream() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

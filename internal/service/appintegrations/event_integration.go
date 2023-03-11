@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appintegrations_event_integration")
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventIntegrationCreate,

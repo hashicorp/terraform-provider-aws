@@ -22,6 +22,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_efs_mount_target")
 func ResourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMountTargetCreate,

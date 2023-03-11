@@ -27,6 +27,7 @@ const (
 	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_eip")
 func ResourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,

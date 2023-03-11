@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

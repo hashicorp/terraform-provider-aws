@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_gcm_channel")
 func ResourceGCMChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGCMChannelUpsert,

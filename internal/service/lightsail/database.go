@@ -21,6 +21,7 @@ const (
 	ResNameDatabase = "Database"
 )
 
+// @SDKResource("aws_lightsail_database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,

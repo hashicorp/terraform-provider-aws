@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_outposts_assets")
 func DataSourceOutpostAssets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetsRead,

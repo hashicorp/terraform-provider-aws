@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_timestreamwrite_database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,

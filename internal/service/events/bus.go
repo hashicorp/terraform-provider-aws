@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_event_bus")
 func ResourceBus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusCreate,

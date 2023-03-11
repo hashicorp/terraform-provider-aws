@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_availability_zones")
 func DataSourceAvailabilityZones() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAvailabilityZonesRead,

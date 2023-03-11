@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_network_interface")
 func ResourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,

@@ -22,6 +22,7 @@ import (
 
 const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
+// @SDKResource("aws_connect_contact_flow_module")
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactFlowModuleCreate,

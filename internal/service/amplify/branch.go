@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_amplify_branch")
 func ResourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,
