@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -50,8 +49,6 @@ func ResourceKeyPolicyAttachment() *schema.Resource {
 					return json
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -66,7 +63,7 @@ func resourceKeyPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(d.Get("key_id").(string))
 
-	return append(diags, resourceKeyRead(ctx, d, meta)...)
+	return append(diags, resourceKeyPolicyAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceKeyPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -106,7 +103,7 @@ func resourceKeyPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return append(diags, resourceKeyRead(ctx, d, meta)...)
+	return append(diags, resourceKeyPolicyAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceKeyPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -114,8 +111,12 @@ func resourceKeyPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).KMSConn()
 	accountId := meta.(*conns.AWSClient).AccountID
 
-	if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), defaultKeyPolicy(accountId), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
+	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
+		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), defaultKeyPolicy(accountId), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
+		} else {
+			log.Printf("[WARN] KMS Key Policy for Key (%s) does not allow PutKeyPolicy. Default Policy cannot be restored. Removing from state", d.Id())
+		}
 	}
 
 	return diags
