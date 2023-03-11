@@ -39,7 +39,7 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Sink.
-* `id` - ID string that AWS generated as part of the sink ARN.
+* `sink_id` - ID string that AWS generated as part of the sink ARN.
 
 ## Timeouts
 

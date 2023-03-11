@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_oam_sink")
 func ResourceSink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkCreate,
@@ -42,14 +43,14 @@ func ResourceSink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"sink_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -107,8 +108,8 @@ func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("arn", out.Arn)
-	d.Set("id", out.Id)
 	d.Set("name", out.Name)
+	d.Set("sink_id", out.Id)
 
 	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
