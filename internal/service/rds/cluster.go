@@ -246,7 +246,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: verify.ValidKmsKeyId,
 			},
 			// //lintignore:S019
 			// "master_user_secret_arn": {
