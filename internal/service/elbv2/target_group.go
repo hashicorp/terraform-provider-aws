@@ -147,6 +147,16 @@ func ResourceTargetGroup() *schema.Resource {
 					"least_outstanding_requests",
 				}, false),
 			},
+			"load_balancing_cross_zone_enabled": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"true",
+					"false",
+					"use_load_balancer_configuration",
+				}, false),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -475,6 +485,13 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			})
 		}
 
+		if v, ok := d.GetOk("load_balancing_cross_zone_enabled"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(v.(string)),
+			})
+		}
+
 		if v, ok := d.GetOk("preserve_client_ip"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("preserve_client_ip.enabled"),
@@ -764,6 +781,13 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.algorithm.type"),
 				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
+			})
+		}
+
+		if d.HasChange("load_balancing_cross_zone_enabled") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
 			})
 		}
 
@@ -1093,6 +1117,9 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 		case "load_balancing.algorithm.type":
 			loadBalancingAlgorithm := aws.StringValue(attr.Value)
 			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
+		case "load_balancing.cross_zone.enabled":
+			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
+			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
 		case "preserve_client_ip.enabled":
 			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {

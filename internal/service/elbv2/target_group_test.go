@@ -2122,6 +2122,49 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 	})
 }
 
+func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "use_load_balancer_configuration"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
@@ -3510,6 +3553,32 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }`, rName, algoTypeParam)
+}
+
+func testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName string, nonDefault bool, enabled bool) string {
+	var crossZoneParam string
+
+	if nonDefault {
+		crossZoneParam = fmt.Sprintf(`load_balancing_cross_zone_enabled = "%v"`, enabled)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  %[2]s
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, crossZoneParam)
 }
 
 func testAccTargetGroupConfig_albMissingPort(rName string) string {
