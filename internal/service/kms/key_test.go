@@ -635,6 +635,9 @@ resource "aws_kms_key" "test" {
 
 func testAccKeyConfig_policy(rName string) string {
 	return fmt.Sprintf(`
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -645,7 +648,7 @@ resource "aws_kms_key" "test" {
       Sid    = "Enable IAM User Permissions"
       Effect = "Allow"
       Principal = {
-        AWS = "*"
+        AWS = data.aws_caller_identity.current.arn
       }
       Action   = "kms:*"
       Resource = "*"
@@ -698,6 +701,8 @@ func testAccKeyConfig_policyIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -724,7 +729,7 @@ resource "aws_kms_key" "test" {
         Action = "kms:*"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = data.aws_caller_identity.current.arn
         }
 
         Resource = "*"
@@ -882,6 +887,8 @@ func testAccKeyConfig_policyIAMServiceLinkedRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = "autoscaling.${data.aws_partition.current.dns_suffix}"
   custom_suffix    = %[1]q
@@ -898,7 +905,7 @@ resource "aws_kms_key" "test" {
         Action = "kms:*"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = data.aws_caller_identity.current.arn
         }
 
         Resource = "*"
@@ -944,7 +951,7 @@ resource "aws_kms_key" "test" {
         Action = "kms:*"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = data.aws_caller_identity.current.arn
         }
 
         Resource = "*"
