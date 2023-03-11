@@ -107,22 +107,22 @@ func conditionalsBool() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-bool
-	if val == *ptr {
+	if val == aws.ToBool(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-bool
-	if *ptr == val {
+	if aws.ToBool(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-bool
-	if val != *ptr {
+	if val != aws.ToBool(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-bool
-	if *ptr != val {
+	if aws.ToBool(ptr) != val {
 		return true
 	}
 }
@@ -134,62 +134,62 @@ func conditionalsFloat32() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val == *ptr {
+	if val == aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr == val {
+	if aws.ToFloat32(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val != *ptr {
+	if val != aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr != val {
+	if aws.ToFloat32(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val > *ptr {
+	if val > aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr > val {
+	if aws.ToFloat32(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val < *ptr {
+	if val < aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr < val {
+	if aws.ToFloat32(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val >= *ptr {
+	if val >= aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr >= val {
+	if aws.ToFloat32(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if val <= *ptr {
+	if val <= aws.ToFloat32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float32
-	if *ptr <= val {
+	if aws.ToFloat32(ptr) <= val {
 		return true
 	}
 }
@@ -201,62 +201,62 @@ func conditionalsFloat64() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val == *ptr {
+	if val == aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr == val {
+	if aws.ToFloat64(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val != *ptr {
+	if val != aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr != val {
+	if aws.ToFloat64(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val > *ptr {
+	if val > aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr > val {
+	if aws.ToFloat64(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val < *ptr {
+	if val < aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr < val {
+	if aws.ToFloat64(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val >= *ptr {
+	if val >= aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr >= val {
+	if aws.ToFloat64(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if val <= *ptr {
+	if val <= aws.ToFloat64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-float64
-	if *ptr <= val {
+	if aws.ToFloat64(ptr) <= val {
 		return true
 	}
 }
@@ -268,62 +268,62 @@ func conditionalsInt32() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val == *ptr {
+	if val == aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr == val {
+	if aws.ToInt32(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val != *ptr {
+	if val != aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr != val {
+	if aws.ToInt32(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val > *ptr {
+	if val > aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr > val {
+	if aws.ToInt32(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val < *ptr {
+	if val < aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr < val {
+	if aws.ToInt32(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val >= *ptr {
+	if val >= aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr >= val {
+	if aws.ToInt32(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if val <= *ptr {
+	if val <= aws.ToInt32(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int32
-	if *ptr <= val {
+	if aws.ToInt32(ptr) <= val {
 		return true
 	}
 }
@@ -335,62 +335,62 @@ func conditionalsInt64() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val == *ptr {
+	if val == aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr == val {
+	if aws.ToInt64(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val != *ptr {
+	if val != aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr != val {
+	if aws.ToInt64(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val > *ptr {
+	if val > aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr > val {
+	if aws.ToInt64(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val < *ptr {
+	if val < aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr < val {
+	if aws.ToInt64(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val >= *ptr {
+	if val >= aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr >= val {
+	if aws.ToInt64(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if val <= *ptr {
+	if val <= aws.ToInt64(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-int64
-	if *ptr <= val {
+	if aws.ToInt64(ptr) <= val {
 		return true
 	}
 }
@@ -402,62 +402,62 @@ func conditionalsString() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-string
-	if val == *ptr {
+	if val == aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr == val {
+	if aws.ToString(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if val != *ptr {
+	if val != aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr != val {
+	if aws.ToString(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if val > *ptr {
+	if val > aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr > val {
+	if aws.ToString(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if val < *ptr {
+	if val < aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr < val {
+	if aws.ToString(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if val >= *ptr {
+	if val >= aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr >= val {
+	if aws.ToString(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if val <= *ptr {
+	if val <= aws.ToString(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-string
-	if *ptr <= val {
+	if aws.ToString(ptr) <= val {
 		return true
 	}
 }
@@ -469,62 +469,62 @@ func conditionalsTime() bool {
 	)
 
 	// ruleid: pointer-conversion-conditional-time
-	if val == *ptr {
+	if val == aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr == val {
+	if aws.ToTime(ptr) == val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if val != *ptr {
+	if val != aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr != val {
+	if aws.ToTime(ptr) != val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if val > *ptr {
+	if val > aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr > val {
+	if aws.ToTime(ptr) > val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if val < *ptr {
+	if val < aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr < val {
+	if aws.ToTime(ptr) < val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if val >= *ptr {
+	if val >= aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr >= val {
+	if aws.ToTime(ptr) >= val {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if val <= *ptr {
+	if val <= aws.ToTime(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-time
-	if *ptr <= val {
+	if aws.ToTime(ptr) <= val {
 		return true
 	}
 }

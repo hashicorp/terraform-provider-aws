@@ -75,12 +75,12 @@ func conditionals{{ Title $key }}() bool {
     {{- range $element := $value.Conditionals }}
 
 	// ruleid: pointer-conversion-conditional-{{ $key }}
-	if val {{ $element }} *ptr {
+	if val {{ $element }} {{ $value.UnwrapFunc }}(ptr) {
 		return true
 	}
 
 	// ruleid: pointer-conversion-conditional-{{ $key }}
-	if *ptr {{ $element }} val {
+	if {{ $value.UnwrapFunc }}(ptr) {{ $element }} val {
 		return true
 	}
     {{- end }}
