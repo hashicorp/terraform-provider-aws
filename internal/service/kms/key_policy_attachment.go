@@ -109,10 +109,11 @@ func resourceKeyPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 func resourceKeyPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
+	partition := meta.(*conns.AWSClient).Partition
 	accountId := meta.(*conns.AWSClient).AccountID
 
 	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
-		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), defaultKeyPolicy(accountId), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), defaultKeyPolicy(partition, accountId), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
 		} else {
 			log.Printf("[WARN] KMS Key Policy for Key (%s) does not allow PutKeyPolicy. Default Policy cannot be restored. Removing from state", d.Id())
@@ -122,7 +123,7 @@ func resourceKeyPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func defaultKeyPolicy(accountId string) string {
+func defaultKeyPolicy(partition, accountId string) string {
 	return fmt.Sprintf(`
 {
 	"Id": "default",
@@ -132,12 +133,12 @@ func defaultKeyPolicy(accountId string) string {
 			"Sid": "Enable IAM User Permissions",
 			"Effect": "Allow",
 			"Principal": {
-				"AWS": "arn:aws:iam::%[1]s:root"
+				"AWS": "arn:%[1]s:iam::%[2]s:root"
 			},
 			"Action": "kms:*",
 			"Resource": "*"
 		}
 	]
 }	
-`, accountId)
+`, partition, accountId)
 }
