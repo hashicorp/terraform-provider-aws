@@ -241,6 +241,7 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"master_password"},
+				AtLeastOneOf:  []string{"master_password", "manage_master_user_password"},
 			},
 			"master_user_secret_kms_key_id": {
 				Type:         schema.TypeString,
@@ -260,6 +261,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"manage_master_user_password"},
+				AtLeastOneOf:  []string{"master_password", "manage_master_user_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
