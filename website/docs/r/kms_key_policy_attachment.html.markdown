@@ -53,6 +53,8 @@ For more information, refer to the scenario in the [Default Key Policy](https://
 
 ## Attributes Reference
 
+No additional attributes are exported.
+
 ## Import
 
 KMS Key Attachments can be imported using the `key_id`, e.g.,
