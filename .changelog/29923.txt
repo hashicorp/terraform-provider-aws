@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_kms_key_policy_attachment
+```
+
+```release-note:note
+resource/aws_kms_key: Deprecate `policy` argument in favor of `aws_kms_key_policy_attachment` resource
+```
