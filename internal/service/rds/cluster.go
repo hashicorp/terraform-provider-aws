@@ -930,10 +930,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManageMasterUserPassword = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
-			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
-		}
-
 		// Note: Username and password credentials are required and valid
 		// unless the cluster password is managed by RDS, or it is a read-replica.
 		// This also applies to clusters within a global cluster.
@@ -941,6 +937,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_username"); ok {
