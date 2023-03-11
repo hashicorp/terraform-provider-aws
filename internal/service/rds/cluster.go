@@ -791,8 +791,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbClusterInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
