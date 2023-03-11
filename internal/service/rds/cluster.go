@@ -616,11 +616,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if !d.Get("manage_master_user_password").(bool) {
-			if _, ok := d.GetOk("master_password"); !ok {
-				diags = sdkdiag.AppendErrorf(diags, `"master_password": required field is not set`)
-			}
-		}
 		if _, ok := d.GetOk("master_username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"master_username": required field is not set`)
 		}
