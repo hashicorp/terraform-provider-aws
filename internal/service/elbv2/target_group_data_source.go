@@ -97,6 +97,10 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"load_balancing_cross_zone_enabled": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -277,6 +281,9 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		case "load_balancing.algorithm.type":
 			loadBalancingAlgorithm := aws.StringValue(attr.Value)
 			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
+		case "load_balancing.cross_zone.enabled":
+			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
+			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
 		case "preserve_client_ip.enabled":
 			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
