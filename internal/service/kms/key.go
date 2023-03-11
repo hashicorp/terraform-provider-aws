@@ -99,6 +99,7 @@ func ResourceKey() *schema.Resource {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
+				Deprecated:            "Use the aws_kms_key_policy_attachment resource instead",
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
