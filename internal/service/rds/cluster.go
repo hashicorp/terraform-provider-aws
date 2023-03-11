@@ -240,7 +240,6 @@ func ResourceCluster() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				Default:       false,
 				ConflictsWith: []string{"master_password"},
 			},
 			"master_user_secret_kms_key_id": {
@@ -249,13 +248,13 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			//lintignore:S019
-			"master_user_secret_arn": {
-				Type:     schema.TypeString,
-				Optional: false,
-				Required: false,
-				Computed: true,
-			},
+			// //lintignore:S019
+			// "master_user_secret_arn": {
+			// 	Type:     schema.TypeString,
+			// 	Optional: false,
+			// 	Required: false,
+			// 	Computed: true,
+			// },
 			"master_password": {
 				Type:          schema.TypeString,
 				Optional:      true,
