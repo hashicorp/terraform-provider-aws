@@ -46,9 +46,9 @@ func TestAccKMSKeyPolicyAttachment_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccKeyPolicyAttachmentConfig_removedPolicy(keyResourceName), //
+				Config: testAccKeyPolicyAttachmentConfig_removedPolicy(keyResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyPolicyAttachmentExists(ctx, keyResourceName, &key), //
+					testAccCheckKeyPolicyAttachmentExists(ctx, keyResourceName, &key),
 				),
 			},
 		},
@@ -411,19 +411,8 @@ func testAccCheckKeyPolicyAttachmentExists(ctx context.Context, name string, key
 	}
 }
 
-// func testAccKeyPolicyAttachmentConfig_name(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_kms_key" "test" {
-//   description             = %[1]q
-//   deletion_window_in_days = 7
-// }
-// `, rName)
-// }
-
 func testAccKeyPolicyAttachmentConfig_policy(rName string) string {
 	return fmt.Sprintf(`
-
-data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -436,7 +425,7 @@ resource "aws_kms_key_policy_attachment" "test" {
       Sid    = "Enable IAM User Permissions"
       Effect = "Allow"
       Principal = {
-        AWS = data.aws_caller_identity.current.arn
+        "AWS" : "*"
       }
       Action   = "kms:*"
       Resource = "*"
