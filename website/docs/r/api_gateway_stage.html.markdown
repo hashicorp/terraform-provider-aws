@@ -142,7 +142,6 @@ In addition to all arguments above, the following attributes are exported:
   e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `web_acl_arn` - ARN of the WebAcl associated with the Stage.
-* `stage_name` - Name of the stage
 
 ## Import
 
