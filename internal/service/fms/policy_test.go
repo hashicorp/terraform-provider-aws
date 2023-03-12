@@ -285,7 +285,7 @@ func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
-	description           = "test description"
+  description           = "test description"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
