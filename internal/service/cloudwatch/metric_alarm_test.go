@@ -846,9 +846,9 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   metric_query {
-    id          = "e1"
-    expression  = "m1"
-    label       = "cat"
+    id         = "e1"
+    expression = "m1"
+    label      = "cat"
   }
 
   metric_query {
