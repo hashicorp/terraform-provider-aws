@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_servicecatalog_provisioning_artifacts")
 func DataSourceProvisioningArtifacts() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceProvisioningArtifactsRead,
