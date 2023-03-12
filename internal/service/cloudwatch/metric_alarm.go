@@ -297,7 +297,7 @@ func validMetricAlarm(d *schema.ResourceData) error {
 				}
 			}
 
-			if v, ok := metricQueryResource["result_data"]; ok {
+			if v, ok := metricQueryResource["return_data"]; ok {
 				if v.(bool) {
 					numOfResultDataTrue++
 				}
@@ -308,6 +308,10 @@ func validMetricAlarm(d *schema.ResourceData) error {
 	if hasMetricQuery {
 		if numOfResultDataTrue == 0 {
 			return fmt.Errorf("One of `metric_query` must have `return_data` as `true` for a cloudwatch metric alarm")
+		}
+
+		if numOfResultDataTrue > 1 {
+			return fmt.Errorf("Multiple `metric_query` blocks have `return_data` as `true` for a cloudwatch metric alarm")
 		}
 	}
 
@@ -472,10 +476,14 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	err := validMetricAlarm(d)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
+	}
 	params := getPutMetricAlarmInput(ctx, d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
-	_, err := conn.PutMetricAlarmWithContext(ctx, &params)
+	_, err = conn.PutMetricAlarmWithContext(ctx, &params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Updating metric alarm failed: %s", err)
 	}

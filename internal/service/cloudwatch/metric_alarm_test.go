@@ -524,7 +524,7 @@ func TestAccCloudWatchMetricAlarm_moreThanOneReturnDataFromMetricQuery(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_moreThanOneReturnDataFromMetricQuery(rName),
-				ExpectError: regexp.MustCompile("Multiple `metric_query` blocks have `return_data` as `true`. Only one can for a cloudwatch metric alarm"),
+				ExpectError: regexp.MustCompile("Multiple `metric_query` blocks have `return_data` as `true` for a cloudwatch metric alarm"),
 			},
 		},
 	})
