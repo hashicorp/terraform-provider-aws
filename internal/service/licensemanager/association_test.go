@@ -28,7 +28,7 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_instance.test", "arn"),
@@ -56,7 +56,7 @@ func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceAssociation(), resourceName),
 				),

@@ -45,7 +45,7 @@ func NewSweepFrameworkResource(factory func(context.Context) (fwresource.Resourc
 
 func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
-		err := DeleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
+		err := deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
@@ -60,13 +60,13 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Durat
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
+		err = deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 	}
 
 	return err
 }
 
-func DeleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes []FrameworkSupplementalAttribute) error {
+func deleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes []FrameworkSupplementalAttribute) error {
 	resource, err := factory(ctx)
 
 	if err != nil {

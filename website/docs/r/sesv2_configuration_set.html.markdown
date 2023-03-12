@@ -51,6 +51,7 @@ The following arguments are supported:
 * `suppression_options` - (Optional) An object that contains information about the suppression list preferences for your account.
 * `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tracking_options` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set.
+* `vdm_options` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set.
 
 ### delivery_options
 
@@ -73,11 +74,24 @@ The following arguments are supported:
 
 ### suppression_options
 
-- `suppressed_reasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
+* `suppressed_reasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
 
-## tracking_options
+### tracking_options
 
-- `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
+* `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
+
+### vdm_options
+
+* `dashboard_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard.
+* `guardian_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian.
+
+### dashboard_options
+
+* `engagement_metrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
+
+### guardian_options
+
+* `optimized_shared_delivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attributes Reference
 

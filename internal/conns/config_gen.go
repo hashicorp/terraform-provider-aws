@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
@@ -26,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
@@ -154,7 +156,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -286,7 +287,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -438,7 +438,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.groundstationConn = groundstation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.GroundStation])}))
 	client.guarddutyConn = guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.GuardDuty])}))
 	client.healthConn = health.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Health])}))
-	client.healthlakeConn = healthlake.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.HealthLake])}))
 	client.honeycodeConn = honeycode.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Honeycode])}))
 	client.iamConn = iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IAM])}))
 	client.ivsConn = ivs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IVS])}))
@@ -554,7 +553,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.snsConn = sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SNS])}))
 	client.sqsConn = sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SQS])}))
 	client.ssmConn = ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSM])}))
-	client.ssmcontactsConn = ssmcontacts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSMContacts])}))
 	client.ssoConn = sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSO])}))
 	client.ssoadminConn = ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOAdmin])}))
 	client.ssooidcConn = ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOOIDC])}))
@@ -628,6 +626,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.healthlakeClient = healthlake.NewFromConfig(cfg, func(o *healthlake.Options) {
+		if endpoint := c.Endpoints[names.HealthLake]; endpoint != "" {
+			o.EndpointResolver = healthlake.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.ivschatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
 		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
 			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
@@ -681,6 +684,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.sesv2Client = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
 		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
 			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.ssmcontactsClient = ssmcontacts.NewFromConfig(cfg, func(o *ssmcontacts.Options) {
+		if endpoint := c.Endpoints[names.SSMContacts]; endpoint != "" {
+			o.EndpointResolver = ssmcontacts.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.ssmincidentsClient = ssmincidents.NewFromConfig(cfg, func(o *ssmincidents.Options) {
