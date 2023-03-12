@@ -138,7 +138,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 }
 ```
 
-Create a cost_filter using resource tags 
+Create a Cost Filter using Resource Tags 
 
 ```terraform
 resource "aws_budgets_budget" "cost" {
