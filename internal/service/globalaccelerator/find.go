@@ -1,26 +1,25 @@
 package globalaccelerator
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindAcceleratorByARN returns the accelerator corresponding to the specified ARN.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
+func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
 	input := &globalaccelerator.DescribeAcceleratorInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return FindAccelerator(conn, input)
+	return FindAccelerator(ctx, conn, input)
 }
 
-// FindAccelerator returns the accelerator corresponding to the specified input.
-// Returns NotFoundError if no accelerator is found.
-func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
-	output, err := conn.DescribeAccelerator(input)
+func FindAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
+	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -34,29 +33,22 @@ func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalacc
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Accelerator, nil
 }
 
-// FindAcceleratorAttributesByARN returns the accelerator attributes corresponding to the specified ARN.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorAttributesByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
+func FindAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return FindAcceleratorAttributes(conn, input)
+	return FindAcceleratorAttributes(ctx, conn, input)
 }
 
-// FindAcceleratorAttributes returns the accelerator attributes corresponding to the specified input.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
-	output, err := conn.DescribeAcceleratorAttributes(input)
+func FindAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
+	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -70,29 +62,22 @@ func FindAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input 
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.AcceleratorAttributes, nil
 }
 
-// FindEndpointGroupByARN returns the endpoint group corresponding to the specified ARN.
-// Returns NotFoundError if no endpoint group is found.
-func FindEndpointGroupByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
+func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
 	input := &globalaccelerator.DescribeEndpointGroupInput{
 		EndpointGroupArn: aws.String(arn),
 	}
 
-	return FindEndpointGroup(conn, input)
+	return FindEndpointGroup(ctx, conn, input)
 }
 
-// FindEndpointGroup returns the endpoint group corresponding to the specified input.
-// Returns NotFoundError if no endpoint group is found.
-func FindEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeEndpointGroupInput) (*globalaccelerator.EndpointGroup, error) {
-	output, err := conn.DescribeEndpointGroup(input)
+func FindEndpointGroup(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeEndpointGroupInput) (*globalaccelerator.EndpointGroup, error) {
+	output, err := conn.DescribeEndpointGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -106,29 +91,22 @@ func FindEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globala
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.EndpointGroup, nil
 }
 
-// FindListenerByARN returns the listener corresponding to the specified ARN.
-// Returns NotFoundError if no listener is found.
-func FindListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
 	input := &globalaccelerator.DescribeListenerInput{
 		ListenerArn: aws.String(arn),
 	}
 
-	return FindListener(conn, input)
+	return FindListener(ctx, conn, input)
 }
 
-// FindListener returns the listener corresponding to the specified input.
-// Returns NotFoundError if no listener is found.
-func FindListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
-	output, err := conn.DescribeListener(input)
+func FindListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
+	output, err := conn.DescribeListenerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -142,10 +120,7 @@ func FindListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccele
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Listener, nil

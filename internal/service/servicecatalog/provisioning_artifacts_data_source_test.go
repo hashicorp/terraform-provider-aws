@@ -14,13 +14,12 @@ import (
 func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_servicecatalog_provisioning_artifacts.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain),

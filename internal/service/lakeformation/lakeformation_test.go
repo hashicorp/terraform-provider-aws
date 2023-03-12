@@ -2,9 +2,13 @@ package lakeformation_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccDataLakeSettings_basic,
@@ -19,11 +23,15 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"databaseMultiple":   testAccPermissions_databaseMultiple,
 			"dataLocation":       testAccPermissions_dataLocation,
 			"disappears":         testAccPermissions_disappears,
+			"lfTag":              testAccPermissions_lfTag,
+			"lfTagPolicy":        testAccPermissions_lfTagPolicy,
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
 			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
+			"lfTag":            testAccPermissionsDataSource_lfTag,
+			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
 			"table":            testAccPermissionsDataSource_table,
 			"tableWithColumns": testAccPermissionsDataSource_tableWithColumns,
 		},
@@ -50,17 +58,14 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"disappears": testAccLFTag_disappears,
 			"values":     testAccLFTag_values,
 		},
+		"ResourceLFTags": {
+			"basic":            testAccResourceLFTags_basic,
+			"database":         testAccResourceLFTags_database,
+			"databaseMultiple": testAccResourceLFTags_databaseMultiple,
+			"table":            testAccResourceLFTags_table,
+			"tableWithColumns": testAccResourceLFTags_tableWithColumns,
+		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

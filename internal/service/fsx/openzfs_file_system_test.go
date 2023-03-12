@@ -1,6 +1,7 @@
 package fsx_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -27,20 +28,21 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -65,9 +67,11 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "crossmnt"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "0"),
 				),
 			},
@@ -82,23 +86,24 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName),
+				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 192),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 				),
 			},
 			{
@@ -107,26 +112,36 @@ func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
+			{
+				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "200"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccFSxOpenzfsFileSystem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOpenzfsFileSystem(), resourceName),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenzfsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,20 +150,21 @@ func TestAccFSxOpenzfsFileSystem_disappears(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume1(rName, "NONE", "false", 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
@@ -158,6 +174,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "sync"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -173,9 +190,9 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "ZSTD"),
@@ -186,6 +203,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "async"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "8"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -195,9 +213,9 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024, 512),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem3),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
@@ -214,6 +232,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 						"options.1": "rw",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "512"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -240,11 +259,12 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume4(rName, "NONE", "false", 128, 1024),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -273,20 +293,21 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_securityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
@@ -299,7 +320,7 @@ func TestAccFSxOpenzfsFileSystem_securityGroupIDs(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
@@ -309,20 +330,21 @@ func TestAccFSxOpenzfsFileSystem_securityGroupIDs(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -336,7 +358,7 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -346,7 +368,7 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem3),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -357,20 +379,21 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_copyTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
@@ -386,7 +409,7 @@ func TestAccFSxOpenzfsFileSystem_copyTags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
@@ -398,20 +421,21 @@ func TestAccFSxOpenzfsFileSystem_copyTags(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_throughput(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 64),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
 				),
 			},
@@ -424,7 +448,7 @@ func TestAccFSxOpenzfsFileSystem_throughput(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 				),
@@ -434,20 +458,21 @@ func TestAccFSxOpenzfsFileSystem_throughput(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_storageType(rName, "SSD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
 				),
 			},
@@ -462,20 +487,21 @@ func TestAccFSxOpenzfsFileSystem_storageType(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "1:01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "1:01:01"),
 				),
 			},
@@ -488,7 +514,7 @@ func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "2:02:02"),
 				),
@@ -498,20 +524,21 @@ func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
@@ -524,7 +551,7 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
@@ -532,7 +559,7 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
 				),
 			},
@@ -541,20 +568,21 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -569,20 +597,21 @@ func TestAccFSxOpenzfsFileSystem_kmsKeyID(t *testing.T) {
 }
 
 func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
 				),
 			},
@@ -595,7 +624,7 @@ func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
 				),
@@ -604,16 +633,90 @@ func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	})
 }
 
-func testAccCheckOpenzfsFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
+func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOpenzfsFileSystemConfig_throughputCapacity(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOpenzfsFileSystemConfig_storageCapacity(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "75"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckOpenzfsFileSystemExists(ctx context.Context, resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -648,24 +751,26 @@ func testAccCheckOpenzfsFileSystemRecreated(i, j *fsx.FileSystem) resource.TestC
 	}
 }
 
-func testAccCheckOpenzfsFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+func testAccCheckOpenzfsFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_fsx_openzfs_file_system" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fsx_openzfs_file_system" {
+				continue
+			}
 
-		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
+			filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if filesystem != nil {
-			return fmt.Errorf("FSx OpenZFS File System (%s) still exists", rs.Primary.ID)
+			if filesystem != nil {
+				return fmt.Errorf("FSx OpenZFS File System (%s) still exists", rs.Primary.ID)
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
 func testAccOpenzfsFileSystemBaseConfig(rName string) string {
@@ -704,8 +809,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `)
 }
 
-func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), `
+func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string, iops int) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   storage_type        = "SSD"
@@ -714,10 +819,14 @@ resource "aws_fsx_openzfs_file_system" "test" {
   throughput_capacity = 64
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
-    iops = 3072
+    iops = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`)
+`, rName, iops))
 }
 
 func testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName string) string {
@@ -1010,13 +1119,14 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName, dataCompression, readOnly, quotaSize))
 }
 
-func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize int) string {
+func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1026,7 +1136,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["async", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
+    record_size_kib = %[5]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
@@ -1038,16 +1151,17 @@ resource "aws_fsx_openzfs_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName, dataCompression, readOnly, quotaSize))
+`, rName, dataCompression, readOnly, quotaSize, recordSizeKiB))
 }
 
-func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
+func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1061,7 +1175,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["sync", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
+    record_size_kib = %[6]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
@@ -1088,7 +1205,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName, dataCompression, readOnly, userQuota, groupQuota))
+`, rName, dataCompression, readOnly, userQuota, groupQuota, recordSizeKiB))
 }
 
 func testAccOpenZFSFileSystemConfig_rootVolume4(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
@@ -1129,4 +1246,34 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, rName, dataCompression, readOnly, userQuota, groupQuota))
+}
+
+func testAccOpenzfsFileSystemConfig_throughputCapacity(rName string) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 128
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccOpenzfsFileSystemConfig_storageCapacity(rName string) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 75
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }

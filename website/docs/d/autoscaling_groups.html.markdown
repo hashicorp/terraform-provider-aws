@@ -42,15 +42,15 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 
 ## Argument Reference
 
-* `names` - (Optional) A list of autoscaling group names
-* `filter` - (Optional) A filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
-    * `name` - (Required) The name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`
-    * `values` - (Required) The value of the filter.
+* `names` - (Optional) List of autoscaling group names
+* `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
+    * `name` - (Required) Name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`
+    * `values` - (Required) Value of the filter.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arns` - A list of the Autoscaling Groups Arns in the current region.
+* `arns` - List of the Autoscaling Groups Arns in the current region.
 * `id` - AWS Region.
-* `names` - A list of the Autoscaling Groups in the current region.
+* `names` - List of the Autoscaling Groups in the current region.

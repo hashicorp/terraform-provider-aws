@@ -17,9 +17,9 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryDataSourceConfig_basic(rName),
@@ -31,6 +31,7 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "image_scanning_configuration.#", dataSourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability", dataSourceName, "image_tag_mutability"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.#", dataSourceName, "encryption_configuration.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "most_recent_image_tags.#"),
 				),
 			},
 		},
@@ -43,9 +44,9 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 	dataSourceName := "data.aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryDataSourceConfig_encryption(rName),
@@ -66,15 +67,14 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 }
 
 func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRepositoryDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				ExpectError: regexp.MustCompile(`couldn't find resource`),
 			},
 		},
 	})

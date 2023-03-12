@@ -11,16 +11,16 @@ import (
 )
 
 func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
-
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig_byID(rName, domain),
@@ -46,16 +46,16 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 }
 
 func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
-
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig_byDirectoryIDUserName(rName, domain),
@@ -81,10 +81,12 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 }
 
 func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceDataSourceConfig_idAndDirectoryIDConflict(),

@@ -49,44 +49,40 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
+data "aws_iam_policy_document" "firehose_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "firehose_role" {
+  name               = "firehose_test_role"
+  assume_role_policy = data.aws_iam_policy_document.firehose_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 resource "aws_iam_role" "lambda_iam" {
-  name = "lambda_iam"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  name               = "lambda_iam"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
 resource "aws_lambda_function" "lambda_processor" {
@@ -94,7 +90,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role          = aws_iam_role.lambda_iam.arn
   handler       = "exports.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 ```
 
@@ -110,12 +106,17 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
 
+    buffer_size = 64
+
+    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
+    dynamic_partitioning_configuration {
+      enabled = "true"
+    }
+
     # Example prefix using partitionKeyFromQuery, applicable to JQ processor
     prefix              = "data/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
-    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
-    buffer_size = 64
     processing_configuration {
       enabled = "true"
 
@@ -162,24 +163,22 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "firehose_role" {
+  name               = "firehose_test_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
@@ -302,42 +301,39 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   }
 }
 
+data "aws_iam_policy_document" "firehose-elasticsearch" {
+  statement {
+    effect  = "Allow"
+    actions = ["es:*"]
+
+    resources = [
+      aws_elasticsearch_domain.test_cluster.arn,
+      "${aws_elasticsearch_domain.test_cluster.arn}/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateNetworkInterfacePermission",
+      "ec2:DeleteNetworkInterface",
+    ]
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role_policy" "firehose-elasticsearch" {
   name   = "elasticsearch"
   role   = aws_iam_role.firehose.id
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "es:*"
-      ],
-      "Resource": [
-        "${aws_elasticsearch_domain.test_cluster.arn}",
-        "${aws_elasticsearch_domain.test_cluster.arn}/*"
-      ]
-        },
-        {
-          "Effect": "Allow",
-          "Action": [
-            "ec2:DescribeVpcs",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateNetworkInterfacePermission",
-            "ec2:DeleteNetworkInterface"
-          ],
-          "Resource": [
-            "*"
-          ]
-        }
-  ]
-}
-EOF
+  policy = data.aws_iam_policy_document.firehose-elasticsearch.json
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -434,9 +430,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 The following arguments are supported:
 
-* `name` - (Required) A name to identify the stream. This is unique to the
-AWS account and region the Stream is created in.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
@@ -484,7 +479,7 @@ The `extended_s3_configuration` object supports the same fields from `s3_configu
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
-* `dynamic_partitioning_configuration` - (Optional) The configuration for dynamic partitioning. See [Dynamic Partitioning Configuration](#dynamic_partitioning_configuration) below for more details.
+* `dynamic_partitioning_configuration` - (Optional) The configuration for dynamic partitioning. See [Dynamic Partitioning Configuration](#dynamic_partitioning_configuration) below for more details. Required when using dynamic partitioning.
 
 The `redshift_configuration` object supports the following:
 
@@ -505,12 +500,12 @@ The `elasticsearch_configuration` object supports the following:
 
 * `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
-* `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The IAM role must have permission for `DescribeElasticsearchDomain`, `DescribeElasticsearchDomains`, and `DescribeElasticsearchDomainConfig` after assuming `RoleARN`.  The pattern needs to be `arn:.*`. Conflicts with `cluster_endpoint`.
+* `domain_arn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
 * `cluster_endpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
 * `index_name` - (Required) The Elasticsearch index name.
 * `index_rotation_period` - (Optional) The Elasticsearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
-* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeElasticsearchDomain`, `DescribeElasticsearchDomains`, and `DescribeElasticsearchDomainConfig`.  The pattern needs to be `arn:.*`.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
@@ -688,17 +683,29 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 
 #### dynamic_partitioning_configuration
 
-* `enabled` - (Optional) Enables or disables [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html). Defaults to `false`.
+Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html).
+
+* `enabled` - (Optional) Enables or disables dynamic partitioning. Defaults to `false`.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. Valid values between 0 and 7200. Default is 300.
+
+~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream. Therefore, Terraform will recreate the resource whenever dynamic partitioning is enabled or disabled.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://aws.amazon.com/documentation/firehose/
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

@@ -11,7 +11,7 @@ import (
 
 func statusClusterState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(ctx, conn, arn)
+		output, err := findClusterV2ByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn str
 	}
 }
 
-func statusConfigurationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusConfigurationState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindConfigurationByARN(conn, arn)
+		output, err := FindConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

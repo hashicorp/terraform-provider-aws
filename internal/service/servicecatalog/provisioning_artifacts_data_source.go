@@ -70,7 +70,7 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 }
 
 func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.ListProvisioningArtifactsInput{
 		ProductId:      aws.String(d.Get("product_id").(string)),

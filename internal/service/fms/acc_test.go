@@ -34,19 +34,24 @@ var testAccProviderAdmin *schema.Provider
 var testAccProviderAdminConfigure sync.Once
 
 // testAccPreCheckAdmin verifies AWS credentials and that Firewall Management Service is supported
-func testAccPreCheckAdmin(t *testing.T) {
-	acctest.PreCheckPartitionHasService(fms.EndpointsID, t)
+func testAccPreCheckAdmin(ctx context.Context, t *testing.T) {
+	acctest.PreCheckPartitionHasService(t, fms.EndpointsID)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderAdminConfigure.Do(func() {
-		testAccProviderAdmin = provider.Provider()
+		var err error
+		testAccProviderAdmin, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": testAccGetAdminRegion(),
 		}
 
-		diags := testAccProviderAdmin.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderAdmin.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

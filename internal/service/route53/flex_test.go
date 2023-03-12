@@ -8,6 +8,8 @@ import (
 )
 
 func TestFlattenResourceRecords(t *testing.T) {
+	t.Parallel()
+
 	original := []string{
 		`127.0.0.1`,
 		`"abc def"`,
@@ -47,7 +49,6 @@ func checkFlattenResourceRecords(
 	recordType string,
 	expanded []*route53.ResourceRecord,
 	expected []string) {
-
 	result := FlattenResourceRecords(expanded, recordType)
 
 	if result == nil {

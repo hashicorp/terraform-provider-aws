@@ -2,28 +2,35 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists rds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *rds.RDS, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn rdsiface.RDSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &rds.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagList), nil
+	return KeyValueTags(ctx, output.TagList), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).RDSConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -45,22 +52,23 @@ func Tags(tags tftags.KeyValueTags) []*rds.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from rds service tags.
-func KeyValueTags(tags []*rds.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*rds.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates rds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn rdsiface.RDSAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &rds.RemoveTagsFromResourceInput{
@@ -68,10 +76,10 @@ func UpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, newTag
 			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTagsFromResource(input)
+		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,12 +89,16 @@ func UpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, newTag
 			Tags:         Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTagsToResource(input)
+		_, err := conn.AddTagsToResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(), identifier, oldTags, newTags)
 }

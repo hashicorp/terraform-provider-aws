@@ -173,130 +173,130 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual node. Must be between 1 and 255 characters in length.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) The virtual node specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name to use for the virtual node. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) Name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `spec` - (Required) Virtual node specification to apply.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
-* `backend` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
-* `backend_defaults` - (Optional) The defaults for backends.
-* `listener` - (Optional) The listeners from which the virtual node is expected to receive inbound traffic.
-* `logging` - (Optional) The inbound and outbound access logging information for the virtual node.
-* `service_discovery` - (Optional) The service discovery information for the virtual node.
+* `backend` - (Optional) Backends to which the virtual node is expected to send outbound traffic.
+* `backend_defaults` - (Optional) Defaults for backends.
+* `listener` - (Optional) Listeners from which the virtual node is expected to receive inbound traffic.
+* `logging` - (Optional) Inbound and outbound access logging information for the virtual node.
+* `service_discovery` - (Optional) Service discovery information for the virtual node.
 
 The `backend` object supports the following:
 
-* `virtual_service` - (Required) Specifies a virtual service to use as a backend for a virtual node.
+* `virtual_service` - (Required) Virtual service to use as a backend for a virtual node.
 
 The `virtual_service` object supports the following:
 
-* `client_policy` - (Optional) The client policy for the backend.
-* `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend. Must be between 1 and 255 characters in length.
+* `client_policy` - (Optional) Client policy for the backend.
+* `virtual_service_name` - (Required) Name of the virtual service that is acting as a virtual node backend. Must be between 1 and 255 characters in length.
 
 The `client_policy` object supports the following:
 
-* `tls` - (Optional) The Transport Layer Security (TLS) client policy.
+* `tls` - (Optional) Transport Layer Security (TLS) client policy.
 
 The `tls` object supports the following:
 
-* `certificate` (Optional) The virtual node's client's Transport Layer Security (TLS) certificate.
+* `certificate` (Optional) Virtual node's client's Transport Layer Security (TLS) certificate.
 * `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
-* `validation` - (Required) The TLS validation context.
+* `validation` - (Required) TLS validation context.
 
 The `certificate` object supports the following:
 
-* `file` - (Optional) A local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
+* `certificate_chain` - (Required) Certificate chain for the certificate.
+* `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
 The `validation` object supports the following:
 
-* `subject_alternative_names` - (Optional) The SANs for a TLS validation context.
-* `trust` - (Required) The TLS validation context trust.
+* `subject_alternative_names` - (Optional) SANs for a TLS validation context.
+* `trust` - (Required) TLS validation context trust.
 
 The `subject_alternative_names` object supports the following:
 
-* `match` - (Required) The criteria for determining a SAN's match.
+* `match` - (Required) Criteria for determining a SAN's match.
 
 The `match` object supports the following:
 
-* `exact` - (Required) The values sent must match the specified values exactly.
+* `exact` - (Required) Values sent must match the specified values exactly.
 
 The `trust` object supports the following:
 
-* `acm` - (Optional) The TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
-* `file` - (Optional) The TLS validation context trust for a local file certificate.
-* `sds` - (Optional) The TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `acm` - (Optional) TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
+* `file` - (Optional) TLS validation context trust for a local file certificate.
+* `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:
 
-* `certificate_authority_arns` - (Required) One or more ACM Amazon Resource Name (ARN)s.
+* `certificate_authority_arns` - (Required) One or more ACM ARNs.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
 The `backend_defaults` object supports the following:
 
-* `client_policy` - (Optional) The default client policy for virtual service backends. See above for details.
+* `client_policy` - (Optional) Default client policy for virtual service backends. See above for details.
 
 The `listener` object supports the following:
 
-* `port_mapping` - (Required) The port mapping information for the listener.
-* `connection_pool` - (Optional) The connection pool information for the listener.
-* `health_check` - (Optional) The health check information for the listener.
-* `outlier_detection` - (Optional) The outlier detection information for the listener.
+* `port_mapping` - (Required) Port mapping information for the listener.
+* `connection_pool` - (Optional) Connection pool information for the listener.
+* `health_check` - (Optional) Health check information for the listener.
+* `outlier_detection` - (Optional) Outlier detection information for the listener.
 * `timeout` - (Optional) Timeouts for different protocols.
-* `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
+* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener
 
 The `logging` object supports the following:
 
-* `access_log` - (Optional) The access log configuration for a virtual node.
+* `access_log` - (Optional) Access log configuration for a virtual node.
 
 The `access_log` object supports the following:
 
-* `file` - (Optional) The file object to send virtual node access logs to.
+* `file` - (Optional) File object to send virtual node access logs to.
 
 The `file` object supports the following:
 
-* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
+* `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
 The `service_discovery` object supports the following:
 
-* `aws_cloud_map` - (Optional) Specifies any AWS Cloud Map information for the virtual node.
-* `dns` - (Optional) Specifies the DNS service name for the virtual node.
+* `aws_cloud_map` - (Optional) Any AWS Cloud Map information for the virtual node.
+* `dns` - (Optional) DNS service name for the virtual node.
 
 The `aws_cloud_map` object supports the following:
 
-* `attributes` - (Optional) A string map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
-* `namespace_name` - (Required) The name of the AWS Cloud Map namespace to use.
+* `attributes` - (Optional) String map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
+* `namespace_name` - (Required) Name of the AWS Cloud Map namespace to use.
 Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
-* `service_name` - (Required) The name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
+* `service_name` - (Required) Name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
 
 The `dns` object supports the following:
 
-* `hostname` - (Required) The DNS host name for your virtual node.
+* `hostname` - (Required) DNS host name for your virtual node.
 
 The `port_mapping` object supports the following:
 
-* `port` - (Required) The port used for the port mapping.
-* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
+* `port` - (Required) Port used for the port mapping.
+* `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
 
 The `connection_pool` object supports the following:
 
@@ -324,26 +324,26 @@ The `tcp` connection pool object supports the following:
 
 The `health_check` object supports the following:
 
-* `healthy_threshold` - (Required) The number of consecutive successful health checks that must occur before declaring listener healthy.
-* `interval_millis`- (Required) The time period in milliseconds between each health check execution.
-* `protocol` - (Required) The protocol for the health check request. Valid values are `http`, `http2`, `tcp` and `grpc`.
-* `timeout_millis` - (Required) The amount of time to wait when receiving a response from the health check, in milliseconds.
-* `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
-* `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+* `healthy_threshold` - (Required) Number of consecutive successful health checks that must occur before declaring listener healthy.
+* `interval_millis`- (Required) Time period in milliseconds between each health check execution.
+* `protocol` - (Required) Protocol for the health check request. Valid values are `http`, `http2`, `tcp` and `grpc`.
+* `timeout_millis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
+* `unhealthy_threshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
+* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 The `outlier_detection` object supports the following:
 
-* `base_ejection_duration` - (Required) The base amount of time for which a host is ejected.
-* `interval` - (Required) The time interval between ejection sweep analysis.
+* `base_ejection_duration` - (Required) Base amount of time for which a host is ejected.
+* `interval` - (Required) Time interval between ejection sweep analysis.
 * `max_ejection_percent` - (Required) Maximum percentage of hosts in load balancing pool for upstream service that can be ejected. Will eject at least one host regardless of the value.
 Minimum value of `0`. Maximum value of `100`.
 * `max_server_errors` - (Required) Number of consecutive `5xx` errors required for ejection. Minimum value of `1`.
 
 The `base_ejection_duration` and `interval` objects support the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `timeout` object supports the following:
 
@@ -354,94 +354,94 @@ The `timeout` object supports the following:
 
 The `grpc` timeout object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) The per request timeout.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) Per request timeout.
 
 The `idle` and `per_request` objects support the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `http` and `http2` timeout objects support the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) The per request timeout.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) Per request timeout.
 
 The `idle` and `per_request` objects support the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `tcp` timeout object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
 
 The `idle` object supports the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `tls` object supports the following:
 
-* `certificate` - (Required) The listener's TLS certificate.
-* `mode`- (Required) The listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
-* `validation`- (Optional) The listener's Transport Layer Security (TLS) validation context.
+* `certificate` - (Required) Listener's TLS certificate.
+* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
+* `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
 The `certificate` object supports the following:
 
 * `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
-* `file` - (optional) A local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:
 
-* `certificate_arn` - (Required) The Amazon Resource Name (ARN) for the certificate.
+* `certificate_arn` - (Required) ARN for the certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate. Must be between 1 and 255 characters in length.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate chain for the certificate. Must be between 1 and 255 characters in length.
+* `private_key` - (Required) Private key for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
 The `validation` object supports the following:
 
-* `subject_alternative_names` - (Optional) The SANs for a TLS validation context.
-* `trust` - (Required) The TLS validation context trust.
+* `subject_alternative_names` - (Optional) SANs for a TLS validation context.
+* `trust` - (Required) TLS validation context trust.
 
 The `subject_alternative_names` object supports the following:
 
-* `match` - (Required) The criteria for determining a SAN's match.
+* `match` - (Required) Criteria for determining a SAN's match.
 
 The `match` object supports the following:
 
-* `exact` - (Required) The values sent must match the specified values exactly.
+* `exact` - (Required) Values sent must match the specified values exactly.
 
 The `trust` object supports the following:
 
-* `file` - (Optional) The TLS validation context trust for a local file certificate.
-* `sds` - (Optional) The TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `file` - (Optional) TLS validation context trust for a local file certificate.
+* `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - (Required) Name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the virtual node.
-* `arn` - The ARN of the virtual node.
-* `created_date` - The creation date of the virtual node.
-* `last_updated_date` - The last update date of the virtual node.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `id` - ID of the virtual node.
+* `arn` - ARN of the virtual node.
+* `created_date` - Creation date of the virtual node.
+* `last_updated_date` - Last update date of the virtual node.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

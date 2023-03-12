@@ -36,8 +36,8 @@ var testAccProviderEdgeDomainName *schema.Provider
 var testAccProviderEdgeDomainNameConfigure sync.Once
 
 // testAccPreCheckEdgeDomainName verifies AWS credentials and that API Gateway Domain Name is supported
-func testAccPreCheckEdgeDomainName(t *testing.T) {
-	acctest.PreCheckPartitionHasService(apigateway.EndpointsID, t)
+func testAccPreCheckEdgeDomainName(ctx context.Context, t *testing.T) {
+	acctest.PreCheckPartitionHasService(t, apigateway.EndpointsID)
 
 	region := testAccGetEdgeDomainNameRegion()
 
@@ -48,13 +48,18 @@ func testAccPreCheckEdgeDomainName(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEdgeDomainNameConfigure.Do(func() {
-		testAccProviderEdgeDomainName = provider.Provider()
+		var err error
+		testAccProviderEdgeDomainName, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderEdgeDomainName.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderEdgeDomainName.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

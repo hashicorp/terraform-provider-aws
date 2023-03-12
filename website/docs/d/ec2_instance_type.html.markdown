@@ -37,11 +37,11 @@ In addition to the argument above, the following attributes are exported:
 * `burstable_performance_supported` - `true` if the instance type is a burstable performance instance type.
 * `current_generation` - `true`  if the instance type is a current generation.
 * `dedicated_hosts_supported` - `true` if Dedicated Hosts are supported on the instance type.
-* `default_cores` - The default number of cores for the instance type.
+* `default_cores` - Default number of cores for the instance type.
 * `default_threads_per_core` - The  default  number of threads per core for the instance type.
-* `default_vcpus` - The default number of vCPUs for the instance type.
+* `default_vcpus` - Default number of vCPUs for the instance type.
 * `ebs_encryption_support` - Indicates whether Amazon EBS encryption is supported.
-* `ebs_nvme_support` - Indicates whether non-volatile memory express (NVMe) is supported.
+* `ebs_nvme_support` - Whether non-volatile memory express (NVMe) is supported.
 * `ebs_optimized_support` - Indicates that the instance type is Amazon EBS-optimized.
 * `ebs_performance_baseline_bandwidth` - The baseline bandwidth performance for an EBS-optimized instance type, in Mbps.
 * `ebs_performance_baseline_iops` - The baseline input/output storage operations per seconds for an EBS-optimized instance type.
@@ -49,8 +49,8 @@ In addition to the argument above, the following attributes are exported:
 * `ebs_performance_maximum_bandwidth` - The maximum bandwidth performance for an EBS-optimized instance type, in Mbps.
 * `ebs_performance_maximum_iops` - The maximum input/output storage operations per second for an EBS-optimized instance type.
 * `ebs_performance_maximum_throughput` - The maximum throughput performance for an EBS-optimized instance type, in MBps.
-* `efa_supported` - Indicates whether Elastic Fabric Adapter (EFA) is supported.
-* `ena_support` - Indicates whether Elastic Network Adapter (ENA) is supported.
+* `efa_supported` - Whether Elastic Fabric Adapter (EFA) is supported.
+* `ena_support` - Whether Elastic Network Adapter (ENA) is supported.
 * `encryption_in_transit_supported` - Indicates whether encryption in-transit between instances is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
     * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
@@ -64,7 +64,7 @@ In addition to the argument above, the following attributes are exported:
     * `gpus.#.memory_size` - The size (in MiB) for the memory available to the GPU accelerator.
     * `gpus.#.name` - The name of the GPU accelerator.
 * `hibernation_supported` - `true` if On-Demand hibernation is supported.
-* `hypervisor` - Indicates the hypervisor used for the instance type.
+* `hypervisor` - Hypervisor used for the instance type.
 * `inference_accelerators` Describes the Inference accelerators for the instance type.
     * `inference_accelerators.#.count` - The number of Inference accelerators for the instance type.
     * `inference_accelerators.#.manufacturer` - The manufacturer of the Inference accelerator.
@@ -86,8 +86,14 @@ In addition to the argument above, the following attributes are exported:
 * `supported_usages_classes` - Indicates whether the instance type is offered for spot or On-Demand.
 * `supported_virtualization_types` - The supported virtualization types.
 * `sustained_clock_speed` - The speed of the processor, in GHz.
-* `total_fpga_memory` - The total memory of all FPGA accelerators for the instance type (in MiB).
-* `total_gpu_memory` - The total size of the memory for the GPU accelerators for the instance type (in MiB).
+* `total_fpga_memory` - Total memory of all FPGA accelerators for the instance type (in MiB).
+* `total_gpu_memory` - Total size of the memory for the GPU accelerators for the instance type (in MiB).
 * `total_instance_storage` - The total size of the instance disks, in GB.
 * `valid_cores` - List of the valid number of cores that can be configured for the instance type.
 * `valid_threads_per_core` - List of the valid number of threads per core that can be configured for the instance type.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

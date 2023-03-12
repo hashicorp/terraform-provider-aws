@@ -28,8 +28,8 @@ The following arguments are supported:
 In addition to the argument above, the following attributes are exported:
 
 * `authorization_token` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
-* `expires_at` - The time in UTC RFC3339 format when the authorization token expires.
+* `expires_at` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
-* `proxy_endpoint` - The registry URL to use in the docker login command.
+* `proxy_endpoint` - Registry URL to use in the docker login command.
 * `user_name` - User name decoded from the authorization token.

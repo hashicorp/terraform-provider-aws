@@ -16,9 +16,9 @@ func TestAccElastiCacheUserDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(rName),

@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccFaq_basic(t *testing.T) {
+func TestAccKendraFaq_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,16 +30,16 @@ func testAccFaq_basic(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/faq/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "faq_id"),
@@ -62,7 +63,8 @@ func testAccFaq_basic(t *testing.T) {
 	})
 }
 
-func testAccFaq_description(t *testing.T) {
+func TestAccKendraFaq_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -75,16 +77,16 @@ func testAccFaq_description(t *testing.T) {
 	description := "example description for kendra faq"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_description(rName, rName2, rName3, rName4, rName5, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -97,7 +99,8 @@ func testAccFaq_description(t *testing.T) {
 	})
 }
 
-func testAccFaq_fileFormat(t *testing.T) {
+func TestAccKendraFaq_fileFormat(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -110,16 +113,16 @@ func testAccFaq_fileFormat(t *testing.T) {
 	fileFormat := string(types.FaqFileFormatCsv)
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_fileFormat(rName, rName2, rName3, rName4, rName5, fileFormat),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "file_format", fileFormat),
 				),
 			},
@@ -132,7 +135,8 @@ func testAccFaq_fileFormat(t *testing.T) {
 	})
 }
 
-func testAccFaq_languageCode(t *testing.T) {
+func TestAccKendraFaq_languageCode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -145,16 +149,16 @@ func testAccFaq_languageCode(t *testing.T) {
 	languageCode := "en"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_languageCode(rName, rName2, rName3, rName4, rName5, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "language_code", languageCode),
 				),
 			},
@@ -167,7 +171,8 @@ func testAccFaq_languageCode(t *testing.T) {
 	})
 }
 
-func testAccFaq_tags(t *testing.T) {
+func TestAccKendraFaq_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -179,16 +184,16 @@ func testAccFaq_tags(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -201,7 +206,7 @@ func testAccFaq_tags(t *testing.T) {
 			{
 				Config: testAccFaqConfig_tags2(rName, rName2, rName3, rName4, rName5, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -210,7 +215,7 @@ func testAccFaq_tags(t *testing.T) {
 			{
 				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -219,7 +224,8 @@ func testAccFaq_tags(t *testing.T) {
 	})
 }
 
-func testAccFaq_disappears(t *testing.T) {
+func TestAccKendraFaq_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -231,17 +237,17 @@ func testAccFaq_disappears(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFaqDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFaqDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFaqConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFaqExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceFaq(), resourceName),
+					testAccCheckFaqExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceFaq(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -249,33 +255,35 @@ func testAccFaq_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFaqDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+func testAccCheckFaqDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kendra_faq" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kendra_faq" {
+				continue
+			}
+
+			id, indexId, err := tfkendra.FaqParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+			_, err = tfkendra.FindFaqByID(ctx, conn, id, indexId)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		id, indexId, err := tfkendra.FaqParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		_, err = tfkendra.FindFaqByID(context.TODO(), conn, id, indexId)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckFaqExists(name string) resource.TestCheckFunc {
+func testAccCheckFaqExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -292,9 +300,9 @@ func testAccCheckFaqExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
-		_, err = tfkendra.FindFaqByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindFaqByID(ctx, conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Faq: %s", err.Error())

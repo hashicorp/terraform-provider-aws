@@ -26,7 +26,7 @@ const (
 	trafficPolicyInstanceOperationTimeout = 4 * time.Minute
 )
 
-func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
+func waitChangeInfoStatusInsync(ctx context.Context, conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid
@@ -37,11 +37,11 @@ func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route5
 		Delay:        time.Duration(rand.Int63n(changeMaxDelay-changeMinDelay)+changeMinDelay) * time.Second,
 		MinTimeout:   changeMinTimeout,
 		PollInterval: changePollInterval,
-		Refresh:      statusChangeInfo(conn, changeID),
+		Refresh:      statusChangeInfo(ctx, conn, changeID),
 		Timeout:      changeTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.ChangeInfo); ok {
 		return output, err
@@ -50,15 +50,15 @@ func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route5
 	return nil, err
 }
 
-func waitHostedZoneDNSSECStatusUpdated(conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
+func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
 		Timeout:    hostedZoneDNSSECStatusTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.DNSSECStatus); ok {
 		if serveSignature := aws.StringValue(output.ServeSignature); serveSignature == ServeSignatureInternalFailure {
@@ -71,15 +71,15 @@ func waitHostedZoneDNSSECStatusUpdated(conn *route53.Route53, hostedZoneID strin
 	return nil, err
 }
 
-func waitKeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) { //nolint:unparam
+func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusKeySigningKey(conn, hostedZoneID, name),
+		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
 		Timeout:    keySigningKeyStatusTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.KeySigningKey); ok {
 		if status := aws.StringValue(output.Status); status == KeySigningKeyStatusInternalFailure {

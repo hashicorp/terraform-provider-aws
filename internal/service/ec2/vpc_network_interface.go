@@ -4,30 +4,37 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_network_interface")
 func ResourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNetworkInterfaceCreate,
-		Read:   resourceNetworkInterfaceRead,
-		Update: resourceNetworkInterfaceUpdate,
-		Delete: resourceNetworkInterfaceDelete,
+		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
+		ReadWithoutTimeout:   resourceNetworkInterfaceRead,
+		UpdateWithoutTimeout: resourceNetworkInterfaceUpdate,
+		DeleteWithoutTimeout: resourceNetworkInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -319,16 +326,18 @@ func ResourceNetworkInterface() *schema.Resource {
 	}
 }
 
-func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
 
 	input := &ec2.CreateNetworkInterfaceInput{
-		SubnetId: aws.String(d.Get("subnet_id").(string)),
+		ClientToken: aws.String(resource.UniqueId()),
+		SubnetId:    aws.String(d.Get("subnet_id").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -407,17 +416,16 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network Interface: %s", input)
-	output, err := conn.CreateNetworkInterface(input)
+	output, err := conn.CreateNetworkInterfaceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Network Interface: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NetworkInterface.NetworkInterfaceId))
 
-	if _, err := WaitNetworkInterfaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Network Interface (%s) create: %w", d.Id(), err)
+	if _, err := WaitNetworkInterfaceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Network Interface (%s) create: %s", d.Id(), err)
 	}
 
 	if !d.Get("private_ip_list_enabled").(bool) {
@@ -430,9 +438,11 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 						NetworkInterfaceId:             aws.String(d.Id()),
 						SecondaryPrivateIpAddressCount: aws.Int64(int64(privateIPsCount.(int) + 1 - totalPrivateIPs)),
 					}
-					_, err := conn.AssignPrivateIpAddresses(input)
+
+					_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
+
 					if err != nil {
-						return fmt.Errorf("Failure to assign Private IPs: %s", err)
+						return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 					}
 				}
 			}
@@ -440,8 +450,8 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -452,44 +462,44 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(false)},
 		}
 
-		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
-		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) SourceDestCheck: %s", d.Id(), err)
 		}
 	}
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
+		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceNetworkInterfaceRead(d, meta)
+	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindNetworkInterfaceByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network Interface (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", d.Id(), err)
 	}
 
 	eni := outputRaw.(*ec2.NetworkInterface)
@@ -503,79 +513,65 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
 	if eni.Attachment != nil {
 		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
-			return fmt.Errorf("error setting attachment: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
 		}
 	} else {
 		d.Set("attachment", nil)
 	}
-
 	d.Set("description", eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
-
 	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
-		return fmt.Errorf("error setting ipv4_prefixes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ipv4_prefixes: %s", err)
 	}
-
 	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
-
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-
 	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return fmt.Errorf("error setting ipv6 address list: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
 	}
-
 	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return fmt.Errorf("error setting ipv6_addresses: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ipv6_addresses: %s", err)
 	}
-
 	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
-		return fmt.Errorf("error setting ipv6_prefixes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ipv6_prefixes: %s", err)
 	}
-
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
-
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
 	d.Set("owner_id", ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-
 	if err := d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return fmt.Errorf("error setting private_ips: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting private_ips: %s", err)
 	}
-
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
-
 	if err := d.Set("private_ip_list", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return fmt.Errorf("error setting private_ip_list: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
 	}
-
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
-
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	tags := KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -584,20 +580,20 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if oa != nil && oa.(*schema.Set).Len() > 0 {
 			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
+			err := DetachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 			if err != nil {
-				return err
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
-			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
+			_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 			if err != nil {
-				return err
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -622,11 +618,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				PrivateIpAddresses: flex.ExpandStringSet(unassignIPs),
 			}
 
-			log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
-			_, err := conn.UnassignPrivateIpAddresses(input)
+			_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 
 			privateIPsNetChange -= unassignIPs.Len()
@@ -640,11 +635,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				PrivateIpAddresses: flex.ExpandStringSet(assignIPs),
 			}
 
-			log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
-			_, err := conn.AssignPrivateIpAddresses(input)
+			_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 			privateIPsNetChange += assignIPs.Len()
 		}
@@ -667,7 +661,6 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					continue
 				}
 				privateIPsToUnassign[idx] = ip
-				log.Printf("[INFO] Unassigning private ip %s", ip)
 				idx += 1
 			}
 
@@ -676,9 +669,11 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				NetworkInterfaceId: aws.String(d.Id()),
 				PrivateIpAddresses: flex.ExpandStringList(privateIPsToUnassign),
 			}
-			_, err := conn.UnassignPrivateIpAddresses(input)
+
+			_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
+
 			if err != nil {
-				return fmt.Errorf("Failure to unassign Private IPs: %s", err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 		}
 
@@ -689,15 +684,16 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				continue
 			}
 			privateIPToAssign := []interface{}{ip}
-			log.Printf("[INFO] Assigning private ip %s", ip)
 
 			input := &ec2.AssignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
 				PrivateIpAddresses: flex.ExpandStringList(privateIPToAssign),
 			}
-			_, err := conn.AssignPrivateIpAddresses(input)
+
+			_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
+
 			if err != nil {
-				return fmt.Errorf("Failure to assign Private IPs: %s", err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 		}
 	}
@@ -721,11 +717,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					SecondaryPrivateIpAddressCount: aws.Int64(int64(diff)),
 				}
 
-				log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
-				_, err := conn.AssignPrivateIpAddresses(input)
+				_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
 			} else if diff < 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
@@ -733,11 +728,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					PrivateIpAddresses: flex.ExpandStringList(privateIPsFiltered[0:-diff]),
 				}
 
-				log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
-				_, err := conn.UnassignPrivateIpAddresses(input)
+				_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
 			}
 		}
@@ -754,11 +748,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv4PrefixCount:    aws.Int64(int64(diff)),
 				}
 
-				log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
-				_, err := conn.AssignPrivateIpAddresses(input)
+				_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
 			} else if diff < 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
@@ -766,11 +759,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv4Prefixes:       flex.ExpandStringList(ipv4Prefixes[0:-diff]),
 				}
 
-				log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
-				_, err := conn.UnassignPrivateIpAddresses(input)
+				_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
 			}
 		}
@@ -796,11 +788,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv4Prefixes:       flex.ExpandStringSet(unassignPrefixes),
 			}
 
-			log.Printf("[INFO] Unassigning private IPv4 addresses: %s", input)
-			_, err := conn.UnassignPrivateIpAddresses(input)
+			_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 		}
 
@@ -812,11 +803,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv4Prefixes:       flex.ExpandStringSet(assignPrefixes),
 			}
 
-			log.Printf("[INFO] Assigning private IPv4 addresses: %s", input)
-			_, err := conn.AssignPrivateIpAddresses(input)
+			_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
 		}
 	}
@@ -841,11 +831,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv6Addresses:      flex.ExpandStringSet(unassignIPs),
 			}
 
-			log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
-			_, err := conn.UnassignIpv6Addresses(input)
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 
@@ -857,11 +846,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv6Addresses:      flex.ExpandStringSet(assignIPs),
 			}
 
-			log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
-			_, err := conn.AssignIpv6Addresses(input)
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 	}
@@ -877,11 +865,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv6AddressCount:   aws.Int64(int64(diff)),
 				}
 
-				log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
-				_, err := conn.AssignIpv6Addresses(input)
+				_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
 			} else if diff < 0 {
 				input := &ec2.UnassignIpv6AddressesInput{
@@ -889,11 +876,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv6Addresses:      flex.ExpandStringList(ipv6Addresses[0:-diff]),
 				}
 
-				log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
-				_, err := conn.UnassignIpv6Addresses(input)
+				_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
 			}
 		}
@@ -911,34 +897,33 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		// Unassign old IPV6 addresses
 		if len(o.([]interface{})) > 0 {
 			unassignIPs := make([]interface{}, len(o.([]interface{})))
-			for i, ip := range o.([]interface{}) {
-				unassignIPs[i] = ip
-				log.Printf("[INFO] Unassigning ipv6 address %s", ip)
-			}
+			copy(unassignIPs, o.([]interface{}))
 
-			log.Printf("[INFO] Unassigning ipv6 addresses")
 			input := &ec2.UnassignIpv6AddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
 				Ipv6Addresses:      flex.ExpandStringList(unassignIPs),
 			}
-			_, err := conn.UnassignIpv6Addresses(input)
+
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
+
 			if err != nil {
-				return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 
 		// Assign each ip one-by-one in order to retain order
 		for _, ip := range n.([]interface{}) {
 			privateIPToAssign := []interface{}{ip}
-			log.Printf("[INFO] Assigning ipv6 address %s", ip)
 
 			input := &ec2.AssignIpv6AddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
 				Ipv6Addresses:      flex.ExpandStringList(privateIPToAssign),
 			}
-			_, err := conn.AssignIpv6Addresses(input)
+
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
+
 			if err != nil {
-				return fmt.Errorf("Failure to assign IPV6 Addresses: %s", err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 	}
@@ -963,11 +948,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv6Prefixes:       flex.ExpandStringSet(unassignPrefixes),
 			}
 
-			log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
-			_, err := conn.UnassignIpv6Addresses(input)
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 
@@ -979,11 +963,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				Ipv6Prefixes:       flex.ExpandStringSet(assignPrefixes),
 			}
 
-			log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
-			_, err := conn.AssignIpv6Addresses(input)
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 	}
@@ -999,11 +982,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv6PrefixCount:    aws.Int64(int64(diff)),
 				}
 
-				log.Printf("[INFO] Assigning IPv6 addresses: %s", input)
-				_, err := conn.AssignIpv6Addresses(input)
+				_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error assigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
 			} else if diff < 0 {
 				input := &ec2.UnassignIpv6AddressesInput{
@@ -1011,11 +993,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 					Ipv6Prefixes:       flex.ExpandStringList(ipv6Prefixes[0:-diff]),
 				}
 
-				log.Printf("[INFO] Unassigning IPv6 addresses: %s", input)
-				_, err := conn.UnassignIpv6Addresses(input)
+				_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
 			}
 		}
@@ -1027,11 +1008,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
 		}
 
-		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
-		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Network Interface (%s) SourceDestCheck: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) SourceDestCheck: %s", d.Id(), err)
 		}
 	}
 
@@ -1041,11 +1021,10 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			Groups:             flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
-		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
-		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Network Interface (%s) Groups: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Groups: %s", d.Id(), err)
 		}
 	}
 
@@ -1055,69 +1034,69 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			Description:        &ec2.AttributeValue{Value: aws.String(d.Get("description").(string))},
 		}
 
-		log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
-		_, err := conn.ModifyNetworkInterfaceAttribute(input)
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Network Interface (%s) Description: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Description: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceNetworkInterfaceRead(d, meta)
+	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
-
-		if err != nil {
-			return err
+		if err := DetachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return DeleteNetworkInterface(conn, d.Id())
+	if err := DeleteNetworkInterface(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	return diags
 }
 
-func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
+func attachNetworkInterface(ctx context.Context, conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
 	input := &ec2.AttachNetworkInterfaceInput{
 		DeviceIndex:        aws.Int64(int64(deviceIndex)),
 		InstanceId:         aws.String(instanceID),
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	}
 
-	log.Printf("[INFO] Attaching EC2 Network Interface: %s", input)
-	output, err := conn.AttachNetworkInterface(input)
+	output, err := conn.AttachNetworkInterfaceWithContext(ctx, input)
 
 	if err != nil {
-		return "", fmt.Errorf("error attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
+		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
 	}
 
 	attachmentID := aws.StringValue(output.AttachmentId)
 
-	_, err = WaitNetworkInterfaceAttached(conn, attachmentID, timeout)
+	_, err = WaitNetworkInterfaceAttached(ctx, conn, attachmentID, timeout)
 
 	if err != nil {
-		return attachmentID, fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, attachmentID, err)
+		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, instanceID, err)
 	}
 
 	return attachmentID, nil
 }
 
-func DeleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
+func DeleteNetworkInterface(ctx context.Context, conn *ec2.EC2, networkInterfaceID string) error {
 	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
-	_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
+	_, err := conn.DeleteNetworkInterfaceWithContext(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
 
@@ -1126,37 +1105,35 @@ func DeleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
+		return fmt.Errorf("deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
 	}
 
 	return nil
 }
 
-func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
-	input := &ec2.DetachNetworkInterfaceInput{
+func DetachNetworkInterface(ctx context.Context, conn *ec2.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
+	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
+	_, err := conn.DetachNetworkInterfaceWithContext(ctx, &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),
-	}
-
-	log.Printf("[INFO] Detaching EC2 Network Interface: %s", input)
-	_, err := conn.DetachNetworkInterface(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAttachmentIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
-	_, err = WaitNetworkInterfaceDetached(conn, attachmentID, timeout)
+	_, err = WaitNetworkInterfaceDetached(ctx, conn, attachmentID, timeout)
 
 	if tfresource.NotFound(err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil
@@ -1504,4 +1481,131 @@ func flattenIPv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) 
 	}
 
 	return tfList
+}
+
+// Some AWS services creates ENIs behind the scenes and keeps these around for a while
+// which can prevent security groups and subnets attached to such ENIs from being destroyed
+func deleteLingeringENIs(ctx context.Context, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	var g multierror.Group
+
+	err := multierror.Append(nil, deleteLingeringLambdaENIs(ctx, &g, conn, filterName, resourceId, timeout))
+
+	err = multierror.Append(err, deleteLingeringComprehendENIs(ctx, &g, conn, filterName, resourceId, timeout))
+
+	return multierror.Append(err, g.Wait()).ErrorOrNil()
+}
+
+func deleteLingeringLambdaENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	networkInterfaces, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			filterName:    resourceId,
+			"description": "AWS Lambda VPC ENI*",
+		}),
+	})
+
+	if err != nil {
+		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
+	}
+
+	for _, v := range networkInterfaces {
+		v := v
+		g.Go(func() error {
+			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+
+			if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
+				networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
+
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
+				if err != nil {
+					return fmt.Errorf("waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
+				}
+
+				v = networkInterface
+			}
+
+			if v.Attachment != nil {
+				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+
+				if err != nil {
+					return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
+				}
+			}
+
+			err = DeleteNetworkInterface(ctx, conn, networkInterfaceID)
+
+			if err != nil {
+				return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
+			}
+
+			return nil
+		})
+	}
+
+	return nil
+}
+
+func deleteLingeringComprehendENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	enis, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			filterName: resourceId,
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
+	}
+
+	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
+	for _, v := range enis {
+		if strings.HasSuffix(aws.StringValue(v.RequesterId), ":Comprehend") {
+			networkInterfaces = append(networkInterfaces, v)
+		}
+	}
+
+	for _, v := range networkInterfaces {
+		v := v
+		g.Go(func() error {
+			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+
+			if v.Attachment != nil {
+				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+
+				if err != nil {
+					return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
+				}
+			}
+
+			err := DeleteNetworkInterface(ctx, conn, networkInterfaceID)
+
+			if err != nil {
+				return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
+			}
+
+			return nil
+		})
+	}
+
+	return nil
+}
+
+// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
+func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
+	ids := make([]string, 0, len(dtos))
+	for _, v := range dtos {
+		group_id := aws.StringValue(v.GroupId)
+		ids = append(ids, group_id)
+	}
+	return ids
 }
