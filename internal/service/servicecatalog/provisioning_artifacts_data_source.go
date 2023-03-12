@@ -19,15 +19,15 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"accept_language": {
 				Type:         schema.TypeString,
 				Default:      AcceptLanguageEnglish,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+			},
+			"product_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"provisioning_artifact_details": {
 				Type:     schema.TypeList,
