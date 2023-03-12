@@ -283,9 +283,12 @@ func validMetricAlarm(d *schema.ResourceData) error {
 		return fmt.Errorf("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
 	}
 
+	numOfResultDataTrue := 0
+	hasMetricQuery := false
 	if v := d.Get("metric_query"); v != nil {
 		for _, v := range v.(*schema.Set).List() {
 			metricQueryResource := v.(map[string]interface{})
+			hasMetricQuery = true
 			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
 				if v := metricQueryResource["metric"]; v != nil {
 					if len(v.([]interface{})) > 0 {
@@ -293,6 +296,18 @@ func validMetricAlarm(d *schema.ResourceData) error {
 					}
 				}
 			}
+
+			if v, ok := metricQueryResource["result_data"]; ok {
+				if v.(bool) {
+					numOfResultDataTrue++
+				}
+			}
+		}
+	}
+
+	if hasMetricQuery {
+		if numOfResultDataTrue == 0 {
+			return fmt.Errorf("One of `metric_query` must have `return_data` as `true` for a cloudwatch metric alarm")
 		}
 	}
 
