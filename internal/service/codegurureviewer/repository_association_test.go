@@ -32,7 +32,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codegurureviewer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,7 +67,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codegurureviewer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -102,7 +102,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codegurureviewer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,7 +138,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codegurureviewer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -182,7 +182,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codegurureviewer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -253,9 +253,8 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, name string, r
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
-	ctx := context.Background()
 
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
 	_, err := conn.ListRepositoryAssociationsWithContext(ctx, input)
@@ -330,7 +329,11 @@ resource "aws_codegurureviewer_repository_association" "test" {
 }
 
 func testAccRepositoryAssociationConfig_s3_repository(rName string) string {
-	return acctest.ConfigCompose(testAccRepositoryAssociation_s3_repository(rName), `
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
 resource "aws_codegurureviewer_repository_association" "test" {
   repository {
     s3_bucket {
@@ -339,7 +342,7 @@ resource "aws_codegurureviewer_repository_association" "test" {
     }
   }
 }
-`)
+`, rName)
 }
 
 func testAccRepositoryAssociation_codecommit_repository(rName string) string {
@@ -352,15 +355,6 @@ resource "aws_codecommit_repository" "test" {
       tags["codeguru-reviewer"]
     ]
   }
-}
-`, rName)
-}
-
-func testAccRepositoryAssociation_s3_repository(rName string) string {
-	return fmt.Sprintf(`
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
 }
 `, rName)
 }
