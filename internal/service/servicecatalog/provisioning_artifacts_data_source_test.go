@@ -23,13 +23,14 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
+					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", "true"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "provisioning_artifact_details.0.description"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.name", rName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.type", servicecatalog.ProductTypeCloudFormationTemplate),
 				),
 			},
@@ -37,7 +38,7 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccProvisioningArtifactsDataSourceBaseConfig(rName, domain string) string {
+func testAccProvisioningArtifactsDataSourceConfig_base(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -98,6 +99,7 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
+
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   accept_language             = "en"
   active                      = true
@@ -113,10 +115,9 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
 }
 
 func testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain string) string {
-	return acctest.ConfigCompose(testAccProvisioningArtifactsDataSourceBaseConfig(rName, domain), `
+	return acctest.ConfigCompose(testAccProvisioningArtifactsDataSourceConfig_base(rName, domain), `
 data "aws_servicecatalog_provisioning_artifacts" "test" {
-  accept_language = "en"
-  product_id      = aws_servicecatalog_product.test.id
+  product_id = aws_servicecatalog_product.test.id
 }
 `)
 }

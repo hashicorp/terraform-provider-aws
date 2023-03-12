@@ -1,19 +1,21 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_servicecatalog_provisioning_artifacts")
 func DataSourceProvisioningArtifacts() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceProvisioningArtifactsRead,
+		ReadWithoutTimeout: dataSourceProvisioningArtifactsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
@@ -70,28 +72,26 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 	}
 }
 
-func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
+	productID := d.Get("product_id").(string)
 	input := &servicecatalog.ListProvisioningArtifactsInput{
-		ProductId:      aws.String(d.Get("product_id").(string)),
 		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
+		ProductId:      aws.String(productID),
 	}
 
-	output, err := conn.ListProvisioningArtifacts(input)
+	output, err := conn.ListProvisioningArtifactsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing provisioning artifact: %w", err)
-	}
-	if output == nil {
-		return fmt.Errorf("no provisioning artifacts found matching criteria; try different search")
-	}
-	if err := d.Set("provisioning_artifact_details", flattenProvisioningArtifactDetails(output.ProvisioningArtifactDetails)); err != nil {
-		return fmt.Errorf("error setting provisioning artifact details: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Service Catalog Provisioning Artifacts: %s", err)
 	}
 
-	d.SetId(d.Get("product_id").(string))
-	d.Set("accept_language", d.Get("accept_language").(string))
+	d.SetId(productID)
+	if err := d.Set("provisioning_artifact_details", flattenProvisioningArtifactDetails(output.ProvisioningArtifactDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting provisioning_artifact_details: %s", err)
+	}
 
 	return nil
 }
