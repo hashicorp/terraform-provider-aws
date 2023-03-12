@@ -221,6 +221,7 @@ The following values are supported: `ignore`, and `evaluate`.
 * `metric` (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
+~> **NOTE:**  One `metric_query` block must set `return_data` as `true` and only one.
 
 #### `metric`
 
