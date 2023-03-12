@@ -347,6 +347,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 						names.AttrType: "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "0"),
@@ -375,6 +376,45 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_deletion_protection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_enable_deletion_protection(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: rName,
+						names.AttrType: "S",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// disable deletion protection for the sweeper to work
+			{
+				Config: testAccTableConfig_disable_deletion_protection(rName),
+				Check:  resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
 			},
 		},
 	})
@@ -2693,6 +2733,39 @@ resource "aws_dynamodb_table" "test" {
   write_capacity = 1
   hash_key       = %[1]q
 
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_enable_deletion_protection(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name                        = %[1]q
+  read_capacity               = 1
+  write_capacity              = 1
+  hash_key                    = %[1]q
+  deletion_protection_enabled = true
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_disable_deletion_protection(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name                        = %[1]q
+  read_capacity               = 1
+  write_capacity              = 1
+  hash_key                    = %[1]q
+  deletion_protection_enabled = false
   attribute {
     name = %[1]q
     type = "S"

@@ -146,6 +146,11 @@ func ResourceTable() *schema.Resource {
 				Default:      dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -505,6 +510,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.AttributeDefinitions = expandAttributes(aSet.List())
 		}
 
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			input.DeletionProtectionEnabled = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
 			input.LocalSecondaryIndexes = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
@@ -631,6 +640,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	}
+
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
 
 	if table.ProvisionedThroughput != nil {
 		d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
@@ -826,6 +837,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		input.BillingMode = aws.String(billingMode)
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		hasTableUpdate = true
+		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
 	// make change when
