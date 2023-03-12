@@ -37,6 +37,7 @@ func testAccPolicy_basic(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -284,6 +285,7 @@ func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
+	description           = "test description"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 

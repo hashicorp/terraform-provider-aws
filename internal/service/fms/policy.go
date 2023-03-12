@@ -50,6 +50,10 @@ func ResourcePolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -295,21 +299,26 @@ func FindPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPoli
 func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
 	d.Set("arn", resp.PolicyArn)
 
-	d.Set("name", resp.Policy.PolicyName)
+	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
+	d.Set("description", resp.Policy.PolicyDescription)
 	d.Set("exclude_resource_tags", resp.Policy.ExcludeResourceTags)
+	d.Set("name", resp.Policy.PolicyName)
+	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
+	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
+	d.Set("resource_type", resp.Policy.ResourceType)
+
 	if err := d.Set("exclude_map", flattenPolicyMap(resp.Policy.ExcludeMap)); err != nil {
 		return fmt.Errorf("setting exclude_map: %w", err)
 	}
+
 	if err := d.Set("include_map", flattenPolicyMap(resp.Policy.IncludeMap)); err != nil {
 		return fmt.Errorf("setting include_map: %w", err)
 	}
-	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
+
 	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
 		return fmt.Errorf("setting resource_type_list: %w", err)
 	}
-	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
-	d.Set("resource_type", resp.Policy.ResourceType)
-	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
+
 	if err := d.Set("resource_tags", flattenResourceTags(resp.Policy.ResourceTags)); err != nil {
 		return fmt.Errorf("setting resource_tags: %w", err)
 	}
@@ -318,6 +327,7 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 		"type":                 *resp.Policy.SecurityServicePolicyData.Type,
 		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
 	}}
+
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
 		return fmt.Errorf("setting security_service_policy_data: %w", err)
 	}
@@ -333,12 +343,13 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	}
 
 	fmsPolicy := &fms.Policy{
+		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
+		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
+		PolicyDescription:              aws.String(d.Get("description").(string)),
 		PolicyName:                     aws.String(d.Get("name").(string)),
 		RemediationEnabled:             aws.Bool(d.Get("remediation_enabled").(bool)),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               resourceTypeList,
-		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
-		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
 	}
 
 	if d.Id() != "" {
