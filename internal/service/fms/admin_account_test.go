@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -21,7 +22,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAdmin(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -29,7 +30,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAdminAccountConfig_basic(),
+				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
@@ -40,7 +41,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 
 func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_admin_account" {
@@ -68,10 +69,7 @@ func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccAdminAccountConfig_basic() string {
-	return acctest.ConfigCompose(
-		testAccAdminRegionProviderConfig(),
-		`
+const testAccAdminAccountConfig_basic = `
 data "aws_partition" "current" {}
 
 resource "aws_organizations_organization" "test" {
@@ -82,5 +80,4 @@ resource "aws_organizations_organization" "test" {
 resource "aws_fms_admin_account" "test" {
   account_id = aws_organizations_organization.test.master_account_id
 }
-`)
-}
+`
