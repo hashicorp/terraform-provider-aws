@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ses_receipt_rule")
 func ResourceReceiptRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptRuleCreate,

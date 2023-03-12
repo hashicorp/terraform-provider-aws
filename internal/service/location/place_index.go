@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_location_place_index")
 func ResourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaceIndexCreate,
@@ -82,7 +83,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &locationservice.CreatePlaceIndexInput{}
 
@@ -160,7 +161,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_default_vpc_dhcp_options")
 func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

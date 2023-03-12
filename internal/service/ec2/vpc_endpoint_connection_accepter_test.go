@@ -26,7 +26,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

@@ -447,6 +447,8 @@ service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/oam:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -627,6 +629,8 @@ service/transitgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_transit_gateway'
 service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
+service/verifiedaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
 service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:

@@ -10,25 +10,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindCertificateAuthorityByARN returns the certificate authority corresponding to the specified ARN.
-// Returns nil if no certificate authority is found.
-func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
-	input := &acmpca.DescribeCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.CertificateAuthority, nil
-}
-
 // FindCertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
 // Returns a resource.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
 func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {

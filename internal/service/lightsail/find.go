@@ -492,3 +492,51 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id 
 
 	return entry, nil
 }
+
+func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.ResourceReceivingAccess, error) {
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	in := &lightsail.GetBucketsInput{
+		BucketName:                aws.String(parts[0]),
+		IncludeConnectedResources: aws.Bool(true),
+	}
+
+	out, err := conn.GetBucketsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.Buckets) == 0 || out.Buckets[0] == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	bucket := out.Buckets[0]
+	var entry *lightsail.ResourceReceivingAccess
+	entryExists := false
+
+	for _, n := range bucket.ResourcesReceivingAccess {
+		if parts[1] == aws.StringValue(n.Name) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}

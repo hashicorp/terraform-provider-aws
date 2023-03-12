@@ -10,10 +10,11 @@ import (
 )
 
 func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -35,11 +36,12 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 }
 
 func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -61,11 +63,12 @@ func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
 }
 
 func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -87,11 +90,12 @@ func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
 }
 
 func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
+	ctx := acctest.Context(t)
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

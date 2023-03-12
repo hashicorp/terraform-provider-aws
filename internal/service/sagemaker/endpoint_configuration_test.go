@@ -179,6 +179,33 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t 
 	})
 }
 
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_productionVariantVariantNameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "production_variants.0.variant_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -593,6 +620,21 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     accelerator_type       = "ml.eia1.medium"
+    initial_variant_weight = 1
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_productionVariantVariantNameGenerated(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
   }
 }

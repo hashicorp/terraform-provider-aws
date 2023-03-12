@@ -35,6 +35,7 @@ const (
 	entityRecognizerTagKey = "tf-aws_comprehend_entity_recognizer"
 )
 
+// @SDKResource("aws_comprehend_entity_recognizer")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -526,7 +527,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	}
 
 	defaultTagsConfig := awsClient.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())

@@ -11,7 +11,7 @@ description: |-
 Provides an S3 bucket Object Lock configuration resource. For more information about Object Locking, go to [Using S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html) in the Amazon S3 User Guide.
 
 ~> **NOTE:** This resource **does not enable** Object Lock for **new** buckets. It configures a default retention period for objects placed in the specified bucket.
-Thus, to **enable** Object Lock for a **new** bucket, see the [Using object lock configuration](s3_bucket.html.markdown#Using-object-lock-configuration) section in  the `aws_s3_bucket` resource or the [Object Lock configuration for a new bucket](#object-lock-configuration-for-a-new-bucket) example below.
+Thus, to **enable** Object Lock for a **new** bucket, see the [Using object lock configuration](s3_bucket.html.markdown#using-object-lock-configuration) section in  the `aws_s3_bucket` resource or the [Object Lock configuration for a new bucket](#object-lock-configuration-for-a-new-bucket) example below.
 If you want to **enable** Object Lock for an **existing** bucket, contact AWS Support and see the [Object Lock configuration for an existing bucket](#object-lock-configuration-for-an-existing-bucket) example below.
 
 ## Example Usage

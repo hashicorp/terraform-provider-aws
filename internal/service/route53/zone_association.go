@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53_zone_association")
 func ResourceZoneAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneAssociationCreate,

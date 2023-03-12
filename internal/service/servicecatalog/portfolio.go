@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_servicecatalog_portfolio")
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -73,7 +74,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
@@ -127,7 +128,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -169,8 +170,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		input.AddTags = Tags(tftags.New(n).IgnoreAWS())
-		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAWS().Keys())
+		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
+		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
 	}
 
 	_, err := conn.UpdatePortfolioWithContext(ctx, input)

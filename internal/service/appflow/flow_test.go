@@ -68,6 +68,53 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowFlow_S3_outputFormatConfig_ParquetFileType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowOutput appflow.FlowDefinition
+	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_S3_OutputFormatConfig_ParquetFileType(rSourceName, rDestinationName, rFlowName, scheduleStartTime, "PARQUET", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.destination_connector_properties.#"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.preserve_source_data_typing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.file_type", "PARQUET"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
+				),
+			},
+			{
+				Config: testAccFlowConfig_S3_OutputFormatConfig_ParquetFileType(rSourceName, rDestinationName, rFlowName, scheduleStartTime, "PARQUET", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.destination_connector_properties.#"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.preserve_source_data_typing", "false"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.file_type", "PARQUET"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppFlowFlow_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
@@ -341,6 +388,76 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rFlowName, scheduleStartTime),
+	)
+}
+
+func testAccFlowConfig_S3_OutputFormatConfig_ParquetFileType(rSourceName, rDestinationName, rFlowName, scheduleStartTime, fileType string, preserveSourceDataTyping bool) string {
+	return acctest.ConfigCompose(
+		testAccFlowConfig_base(rSourceName, rDestinationName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name = %[1]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+
+          file_type                   = %[3]q
+          preserve_source_data_typing = %[4]t
+
+          aggregation_config {
+            aggregation_type = "None"
+          }
+        }
+      }
+    }
+  }
+
+  task {
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
+
+    task_properties = {
+      "DESTINATION_DATA_TYPE" = "string"
+      "SOURCE_DATA_TYPE"      = "string"
+    }
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
+  }
+
+  trigger_config {
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        data_pull_mode      = "Incremental"
+        schedule_expression = "rate(3hours)"
+        schedule_start_time = %[2]q
+      }
+    }
+  }
+}
+`, rFlowName, scheduleStartTime, fileType, preserveSourceDataTyping),
 	)
 }
 

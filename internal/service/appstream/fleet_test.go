@@ -38,7 +38,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -74,7 +74,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -106,7 +106,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -159,7 +159,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -213,7 +213,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -268,7 +268,7 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),

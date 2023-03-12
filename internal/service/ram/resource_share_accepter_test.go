@@ -30,7 +30,7 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +68,7 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourceShareAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

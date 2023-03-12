@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafregional_rule")
 func DataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,

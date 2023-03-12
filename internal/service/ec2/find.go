@@ -818,25 +818,45 @@ func FindHostByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, err
 		HostIds: aws.StringSlice([]string{id}),
 	}
 
-	return FindHost(ctx, conn, input)
-}
+	output, err := FindHost(ctx, conn, input)
 
-func FindHostByIDAndFilters(ctx context.Context, conn *ec2.EC2, id string, filters []*ec2.Filter) (*ec2.Host, error) {
-	input := &ec2.DescribeHostsInput{}
-
-	if id != "" {
-		input.HostIds = aws.StringSlice([]string{id})
+	if err != nil {
+		return nil, err
 	}
 
-	if len(filters) > 0 {
-		input.Filter = filters
+	if state := aws.StringValue(output.State); state == ec2.AllocationStateReleased || state == ec2.AllocationStateReleasedPermanentFailure {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
 	}
 
-	return FindHost(ctx, conn, input)
+	// Eventual consistency check.
+	if aws.StringValue(output.HostId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
-func FindHost(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
-	output, err := conn.DescribeHostsWithContext(ctx, input)
+func FindHosts(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeHostsInput) ([]*ec2.Host, error) {
+	var output []*ec2.Host
+
+	err := conn.DescribeHostsPagesWithContext(ctx, input, func(page *ec2.DescribeHostsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Hosts {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidHostIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -849,24 +869,25 @@ func FindHost(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeHostsInput)
 		return nil, err
 	}
 
-	if output == nil || len(output.Hosts) == 0 || output.Hosts[0] == nil || output.Hosts[0].HostProperties == nil {
+	return output, nil
+}
+
+func FindHost(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
+	output, err := FindHosts(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].HostProperties == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Hosts); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	host := output.Hosts[0]
-
-	if state := aws.StringValue(host.State); state == ec2.AllocationStateReleased || state == ec2.AllocationStateReleasedPermanentFailure {
-		return nil, &resource.NotFoundError{
-			Message:     state,
-			LastRequest: input,
-		}
-	}
-
-	return host, nil
+	return output[0], nil
 }
 
 func FindImages(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImagesInput) ([]*ec2.Image, error) {
@@ -3607,7 +3628,7 @@ func FindVPNConnectionByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return output, nil
 }
 
-func FindVPNConnection(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) (*ec2.VpnConnection, error) {
+func FindVPNConnections(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) ([]*ec2.VpnConnection, error) {
 	output, err := conn.DescribeVpnConnectionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
@@ -3621,15 +3642,25 @@ func FindVPNConnection(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVp
 		return nil, err
 	}
 
-	if output == nil || len(output.VpnConnections) == 0 || output.VpnConnections[0] == nil {
+	return output.VpnConnections, nil
+}
+
+func FindVPNConnection(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) (*ec2.VpnConnection, error) {
+	output, err := FindVPNConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.VpnConnections); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.VpnConnections[0], nil
+	return output[0], nil
 }
 
 func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
@@ -5332,21 +5363,62 @@ func FindFlowLogByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.FlowLo
 		FlowLogIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeFlowLogsWithContext(ctx, input)
+	output, err := FindFlowLog(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.FlowLogs) == 0 || output.FlowLogs[0] == nil {
+	// Eventual consistency check.
+	if aws.StringValue(output.FlowLogId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindFlowLogs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeFlowLogsInput) ([]*ec2.FlowLog, error) {
+	var output []*ec2.FlowLog
+
+	err := conn.DescribeFlowLogsPagesWithContext(ctx, input, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FlowLogs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindFlowLog(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeFlowLogsInput) (*ec2.FlowLog, error) {
+	output, err := FindFlowLogs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.FlowLogs); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.FlowLogs[0], nil
+	return output[0], nil
 }
 
 func FindInternetGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInternetGatewaysInput) (*ec2.InternetGateway, error) {
