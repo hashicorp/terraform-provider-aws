@@ -37,7 +37,6 @@ func ResourceDataSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"aws_account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -45,7 +44,6 @@ func ResourceDataSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-
 			"column_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -85,7 +83,6 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"column_level_permission_rules": {
 				Type:     schema.TypeList,
 				MinItems: 1,
@@ -108,13 +105,11 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"data_set_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"data_set_usage_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -135,7 +130,6 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"field_folders": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -160,13 +154,11 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"import_mode": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(quicksight.DataSetImportMode_Values(), false),
 			},
-
 			"logical_table_map": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -179,86 +171,6 @@ func ResourceDataSet() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
-						},
-						"source": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data_set_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-										Optional: true,
-									},
-									"join_instruction": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"left_operand": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 64),
-												},
-												"on_clause": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 512),
-												},
-												"right_operand": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 64),
-												},
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(quicksight.JoinType_Values(), false),
-												},
-												"left_join_key_properties": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unique_key": {
-																Type:     schema.TypeBool,
-																Computed: true,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"right_join_key_properties": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unique_key": {
-																Type:     schema.TypeBool,
-																Computed: true,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"physical_table_id": {
-										Type:         schema.TypeString,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 64),
-									},
-								},
-							},
 						},
 						"data_transforms": {
 							Type:     schema.TypeList,
@@ -280,16 +192,16 @@ func ResourceDataSet() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 128),
 												},
-												"new_column_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(quicksight.ColumnDataType_Values(), false),
-												},
 												"format": {
 													Type:         schema.TypeString,
 													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 32),
+												},
+												"new_column_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(quicksight.ColumnDataType_Values(), false),
 												},
 											},
 										},
@@ -454,16 +366,94 @@ func ResourceDataSet() *schema.Resource {
 								},
 							},
 						},
+						"source": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"data_set_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+										Optional: true,
+									},
+									"join_instruction": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"left_join_key_properties": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unique_key": {
+																Type:     schema.TypeBool,
+																Computed: true,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"left_operand": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 64),
+												},
+												"on_clause": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 512),
+												},
+												"right_join_key_properties": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unique_key": {
+																Type:     schema.TypeBool,
+																Computed: true,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"right_operand": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 64),
+												},
+												"type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(quicksight.JoinType_Values(), false),
+												},
+											},
+										},
+									},
+									"physical_table_id": {
+										Type:         schema.TypeString,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-
 			"permissions": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -486,38 +476,18 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"physical_table_map": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MaxItems: 32,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"physical_table_map_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"custom_sql": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"data_source_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 64),
-									},
-									"sql_query": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 65536),
-									},
 									"columns": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -538,8 +508,27 @@ func ResourceDataSet() *schema.Resource {
 											},
 										},
 									},
+									"data_source_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+									"sql_query": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 65536),
+									},
 								},
 							},
+						},
+						"physical_table_map_id": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"relational_table": {
 							Type:     schema.TypeList,
@@ -547,6 +536,11 @@ func ResourceDataSet() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"catalog": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 256),
+									},
 									"data_source_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -577,12 +571,6 @@ func ResourceDataSet() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
-									"catalog": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 256),
-									},
-
 									"schema": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -667,7 +655,6 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"row_level_permission_data_set": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -679,11 +666,6 @@ func ResourceDataSet() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"permission_policy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionPolicy_Values(), false),
-						},
 						"format_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -694,6 +676,11 @@ func ResourceDataSet() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
+						"permission_policy": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionPolicy_Values(), false),
+						},
 						"status": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -702,13 +689,17 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-
 			"row_level_permission_tag_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+						},
 						"tag_rules": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -721,15 +712,15 @@ func ResourceDataSet() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-									"tag_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
 									"match_all_value": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"tag_key": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									"tag_multi_value_delimiter": {
 										Type:         schema.TypeString,
@@ -739,17 +730,10 @@ func ResourceDataSet() *schema.Resource {
 								},
 							},
 						},
-						"status": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
-						},
 					},
 				},
 			},
-
-			"tags": tftags.TagsSchema(),
-
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
