@@ -20,15 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// route53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const route53ZoneID = "Z2FDTNDATAQYW2"
-
-// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
-// This is used to set the zone_id attribute.
-// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
-
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
 // complex structures which are necessary to properly build the
@@ -90,7 +81,6 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {

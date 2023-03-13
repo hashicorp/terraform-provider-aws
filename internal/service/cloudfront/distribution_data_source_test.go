@@ -37,8 +37,7 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 }
 
 func testAccDistributionDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccDistributionConfig_s3Tags(rName), `
+	return acctest.ConfigCompose(testAccDistributionConfig_s3Tags(rName), `
 data "aws_cloudfront_distribution" "test" {
   id = aws_cloudfront_distribution.s3_distribution.id
 }

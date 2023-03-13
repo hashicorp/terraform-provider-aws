@@ -14,7 +14,6 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
-
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 

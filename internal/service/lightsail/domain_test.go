@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -24,7 +25,7 @@ func TestAccLightsailDomain_basic(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDomain(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
@@ -46,7 +47,7 @@ func TestAccLightsailDomain_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDomain(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
@@ -55,7 +56,7 @@ func TestAccLightsailDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, testAccProviderLightsailDomain, tflightsail.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,7 +75,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *lightsail.D
 			return errors.New("No Lightsail Domain ID is set")
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := conn.GetDomainWithContext(ctx, &lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -99,7 +100,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 			resp, err := conn.GetDomainWithContext(ctx, &lightsail.GetDomainInput{
 				DomainName: aws.String(rs.Primary.ID),
@@ -123,11 +124,9 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccDomainConfig_basic(lightsailDomainName string) string {
-	return acctest.ConfigCompose(
-		testAccDomainRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_lightsail_domain" "test" {
   domain_name = "%s"
 }
-`, lightsailDomainName))
+`, lightsailDomainName)
 }
