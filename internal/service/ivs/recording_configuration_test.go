@@ -29,7 +29,7 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
@@ -71,7 +71,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
@@ -116,7 +116,7 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
@@ -145,7 +145,7 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
@@ -173,7 +173,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},

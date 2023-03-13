@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -22,7 +23,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
@@ -44,6 +45,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 }
 
 func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -55,7 +57,7 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),

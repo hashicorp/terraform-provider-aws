@@ -17,7 +17,7 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/sdf"
 
     ebs {
       volume_size = 20
@@ -168,7 +168,7 @@ To find out more information for an existing AMI to override the configuration, 
 
 Each `block_device_mappings` supports the following:
 
-* `device_name` - (Optional) The name of the device to mount.
+* `device_name` - (Required) The name of the device to mount.
 * `ebs` - (Optional) Configure EBS volume properties.
 * `no_device` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - (Optional) The [Instance Store Device

@@ -27,7 +27,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -133,7 +133,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -161,7 +161,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -204,7 +204,7 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -238,7 +238,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -296,7 +296,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
@@ -338,7 +338,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
@@ -394,7 +394,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
@@ -459,7 +459,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
@@ -494,7 +494,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -569,7 +569,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
