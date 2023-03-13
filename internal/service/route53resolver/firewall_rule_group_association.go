@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_rule_group_association")
 func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleGroupAssociationCreate,
@@ -27,7 +28,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallRuleGroupAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,7 +72,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
@@ -130,7 +131,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	d.Set("priority", ruleGroupAssociation.Priority)
 	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Firewall Rule Group Association (%s): %s", arn, err)
@@ -178,7 +179,7 @@ func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.R
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Firewall Rule Group Association (%s) tags: %s", d.Id(), err)
 		}
 	}

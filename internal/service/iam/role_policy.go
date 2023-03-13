@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -21,16 +24,17 @@ const (
 	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_role_policy")
 func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutRolePolicy API is idempotent, so these can be the same.
-		Create: resourceRolePolicyPut,
-		Update: resourceRolePolicyPut,
+		CreateWithoutTimeout: resourceRolePolicyPut,
+		UpdateWithoutTimeout: resourceRolePolicyPut,
 
-		Read:   resourceRolePolicyRead,
-		Delete: resourceRolePolicyDelete,
+		ReadWithoutTimeout:   resourceRolePolicyRead,
+		DeleteWithoutTimeout: resourceRolePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,12 +74,13 @@ func ResourceRolePolicy() *schema.Resource {
 	}
 }
 
-func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	request := &iam.PutRolePolicyInput{
@@ -93,20 +98,21 @@ func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	}
 	request.PolicyName = aws.String(policyName)
 
-	if _, err := conn.PutRolePolicy(request); err != nil {
-		return fmt.Errorf("Error putting IAM role policy %s: %s", *request.PolicyName, err)
+	if _, err := conn.PutRolePolicyWithContext(ctx, request); err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting IAM role policy %s: %s", *request.PolicyName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *request.RoleName, *request.PolicyName))
-	return resourceRolePolicyRead(d, meta)
+	return append(diags, resourceRolePolicyRead(ctx, d, meta)...)
 }
 
-func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
 	}
 
 	request := &iam.GetRolePolicyInput{
@@ -116,10 +122,10 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetRolePolicyOutput
 
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = conn.GetRolePolicy(request)
+		getResp, err = conn.GetRolePolicyWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -133,31 +139,31 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetRolePolicy(request)
+		getResp, err = conn.GetRolePolicyWithContext(ctx, request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Role Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.PolicyDocument == nil {
-		return fmt.Errorf("reading IAM Role Policy (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): empty response", d.Id())
 	}
 
 	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
 	if err != nil {
-		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return fmt.Errorf("reading IAM Role Policy (%s): setting policy: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): setting policy: %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -165,15 +171,16 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", name)
 	d.Set("role", role)
 
-	return nil
+	return diags
 }
 
-func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("deleting IAM role policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM role policy (%s): %s", d.Id(), err)
 	}
 
 	request := &iam.DeleteRolePolicyInput{
@@ -181,13 +188,13 @@ func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		RoleName:   aws.String(role),
 	}
 
-	if _, err := conn.DeleteRolePolicy(request); err != nil {
+	if _, err := conn.DeleteRolePolicyWithContext(ctx, request); err != nil {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting IAM role policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM role policy (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func RolePolicyParseID(id string) (roleName, policyName string, err error) {

@@ -1,17 +1,21 @@
 package workspaces
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_workspaces_bundle")
 func DataSourceBundle() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkspaceBundleRead,
+		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
@@ -73,27 +77,28 @@ func DataSourceBundle() *schema.Resource {
 	}
 }
 
-func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	var bundle *workspaces.WorkspaceBundle
 
 	if bundleID, ok := d.GetOk("bundle_id"); ok {
-		resp, err := conn.DescribeWorkspaceBundles(&workspaces.DescribeWorkspaceBundlesInput{
+		resp, err := conn.DescribeWorkspaceBundlesWithContext(ctx, &workspaces.DescribeWorkspaceBundlesInput{
 			BundleIds: []*string{aws.String(bundleID.(string))},
 		})
 		if err != nil {
-			return fmt.Errorf("reading WorkSpaces Workspace Bundle (%s): %w", bundleID, err)
+			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace Bundle (%s): %s", bundleID, err)
 		}
 
 		if len(resp.Bundles) != 1 {
-			return fmt.Errorf("expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
+			return sdkdiag.AppendErrorf(diags, "expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
 		bundle = resp.Bundles[0]
 
 		if bundle == nil {
-			return fmt.Errorf("no WorkSpaces Workspace Bundle with ID %q found", bundleID)
+			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with ID %q found", bundleID)
 		}
 	}
 
@@ -107,7 +112,7 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		name := name.(string)
-		err := conn.DescribeWorkspaceBundlesPages(input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
+		err := conn.DescribeWorkspaceBundlesPagesWithContext(ctx, input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
 			for _, b := range out.Bundles {
 				if aws.StringValue(b.Name) == name {
 					bundle = b
@@ -118,11 +123,11 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 			return !lastPage
 		})
 		if err != nil {
-			return fmt.Errorf("reading WorkSpaces Workspace Bundle (%s): %w", id, err)
+			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace Bundle (%s): %s", id, err)
 		}
 
 		if bundle == nil {
-			return fmt.Errorf("no WorkSpaces Workspace Bundle with name %q found", name)
+			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with name %q found", name)
 		}
 	}
 
@@ -139,7 +144,7 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 	if err := d.Set("compute_type", computeType); err != nil {
-		return fmt.Errorf("error setting compute_type: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting compute_type: %s", err)
 	}
 
 	rootStorage := make([]map[string]interface{}, 1)
@@ -149,7 +154,7 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 	if err := d.Set("root_storage", rootStorage); err != nil {
-		return fmt.Errorf("error setting root_storage: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_storage: %s", err)
 	}
 
 	userStorage := make([]map[string]interface{}, 1)
@@ -159,8 +164,8 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 	if err := d.Set("user_storage", userStorage); err != nil {
-		return fmt.Errorf("error setting user_storage: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting user_storage: %s", err)
 	}
 
-	return nil
+	return diags
 }

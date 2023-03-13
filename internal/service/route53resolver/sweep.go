@@ -92,6 +92,7 @@ func init() {
 }
 
 func sweepDNSSECConfig(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -100,7 +101,7 @@ func sweepDNSSECConfig(region string) error {
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverDnssecConfigsPages(input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
+	err = conn.ListResolverDnssecConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -126,7 +127,7 @@ func sweepDNSSECConfig(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver DNSSEC Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver DNSSEC Configs (%s): %w", region, err)
@@ -136,6 +137,7 @@ func sweepDNSSECConfig(region string) error {
 }
 
 func sweepEndpoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -144,7 +146,7 @@ func sweepEndpoints(region string) error {
 	input := &route53resolver.ListResolverEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverEndpointsPages(input, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
+	err = conn.ListResolverEndpointsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -169,7 +171,7 @@ func sweepEndpoints(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Endpoints (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Endpoints (%s): %w", region, err)
@@ -179,6 +181,7 @@ func sweepEndpoints(region string) error {
 }
 
 func sweepFirewallConfigs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -187,7 +190,7 @@ func sweepFirewallConfigs(region string) error {
 	input := &route53resolver.ListFirewallConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallConfigsPages(input, func(page *route53resolver.ListFirewallConfigsOutput, lastPage bool) bool {
+	err = conn.ListFirewallConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -213,7 +216,7 @@ func sweepFirewallConfigs(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Configs (%s): %w", region, err)
@@ -223,6 +226,7 @@ func sweepFirewallConfigs(region string) error {
 }
 
 func sweepFirewallDomainLists(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -231,7 +235,7 @@ func sweepFirewallDomainLists(region string) error {
 	input := &route53resolver.ListFirewallDomainListsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallDomainListsPages(input, func(page *route53resolver.ListFirewallDomainListsOutput, lastPage bool) bool {
+	err = conn.ListFirewallDomainListsPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallDomainListsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -256,7 +260,7 @@ func sweepFirewallDomainLists(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
@@ -266,6 +270,7 @@ func sweepFirewallDomainLists(region string) error {
 }
 
 func sweepFirewallRuleGroupAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -274,7 +279,7 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 	input := &route53resolver.ListFirewallRuleGroupAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallRuleGroupAssociationsPages(input, func(page *route53resolver.ListFirewallRuleGroupAssociationsOutput, lastPage bool) bool {
+	err = conn.ListFirewallRuleGroupAssociationsPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRuleGroupAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -299,7 +304,7 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
@@ -309,6 +314,7 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 }
 
 func sweepFirewallRuleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -317,7 +323,7 @@ func sweepFirewallRuleGroups(region string) error {
 	input := &route53resolver.ListFirewallRuleGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallRuleGroupsPages(input, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
+	err = conn.ListFirewallRuleGroupsPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -342,7 +348,7 @@ func sweepFirewallRuleGroups(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
@@ -352,6 +358,7 @@ func sweepFirewallRuleGroups(region string) error {
 }
 
 func sweepFirewallRules(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -361,7 +368,7 @@ func sweepFirewallRules(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallRuleGroupsPages(input, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
+	err = conn.ListFirewallRuleGroupsPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -371,7 +378,7 @@ func sweepFirewallRules(region string) error {
 				FirewallRuleGroupId: v.Id,
 			}
 
-			err := conn.ListFirewallRulesPages(input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
+			err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -408,7 +415,7 @@ func sweepFirewallRules(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 Resolver Firewall Rules (%s): %w", region, err))
@@ -418,6 +425,7 @@ func sweepFirewallRules(region string) error {
 }
 
 func sweepQueryLogAssociationsConfigs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -426,7 +434,7 @@ func sweepQueryLogAssociationsConfigs(region string) error {
 	input := &route53resolver.ListResolverQueryLogConfigAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverQueryLogConfigAssociationsPages(input, func(page *route53resolver.ListResolverQueryLogConfigAssociationsOutput, lastPage bool) bool {
+	err = conn.ListResolverQueryLogConfigAssociationsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverQueryLogConfigAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -453,7 +461,7 @@ func sweepQueryLogAssociationsConfigs(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Query Log Config Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Query Log Config Associations (%s): %w", region, err)
@@ -463,6 +471,7 @@ func sweepQueryLogAssociationsConfigs(region string) error {
 }
 
 func sweepQueryLogsConfig(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -471,7 +480,7 @@ func sweepQueryLogsConfig(region string) error {
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverQueryLogConfigsPages(input, func(page *route53resolver.ListResolverQueryLogConfigsOutput, lastPage bool) bool {
+	err = conn.ListResolverQueryLogConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverQueryLogConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -496,7 +505,7 @@ func sweepQueryLogsConfig(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Query Log Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Query Log Configs (%s): %w", region, err)
@@ -506,6 +515,7 @@ func sweepQueryLogsConfig(region string) error {
 }
 
 func sweepRuleAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -514,7 +524,7 @@ func sweepRuleAssociations(region string) error {
 	input := &route53resolver.ListResolverRuleAssociationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverRuleAssociationsPages(input, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
+	err = conn.ListResolverRuleAssociationsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -541,7 +551,7 @@ func sweepRuleAssociations(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Rule Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Rule Associations (%s): %w", region, err)
@@ -551,6 +561,7 @@ func sweepRuleAssociations(region string) error {
 }
 
 func sweepRules(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -559,7 +570,7 @@ func sweepRules(region string) error {
 	input := &route53resolver.ListResolverRulesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListResolverRulesPages(input, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
+	err = conn.ListResolverRulesPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -588,7 +599,7 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Rules (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Rules (%s): %w", region, err)

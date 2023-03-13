@@ -38,6 +38,7 @@ func (p *parser) parseTemplateInner(end TokenType, flushHeredoc bool) ([]Express
 	if flushHeredoc {
 		flushHeredocTemplateParts(parts) // Trim off leading spaces on lines per the flush heredoc spec
 	}
+	meldConsecutiveStringLiterals(parts)
 	tp := templateParser{
 		Tokens:   parts.Tokens,
 		SrcRange: parts.SrcRange,
@@ -748,6 +749,37 @@ func flushHeredocTemplateParts(parts *templateParts) {
 		lit.Val = lit.Val[spaceByteCount:]
 		lit.SrcRange.Start.Column += minSpaces
 		lit.SrcRange.Start.Byte += spaceByteCount
+	}
+}
+
+// meldConsecutiveStringLiterals simplifies the AST output by combining a
+// sequence of string literal tokens into a single string literal. This must be
+// performed after any whitespace trimming operations.
+func meldConsecutiveStringLiterals(parts *templateParts) {
+	if len(parts.Tokens) == 0 {
+		return
+	}
+
+	// Loop over all tokens starting at the second element, as we want to join
+	// pairs of consecutive string literals.
+	i := 1
+	for i < len(parts.Tokens) {
+		if prevLiteral, ok := parts.Tokens[i-1].(*templateLiteralToken); ok {
+			if literal, ok := parts.Tokens[i].(*templateLiteralToken); ok {
+				// The current and previous tokens are both literals: combine
+				prevLiteral.Val = prevLiteral.Val + literal.Val
+				prevLiteral.SrcRange.End = literal.SrcRange.End
+
+				// Remove the current token from the slice
+				parts.Tokens = append(parts.Tokens[:i], parts.Tokens[i+1:]...)
+
+				// Continue without moving forward in the slice
+				continue
+			}
+		}
+
+		// Try the next pair of tokens
+		i++
 	}
 }
 

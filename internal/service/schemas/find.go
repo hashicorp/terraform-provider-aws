@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
+func FindDiscovererByID(ctx context.Context, conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
 	input := &schemas.DescribeDiscovererInput{
 		DiscovererId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDiscoverer(input)
+	output, err := conn.DescribeDiscovererWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -35,12 +35,12 @@ func FindDiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDisc
 	return output, nil
 }
 
-func FindRegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
+func FindRegistryByName(ctx context.Context, conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
 	input := &schemas.DescribeRegistryInput{
 		RegistryName: aws.String(name),
 	}
 
-	output, err := conn.DescribeRegistry(input)
+	output, err := conn.DescribeRegistryWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -60,13 +60,13 @@ func FindRegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRe
 	return output, nil
 }
 
-func FindSchemaByNameAndRegistryName(conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
+func FindSchemaByNameAndRegistryName(ctx context.Context, conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
 	input := &schemas.DescribeSchemaInput{
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 	}
 
-	output, err := conn.DescribeSchema(input)
+	output, err := conn.DescribeSchemaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

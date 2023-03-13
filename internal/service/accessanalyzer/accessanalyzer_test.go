@@ -1,6 +1,7 @@
 package accessanalyzer_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -29,12 +30,12 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 	input := &accessanalyzer.ListAnalyzersInput{}
 
-	_, err := conn.ListAnalyzers(input)
+	_, err := conn.ListAnalyzersWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

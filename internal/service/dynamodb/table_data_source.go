@@ -2,27 +2,32 @@ package dynamodb
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dynamodb_table")
 func DataSourceTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTableRead,
+		ReadWithoutTimeout: dataSourceTableRead,
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,11 +36,11 @@ func DataSourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -44,7 +49,7 @@ func DataSourceTable() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -53,7 +58,7 @@ func DataSourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -94,7 +99,7 @@ func DataSourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -116,7 +121,7 @@ func DataSourceTable() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -144,7 +149,7 @@ func DataSourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -154,7 +159,7 @@ func DataSourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -170,7 +175,7 @@ func DataSourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -188,11 +193,11 @@ func DataSourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -208,7 +213,7 @@ func DataSourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -223,30 +228,31 @@ func DataSourceTable() *schema.Resource {
 	}
 }
 
-func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
-	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+	result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Dynamodb Table (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Dynamodb Table (%s): %s", name, err)
 	}
 
 	if result == nil || result.Table == nil {
-		return fmt.Errorf("error reading Dynamodb Table (%s): not found", name)
+		return sdkdiag.AppendErrorf(diags, "reading Dynamodb Table (%s): not found", name)
 	}
 
 	table := result.Table
 
 	d.SetId(aws.StringValue(table.TableName))
 
-	d.Set("arn", table.TableArn)
-	d.Set("name", table.TableName)
+	d.Set(names.AttrARN, table.TableArn)
+	d.Set(names.AttrName, table.TableName)
 
 	if table.BillingModeSummary != nil {
 		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
@@ -260,7 +266,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("attribute", flattenTableAttributeDefinitions(table.AttributeDefinitions)); err != nil {
-		return fmt.Errorf("error setting attribute: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}
 
 	for _, attribute := range table.KeySchema {
@@ -274,11 +280,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("local_secondary_index", flattenTableLocalSecondaryIndex(table.LocalSecondaryIndexes)); err != nil {
-		return fmt.Errorf("error setting local_secondary_index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting local_secondary_index: %s", err)
 	}
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
-		return fmt.Errorf("error setting global_secondary_index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting global_secondary_index: %s", err)
 	}
 
 	if table.StreamSpecification != nil {
@@ -293,11 +299,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {
-		return fmt.Errorf("error setting server_side_encryption: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting server_side_encryption: %s", err)
 	}
 
 	if err := d.Set("replica", flattenReplicaDescriptions(table.Replicas)); err != nil {
-		return fmt.Errorf("error setting replica: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}
 
 	if table.TableClassSummary != nil {
@@ -306,39 +312,39 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("table_class", nil)
 	}
 
-	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
-		return fmt.Errorf("error describing DynamoDB Table (%s) Continuous Backups: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing DynamoDB Table (%s) Continuous Backups: %s", d.Id(), err)
 	}
 
 	if err := d.Set("point_in_time_recovery", flattenPITR(pitrOut)); err != nil {
-		return fmt.Errorf("error setting point_in_time_recovery: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 	}
 
-	ttlOut, err := conn.DescribeTimeToLive(&dynamodb.DescribeTimeToLiveInput{
+	ttlOut, err := conn.DescribeTimeToLiveWithContext(ctx, &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
 	}
 
 	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
-		return fmt.Errorf("error setting ttl: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

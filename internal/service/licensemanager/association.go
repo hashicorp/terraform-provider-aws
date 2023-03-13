@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_licensemanager_association")
 func ResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssociationCreate,
@@ -23,7 +24,7 @@ func ResourceAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -126,7 +127,7 @@ func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, r
 	}
 	var output []*licensemanager.LicenseSpecification
 
-	err := listLicenseSpecificationsForResourcePagesWithContext(ctx, conn, input, func(page *licensemanager.ListLicenseSpecificationsForResourceOutput, lastPage bool) bool {
+	err := listLicenseSpecificationsForResourcePages(ctx, conn, input, func(page *licensemanager.ListLicenseSpecificationsForResourceOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

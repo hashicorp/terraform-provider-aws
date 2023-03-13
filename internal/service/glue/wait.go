@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -22,15 +23,15 @@ const (
 )
 
 // waitMLTransformDeleted waits for an MLTransform to return Deleted
-func waitMLTransformDeleted(conn *glue.Glue, transformId string) (*glue.GetMLTransformOutput, error) {
+func waitMLTransformDeleted(ctx context.Context, conn *glue.Glue, transformId string) (*glue.GetMLTransformOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.TransformStatusTypeNotReady, glue.TransformStatusTypeReady, glue.TransformStatusTypeDeleting},
 		Target:  []string{},
-		Refresh: statusMLTransform(conn, transformId),
+		Refresh: statusMLTransform(ctx, conn, transformId),
 		Timeout: mlTransformDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetMLTransformOutput); ok {
 		return output, err
@@ -40,15 +41,15 @@ func waitMLTransformDeleted(conn *glue.Glue, transformId string) (*glue.GetMLTra
 }
 
 // waitRegistryDeleted waits for a Registry to return Deleted
-func waitRegistryDeleted(conn *glue.Glue, registryID string) (*glue.GetRegistryOutput, error) {
+func waitRegistryDeleted(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetRegistryOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.RegistryStatusDeleting},
 		Target:  []string{},
-		Refresh: statusRegistry(conn, registryID),
+		Refresh: statusRegistry(ctx, conn, registryID),
 		Timeout: registryDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetRegistryOutput); ok {
 		return output, err
@@ -58,15 +59,15 @@ func waitRegistryDeleted(conn *glue.Glue, registryID string) (*glue.GetRegistryO
 }
 
 // waitSchemaAvailable waits for a Schema to return Available
-func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
+func waitSchemaAvailable(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaStatusPending},
 		Target:  []string{glue.SchemaStatusAvailable},
-		Refresh: statusSchema(conn, registryID),
+		Refresh: statusSchema(ctx, conn, registryID),
 		Timeout: schemaAvailableTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
 		return output, err
@@ -76,15 +77,15 @@ func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOut
 }
 
 // waitSchemaDeleted waits for a Schema to return Deleted
-func waitSchemaDeleted(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
+func waitSchemaDeleted(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaStatusDeleting},
 		Target:  []string{},
-		Refresh: statusSchema(conn, registryID),
+		Refresh: statusSchema(ctx, conn, registryID),
 		Timeout: schemaDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
 		return output, err
@@ -94,15 +95,15 @@ func waitSchemaDeleted(conn *glue.Glue, registryID string) (*glue.GetSchemaOutpu
 }
 
 // waitSchemaVersionAvailable waits for a Schema to return Available
-func waitSchemaVersionAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaVersionOutput, error) {
+func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaVersionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaVersionStatusPending},
 		Target:  []string{glue.SchemaVersionStatusAvailable},
-		Refresh: statusSchemaVersion(conn, registryID),
+		Refresh: statusSchemaVersion(ctx, conn, registryID),
 		Timeout: schemaVersionAvailableTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetSchemaVersionOutput); ok {
 		return output, err
@@ -112,7 +113,7 @@ func waitSchemaVersionAvailable(conn *glue.Glue, registryID string) (*glue.GetSc
 }
 
 // waitTriggerCreated waits for a Trigger to return Created
-func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
+func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			glue.TriggerStateActivating,
@@ -123,11 +124,11 @@ func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOu
 			glue.TriggerStateActivated,
 			glue.TriggerStateCreated,
 		},
-		Refresh: statusTrigger(conn, triggerName),
+		Refresh: statusTrigger(ctx, conn, triggerName),
 		Timeout: triggerCreateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
 		return output, err
@@ -137,15 +138,15 @@ func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOu
 }
 
 // waitTriggerDeleted waits for a Trigger to return Deleted
-func waitTriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
+func waitTriggerDeleted(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.TriggerStateDeleting},
 		Target:  []string{},
-		Refresh: statusTrigger(conn, triggerName),
+		Refresh: statusTrigger(ctx, conn, triggerName),
 		Timeout: triggerDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
 		return output, err
@@ -154,15 +155,15 @@ func waitTriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOu
 	return nil, err
 }
 
-func waitDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+func waitDevEndpointCreated(ctx context.Context, conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{devEndpointStatusProvisioning},
 		Target:  []string{devEndpointStatusReady},
-		Refresh: statusDevEndpoint(conn, name),
+		Refresh: statusDevEndpoint(ctx, conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
 		if status := aws.StringValue(output.Status); status == devEndpointStatusFailed {
@@ -175,15 +176,15 @@ func waitDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, er
 	return nil, err
 }
 
-func waitDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+func waitDevEndpointDeleted(ctx context.Context, conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
-		Refresh: statusDevEndpoint(conn, name),
+		Refresh: statusDevEndpoint(ctx, conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
 		if status := aws.StringValue(output.Status); status == devEndpointStatusFailed {
@@ -196,15 +197,15 @@ func waitDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, er
 	return nil, err
 }
 
-func waitPartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
+func waitPartitionIndexCreated(ctx context.Context, conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusCreating},
 		Target:  []string{glue.PartitionIndexStatusActive},
-		Refresh: statusPartitionIndex(conn, id),
+		Refresh: statusPartitionIndex(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.PartitionIndexDescriptor); ok {
 		return output, err
@@ -213,15 +214,15 @@ func waitPartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration
 	return nil, err
 }
 
-func waitPartitionIndexDeleted(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
+func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusDeleting},
 		Target:  []string{},
-		Refresh: statusPartitionIndex(conn, id),
+		Refresh: statusPartitionIndex(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*glue.PartitionIndexDescriptor); ok {
 		return output, err

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/google/go-cmp/cmp"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/mitchellh/go-testing-interface"
 
@@ -42,8 +42,6 @@ func runPostTestDestroy(ctx context.Context, t testing.T, c TestCase, wd *plugin
 func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest.Helper) {
 	t.Helper()
 
-	spewConf := spew.NewDefaultConfig()
-	spewConf.SortKeys = true
 	wd := helper.RequireNewWorkingDir(ctx, t)
 
 	ctx = logging.TestTerraformPathContext(ctx, wd.GetHelper().TerraformExecPath())
@@ -360,9 +358,6 @@ func planIsEmpty(plan *tfjson.Plan) bool {
 func testIDRefresh(ctx context.Context, t testing.T, c TestCase, wd *plugintest.WorkingDir, step TestStep, r *terraform.ResourceState, providers *providerFactories) error {
 	t.Helper()
 
-	spewConf := spew.NewDefaultConfig()
-	spewConf.SortKeys = true
-
 	// Build the state. The state is just the resource with an ID. There
 	// are no attributes. We only set what is needed to perform a refresh.
 	state := terraform.NewState()
@@ -436,12 +431,9 @@ func testIDRefresh(ctx context.Context, t testing.T, c TestCase, wd *plugintest.
 			}
 		}
 
-		spewConf := spew.NewDefaultConfig()
-		spewConf.SortKeys = true
-		return fmt.Errorf(
-			"Attributes not equivalent. Difference is shown below. Top is actual, bottom is expected."+
-				"\n\n%s\n\n%s",
-			spewConf.Sdump(actual), spewConf.Sdump(expected))
+		if diff := cmp.Diff(expected, actual); diff != "" {
+			return fmt.Errorf("IDRefreshName attributes not equivalent. Difference is shown below. The - symbol indicates attributes missing after refresh.\n\n%s", diff)
+		}
 	}
 
 	return nil

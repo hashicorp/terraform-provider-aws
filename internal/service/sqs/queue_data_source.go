@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_sqs_queue")
 func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
@@ -63,7 +64,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
-	tags, err := ListTagsWithContext(ctx, conn, queueURL)
+	tags, err := ListTags(ctx, conn, queueURL)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error

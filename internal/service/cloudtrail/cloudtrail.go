@@ -1,6 +1,7 @@
 package cloudtrail
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -8,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,14 +23,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudtrail")
 func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-name
 	return &schema.Resource{
-		Create: resourceCloudTrailCreate,
-		Read:   resourceCloudTrailRead,
-		Update: resourceCloudTrailUpdate,
-		Delete: resourceCloudTrailDelete,
+		CreateWithoutTimeout: resourceCloudTrailCreate,
+		ReadWithoutTimeout:   resourceCloudTrailRead,
+		UpdateWithoutTimeout: resourceCloudTrailUpdate,
+		DeleteWithoutTimeout: resourceCloudTrailDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -247,10 +251,11 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-
 	}
 }
 
-func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
+func resourceCloudTrailCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
@@ -290,9 +295,9 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		t, err = conn.CreateTrail(&input)
+		t, err = conn.CreateTrailWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
@@ -305,10 +310,10 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		t, err = conn.CreateTrail(&input)
+		t, err = conn.CreateTrailWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("creating CloudTrail: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudTrail: %s", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
@@ -317,35 +322,36 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 
 	// AWS CloudTrail sets newly-created trails to false.
 	if v, ok := d.GetOk("enable_logging"); ok && v.(bool) {
-		err := setLogging(conn, v.(bool), d.Id())
+		err := setLogging(ctx, conn, v.(bool), d.Id())
 		if err != nil {
-			return fmt.Errorf("creating CloudTrail: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating CloudTrail: %s", err)
 		}
 	}
 
 	// Event Selectors
 	if _, ok := d.GetOk("event_selector"); ok {
-		if err := setEventSelectors(conn, d); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
+		if err := setEventSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
-		if err := setAdvancedEventSelectors(conn, d); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
+		if err := setAdvancedEventSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if _, ok := d.GetOk("insight_selector"); ok {
-		if err := setInsightSelectors(conn, d); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
+		if err := setInsightSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceCloudTrailRead(d, meta)
+	return append(diags, resourceCloudTrailRead(ctx, d, meta)...)
 }
 
-func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
+func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -355,9 +361,9 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 			aws.String(d.Id()),
 		},
 	}
-	resp, err := conn.DescribeTrails(&input)
+	resp, err := conn.DescribeTrailsWithContext(ctx, &input)
 	if err != nil {
-		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	// CloudTrail does not return a NotFound error in the event that the Trail
@@ -372,11 +378,11 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	if !d.IsNewResource() && trail == nil {
 		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && trail == nil {
-		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)
@@ -401,68 +407,69 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	d.Set("arn", arn)
 	d.Set("home_region", trail.HomeRegion)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Cloudtrail (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Cloudtrail (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	logstatus, err := getLoggingStatus(conn, trail.Name)
+	logstatus, err := getLoggingStatus(ctx, conn, trail.Name)
 	if err != nil {
-		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 	}
 	d.Set("enable_logging", logstatus)
 
 	// Get EventSelectors
-	eventSelectorsOut, err := conn.GetEventSelectors(&cloudtrail.GetEventSelectorsInput{
+	eventSelectorsOut, err := conn.GetEventSelectorsWithContext(ctx, &cloudtrail.GetEventSelectorsInput{
 		TrailName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 	}
 
 	if aws.BoolValue(trail.HasCustomEventSelectors) {
 		if err := d.Set("event_selector", flattenEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
-			return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+			return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 		}
 
 		if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
-			return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+			return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 		}
 	}
 
 	if aws.BoolValue(trail.HasInsightSelectors) {
 		// Get InsightSelectors
-		insightSelectors, err := conn.GetInsightSelectors(&cloudtrail.GetInsightSelectorsInput{
+		insightSelectors, err := conn.GetInsightSelectorsWithContext(ctx, &cloudtrail.GetInsightSelectorsInput{
 			TrailName: aws.String(d.Id()),
 		})
 		if err != nil {
 			if !tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeInsightNotEnabledException) {
-				return fmt.Errorf("getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "getting Cloud Trail (%s) Insight Selectors: %s", d.Id(), err)
 			}
 		}
 		if insightSelectors != nil {
 			if err := d.Set("insight_selector", flattenInsightSelector(insightSelectors.InsightSelectors)); err != nil {
-				return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
+				return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
+func resourceCloudTrailUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
@@ -502,9 +509,9 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { 
 		}
 
 		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 			var err error
-			_, err = conn.UpdateTrail(&input)
+			_, err = conn.UpdateTrailWithContext(ctx, &input)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 					return resource.RetryableError(err)
@@ -517,77 +524,78 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { 
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTrail(&input)
+			_, err = conn.UpdateTrailWithContext(ctx, &input)
 		}
 		if err != nil {
-			return fmt.Errorf("updating CloudTrail Trail (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
 	if d.HasChange("enable_logging") {
 		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", d.Id())
-		err := setLogging(conn, d.Get("enable_logging").(bool), d.Id())
+		err := setLogging(ctx, conn, d.Get("enable_logging").(bool), d.Id())
 		if err != nil {
-			return fmt.Errorf("updating CloudTrail Trail (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("event_selector") {
 		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", d.Id())
-		if err := setEventSelectors(conn, d); err != nil {
-			return fmt.Errorf("updating CloudTrail Trail (%s): %w", d.Id(), err)
+		if err := setEventSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
 		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail: %s", d.Id())
-		if err := setAdvancedEventSelectors(conn, d); err != nil {
-			return fmt.Errorf("updating CloudTrail Trail (%s): %w", d.Id(), err)
+		if err := setAdvancedEventSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("insight_selector") {
 		log.Printf("[DEBUG] Updating insight selector on CloudTrail: %s", d.Id())
-		if err := setInsightSelectors(conn, d); err != nil {
-			return fmt.Errorf("updating CloudTrail Trail (%s): %w", d.Id(), err)
+		if err := setInsightSelectors(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Trail (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceCloudTrailRead(d, meta)
+	return append(diags, resourceCloudTrailRead(ctx, d, meta)...)
 }
 
-func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
+func resourceCloudTrailDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
-	_, err := conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
+	_, err := conn.DeleteTrailWithContext(ctx, &cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudTrail (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudTrail (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func getLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, error) {
+func getLoggingStatus(ctx context.Context, conn *cloudtrail.CloudTrail, id *string) (bool, error) {
 	input := &cloudtrail.GetTrailStatusInput{
 		Name: id,
 	}
-	resp, err := conn.GetTrailStatus(input)
+	resp, err := conn.GetTrailStatusWithContext(ctx, input)
 	if err != nil {
 		return false, fmt.Errorf("retrieving logging status: %w", err)
 	}
@@ -595,13 +603,13 @@ func getLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, error) {
 	return aws.BoolValue(resp.IsLogging), err
 }
 
-func setLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
+func setLogging(ctx context.Context, conn *cloudtrail.CloudTrail, enabled bool, id string) error {
 	if enabled {
 		log.Printf("[DEBUG] Starting logging on CloudTrail (%s)", id)
 		StartLoggingOpts := &cloudtrail.StartLoggingInput{
 			Name: aws.String(id),
 		}
-		if _, err := conn.StartLogging(StartLoggingOpts); err != nil {
+		if _, err := conn.StartLoggingWithContext(ctx, StartLoggingOpts); err != nil {
 			return fmt.Errorf("starting logging: %w", err)
 		}
 	} else {
@@ -609,7 +617,7 @@ func setLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
 		StopLoggingOpts := &cloudtrail.StopLoggingInput{
 			Name: aws.String(id),
 		}
-		if _, err := conn.StopLogging(StopLoggingOpts); err != nil {
+		if _, err := conn.StopLoggingWithContext(ctx, StopLoggingOpts); err != nil {
 			return fmt.Errorf("stopping logging: %w", err)
 		}
 	}
@@ -617,7 +625,7 @@ func setLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
 	return nil
 }
 
-func setEventSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
+func setEventSelectors(ctx context.Context, conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
 	input := &cloudtrail.PutEventSelectorsInput{
 		TrailName: aws.String(d.Id()),
 	}
@@ -638,7 +646,7 @@ func setEventSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) erro
 		return fmt.Errorf("validate CloudTrail (%s): %s", d.Id(), err)
 	}
 
-	_, err := conn.PutEventSelectors(input)
+	_, err := conn.PutEventSelectorsWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("set event selector on CloudTrail (%s): %s", d.Id(), err)
 	}
@@ -721,7 +729,7 @@ func flattenEventSelectorDataResource(configured []*cloudtrail.DataResource) []m
 	return dataResources
 }
 
-func setAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
+func setAdvancedEventSelectors(ctx context.Context, conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
 	input := &cloudtrail.PutEventSelectorsInput{
 		TrailName: aws.String(d.Id()),
 	}
@@ -732,7 +740,7 @@ func setAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceDa
 		return fmt.Errorf("validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
-	_, err := conn.PutEventSelectors(input)
+	_, err := conn.PutEventSelectorsWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("set advanced event selector on CloudTrail (%s): %w", d.Id(), err)
 	}
@@ -842,7 +850,7 @@ func flattenAdvancedEventSelectorFieldSelector(configured []*cloudtrail.Advanced
 	return fieldSelectors
 }
 
-func setInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
+func setInsightSelectors(ctx context.Context, conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
 	input := &cloudtrail.PutInsightSelectorsInput{
 		TrailName: aws.String(d.Id()),
 	}
@@ -854,7 +862,7 @@ func setInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) er
 		return fmt.Errorf("validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
-	_, err := conn.PutInsightSelectors(input)
+	_, err := conn.PutInsightSelectorsWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("set insight selector on CloudTrail (%s): %w", d.Id(), err)
 	}

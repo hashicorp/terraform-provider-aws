@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_metric_stream")
 func ResourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricStreamCreate,
@@ -174,7 +175,7 @@ func ResourceMetricStream() *schema.Resource {
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatch.PutMetricStreamInput{
@@ -222,7 +223,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTagsWithContext(ctx, conn, aws.StringValue(output.Arn), nil, tags)
+		err := UpdateTags(ctx, conn, aws.StringValue(output.Arn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -283,7 +284,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(output.Arn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(output.Arn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -346,7 +347,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			log.Printf("[WARN] failed updating tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
 		}
 	}

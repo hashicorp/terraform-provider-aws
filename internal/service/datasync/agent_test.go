@@ -1,6 +1,7 @@
 package datasync_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -18,20 +19,21 @@ import (
 )
 
 func TestAccDataSyncAgent_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var agent1 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentDestroy,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent1),
+					testAccCheckAgentExists(ctx, resourceName, &agent1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_link_endpoint", ""),
@@ -52,21 +54,22 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 }
 
 func TestAccDataSyncAgent_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var agent1 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentDestroy,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
+					testAccCheckAgentExists(ctx, resourceName, &agent1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,28 +78,29 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 }
 
 func TestAccDataSyncAgent_agentName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var agent1, agent2 datasync.DescribeAgentOutput
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentDestroy,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentConfig_name(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent1),
+					testAccCheckAgentExists(ctx, resourceName, &agent1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
 				Config: testAccAgentConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent2),
+					testAccCheckAgentExists(ctx, resourceName, &agent2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -111,20 +115,21 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 }
 
 func TestAccDataSyncAgent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var agent1, agent2, agent3 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentDestroy,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent1),
+					testAccCheckAgentExists(ctx, resourceName, &agent1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -138,7 +143,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 			{
 				Config: testAccAgentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent2),
+					testAccCheckAgentExists(ctx, resourceName, &agent2),
 					testAccCheckAgentNotRecreated(&agent1, &agent2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -148,7 +153,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 			{
 				Config: testAccAgentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent3),
+					testAccCheckAgentExists(ctx, resourceName, &agent3),
 					testAccCheckAgentNotRecreated(&agent2, &agent3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -159,6 +164,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 }
 
 func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var agent datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
@@ -167,15 +173,15 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentDestroy,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentConfig_vpcEndpointID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(resourceName, &agent),
+					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
@@ -193,31 +199,33 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 	})
 }
 
-func testAccCheckAgentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_agent" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datasync_agent" {
+				continue
+			}
+
+			_, err := tfdatasync.FindAgentByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataSync Agent %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfdatasync.FindAgentByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DataSync Agent %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAgentExists(resourceName string, agent *datasync.DescribeAgentOutput) resource.TestCheckFunc {
+func testAccCheckAgentExists(ctx context.Context, resourceName string, agent *datasync.DescribeAgentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -226,7 +234,7 @@ func testAccCheckAgentExists(resourceName string, agent *datasync.DescribeAgentO
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
-		output, err := tfdatasync.FindAgentByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindAgentByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

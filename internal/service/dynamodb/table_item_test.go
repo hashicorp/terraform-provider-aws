@@ -1,6 +1,7 @@
 package dynamodb_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDynamoDBTableItem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -30,16 +32,16 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemContent+"\n"),
@@ -50,6 +52,7 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -65,16 +68,16 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
@@ -86,6 +89,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
@@ -109,17 +113,17 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test2", &conf2),
-					testAccCheckTableItemCount(tableName, 2),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test2", &conf2),
+					testAccCheckTableItemCount(ctx, tableName, 2),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
@@ -137,6 +141,7 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
@@ -149,10 +154,10 @@ func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, firstItem),
@@ -163,6 +168,7 @@ func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_withDuplicateItemsDifferentRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
@@ -185,17 +191,17 @@ func TestAccDynamoDBTableItem_withDuplicateItemsDifferentRangeKey(t *testing.T) 
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test2", &conf2),
-					testAccCheckTableItemCount(tableName, 2),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test2", &conf2),
+					testAccCheckTableItemCount(ctx, tableName, 2),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
@@ -213,6 +219,7 @@ func TestAccDynamoDBTableItem_withDuplicateItemsDifferentRangeKey(t *testing.T) 
 }
 
 func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf1 dynamodb.GetItemOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -228,16 +235,16 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_wonky(rName, hashKey, rangeKey, item),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
-					testAccCheckTableItemCount(rName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemCount(ctx, rName, 1),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
@@ -250,6 +257,7 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -270,16 +278,16 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemBefore+"\n"),
@@ -288,8 +296,8 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemAfter+"\n"),
@@ -300,6 +308,7 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -318,16 +327,16 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
@@ -337,8 +346,8 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
@@ -350,6 +359,7 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_item.test"
@@ -364,16 +374,16 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(rName, hashKey, itemContent),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableItemExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
+					testAccCheckTableItemExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -381,39 +391,41 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTableItemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_table_item" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dynamodb_table_item" {
+				continue
+			}
+
+			attrs := rs.Primary.Attributes
+			attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
+			if err != nil {
+				return err
+			}
+
+			key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+
+			_, err = tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
 		}
 
-		attrs := rs.Primary.Attributes
-		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
-		if err != nil {
-			return err
-		}
-
-		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
-
-		_, err = tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resource.TestCheckFunc {
+func testAccCheckTableItemExists(ctx context.Context, n string, item *dynamodb.GetItemOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -434,7 +446,7 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 
 		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
 
-		result, err := tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
+		result, err := tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
 
 		if err != nil {
 			return err
@@ -446,10 +458,10 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 	}
 }
 
-func testAccCheckTableItemCount(tableName string, count int64) resource.TestCheckFunc {
+func testAccCheckTableItemCount(ctx context.Context, tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
-		out, err := conn.Scan(&dynamodb.ScanInput{
+		out, err := conn.ScanWithContext(ctx, &dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),
 			Select:         aws.String(dynamodb.SelectCount),

@@ -7,10 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_rds_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -151,7 +152,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
@@ -204,14 +205,14 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
+	tags, err := ListTags(ctx, conn, clusterARN)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_lambda_alias")
 func ResourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAliasCreate,
-		Read:   resourceAliasRead,
-		Update: resourceAliasUpdate,
-		Delete: resourceAliasDelete,
+		CreateWithoutTimeout: resourceAliasCreate,
+		ReadWithoutTimeout:   resourceAliasRead,
+		UpdateWithoutTimeout: resourceAliasUpdate,
+		DeleteWithoutTimeout: resourceAliasDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAliasImport,
+			StateContext: resourceAliasImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,7 +80,8 @@ func ResourceAlias() *schema.Resource {
 
 // resourceAliasCreate maps to:
 // CreateAlias in the API / SDK
-func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
@@ -92,19 +97,20 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
-	aliasConfiguration, err := conn.CreateAlias(params)
+	aliasConfiguration, err := conn.CreateAliasWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda alias: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda alias: %s", err)
 	}
 
 	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
 
-	return resourceAliasRead(d, meta)
+	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
 // resourceAliasRead maps to:
 // GetAlias in the API / SDK
-func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
@@ -114,13 +120,13 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 		Name:         aws.String(d.Get("name").(string)),
 	}
 
-	aliasConfiguration, err := conn.GetAlias(params)
+	aliasConfiguration, err := conn.GetAliasWithContext(ctx, params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading Lambda Alias (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Alias (%s): %s", d.Id(), err)
 	}
 
 	d.Set("description", aliasConfiguration.Description)
@@ -133,15 +139,16 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("invoke_arn", invokeArn)
 
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
-		return fmt.Errorf("error setting routing_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 // resourceAliasDelete maps to:
 // DeleteAlias in the API / SDK
-func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
@@ -151,17 +158,18 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 		Name:         aws.String(d.Get("name").(string)),
 	}
 
-	_, err := conn.DeleteAlias(params)
+	_, err := conn.DeleteAliasWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Lambda alias: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda alias: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 // resourceAliasUpdate maps to:
 // UpdateAlias in the API / SDK
-func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
@@ -174,12 +182,12 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
-	_, err := conn.UpdateAlias(params)
+	_, err := conn.UpdateAliasWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error updating Lambda alias: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda alias: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
@@ -198,7 +206,7 @@ func expandAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfig
 	return aliasRoutingConfiguration
 }
 
-func resourceAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())

@@ -1,6 +1,7 @@
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,23 +10,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_resolver")
 func ResourceResolver() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResolverCreate,
-		Read:   resourceResolverRead,
-		Update: resourceResolverUpdate,
-		Delete: resourceResolverDelete,
+		CreateWithoutTimeout: resourceResolverCreate,
+		ReadWithoutTimeout:   resourceResolverRead,
+		UpdateWithoutTimeout: resourceResolverUpdate,
+		DeleteWithoutTimeout: resourceResolverDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -172,7 +176,8 @@ func ResourceResolver() *schema.Resource {
 	}
 }
 
-func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.CreateResolverInput{
@@ -222,26 +227,27 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateResolver(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppSync Resolver: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating AppSync Resolver: %s", err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("type").(string) + "-" + d.Get("field").(string))
 
-	return resourceResolverRead(d, meta)
+	return append(diags, resourceResolverRead(ctx, d, meta)...)
 }
 
-func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("reading AppSync Resolver (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.GetResolverInput{
@@ -250,16 +256,16 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 		FieldName: aws.String(fieldName),
 	}
 
-	resp, err := conn.GetResolver(input)
+	resp, err := conn.GetResolverWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync Resolver (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading AppSync Resolver (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
 	resolver := resp.Resolver
@@ -275,25 +281,26 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("code", resolver.Code)
 
 	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
-		return fmt.Errorf("error setting sync_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sync_config: %s", err)
 	}
 
 	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
-		return fmt.Errorf("Error setting pipeline_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting pipeline_config: %s", err)
 	}
 
 	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
-		return fmt.Errorf("Error setting caching_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting caching_config: %s", err)
 	}
 
 	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {
-		return fmt.Errorf("error setting runtime: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting runtime: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.UpdateResolverInput{
@@ -346,24 +353,25 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.UpdateResolver(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.UpdateResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
-		return fmt.Errorf("error updating AppSync Resolver (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
-	return resourceResolverRead(d, meta)
+	return append(diags, resourceResolverRead(ctx, d, meta)...)
 }
 
-func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("deleting AppSync Resolver (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteResolverInput{
@@ -376,15 +384,15 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.DeleteResolver(input)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.DeleteResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
-		return fmt.Errorf("deleting AppSync Resolver (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeResolverID(id string) (string, string, string, error) {

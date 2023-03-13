@@ -23,6 +23,7 @@ func init() {
 }
 
 func sweepWorkSpaces(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -34,7 +35,7 @@ func sweepWorkSpaces(region string) error {
 
 	input := &managedgrafana.ListWorkspacesInput{}
 
-	err = conn.ListWorkspacesPages(input, func(page *managedgrafana.ListWorkspacesOutput, lastPage bool) bool {
+	err = conn.ListWorkspacesPagesWithContext(ctx, input, func(page *managedgrafana.ListWorkspacesOutput, lastPage bool) bool {
 		if len(page.Workspaces) == 0 {
 			log.Printf("[INFO] No Grafana Workspaces to sweep")
 			return false
@@ -49,7 +50,6 @@ func sweepWorkSpaces(region string) error {
 
 			if err != nil {
 				err := fmt.Errorf("reading Grafana Workspace (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
 				errs = multierror.Append(errs, err)
 				continue
 			}

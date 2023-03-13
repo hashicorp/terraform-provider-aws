@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
@@ -29,15 +30,15 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
@@ -62,6 +63,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 }
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,16 +74,16 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,6 +92,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 }
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -100,15 +103,15 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -116,7 +119,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
@@ -125,7 +128,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -139,7 +142,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteToSiteVpnAttachment) resource.TestCheckFunc {
+func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *networkmanager.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -152,7 +155,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteT
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -164,28 +167,30 @@ func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteT
 	}
 }
 
-func testAccCheckSiteToSiteVPNAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {
+				continue
+			}
+
+			_, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Site To Site VPN Attachment %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Site To Site VPN Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {

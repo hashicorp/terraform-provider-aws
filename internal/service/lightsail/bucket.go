@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_bucket")
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -25,7 +26,7 @@ func ResourceBucket() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,7 +73,7 @@ func ResourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	in := lightsail.CreateBucketInput{
 		BucketName: aws.String(d.Get("name").(string)),
@@ -95,7 +96,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string), errors.New("Error waiting for Create Bucket request operation"))
 	}
@@ -131,7 +132,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("support_code", out.SupportCode)
 	d.Set("url", out.Url)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -151,7 +152,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResBucket, d.Id(), err)
 		}
 	}
@@ -159,7 +160,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResBucket, d.Id(), err)
 		}
 	}
@@ -181,7 +182,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		op := out.Operations[0]
 
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string), errors.New("Error waiting for request operation"))
 		}
@@ -206,7 +207,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResBucket, d.Id(), err)

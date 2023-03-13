@@ -1,27 +1,31 @@
 package workspaces
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_workspaces_workspace")
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceCreate,
-		Read:   resourceWorkspaceRead,
-		Update: resourceWorkspaceUpdate,
-		Delete: resourceWorkspaceDelete,
+		CreateWithoutTimeout: resourceWorkspaceCreate,
+		ReadWithoutTimeout:   resourceWorkspaceRead,
+		UpdateWithoutTimeout: resourceWorkspaceUpdate,
+		DeleteWithoutTimeout: resourceWorkspaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
@@ -137,10 +141,11 @@ func ResourceWorkspace() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &workspaces.WorkspaceRequest{
 		BundleId:                    aws.String(d.Get("bundle_id").(string)),
@@ -157,42 +162,43 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.WorkspaceProperties = ExpandWorkspaceProperties(d.Get("workspace_properties").([]interface{}))
 
-	resp, err := conn.CreateWorkspaces(&workspaces.CreateWorkspacesInput{
+	resp, err := conn.CreateWorkspacesWithContext(ctx, &workspaces.CreateWorkspacesInput{
 		Workspaces: []*workspaces.WorkspaceRequest{input},
 	})
 	if err != nil {
-		return fmt.Errorf("creating WorkSpaces Workspace: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: %s", err)
 	}
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("creating WorkSpaces Workspace: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
+		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
 	d.SetId(workspaceID)
 
-	_, err = WaitWorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
+	_, err = WaitWorkspaceAvailable(ctx, conn, workspaceID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("creating WorkSpaces Workspace: waiting for completion: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: waiting for completion: %s", err)
 	}
 
-	return resourceWorkspaceRead(d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := StatusWorkspaceState(conn, d.Id())()
+	rawOutput, state, err := StatusWorkspaceState(ctx, conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("reading WorkSpaces Workspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace (%s): %s", d.Id(), err)
 	}
 	if state == workspaces.WorkspaceStateTerminated {
 		log.Printf("[WARN] WorkSpaces Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	workspace := rawOutput.(*workspaces.Workspace)
@@ -206,29 +212,30 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
 	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
-		return fmt.Errorf("setting workspace properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace properties: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("listing tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	// IMPORTANT: Only one workspace property could be changed in a time.
@@ -236,53 +243,57 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	// https://docs.aws.amazon.com/workspaces/latest/adminguide/modify-workspaces.html
 
 	if d.HasChange("workspace_properties.0.compute_type_name") {
-		if err := workspacePropertyUpdate("compute_type_name", conn, d); err != nil {
-			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
+		if err := workspacePropertyUpdate(ctx, "compute_type_name", conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Workspace (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.root_volume_size_gib") {
-		if err := workspacePropertyUpdate("root_volume_size_gib", conn, d); err != nil {
-			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
+		if err := workspacePropertyUpdate(ctx, "root_volume_size_gib", conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Workspace (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.running_mode") {
-		if err := workspacePropertyUpdate("running_mode", conn, d); err != nil {
-			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
+		if err := workspacePropertyUpdate(ctx, "running_mode", conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Workspace (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes") {
-		if err := workspacePropertyUpdate("running_mode_auto_stop_timeout_in_minutes", conn, d); err != nil {
-			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
+		if err := workspacePropertyUpdate(ctx, "running_mode_auto_stop_timeout_in_minutes", conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Workspace (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.user_volume_size_gib") {
-		if err := workspacePropertyUpdate("user_volume_size_gib", conn, d); err != nil {
-			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
+		if err := workspacePropertyUpdate(ctx, "user_volume_size_gib", conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Workspace (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceWorkspaceRead(d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
-	return WorkspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if err := WorkspaceDelete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	return diags
 }
 
-func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
-	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
+func WorkspaceDelete(ctx context.Context, conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
+	resp, err := conn.TerminateWorkspacesWithContext(ctx, &workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
 			{
 				WorkspaceId: aws.String(id),
@@ -298,7 +309,7 @@ func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 		return fmt.Errorf("deleting WorkSpaces Workspace (%s): %s: %s", id, aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
-	_, err = WaitWorkspaceTerminated(conn, id, timeout)
+	_, err = WaitWorkspaceTerminated(ctx, conn, id, timeout)
 	if err != nil {
 		return fmt.Errorf("deleting WorkSpaces Workspace (%s): waiting for completion: %w", id, err)
 	}
@@ -306,7 +317,7 @@ func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 	return nil
 }
 
-func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.ResourceData) error {
+func workspacePropertyUpdate(ctx context.Context, p string, conn *workspaces.WorkSpaces, d *schema.ResourceData) error {
 	id := d.Id()
 
 	var wsp *workspaces.WorkspaceProperties
@@ -339,7 +350,7 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 		}
 	}
 
-	_, err := conn.ModifyWorkspaceProperties(&workspaces.ModifyWorkspacePropertiesInput{
+	_, err := conn.ModifyWorkspacePropertiesWithContext(ctx, &workspaces.ModifyWorkspacePropertiesInput{
 		WorkspaceId:         aws.String(id),
 		WorkspaceProperties: wsp,
 	})
@@ -347,7 +358,7 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 		return fmt.Errorf("modifying property %q: %w", p, err)
 	}
 
-	_, err = WaitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitWorkspaceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("modifying property %q: waiting for completion: %w", p, err)
 	}
