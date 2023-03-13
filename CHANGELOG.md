@@ -3,21 +3,25 @@
 FEATURES:
 
 * **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
+* **New Resource:** `aws_codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
 * **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
-* **New Resource:** `codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
 
 ENHANCEMENTS:
 
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
+* resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
 * resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
 * resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
+* resource/aws_fms_policy: Add `description` argument ([#29926](https://github.com/hashicorp/terraform-provider-aws/issues/29926))
 * resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
+* resource/aws_instance: Add ability to update `private_dns_name_options` in place ([#26305](https://github.com/hashicorp/terraform-provider-aws/issues/26305))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
 
 BUG FIXES:
 
+* data-source/aws_opensearch_domain: Add missing `advanced_security_options.anonymous_auth_enabled` attribute ([#26746](https://github.com/hashicorp/terraform-provider-aws/issues/26746))
 * resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
 * resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
