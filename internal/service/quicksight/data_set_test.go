@@ -423,7 +423,7 @@ func testAccBaseDataSetConfig(rId string, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
-resource "aws_quicksight_data_source" "dsource" {
+resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
   name           = %[2]q
 
@@ -453,7 +453,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = %[1]q
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -476,7 +476,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -506,7 +506,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -532,7 +532,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -559,7 +559,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -587,7 +587,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -617,7 +617,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -649,7 +649,7 @@ resource "aws_quicksight_data_set" "test" {
   physical_table_map {
 	physical_table_map_id = "unique_id"
 	  s3_source {
-		  data_source_arn = aws_quicksight_data_source.dsource.arn
+		  data_source_arn = aws_quicksight_data_source.test.arn
 		  input_columns {
 			  name = "ColumnId-1"
 			  type = "STRING"
@@ -684,7 +684,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -714,7 +714,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
@@ -745,7 +745,7 @@ resource "aws_quicksight_data_set" "test" {
 	physical_table_map {
 		physical_table_map_id = "unique_id"
 		s3_source {
-			data_source_arn = aws_quicksight_data_source.dsource.arn
+			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
 				name = "ColumnId-1"
 				type = "STRING"
