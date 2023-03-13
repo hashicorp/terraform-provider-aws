@@ -314,7 +314,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
