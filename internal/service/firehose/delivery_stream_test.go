@@ -974,6 +974,38 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioning(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioningUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3DynamicPartitioningBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3DynamicPartitioning(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream firehose.DeliveryStreamDescription
@@ -3017,6 +3049,26 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
       }
     }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_extendedS3DynamicPartitioningBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = "prefix1"
+    buffer_size         = 64
   }
 }
 `, rName))

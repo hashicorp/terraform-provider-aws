@@ -28,7 +28,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -67,7 +67,7 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -102,7 +102,7 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -137,7 +137,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -176,7 +176,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -224,7 +224,7 @@ func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -268,7 +268,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),

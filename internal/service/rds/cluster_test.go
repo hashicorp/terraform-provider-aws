@@ -919,9 +919,9 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider(ctx), &providers),
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_replicationSourceIDKMSKeyID(rName),
@@ -1373,9 +1373,9 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
@@ -1408,9 +1408,9 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_replicationSourceID(rName),
@@ -1446,9 +1446,9 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),

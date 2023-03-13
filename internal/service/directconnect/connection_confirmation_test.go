@@ -36,9 +36,9 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),

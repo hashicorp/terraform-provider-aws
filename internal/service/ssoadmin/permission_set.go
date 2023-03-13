@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ssoadmin_permission_set")
 func ResourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetCreate,
@@ -96,7 +97,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceArn := d.Get("instance_arn").(string)
 	name := d.Get("name").(string)

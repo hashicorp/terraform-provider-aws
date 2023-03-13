@@ -19,7 +19,7 @@ import (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
+	acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 

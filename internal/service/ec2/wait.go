@@ -29,6 +29,7 @@ const (
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
 	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
+	IPAMPoolCIDRNotFoundChecks                 = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -2882,13 +2883,14 @@ func WaitIPAMPoolUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func WaitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIPAMPoolCIDRIdCreated(ctx context.Context, conn *ec2.EC2, poolCidrId, poolID, cidrBlock string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
-		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
-		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID),
-		Timeout: timeout,
-		Delay:   5 * time.Second,
+		Pending:        []string{ec2.IpamPoolCidrStatePendingProvision},
+		Target:         []string{ec2.IpamPoolCidrStateProvisioned},
+		Refresh:        StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID, poolCidrId),
+		Timeout:        timeout,
+		Delay:          5 * time.Second,
+		NotFoundChecks: IPAMPoolCIDRNotFoundChecks,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2904,11 +2906,11 @@ func WaitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.EC2, cidrBlock, pool
 	return nil, err
 }
 
-func WaitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID, poolCidrId string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
 		Target:  []string{},
-		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID),
+		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID, poolCidrId),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -2938,6 +2940,96 @@ func WaitIPAMPoolCIDRAllocationCreated(ctx context.Context, conn *ec2.EC2, alloc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.IpamPoolAllocation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateCreateInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryStateCreateComplete},
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryAssociationAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete},
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete, ec2.IpamResourceDiscoveryAssociationStateDisassociateInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateCreateComplete, ec2.IpamResourceDiscoveryStateModifyComplete, ec2.IpamResourceDiscoveryStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateModifyInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryStateModifyComplete},
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscovery); ok {
 		return output, err
 	}
 

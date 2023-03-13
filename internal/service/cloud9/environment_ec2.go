@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloud9_environment_ec2")
 func ResourceEnvironmentEC2() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentEC2Create,
@@ -103,7 +104,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{

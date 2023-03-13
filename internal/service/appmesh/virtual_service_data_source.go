@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_appmesh_virtual_service")
 func DataSourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualServiceRead,

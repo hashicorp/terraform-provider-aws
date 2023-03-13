@@ -3,11 +3,8 @@ package apigateway_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
@@ -106,7 +104,7 @@ func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 	})
 }
 
-func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, res *apigateway.UsagePlanKey) resource.TestCheckFunc {
+func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway.UsagePlanKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -119,22 +117,13 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, res *apigatew
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetUsagePlanKeyInput{
-			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
-			KeyId:       aws.String(rs.Primary.Attributes["key_id"]),
-		}
-		up, err := conn.GetUsagePlanKeyWithContext(ctx, req)
+		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
+
 		if err != nil {
 			return err
 		}
 
-		log.Printf("[DEBUG] Reading API Gateway Usage Plan Key: %#v", up)
-
-		if *up.Id != rs.Primary.ID {
-			return fmt.Errorf("API Gateway Usage Plan Key not found")
-		}
-
-		*res = *up
+		*v = *output
 
 		return nil
 	}
@@ -149,27 +138,17 @@ func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			req := &apigateway.GetUsagePlanKeyInput{
-				UsagePlanId: aws.String(rs.Primary.ID),
-				KeyId:       aws.String(rs.Primary.Attributes["key_id"]),
-			}
-			describe, err := conn.GetUsagePlanKeyWithContext(ctx, req)
+			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
 
-			if err == nil {
-				if describe.Id != nil && *describe.Id == rs.Primary.ID {
-					return fmt.Errorf("API Gateway Usage Plan Key still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != apigateway.ErrCodeNotFoundException {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Usage Plan Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -190,7 +169,7 @@ func testAccCheckUsagePlanKeyImportStateIdFunc(resourceName string) resource.Imp
 func testAccUsagePlanKeyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%[1]s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {

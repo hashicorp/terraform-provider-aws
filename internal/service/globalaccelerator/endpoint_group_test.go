@@ -219,7 +219,7 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -482,7 +482,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.
 		meta := acctest.Provider.Meta()
 		conn := meta.(*conns.AWSClient).EC2Conn()
 
-		v, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
 
 		if tfresource.NotFound(err) {
 			// Already gone.

@@ -95,7 +95,7 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -328,7 +328,7 @@ func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

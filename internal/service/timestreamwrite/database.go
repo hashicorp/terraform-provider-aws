@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_timestreamwrite_database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -72,7 +73,7 @@ func ResourceDatabase() *schema.Resource {
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	dbName := d.Get("database_name").(string)
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshift_scheduled_action")
 func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduledActionCreate,

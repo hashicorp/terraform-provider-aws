@@ -11,17 +11,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_endpoint")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -401,9 +404,10 @@ func ResourceEndpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 						},
 						"server_side_encryption_kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: tfkms.DiffSuppressKey,
+							ValidateFunc:     tfkms.ValidateKey,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
@@ -414,6 +418,7 @@ func ResourceEndpoint() *schema.Resource {
 				},
 			},
 			"s3_settings": {
+				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -611,9 +616,10 @@ func ResourceEndpoint() *schema.Resource {
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"server_side_encryption_kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: tfkms.DiffSuppressKey,
+							ValidateFunc:     tfkms.ValidateKey,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
@@ -678,7 +684,10 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceEndpointCustomizeDiff,
+			requireEngineSettingsCustomizeDiff,
+			validateKMSKeyEngineCustomizeDiff,
+			validateS3SSEKMSKeyCustomizeDiff,
+			validateRedshiftSSEKMSKeyCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 	}
@@ -688,7 +697,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
@@ -887,6 +896,25 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		} else {
 			input.SybaseSettings = &dms.SybaseSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, input)
+		}
+	case engineNameDB2:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			input.IBMDb2Settings = &dms.IBMDb2Settings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				Username:     aws.String(d.Get("username").(string)),
 				Password:     aws.String(d.Get("password").(string)),
 				ServerName:   aws.String(d.Get("server_name").(string)),
@@ -1243,6 +1271,30 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameDB2:
+			if d.HasChanges(
+				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+				"secrets_manager_arn") {
+				if _, ok := d.GetOk("secrets_manager_arn"); ok {
+					input.IBMDb2Settings = &dms.IBMDb2Settings{
+						DatabaseName:                aws.String(d.Get("database_name").(string)),
+						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+					}
+				} else {
+					input.IBMDb2Settings = &dms.IBMDb2Settings{
+						Username:     aws.String(d.Get("username").(string)),
+						Password:     aws.String(d.Get("password").(string)),
+						ServerName:   aws.String(d.Get("server_name").(string)),
+						Port:         aws.Int64(int64(d.Get("port").(int))),
+						DatabaseName: aws.String(d.Get("database_name").(string)),
+					}
+					input.EngineName = aws.String(engineName) // Must be included (should be 'db2')
+
+					// Update connection info in top-level namespace as well
+					expandTopLevelConnectionInfoModify(d, input)
+				}
+			}
 		case engineNameS3:
 			if d.HasChanges("s3_settings") {
 				input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
@@ -1313,7 +1365,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func requireEngineSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
 	case engineNameElasticsearch, engineNameOpenSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
@@ -1341,6 +1393,61 @@ func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff,
 		}
 	}
 
+	return nil
+}
+
+func validateKMSKeyEngineCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameS3 {
+		if d.Get("kms_key_arn") != "" {
+			return fmt.Errorf("kms_key_arn must not be set when engine is %q. Use s3_settings.server_side_encryption_kms_key_id instead", engineNameS3)
+		}
+	}
+	return nil
+}
+
+func validateS3SSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameS3 {
+		return validateSSEKMSKey("s3_settings", d)
+	}
+	return nil
+}
+
+func validateRedshiftSSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameRedshift {
+		return validateSSEKMSKey("redshift_settings", d)
+	}
+	return nil
+}
+
+func validateSSEKMSKey(settingsAttrName string, d *schema.ResourceDiff) error {
+	rawConfig := d.GetRawConfig()
+	settings := rawConfig.GetAttr(settingsAttrName)
+	if settings.IsKnown() && !settings.IsNull() && settings.LengthInt() > 0 {
+		setting := settings.Index(cty.NumberIntVal(0))
+		if setting.IsKnown() && !setting.IsNull() {
+			kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
+			if !kmsKeyId.IsKnown() {
+				return nil
+			}
+			encryptionMode := setting.GetAttr("encryption_mode")
+			if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
+				id := ""
+				if !kmsKeyId.IsNull() {
+					id = kmsKeyId.AsString()
+				}
+				switch encryptionMode.AsString() {
+				case encryptionModeSseS3:
+					if id != "" {
+						return fmt.Errorf("%s.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", settingsAttrName, encryptionModeSseS3)
+					}
+				case encryptionModeSseKMS:
+					if id == "" {
+						return fmt.Errorf("%s.server_side_encryption_kms_key_id is required when encryption_mode is %q", settingsAttrName, encryptionModeSseKMS)
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -1473,13 +1580,23 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+	case engineNameDB2:
+		if endpoint.IBMDb2Settings != nil {
+			d.Set("username", endpoint.IBMDb2Settings.Username)
+			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
+			d.Set("port", endpoint.IBMDb2Settings.Port)
+			d.Set("database_name", endpoint.IBMDb2Settings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.IBMDb2Settings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.IBMDb2Settings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
 			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
-		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
@@ -2120,8 +2237,9 @@ func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.Resour
 
 		if o != nil && config != nil {
 			diff := o.Difference(config)
+			diff2 := n.Difference(config)
 
-			return diff.Len() == 0 || diff.Equal(n)
+			return (diff.Len() == 0 && diff2.Len() == 0) || diff.Equal(n)
 		}
 	}
 	return false

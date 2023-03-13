@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -128,7 +129,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
-	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
+	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
 	}
@@ -140,7 +141,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
-	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
+	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
@@ -263,6 +264,15 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
 		// Handle them all globally for the service client.
 		if tfawserr.ErrMessageContains(r.Error, apigateway.ErrCodeConflictException, "try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.apigatewayv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Many operations can return an error such as:
+		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+		// Handle them all globally for the service client.
+		if tfawserr.ErrMessageContains(r.Error, apigatewayv2.ErrCodeConflictException, "try again later") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
@@ -393,6 +403,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		case "CreateVpnGateway":
 			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
+			}
+
+		case "RunInstances":
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
+			if tfawserr.ErrCodeEquals(err, "InsufficientInstanceCapacity") {
+				r.Retryable = aws.Bool(false)
 			}
 		}
 	})

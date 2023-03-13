@@ -811,33 +811,34 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_oneTag(rName),
+				Config: testAccFirewallPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccFirewallPolicyConfig_twoTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Description", "updated"),
-				),
-			},
-			{
-				Config: testAccFirewallPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -936,24 +937,29 @@ func testAccCheckFirewallPolicyRecreated(i, j *networkfirewall.DescribeFirewallP
 	}
 }
 
-func testAccFirewallPolicyStatelessRuleGroupDependencies(rName string, count int) string {
+func testAccFirewallPolicyConfig_baseStatelessRuleGroup(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
-  count    = %d
+  count = %[1]d
+
   capacity = 100
-  name     = "%s-${count.index}"
+  name     = "%[2]s-${count.index}"
   type     = "STATELESS"
+
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
         stateless_rule {
           priority = 1
+
           rule_definition {
             actions = ["aws:drop"]
+
             match_attributes {
               destination {
                 address_definition = "1.2.3.4/32"
               }
+
               source {
                 address_definition = "124.1.1.5/32"
               }
@@ -963,6 +969,7 @@ resource "aws_networkfirewall_rule_group" "test" {
       }
     }
   }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -970,13 +977,15 @@ resource "aws_networkfirewall_rule_group" "test" {
 `, count, rName)
 }
 
-func testAccFirewallPolicyStatefulRuleGroupDependencies(rName string, count int) string {
+func testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
-  count    = %d
+  count = %[1]d
+
   capacity = 100
-  name     = "%s-${count.index}"
+  name     = "%[2]s-${count.index}"
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -986,6 +995,7 @@ resource "aws_networkfirewall_rule_group" "test" {
       }
     }
   }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -993,17 +1003,20 @@ resource "aws_networkfirewall_rule_group" "test" {
 `, count, rName)
 }
 
-func testAccFirewallPolicyStatefulRuleGroupStrictDependencies(rName string, count int) string {
+func testAccFirewallPolicyConfig_baseStatefulRuleGroupStrictOrder(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
-  count    = %d
+  count = %[1]d
+
   capacity = 100
-  name     = "%s-${count.index}"
+  name     = "%[2]s-${count.index}"
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
         action = "PASS"
+
         header {
           destination      = "124.1.1.24/32"
           destination_port = 53
@@ -1012,15 +1025,19 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "1.2.3.4/32"
           source_port      = 53
         }
+
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
+
     stateful_rule_options {
       rule_order = "STRICT_ORDER"
     }
   }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -1031,7 +1048,8 @@ resource "aws_networkfirewall_rule_group" "test" {
 func testAccFirewallPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -1040,60 +1058,68 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName)
 }
 
-func testAccFirewallPolicyConfig_oneTag(rName string) string {
+func testAccFirewallPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
   }
+
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccFirewallPolicyConfig_twoTags(rName string) string {
+func testAccFirewallPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
   }
+
   tags = {
-    Name        = %[1]q
-    Description = "updated"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccFirewallPolicyConfig_statefulEngineOptions(rName, rule_order string) string {
+func testAccFirewallPolicyConfig_statefulEngineOptions(rName, ruleOrder string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_engine_options {
       rule_order = %[2]q
     }
   }
 }
-`, rName, rule_order)
+`, rName, ruleOrder)
 }
 
 func testAccFirewallPolicyConfig_statefulDefaultActions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
     stateful_default_actions           = ["aws:drop_established"]
+
     stateful_engine_options {
       rule_order = "STRICT_ORDER"
     }
@@ -1103,14 +1129,14 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statefulRuleGroupReference(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
@@ -1120,11 +1146,8 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statefulRuleGroupReferenceManaged(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 1), fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
@@ -1133,6 +1156,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
     }
@@ -1142,17 +1166,18 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_multipleStatefulRuleGroupReferences(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 2), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
+
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[1].arn
     }
@@ -1162,17 +1187,18 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, priority string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupStrictDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroupStrictOrder(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_engine_options {
       rule_order = "STRICT_ORDER"
     }
+
     stateful_rule_group_reference {
       priority     = %[2]q
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
@@ -1183,11 +1209,8 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, override_action string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 1), fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
@@ -1196,8 +1219,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+
       override {
         action = %[2]q
       }
@@ -1208,14 +1233,14 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_singleStatefulRuleGroupReference(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 2), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
@@ -1225,16 +1250,16 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statelessRuleGroupReference(rName string, priority int) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatelessRuleGroupDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatelessRuleGroup(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_rule_group_reference {
-      priority     = %d
+      priority     = %[2]d
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
   }
@@ -1243,18 +1268,19 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_multipleStatelessRuleGroupReferences(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatelessRuleGroupDependencies(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatelessRuleGroup(rName, 2), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_rule_group_reference {
       priority     = 1
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
+
     stateless_rule_group_reference {
       priority     = 2
       resource_arn = aws_networkfirewall_rule_group.test[1].arn
@@ -1265,14 +1291,14 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_singleStatelessRuleGroupReference(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatelessRuleGroupDependencies(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatelessRuleGroup(rName, 2), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_rule_group_reference {
       priority     = 1
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
@@ -1286,9 +1312,11 @@ func testAccFirewallPolicyConfig_statelessCustomAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_custom_action {
       action_name = "CustomAction"
       action_definition {
@@ -1308,11 +1336,14 @@ func testAccFirewallPolicyConfig_updateStatelessCustomAction(rName string) strin
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_custom_action {
       action_name = "updated"
+
       action_definition {
         publish_metric_action {
           dimension {
@@ -1330,9 +1361,11 @@ func testAccFirewallPolicyConfig_multipleStatelessCustomActions(rName string) st
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateless_custom_action {
       action_definition {
         publish_metric_action {
@@ -1341,8 +1374,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
+
       action_name = "CustomAction"
     }
+
     stateless_custom_action {
       action_definition {
         publish_metric_action {
@@ -1351,6 +1386,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
+
       action_name = "CustomAction2"
     }
   }
@@ -1359,17 +1395,18 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallPolicyConfig_statefulRuleGroupReferenceAndStatelessCustomAction(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseStatefulRuleGroup(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
+
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
     }
+
     stateless_custom_action {
       action_definition {
         publish_metric_action {
@@ -1378,6 +1415,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
+
       action_name = "CustomAction"
     }
   }
@@ -1390,7 +1428,7 @@ func testAccFirewallPolicyConfig_encryptionConfiguration(rName string) string {
 resource "aws_kms_key" "test" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
 
   encryption_configuration {
     key_id = aws_kms_key.test.arn
@@ -1415,7 +1453,7 @@ func testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName string) s
 resource "aws_kms_key" "test" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]

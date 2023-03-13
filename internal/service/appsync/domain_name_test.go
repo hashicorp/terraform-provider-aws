@@ -26,9 +26,9 @@ func testAccDomainName_basic(t *testing.T) {
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -57,9 +57,9 @@ func testAccDomainName_description(t *testing.T) {
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +94,9 @@ func testAccDomainName_disappears(t *testing.T) {
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

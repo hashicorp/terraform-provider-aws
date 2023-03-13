@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_local_gateways")
 func DataSourceLocalGateways() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewaysRead,
@@ -40,7 +41,7 @@ func dataSourceLocalGatewaysRead(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.DescribeLocalGatewaysInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(

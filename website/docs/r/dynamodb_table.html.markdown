@@ -177,7 +177,7 @@ Optional arguments:
 
 * `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
-* `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated *at creation* so you cannot change this definition after you have created the resource. See below.
+* `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
@@ -188,7 +188,9 @@ Optional arguments:
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. See below.
 * `stream_enabled` - (Optional) Whether Streams are enabled.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
-* `table_class` - (Optional) Storage class of the table. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
+* `table_class` - (Optional) Storage class of the table.
+  Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
+  Default value is `STANDARD`.
 * `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
 * `write_capacity` - (Optional) Number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
@@ -242,8 +244,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the table
 * `id` - Name of the table
+* `replica.*.arn` - ARN of the replica
+* `replica.*.stream_arn` - ARN of the replica Table Stream. Only available when `stream_enabled = true`.
+* `replica.*.stream_label` - Timestamp, in ISO 8601 format, for the replica stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.
 * `stream_arn` - ARN of the Table Stream. Only available when `stream_enabled = true`
-* `stream_label` - Timestamp, in ISO 8601 format, for this stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`
+* `stream_label` - Timestamp, in ISO 8601 format, for this stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

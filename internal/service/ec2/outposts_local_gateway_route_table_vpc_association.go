@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_local_gateway_route_table_vpc_association")
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteTableVPCAssociationCreate,
@@ -53,7 +54,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
@@ -103,7 +104,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 	d.Set("local_gateway_id", association.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", association.LocalGatewayRouteTableId)
 
-	tags := KeyValueTags(association.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, association.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

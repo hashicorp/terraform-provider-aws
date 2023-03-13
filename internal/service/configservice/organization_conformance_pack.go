@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_config_organization_conformance_pack")
 func ResourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConformancePackCreate,

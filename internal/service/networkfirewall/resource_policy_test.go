@@ -16,6 +16,16 @@ import (
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(networkfirewall.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"The supplied policy does not match RAM managed permissions",
+	)
+}
+
 func TestAccNetworkFirewallResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

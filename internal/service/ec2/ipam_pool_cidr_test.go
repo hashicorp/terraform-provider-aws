@@ -3,8 +3,10 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -38,6 +40,42 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"netmask_length",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	netmaskLength := "24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+					testAccCheckIPAMPoolCIDRPrefix(&cidr, netmaskLength),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"netmask_length",
+				},
 			},
 		},
 	})
@@ -155,7 +193,17 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-const testAccIPAMPoolCIDRConfig_base = `
+func testAccCheckIPAMPoolCIDRPrefix(cidr *ec2.IpamPoolCidr, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(cidr.Cidr), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(cidr.Cidr), expected)
+		}
+
+		return nil
+	}
+}
+
+const TestAccIPAMPoolCIDRConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -169,7 +217,7 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-const testAccIPAMPoolCIDRConfig_privatePool = `
+const TestAccIPAMPoolCIDRConfig_privatePool = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -177,11 +225,41 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
+const TestAccIPAMPoolCIDRConfig_privatePoolWithCIDR = `
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "testparent" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool" "testchild" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+}
+`
+
 func testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr string) string {
-	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
 }
 `, cidr))
+}
+
+func testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength string) string {
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePoolWithCIDR, fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.testchild.id
+  netmask_length = %[1]q
+  depends_on     = [aws_vpc_ipam_pool_cidr.testparent]
+}
+`, netmaskLength))
 }

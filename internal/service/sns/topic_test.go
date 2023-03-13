@@ -66,10 +66,12 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", ""),
 				),
 			},
 			{
@@ -252,8 +254,9 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrJMESPair(resourceName, "policy", "Statement[0].Principal.AWS", "aws_iam_role.example", "arn"),
 				),
 			},
 			{
@@ -344,6 +347,7 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "60"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", "Active"),
 				),
 			},
 			{
@@ -515,6 +519,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "2"),
 				),
 			},
 			{
@@ -561,7 +566,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("testing policy equivalence: %s", err)
 		}
 
 		if !equivalent {
@@ -618,7 +623,7 @@ func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -648,7 +653,7 @@ func testAccCheckTopicExists(ctx context.Context, n string, v *map[string]string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
-		output, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -739,6 +744,28 @@ func testAccTopicConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Statement": [
+    {
+      "Sid": "Stmt1445931846145",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.example.arn}"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+    }
+  ],
+  "Version": "2012-10-17",
+  "Id": "Policy1445931846145"
+}
+EOF
+}
+
 resource "aws_iam_role" "example" {
   name = %[1]q
   path = "/test/"
@@ -761,28 +788,6 @@ EOF
 }
 
 data "aws_region" "current" {}
-
-resource "aws_sns_topic" "test" {
-  name = %[1]q
-
-  policy = <<EOF
-{
-  "Statement": [
-    {
-      "Sid": "Stmt1445931846145",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_iam_role.example.arn}"
-      },
-      "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
-    }
-  ],
-  "Version": "2012-10-17",
-  "Id": "Policy1445931846145"
-}
-EOF
-}
 `, rName)
 }
 
@@ -864,6 +869,8 @@ resource "aws_sns_topic" "test" {
   firehose_success_feedback_sample_rate    = 60
   firehose_failure_feedback_role_arn       = aws_iam_role.example.arn
   firehose_success_feedback_role_arn       = aws_iam_role.example.arn
+
+  tracing_config = "Active"
 }
 
 data "aws_partition" "current" {}
@@ -921,6 +928,7 @@ func testAccTopicConfig_encryption(rName string) string {
 resource "aws_sns_topic" "test" {
   name              = %[1]q
   kms_master_key_id = "alias/aws/sns"
+  signature_version = 2
 }
 `, rName)
 }

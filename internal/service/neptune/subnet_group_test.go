@@ -6,21 +6,54 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
 
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneSubnetGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -31,15 +64,37 @@ func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_subnet_group.foo", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_subnet_group.foo", "description", "Managed by Terraform"),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneSubnetGroup_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_nameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
 			},
 			{
-				ResourceName:      "aws_neptune_subnet_group.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -50,6 +105,8 @@ func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -58,41 +115,15 @@ func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_namePrefix(),
+				Config: testAccSubnetGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.test", &v),
-					resource.TestMatchResourceAttr(
-						"aws_neptune_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_subnet_group.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
-			},
-		},
-	})
-}
-
-func TestAccNeptuneSubnetGroup_generatedName(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSubnetGroupConfig_generatedName(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.test", &v),
-				),
-			},
-			{
-				ResourceName:      "aws_neptune_subnet_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -100,11 +131,58 @@ func TestAccNeptuneSubnetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
+func TestAccNeptuneSubnetGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
 
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccSubnetGroupConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNeptuneSubnetGroup_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_subnet_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
@@ -114,24 +192,18 @@ func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_subnet_group.foo", "description", "Managed by Terraform"),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
-
 			{
-				Config: testAccSubnetGroupConfig_updatedDescription(rName),
+				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_subnet_group.foo", "description", "foo description updated"),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description updated"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 				),
-			},
-			{
-				ResourceName:      "aws_neptune_subnet_group.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -146,24 +218,17 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			// Try to find the resource
-			resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
-			if err == nil {
-				if len(resp.DBSubnetGroups) > 0 {
-					return fmt.Errorf("still exist.")
-				}
+			_, err := tfneptune.FindSubnetGroupByName(ctx, conn, rs.Primary.ID)
 
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Verify the error is what we want
-			neptuneerr, ok := err.(awserr.Error)
-			if !ok {
+			if err != nil {
 				return err
 			}
-			if neptuneerr.Code() != "DBSubnetGroupNotFoundFault" {
-				return err
-			}
+
+			return fmt.Errorf("Neptune Subnet Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -178,176 +243,80 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *neptune.DBS
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Neptune Subnet Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
-		resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+
+		output, err := tfneptune.FindSubnetGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.DBSubnetGroups) == 0 {
-			return fmt.Errorf("DbSubnetGroup not found")
-		}
 
-		*v = *resp.DBSubnetGroups[0]
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccSubnetGroupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-neptune-subnet-group"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-2"
-  }
-}
-
-resource "aws_neptune_subnet_group" "foo" {
-  name       = "%s"
-  subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
-
-  tags = {
-    Name = "tf-neptunesubnet-group-test"
-  }
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName))
 }
 
-func testAccSubnetGroupConfig_updatedDescription(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-neptune-subnet-group-updated-description"
-  }
+func testAccSubnetGroupConfig_nameGenerated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), `
+resource "aws_neptune_subnet_group" "test" {
+  subnet_ids = aws_subnet.test[*].id
+}`)
 }
 
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-1"
-  }
+func testAccSubnetGroupConfig_namePrefix(rName, prefix string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name_prefix = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}`, prefix))
 }
 
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
+func testAccSubnetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
-    Name = "tf-acc-neptune-subnet-group-2"
+    %[2]q = %[3]q
   }
 }
+`, rName, tagKey1, tagValue1))
+}
 
-resource "aws_neptune_subnet_group" "foo" {
-  name        = "%s"
-  description = "foo description updated"
-  subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id]
+func testAccSubnetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
-    Name = "tf-neptunesubnet-group-test"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccSubnetGroupConfig_update(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name        = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+  description = "test description updated"
 }
 `, rName))
-}
-
-func testAccSubnetGroupConfig_namePrefix() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-neptune-subnet-group-name-prefix"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-name-prefix-b"
-  }
-}
-
-resource "aws_neptune_subnet_group" "test" {
-  name_prefix = "tf_test-"
-  subnet_ids  = [aws_subnet.a.id, aws_subnet.b.id]
-}
-`)
-}
-
-func testAccSubnetGroupConfig_generatedName() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-neptune-subnet-group-generated-name"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-generated-name-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-neptune-subnet-group-generated-name-a"
-  }
-}
-
-resource "aws_neptune_subnet_group" "test" {
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}
-`)
 }

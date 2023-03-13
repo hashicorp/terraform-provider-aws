@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_quick_connect")
 func ResourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,
@@ -135,7 +136,7 @@ func ResourceQuickConnect() *schema.Resource {
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -212,7 +213,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
-	tags := KeyValueTags(resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

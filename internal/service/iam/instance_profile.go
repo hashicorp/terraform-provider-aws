@@ -24,6 +24,7 @@ const (
 	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - resource.UniqueIDSuffixLength
 )
 
+// @SDKResource("aws_iam_instance_profile")
 func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -84,7 +85,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -116,7 +117,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err == nil {
-		err = instanceProfileReadResult(d, response.InstanceProfile, meta) // sets id
+		err = instanceProfileReadResult(ctx, d, response.InstanceProfile, meta) // sets id
 	}
 
 	if err != nil {
@@ -283,7 +284,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if err := instanceProfileReadResult(d, instanceProfile, meta); err != nil {
+	if err := instanceProfileReadResult(ctx, d, instanceProfile, meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
 	}
 	return diags
@@ -311,7 +312,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
+func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -326,7 +327,7 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
-	tags := KeyValueTags(result.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, result.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

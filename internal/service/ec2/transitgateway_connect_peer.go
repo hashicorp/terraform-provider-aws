@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_connect_peer")
 func ResourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerCreate,
@@ -100,7 +101,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
 		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
@@ -172,7 +173,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
 	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
-	tags := KeyValueTags(transitGatewayConnectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, transitGatewayConnectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

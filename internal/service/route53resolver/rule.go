@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_rule")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -106,7 +107,7 @@ func ResourceRule() *schema.Resource {
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverRuleInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-rule-")),

@@ -44,7 +44,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -115,7 +115,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -183,7 +183,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),

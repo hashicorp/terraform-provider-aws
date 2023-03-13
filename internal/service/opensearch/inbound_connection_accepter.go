@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_inbound_connection_accepter")
 func ResourceInboundConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInboundConnectionAccepterCreate,

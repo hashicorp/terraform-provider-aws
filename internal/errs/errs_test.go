@@ -6,45 +6,45 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-type Error1 struct{}
+type FirstError struct{}
 
-func (e Error1) Error() string {
-	return "Error1 Error"
+func (e FirstError) Error() string {
+	return "First Error"
 }
 
-func (e Error1) ErrorMessage() string {
-	return "Error1 ErrorMessage"
+func (e FirstError) ErrorMessage() string {
+	return "First ErrorMessage"
 }
 
-type Error2 struct{}
+type SecondError struct{}
 
-func (e *Error2) Error() string {
-	return "Error2 Error"
+func (e *SecondError) Error() string {
+	return "Second Error"
 }
 
-func (e *Error2) ErrorMessage() string {
-	return "Error2 ErrorMessage"
+func (e *SecondError) ErrorMessage() string {
+	return "Second ErrorMessage"
 }
 
 func TestIsAErrorMessageContains(t *testing.T) {
 	t.Parallel()
 
-	var e1 Error1
-	var e2 Error2
+	var e1 FirstError
+	var e2 SecondError
 
-	if !errs.IsAErrorMessageContains[Error1](e1, "Error1") {
+	if !errs.IsAErrorMessageContains[FirstError](e1, "First") {
 		t.Error("unexpected false")
 	}
 
-	if errs.IsAErrorMessageContains[Error1](e1, "Error2") {
+	if errs.IsAErrorMessageContains[FirstError](e1, "Second") {
 		t.Error("unexpected true")
 	}
 
-	if errs.IsAErrorMessageContains[*Error2](e1, "Error1") {
+	if errs.IsAErrorMessageContains[*SecondError](e1, "First") {
 		t.Error("unexpected true")
 	}
 
-	if !errs.IsAErrorMessageContains[*Error2](&e2, "Error2") {
+	if !errs.IsAErrorMessageContains[*SecondError](&e2, "Second") {
 		t.Error("unexpected false")
 	}
 }

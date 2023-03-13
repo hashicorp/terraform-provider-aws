@@ -27,7 +27,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{

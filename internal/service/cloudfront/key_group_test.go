@@ -22,7 +22,7 @@ func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
@@ -79,7 +79,7 @@ func TestAccCloudFrontKeyGroup_comment(t *testing.T) {
 	secondComment := "second comment"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
@@ -113,7 +113,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),

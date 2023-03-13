@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_acmpca_certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

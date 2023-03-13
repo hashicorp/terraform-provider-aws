@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecs_task_set")
 func ResourceTaskSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskSetCreate,
@@ -288,7 +289,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
@@ -459,7 +460,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	tags := KeyValueTags(taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

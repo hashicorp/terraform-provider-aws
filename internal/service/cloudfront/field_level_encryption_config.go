@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_field_level_encryption_config")
 func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFieldLevelEncryptionConfigCreate,

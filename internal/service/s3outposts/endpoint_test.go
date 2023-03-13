@@ -21,7 +21,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -55,7 +55,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),

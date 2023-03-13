@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -61,7 +62,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]`), "must begin with an alphanumeric character"),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
@@ -162,7 +163,7 @@ func ResourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	iName := d.Get("name").(string)
 
@@ -278,7 +279,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

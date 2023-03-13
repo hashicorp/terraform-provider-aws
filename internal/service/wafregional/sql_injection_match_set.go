@@ -19,6 +19,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_sql_injection_match_set")
 func ResourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSQLInjectionMatchSetCreate,

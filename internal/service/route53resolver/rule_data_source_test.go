@@ -117,7 +117,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_sharedByMe(rName, domainName),
@@ -155,7 +155,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_sharedWithMe(rName, domainName),

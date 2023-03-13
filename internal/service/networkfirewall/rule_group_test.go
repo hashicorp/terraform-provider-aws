@@ -7,13 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
@@ -182,7 +182,9 @@ func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
-						"keyword": "sid:1",
+						"keyword":    "sid",
+						"settings.#": "1",
+						"settings.0": "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -610,7 +612,17 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
+						"keyword":    "sid",
+						"settings.#": "1",
+						"settings.0": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
+						"keyword":    "rev",
+						"settings.#": "1",
+						"settings.0": "2",
+					}),
 				),
 			},
 			{
@@ -658,17 +670,15 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
-						"action":                    networkfirewall.StatefulActionAlert,
-						"header.#":                  "1",
-						"header.0.destination":      networkfirewall.StatefulRuleDirectionAny,
-						"header.0.destination_port": networkfirewall.StatefulRuleDirectionAny,
-						"header.0.direction":        networkfirewall.StatefulRuleDirectionAny,
-						"header.0.protocol":         networkfirewall.StatefulRuleProtocolIp,
-						"header.0.source":           networkfirewall.StatefulRuleDirectionAny,
-						"header.0.source_port":      networkfirewall.StatefulRuleDirectionAny,
-						"rule_option.#":             "1",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.action", networkfirewall.StatefulActionAlert),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination_port", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source_port", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.rule_option.#", "1"),
 				),
 			},
 			{
@@ -689,7 +699,7 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "2"),
 				),
 			},
 			{
@@ -882,33 +892,33 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_oneTag(rName),
+				Config: testAccRuleGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccRuleGroupConfig_twoTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Description", "updated"),
-				),
-			},
-			{
-				Config: testAccRuleGroupConfig_basicSourceList(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -990,23 +1000,25 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
-			output, err := tfnetworkfirewall.FindRuleGroup(ctx, conn, rs.Primary.ID)
-			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+
+			_, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
-			if output != nil {
-				return fmt.Errorf("NetworkFirewall Rule Group still exists: %s", rs.Primary.ID)
-			}
+
+			return fmt.Errorf("NetworkFirewall Rule Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, r *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, n string, v *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1018,16 +1030,14 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, r *networkfirewa
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
-		output, err := tfnetworkfirewall.FindRuleGroup(ctx, conn, rs.Primary.ID)
+
+		output, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("NetworkFirewall Rule Group (%s) not found", rs.Primary.ID)
-		}
-
-		*r = *output
+		*v = *output
 
 		return nil
 	}
@@ -1055,8 +1065,9 @@ func testAccRuleGroupConfig_basicSourceList(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -1077,20 +1088,24 @@ resource "aws_ec2_managed_prefix_list" "example1" {
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_ec2_managed_prefix_list" "example2" {
   name           = "SOME VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_ec2_managed_prefix_list" "example3" {
   name           = "FEW VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     reference_sets {
       ip_set_references {
@@ -1099,12 +1114,14 @@ resource "aws_networkfirewall_rule_group" "test" {
           reference_arn = aws_ec2_managed_prefix_list.example1.arn
         }
       }
+
       ip_set_references {
         key = "example2"
         ip_set_reference {
           reference_arn = aws_ec2_managed_prefix_list.example2.arn
         }
       }
+
       ip_set_references {
         key = "example3"
         ip_set_reference {
@@ -1112,6 +1129,7 @@ resource "aws_networkfirewall_rule_group" "test" {
         }
       }
     }
+
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
@@ -1131,20 +1149,24 @@ resource "aws_ec2_managed_prefix_list" "example1" {
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_ec2_managed_prefix_list" "example2" {
   name           = "SOME VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_ec2_managed_prefix_list" "example3" {
   name           = "FEW VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
+
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     reference_sets {
       ip_set_references {
@@ -1153,12 +1175,14 @@ resource "aws_networkfirewall_rule_group" "test" {
           reference_arn = aws_ec2_managed_prefix_list.example1.arn
         }
       }
+
       ip_set_references {
         key = "example21"
         ip_set_reference {
           reference_arn = aws_ec2_managed_prefix_list.example2.arn
         }
       }
+
       ip_set_references {
         key = "example31"
         ip_set_reference {
@@ -1166,6 +1190,7 @@ resource "aws_networkfirewall_rule_group" "test" {
         }
       }
     }
+
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
@@ -1184,6 +1209,7 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rule_variables {
       ip_sets {
@@ -1193,6 +1219,7 @@ resource "aws_networkfirewall_rule_group" "test" {
         }
       }
     }
+
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
@@ -1211,6 +1238,7 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rule_variables {
       ip_sets {
@@ -1219,12 +1247,14 @@ resource "aws_networkfirewall_rule_group" "test" {
           definition = ["10.0.0.0/16", "10.0.1.0/24", "192.168.0.0/16"]
         }
       }
+
       ip_sets {
         key = "example2"
         ip_set {
           definition = ["1.2.3.4/32"]
         }
       }
+
       port_sets {
         key = "example"
         port_set {
@@ -1232,6 +1262,7 @@ resource "aws_networkfirewall_rule_group" "test" {
         }
       }
     }
+
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
@@ -1248,8 +1279,9 @@ func testAccRuleGroupConfig_updateSourceList(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -1270,10 +1302,12 @@ resource "aws_networkfirewall_rule_group" "test" {
   name        = %[1]q
   description = %[1]q
   type        = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
         action = "PASS"
+
         header {
           destination      = "124.1.1.24/32"
           destination_port = 53
@@ -1282,8 +1316,10 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "1.2.3.4/32"
           source_port      = 53
         }
+
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -1299,10 +1335,12 @@ resource "aws_networkfirewall_rule_group" "test" {
   name        = %[1]q
   description = %[1]q
   type        = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
-        action = %q
+        action = %[2]q
+
         header {
           destination      = "124.1.1.24/32"
           destination_port = 53
@@ -1311,8 +1349,10 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "1.2.3.4/32"
           source_port      = 53
         }
+
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -1328,20 +1368,24 @@ resource "aws_networkfirewall_rule_group" "test" {
   name        = %[1]q
   description = %[1]q
   type        = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
         action = "PASS"
+
         header {
           destination      = "ANY"
-          destination_port = %q
+          destination_port = %[2]q
           direction        = "ANY"
           protocol         = "TCP"
           source           = "ANY"
-          source_port      = %q
+          source_port      = %[3]q
         }
+
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -1356,10 +1400,12 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
         action = "DROP"
+
         header {
           destination      = "1.2.3.4/32"
           destination_port = 1001
@@ -1368,8 +1414,15 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "124.1.1.24/32"
           source_port      = 1001
         }
+
         rule_option {
-          keyword = "sid:1;rev:2"
+          keyword  = "sid"
+          settings = ["1"]
+        }
+
+        rule_option {
+          keyword  = "rev"
+          settings = ["2"]
         }
       }
     }
@@ -1384,10 +1437,12 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       stateful_rule {
         action = "PASS"
+
         header {
           destination      = "124.1.1.24/32"
           destination_port = 53
@@ -1396,12 +1451,16 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "1.2.3.4/32"
           source_port      = 53
         }
+
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
+
       stateful_rule {
         action = "ALERT"
+
         header {
           destination      = "ANY"
           destination_port = "ANY"
@@ -1410,8 +1469,10 @@ resource "aws_networkfirewall_rule_group" "test" {
           source           = "ANY"
           source_port      = "ANY"
         }
+
         rule_option {
-          keyword = "sid:2"
+          keyword  = "sid"
+          settings = ["2"]
         }
       }
     }
@@ -1426,17 +1487,21 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATELESS"
+
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
         stateless_rule {
           priority = 1
+
           rule_definition {
             actions = ["aws:drop"]
+
             match_attributes {
               destination {
                 address_definition = "1.2.3.4/32"
               }
+
               source {
                 address_definition = "124.1.1.5/32"
               }
@@ -1456,29 +1521,37 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATELESS"
+
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
         stateless_rule {
           priority = 10
+
           rule_definition {
             actions = ["aws:pass"]
+
             match_attributes {
               destination {
                 address_definition = "1.2.3.4/32"
               }
+
               destination_port {
                 from_port = 53
                 to_port   = 53
               }
+
               protocols = [6]
+
               source {
                 address_definition = "124.1.1.5/32"
               }
+
               source_port {
                 from_port = 53
                 to_port   = 53
               }
+
               tcp_flag {
                 flags = ["SYN"]
                 masks = ["SYN", "ACK"]
@@ -1497,9 +1570,9 @@ func testAccRuleGroupConfig_basic(rName, rules string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
-  rules    = %q
+  rules    = %[2]q
 }
 `, rName, rules)
 }
@@ -1510,6 +1583,7 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_string = %[2]q
@@ -1525,10 +1599,12 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_string = %[2]q
     }
+
     stateful_rule_options {
       rule_order = %[3]q
     }
@@ -1543,11 +1619,13 @@ resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
   name     = %[1]q
   type     = "STATELESS"
+
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
         custom_action {
           action_name = "example"
+
           action_definition {
             publish_metric_action {
               dimension {
@@ -1556,14 +1634,18 @@ resource "aws_networkfirewall_rule_group" "test" {
             }
           }
         }
+
         stateless_rule {
           priority = 1
+
           rule_definition {
             actions = ["aws:pass", "example"]
+
             match_attributes {
               destination {
                 address_definition = "1.2.3.4/32"
               }
+
               source {
                 address_definition = "124.1.1.5/32"
               }
@@ -1577,12 +1659,13 @@ resource "aws_networkfirewall_rule_group" "test" {
 `, rName)
 }
 
-func testAccRuleGroupConfig_oneTag(rName string) string {
+func testAccRuleGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -1592,19 +1675,21 @@ resource "aws_networkfirewall_rule_group" "test" {
       }
     }
   }
+
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccRuleGroupConfig_twoTags(rName string) string {
+func testAccRuleGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -1614,12 +1699,13 @@ resource "aws_networkfirewall_rule_group" "test" {
       }
     }
   }
+
   tags = {
-    Name        = %[1]q
-    Description = "updated"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccRuleGroupConfig_encryptionConfiguration(rName string) string {
@@ -1628,8 +1714,9 @@ resource "aws_kms_key" "test" {}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {
@@ -1639,6 +1726,7 @@ resource "aws_networkfirewall_rule_group" "test" {
       }
     }
   }
+
   encryption_configuration {
     key_id = aws_kms_key.test.arn
     type   = "CUSTOMER_KMS"
@@ -1658,8 +1746,9 @@ resource "aws_kms_key" "test" {}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
-  name     = %q
+  name     = %[1]q
   type     = "STATEFUL"
+
   rule_group {
     rules_source {
       rules_source_list {

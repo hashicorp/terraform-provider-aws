@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_lambda_alias")
 func ResourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,

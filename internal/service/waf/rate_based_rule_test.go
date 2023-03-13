@@ -6,15 +6,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFRateBasedRule_basic(t *testing.T) {
@@ -300,21 +299,18 @@ func testAccCheckRateBasedRuleDestroy(ctx context.Context) resource.TestCheckFun
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
-			resp, err := conn.GetRateBasedRuleWithContext(ctx, &waf.GetRateBasedRuleInput{
-				RuleId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.Rule.RuleId == rs.Primary.ID {
-					return fmt.Errorf("WAF Rule %s still exists", rs.Primary.ID)
-				}
-			}
+			_, err := tfwaf.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WAF Rate Based Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -329,24 +325,20 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *waf.RateB
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Rule ID is set")
+			return fmt.Errorf("No WAF Rate Based Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
-		resp, err := conn.GetRateBasedRuleWithContext(ctx, &waf.GetRateBasedRuleInput{
-			RuleId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.Rule.RuleId == rs.Primary.ID {
-			*v = *resp.Rule
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Rule (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

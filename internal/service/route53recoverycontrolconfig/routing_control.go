@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_routing_control")
 func ResourceRoutingControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoutingControlCreate,

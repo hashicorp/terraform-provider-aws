@@ -25,6 +25,7 @@ const (
 	ResNamePolicy = "Policy"
 )
 
+// @SDKResource("aws_appautoscaling_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,

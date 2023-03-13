@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,6 +35,7 @@ const (
 	entityRecognizerTagKey = "tf-aws_comprehend_entity_recognizer"
 )
 
+// @SDKResource("aws_comprehend_entity_recognizer")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -194,8 +196,8 @@ func ResourceEntityRecognizer() *schema.Resource {
 			"model_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -221,8 +223,8 @@ func ResourceEntityRecognizer() *schema.Resource {
 			"volume_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
@@ -525,7 +527,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	}
 
 	defaultTagsConfig := awsClient.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())

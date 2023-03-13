@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_guardduty_detector")
 func DataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,

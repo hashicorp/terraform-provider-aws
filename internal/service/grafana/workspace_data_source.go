@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_grafana_workspace")
 func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
@@ -144,7 +145,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("stack_set_name", workspace.StackSetName)
 	d.Set("status", workspace.Status)
 
-	if err := d.Set("tags", KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

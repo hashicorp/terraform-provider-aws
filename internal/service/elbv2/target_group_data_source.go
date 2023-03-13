@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_alb_target_group")
+// @SDKDataSource("aws_lb_target_group")
 func DataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTargetGroupRead,
@@ -165,7 +167,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeTargetGroupsInput{}
 

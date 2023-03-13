@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_organizational_unit")
 func ResourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
@@ -82,7 +83,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Create the organizational unit
 	createOpts := &organizations.CreateOrganizationalUnitInput{

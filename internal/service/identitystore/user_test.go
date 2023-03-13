@@ -30,7 +30,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -82,7 +82,7 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -111,7 +111,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -206,7 +206,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -283,7 +283,7 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -334,7 +334,7 @@ func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -373,7 +373,7 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -424,7 +424,7 @@ func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -463,7 +463,7 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -502,7 +502,7 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -553,7 +553,7 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -604,7 +604,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -655,7 +655,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -732,7 +732,7 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -783,7 +783,7 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -834,7 +834,7 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -885,7 +885,7 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
@@ -936,7 +936,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),

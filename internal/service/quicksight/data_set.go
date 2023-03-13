@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_quicksight_data_set")
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDataSetCreate,
@@ -758,7 +759,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_set_id").(string)

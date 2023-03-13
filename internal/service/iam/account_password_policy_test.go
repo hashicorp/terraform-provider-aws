@@ -5,20 +5,32 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
+func TestAccIAMAccountPasswordPolicy_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":      testAccAccountPasswordPolicy_basic,
+		"disappears": testAccAccountPasswordPolicy_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAccountPasswordPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy iam.GetAccountPasswordPolicyOutput
+	var policy iam.PasswordPolicy
 	resourceName := "aws_iam_account_password_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,6 +59,29 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 	})
 }
 
+func testAccAccountPasswordPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy iam.PasswordPolicy
+	resourceName := "aws_iam_account_password_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountPasswordPolicyConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccountPasswordPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
@@ -56,27 +91,24 @@ func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			// Try to get policy
-			_, err := conn.GetAccountPasswordPolicyWithContext(ctx, &iam.GetAccountPasswordPolicyInput{})
-			if err == nil {
-				return fmt.Errorf("still exist.")
+			_, err := tfiam.FindAccountPasswordPolicy(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Verify the error is what we want
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
+			if err != nil {
 				return err
 			}
-			if awsErr.Code() != "NoSuchEntity" {
-				return err
-			}
+
+			return fmt.Errorf("IAM Account Password Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, res *iam.GetAccountPasswordPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, v *iam.PasswordPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -84,17 +116,18 @@ func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, res 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No policy ID is set")
+			return fmt.Errorf("No IAM Account Password Policy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		resp, err := conn.GetAccountPasswordPolicyWithContext(ctx, &iam.GetAccountPasswordPolicyInput{})
+		output, err := tfiam.FindAccountPasswordPolicy(ctx, conn)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *resp
+		*v = *output
 
 		return nil
 	}

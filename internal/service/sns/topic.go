@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,6 +150,12 @@ var (
 				return json
 			},
 		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+		},
 		"sqs_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -166,6 +173,12 @@ var (
 		},
 		"tags":     tftags.TagsSchema(),
 		"tags_all": tftags.TagsSchemaComputed(),
+		"tracing_config": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
@@ -189,12 +202,15 @@ var (
 		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                 TopicAttributeNameOwner,
 		"policy":                                TopicAttributeNamePolicy,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        TopicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -218,7 +234,7 @@ func ResourceTopic() *schema.Resource {
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -290,7 +306,8 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return resourceTopicRead(ctx, d, meta)
 }
 
-func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -302,9 +319,8 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return diag.Errorf("reading SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
@@ -336,18 +352,18 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("listing tags for SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return nil

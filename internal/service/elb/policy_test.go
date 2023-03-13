@@ -4,12 +4,8 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -17,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccELBPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -36,7 +32,6 @@ func TestAccELBPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					testAccCheckPolicyState(ctx, loadBalancerResourceName, resourceName),
 				),
 			},
 		},
@@ -45,9 +40,7 @@ func TestAccELBPolicy_basic(t *testing.T) {
 
 func TestAccELBPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var loadBalancer elb.LoadBalancerDescription
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -60,18 +53,8 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, loadBalancerResourceName, &loadBalancer),
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					testAccCheckPolicyDisappears(ctx, &loadBalancer, &policy),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccPolicyConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, loadBalancerResourceName, &loadBalancer),
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					testAccCheckLoadBalancerDisappears(ctx, &loadBalancer),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -223,7 +206,6 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -237,51 +219,44 @@ func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 				Config: testAccPolicyConfig_updateWhileAssigned0(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					testAccCheckPolicyState(ctx, loadBalancerResourceName, resourceName),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_updateWhileAssigned1(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					testAccCheckPolicyState(ctx, loadBalancerResourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, resourceName string, policyDescription *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Load Balancer Policy ID is set for %s", resourceName)
+			return fmt.Errorf("No ELB Classic Load Balancer Policy is set")
 		}
 
-		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
-
-		input := &elb.DescribeLoadBalancerPoliciesInput{
-			LoadBalancerName: aws.String(loadBalancerName),
-			PolicyNames:      []*string{aws.String(policyName)},
-		}
-
-		output, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, input)
+		lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.PolicyDescriptions) == 0 {
-			return fmt.Errorf("Load Balancer Policy (%s) not found", rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+
+		output, err := tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+
+		if err != nil {
+			return err
 		}
 
-		*policyDescription = *output.PolicyDescriptions[0]
+		*output = *v
 
 		return nil
 	}
@@ -296,93 +271,23 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				PolicyNames:      []*string{aws.String(policyName)},
-			})
+			lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
+
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-					continue
-				}
 				return err
 			}
 
-			if len(out.PolicyDescriptions) > 0 {
-				return fmt.Errorf("Policy still exists")
+			_, err = tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-		}
-		return nil
-	}
-}
 
-func testAccCheckPolicyDisappears(ctx context.Context, loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
-
-		input := elb.DeleteLoadBalancerPolicyInput{
-			LoadBalancerName: loadBalancer.LoadBalancerName,
-			PolicyName:       policy.PolicyName,
-		}
-		_, err := conn.DeleteLoadBalancerPolicyWithContext(ctx, &input)
-
-		return err
-	}
-}
-
-func testAccCheckPolicyState(ctx context.Context, elbResource string, policyResource string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[elbResource]
-		if !ok {
-			return fmt.Errorf("Not found: %s", elbResource)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		policy, ok := s.RootModule().Resources[policyResource]
-		if !ok {
-			return fmt.Errorf("Not found: %s", policyResource)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
-		loadBalancerName, policyName := tfelb.PolicyParseID(policy.Primary.ID)
-		loadBalancerPolicies, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
-			LoadBalancerName: aws.String(loadBalancerName),
-			PolicyNames:      []*string{aws.String(policyName)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, loadBalancerPolicy := range loadBalancerPolicies.PolicyDescriptions {
-			if *loadBalancerPolicy.PolicyName == policyName {
-				if *loadBalancerPolicy.PolicyTypeName != policy.Primary.Attributes["policy_type_name"] {
-					return fmt.Errorf("PolicyTypeName does not match")
-				}
-				policyAttributeCount, err := strconv.Atoi(policy.Primary.Attributes["policy_attribute.#"])
-				if err != nil {
-					return err
-				}
-				if len(loadBalancerPolicy.PolicyAttributeDescriptions) != policyAttributeCount {
-					return fmt.Errorf("PolicyAttributeDescriptions length mismatch")
-				}
-				policyAttributes := make(map[string]string)
-				for k, v := range policy.Primary.Attributes {
-					if strings.HasPrefix(k, "policy_attribute.") && strings.HasSuffix(k, ".name") {
-						key := v
-						value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
-						policyAttributes[key] = policy.Primary.Attributes[value_key]
-					}
-				}
-				for _, policyAttribute := range loadBalancerPolicy.PolicyAttributeDescriptions {
-					if *policyAttribute.AttributeValue != policyAttributes[*policyAttribute.AttributeName] {
-						return fmt.Errorf("PollicyAttribute Value mismatch %s != %s: %s", *policyAttribute.AttributeValue, policyAttributes[*policyAttribute.AttributeName], policyAttributes)
-					}
-				}
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("ELB Classic Load Balancer Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
