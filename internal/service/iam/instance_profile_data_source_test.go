@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_iam_instance_profile.test"
 
 	roleName := fmt.Sprintf("tf-acc-ds-instance-profile-role-%d", sdkacctest.RandInt())
 	profileName := fmt.Sprintf("tf-acc-ds-instance-profile-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
