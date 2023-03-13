@@ -149,7 +149,6 @@ func ResourceTable() *schema.Resource {
 			"deletion_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
