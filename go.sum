@@ -76,8 +76,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.0 h1:KmTUwjxQ/WzS64jhqwXpjngif
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.0/go.mod h1:Xwv56usY/pQjpXTB5kZitJlGaQT+jMpxZ3d/RksI1Tg=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5 h1:vYyn1h1+/eRL8UxfzRgxhH8tm+Jd6ujsyXmUFztfnks=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5/go.mod h1:PMq9hXXhaNxmBMIolmknhJ9gXi4PYDsZwsFBaJs7Zak=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0 h1:i2AFUTfisQPZP0iZlUEJiGfOBxEN7Yy+d3zBfDYRmnQ=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0/go.mod h1:iPDYs5hrSZ+/8Ifoq9ZpoiuHZXDEJx9Udurdoq20958=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.30.1 h1:cn7Aus/F0sUyARPhxRUcu7WJJ08xIurq3zmpaPHm15o=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.30.1/go.mod h1:mc/9GTdsVssN9PsId2/0hpWC5EAXXYym9qNhSXdSEsY=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0 h1:NkQZuHbEyoDDoyu0g4hpUrOV9fitbrZZkIHdXnEaSAA=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0/go.mod h1:MDHSj74ylVyTusJYPIoFhNXqwaD8W8cIf8yTEI7+ccc=
 github.com/aws/aws-sdk-go-v2/service/oam v1.1.6 h1:A5vCeU8BdCJRaEI/UvrY3amM3Lo3WZd7VzCDjIyE2Y8=
