@@ -4,20 +4,16 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
@@ -33,7 +29,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
@@ -75,7 +71,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
@@ -100,7 +96,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeySigningKeyDestroy(ctx),
@@ -137,7 +133,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 
 func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_key_signing_key" {
@@ -179,7 +175,7 @@ func testAccKeySigningKeyExists(ctx context.Context, resourceName string) resour
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(ctx, conn, rs.Primary.ID)
 
@@ -195,10 +191,8 @@ func testAccKeySigningKeyExists(ctx context.Context, resourceName string) resour
 	}
 }
 
-func testAccKeySigningKeyConfig_Base(rName, domainName string) string {
-	return acctest.ConfigCompose(
-		testAccKeySigningKeyRegionProviderConfig(),
-		fmt.Sprintf(`
+func testAccKeySigningKeyConfig_base(rName, domainName string) string {
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
@@ -234,13 +228,11 @@ resource "aws_kms_key" "test" {
 resource "aws_route53_zone" "test" {
   name = %[2]q
 }
-`, rName, domainName))
+`, rName, domainName)
 }
 
 func testAccKeySigningKeyConfig_name(rName, domainName string) string {
-	return acctest.ConfigCompose(
-		testAccKeySigningKeyConfig_Base(rName, domainName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKeySigningKeyConfig_base(rName, domainName), fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
   hosted_zone_id             = aws_route53_zone.test.id
   key_management_service_arn = aws_kms_key.test.arn
@@ -250,9 +242,7 @@ resource "aws_route53_key_signing_key" "test" {
 }
 
 func testAccKeySigningKeyConfig_status(rName, domainName, status string) string {
-	return acctest.ConfigCompose(
-		testAccKeySigningKeyConfig_Base(rName, domainName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKeySigningKeyConfig_base(rName, domainName), fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
   hosted_zone_id             = aws_route53_zone.test.id
   key_management_service_arn = aws_kms_key.test.arn
@@ -260,83 +250,4 @@ resource "aws_route53_key_signing_key" "test" {
   status                     = %[2]q
 }
 `, rName, status))
-}
-
-// Route 53 Key Signing Key can only be enabled with KMS Keys in specific regions,
-
-// testAccRoute53KeySigningKeyRegion is the chosen Route 53 Key Signing Key testing region
-//
-// Cached to prevent issues should multiple regions become available.
-var testAccRoute53KeySigningKeyRegion string
-
-// testAccProviderRoute53KeySigningKey is the Route 53 Key Signing Key provider instance
-//
-// This Provider can be used in testing code for API calls without requiring
-// the use of saving and referencing specific ProviderFactories instances.
-//
-// testAccPreCheckKeySigningKey(t) must be called before using this provider instance.
-var testAccProviderRoute53KeySigningKey *schema.Provider
-
-// testAccProviderRoute53KeySigningKeyConfigure ensures the provider is only configured once
-var testAccProviderRoute53KeySigningKeyConfigure sync.Once
-
-// testAccPreCheckKeySigningKey verifies AWS credentials and that Route 53 Key Signing Key is supported
-func testAccPreCheckKeySigningKey(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(t, route53.EndpointsID)
-
-	region := testAccGetKeySigningKeyRegion()
-
-	if region == "" {
-		t.Skip("Route 53 Key Signing Key not available in this AWS Partition")
-	}
-
-	// Since we are outside the scope of the Terraform configuration we must
-	// call Configure() to properly initialize the provider configuration.
-	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
-		var err error
-		testAccProviderRoute53KeySigningKey, err = provider.New(ctx)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		testAccRecordConfig_config := map[string]interface{}{
-			"region": region,
-		}
-
-		diags := testAccProviderRoute53KeySigningKey.Configure(ctx, terraform.NewResourceConfigRaw(testAccRecordConfig_config))
-
-		if diags != nil && diags.HasError() {
-			for _, d := range diags {
-				if d.Severity == diag.Error {
-					t.Fatalf("error configuring Route 53 Key Signing Key provider: %s", d.Summary)
-				}
-			}
-		}
-	})
-}
-
-// testAccKeySigningKeyRegionProviderConfig is the Terraform provider configuration for Route 53 Key Signing Key region testing
-//
-// Testing Route 53 Key Signing Key assumes no other provider configurations
-// are necessary and overwrites the "aws" provider configuration.
-func testAccKeySigningKeyRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetKeySigningKeyRegion())
-}
-
-// testAccGetKeySigningKeyRegion returns the Route 53 Key Signing Key region for testing
-func testAccGetKeySigningKeyRegion() string {
-	if testAccRoute53KeySigningKeyRegion != "" {
-		return testAccRoute53KeySigningKeyRegion
-	}
-
-	// AWS Commercial: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-cmk-requirements.html
-	// AWS GovCloud (US) - not available yet: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-r53.html
-	// AWS China - not available yet: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-	switch acctest.Partition() {
-	case endpoints.AwsPartitionID:
-		testAccRoute53KeySigningKeyRegion = endpoints.UsEast1RegionID
-	}
-
-	return testAccRoute53KeySigningKeyRegion
 }

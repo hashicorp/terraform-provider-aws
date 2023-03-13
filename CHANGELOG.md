@@ -1,9 +1,17 @@
 ## 4.59.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
+* **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
+* **New Resource:** `codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
+
 ENHANCEMENTS:
 
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
+* resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
+* resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
 * resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
