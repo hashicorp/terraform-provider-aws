@@ -109,7 +109,7 @@ func TestAccEMRBlockPublicAccessConfiguration_default(t *testing.T) {
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBlockPublicAccessConfigurationConfig_default(),
+				Config: blockPublicAccessConfigurationConfig_defaultString,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_default(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "true"),
@@ -143,7 +143,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBlockPublicAccessConfigurationConfig_enabledMultiRange(),
+				Config: blockPublicAccessConfigurationConfig_enabledMultiRangeString,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_enabledMultiRange(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "true"),
@@ -346,8 +346,7 @@ resource "aws_emr_block_public_access_configuration" "test" {
 `, enabled)
 }
 
-func testAccBlockPublicAccessConfigurationConfig_default() string {
-	const BlockPublicAccessConfigurationConfig_defaultString = `
+const blockPublicAccessConfigurationConfig_defaultString = `
 resource "aws_emr_block_public_access_configuration" "test" {
 	block_public_security_group_rules = true
 
@@ -357,11 +356,8 @@ resource "aws_emr_block_public_access_configuration" "test" {
 	}
 }
 `
-	return BlockPublicAccessConfigurationConfig_defaultString
-}
 
-func testAccBlockPublicAccessConfigurationConfig_enabledMultiRange() string {
-	const BlockPublicAccessConfigurationConfig_enabledMultiRangeString = `
+const blockPublicAccessConfigurationConfig_enabledMultiRangeString = `
 resource "aws_emr_block_public_access_configuration" "test" {
 	block_public_security_group_rules = true
 	
@@ -376,5 +372,3 @@ resource "aws_emr_block_public_access_configuration" "test" {
 	}
 }
 `
-	return BlockPublicAccessConfigurationConfig_enabledMultiRangeString
-}
