@@ -1290,7 +1290,7 @@ func FindPublicIPv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.Describe
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
