@@ -8,111 +8,132 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePublicIpv4Pool() *schema.Resource {
+// @SDKDataSource("aws_vpc_public_ipv4_pool")
+func DataSourcePublicIPv4Pool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIpv4PoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_border_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"pool_address_ranges": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"available_address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"first_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"pool": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"tags": tftags.TagsSchemaComputed(),
+			"total_address_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"total_available_address_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
 
-const (
-	DSNamePublicIpv4Pool = "Public IPv4 Pool Data Source"
-)
-
 func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribePublicIpv4PoolsInput{}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if v, ok := d.GetOk("pool_id"); ok {
-		input.PoolIds = aws.StringSlice([]string{v.(string)})
-	}
+	poolID := d.Get("pool_id").(string)
+	pool, err := FindPublicIPv4PoolByID(ctx, conn, poolID)
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
-	)...)
-
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
-		d.Get("filter").(*schema.Set),
-	)...)
-
-	if len(input.Filters) == 0 {
-		input.Filters = nil
-	}
-
-	output, err := FindPublicIPv4Pool(ctx, conn, input)
 	if err != nil {
-		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pool, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pool (%s): %s", poolID, err)
 	}
 
-	pool := flattenPublicIpv4Pool(output[0])
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("pool", pool)
+	d.SetId(poolID)
+	d.Set("description", pool.Description)
+	d.Set("network_border_group", pool.NetworkBorderGroup)
+	if err := d.Set("pool_address_ranges", flattenPublicIpv4PoolRanges(pool.PoolAddressRanges)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pool_address_ranges: %s", err)
+	}
+	if err := d.Set("tags", KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+	d.Set("total_address_count", pool.TotalAddressCount)
+	d.Set("total_available_address_count", pool.TotalAvailableAddressCount)
 
 	return nil
 }
 
-func flattenPublicIpv4Pool(pool *ec2.PublicIpv4Pool) map[string]interface{} {
-	if pool == nil {
-		return map[string]interface{}{}
+func flattenPublicIpv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"description":                   aws.StringValue(pool.Description),
-		"network_border_group":          aws.StringValue(pool.NetworkBorderGroup),
-		"pool_address_ranges":           flattenPublicIpv4PoolRanges(pool.PoolAddressRanges),
-		"pool_id":                       aws.StringValue(pool.PoolId),
-		"tags":                          flattenTags(pool.Tags),
-		"total_address_count":           aws.Int64Value(pool.TotalAddressCount),
-		"total_available_address_count": aws.Int64Value(pool.TotalAvailableAddressCount),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AddressCount; v != nil {
+		tfMap["address_count"] = aws.Int64Value(v)
 	}
 
-	return m
+	if v := apiObject.AvailableAddressCount; v != nil {
+		tfMap["available_address_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.FirstAddress; v != nil {
+		tfMap["first_address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LastAddress; v != nil {
+		tfMap["last_address"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func flattenPublicIpv4PoolRanges(pool_ranges []*ec2.PublicIpv4PoolRange) []interface{} {
-	result := []interface{}{}
-
-	if pool_ranges == nil {
-		return result
+func flattenPublicIpv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	for _, v := range pool_ranges {
-		range_map := map[string]interface{}{
-			"address_count":           aws.Int64Value(v.AddressCount),
-			"available_address_count": aws.Int64Value(v.AvailableAddressCount),
-			"first_address":           aws.StringValue(v.FirstAddress),
-			"last_address":            aws.StringValue(v.LastAddress),
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
-		result = append(result, range_map)
+
+		tfList = append(tfList, flattenPublicIpv4PoolRange(apiObject))
 	}
 
-	return result
-}
-
-func flattenTags(tags []*ec2.Tag) map[string]string {
-	result := make(map[string]string)
-	for _, t := range tags {
-		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
-	}
-
-	return result
+	return tfList
 }
