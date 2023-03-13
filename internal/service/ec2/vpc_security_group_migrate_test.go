@@ -8,6 +8,8 @@ import (
 )
 
 func TestSecurityGroupMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -49,6 +51,8 @@ func TestSecurityGroupMigrateState(t *testing.T) {
 }
 
 func TestSecurityGroupMigrateState_empty(t *testing.T) {
+	t.Parallel()
+
 	var is *terraform.InstanceState
 	var meta interface{}
 

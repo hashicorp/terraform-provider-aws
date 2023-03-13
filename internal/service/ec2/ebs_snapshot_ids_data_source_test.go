@@ -110,7 +110,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "a" {
-  volume_id   = aws_ebs_volume.test.*.id[0]
+  volume_id   = aws_ebs_volume.test[0].id
   description = %[1]q
 
   tags = {
@@ -119,7 +119,7 @@ resource "aws_ebs_snapshot" "a" {
 }
 
 resource "aws_ebs_snapshot" "b" {
-  volume_id   = aws_ebs_volume.test.*.id[1]
+  volume_id   = aws_ebs_volume.test[1].id
   description = %[1]q
 
   # We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than

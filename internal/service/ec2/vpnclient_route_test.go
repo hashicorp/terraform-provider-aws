@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccClientVPNRoute_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
@@ -25,12 +27,12 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientVPNRouteDestroy,
+		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNRouteConfig_basic(rName),
+				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientVPNRouteExists(resourceName, &v),
+					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
@@ -49,6 +51,7 @@ func testAccClientVPNRoute_basic(t *testing.T) {
 }
 
 func testAccClientVPNRoute_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
@@ -57,13 +60,13 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientVPNRouteDestroy,
+		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNRouteConfig_basic(rName),
+				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientVPNRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
+					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,6 +75,7 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 }
 
 func testAccClientVPNRoute_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
@@ -80,12 +84,12 @@ func testAccClientVPNRoute_description(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientVPNRouteDestroy,
+		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNRouteConfig_description(rName),
+				Config: testAccClientVPNRouteConfig_description(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientVPNRouteExists(resourceName, &v),
+					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
 				),
 			},
@@ -98,37 +102,39 @@ func testAccClientVPNRoute_description(t *testing.T) {
 	})
 }
 
-func testAccCheckClientVPNRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_client_vpn_route" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_client_vpn_route" {
+				continue
+			}
+
+			endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Client VPN Route %s still exists", rs.Primary.ID)
 		}
 
-		endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Client VPN Route %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckClientVPNRouteExists(name string, v *ec2.ClientVpnRoute) resource.TestCheckFunc {
+func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *ec2.ClientVpnRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -145,9 +151,9 @@ func testAccCheckClientVPNRouteExists(name string, v *ec2.ClientVpnRoute) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
 		if err != nil {
 			return err
@@ -159,11 +165,8 @@ func testAccCheckClientVPNRouteExists(name string, v *ec2.ClientVpnRoute) resour
 	}
 }
 
-func testAccClientVPNRouteConfig_base(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(
-		testAccClientVPNEndpointConfig_basic(rName),
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
+func testAccClientVPNRouteConfig_base(t *testing.T, rName string, subnetCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), testAccClientVPNEndpointConfig_basic(t, rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -173,7 +176,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count                   = %[2]d
+  count = %[2]d
+
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   vpc_id                  = aws_vpc.test.id
@@ -186,8 +190,8 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount))
 }
 
-func testAccClientVPNRouteConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(rName, 1), `
+func testAccClientVPNRouteConfig_basic(t *testing.T, rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(t, rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id
   destination_cidr_block = "0.0.0.0/0"
@@ -201,8 +205,8 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 `)
 }
 
-func testAccClientVPNRouteConfig_description(rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(rName, 1), `
+func testAccClientVPNRouteConfig_description(t *testing.T, rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNRouteConfig_base(t, rName, 1), `
 resource "aws_ec2_client_vpn_route" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_network_association.test.client_vpn_endpoint_id
   destination_cidr_block = "0.0.0.0/0"

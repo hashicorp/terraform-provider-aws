@@ -1,6 +1,7 @@
 package applicationinsights
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -13,15 +14,15 @@ const (
 	ApplicationDeletedTimeout = 2 * time.Minute
 )
 
-func waitApplicationCreated(conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
+func waitApplicationCreated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED"},
-		Refresh: statusApplication(conn, name),
+		Refresh: statusApplication(ctx, conn, name),
 		Timeout: ApplicationCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*applicationinsights.ApplicationInfo); ok {
 		return output, err
 	}
@@ -29,15 +30,15 @@ func waitApplicationCreated(conn *applicationinsights.ApplicationInsights, name 
 	return nil, err
 }
 
-func waitApplicationTerminated(conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
+func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusApplication(conn, name),
+		Refresh: statusApplication(ctx, conn, name),
 		Timeout: ApplicationDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*applicationinsights.ApplicationInfo); ok {
 		return output, err
 	}

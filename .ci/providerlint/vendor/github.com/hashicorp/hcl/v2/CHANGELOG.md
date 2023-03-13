@@ -1,5 +1,43 @@
 # HCL Changelog
 
+## v2.16.1 (February 13, 2023)
+
+### Bugs Fixed
+
+* hclsyntax: Report correct `Range.End` for `FunctionCall` with incomplete argument ([#588](https://github.com/hashicorp/hcl/pull/588))
+
+## v2.16.0 (January 30, 2023)
+
+### Enhancements
+
+* ext/typeexpr: Modify the `Defaults` functionality to implement additional flexibility. HCL will now upcast lists and sets into tuples, and maps into objects, when applying default values if the applied defaults cause the elements within a target collection to have differing types. Previously, this would have resulted in a panic, now HCL will return a modified overall type. ([#574](https://github.com/hashicorp/hcl/pull/574))
+
+    Users should return to the advice provided by v2.14.0, and apply the go-cty convert functionality *after* setting defaults on a given `cty.Value`, rather than before.
+* hclfmt: Avoid rewriting unchanged files. ([#576](https://github.com/hashicorp/hcl/pull/576))
+* hclsyntax: Simplify the AST for certain string expressions. ([#584](https://github.com/hashicorp/hcl/pull/584))
+
+### Bugs Fixed
+
+* hclwrite: Fix data race in `formatSpaces`. ([#511](https://github.com/hashicorp/hcl/pull/511))
+
+## v2.15.0 (November 10, 2022)
+
+### Bugs Fixed
+
+* ext/typeexpr: Skip null objects when applying defaults. This prevents crashes when null objects are creating inside collections, and stops incomplete objects being created with only optional attributes set. ([#567](https://github.com/hashicorp/hcl/pull/567))
+* ext/typeexpr: Ensure default values do not have optional metadata attached. This prevents crashes when default values are inserted into concrete go-cty values that have also been stripped of their optional metadata. ([#568](https://github.com/hashicorp/hcl/pull/568))
+
+### Enhancements
+
+* ext/typeexpr: With the [go-cty](https://github.com/zclconf/go-cty) upstream depenendency updated to v1.12.0, the `Defaults` struct and associated functions can apply additional and more flexible 'unsafe' conversions (examples include tuples into collections such as lists and sets, and additional safety around null and dynamic values). ([#564](https://github.com/hashicorp/hcl/pull/564))
+* ext/typeexpr: With the [go-cty](https://github.com/zclconf/go-cty) upstream depenendency updated to v1.12.0, users should now apply the go-cty convert functionality *before* setting defaults on a given `cty.Value`, rather than after, if they require a specific `cty.Type`.  ([#564](https://github.com/hashicorp/hcl/pull/564))
+
+## v2.14.1 (September 23, 2022)
+
+### Bugs Fixed
+
+* ext/typeexpr: Type convert defaults for optional object attributes when applying them. This prevents crashes in certain cases when the objects in question are part of a collection. ([#555](https://github.com/hashicorp/hcl/pull/555))
+
 ## v2.14.0 (September 1, 2022)
 
 ### Enhancements

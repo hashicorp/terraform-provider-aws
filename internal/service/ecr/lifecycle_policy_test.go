@@ -1,6 +1,7 @@
 package ecr_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccECRLifecyclePolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	randString := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
 	resourceName := "aws_ecr_lifecycle_policy.test"
@@ -23,12 +25,12 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -41,6 +43,7 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 }
 
 func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_lifecycle_policy.test"
 
@@ -48,12 +51,12 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -65,6 +68,7 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 }
 
 func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_lifecycle_policy.test"
 
@@ -72,12 +76,12 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -89,47 +93,49 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 	})
 }
 
-func testAccCheckLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecr_lifecycle_policy" {
-			continue
-		}
-
-		input := &ecr.GetLifecyclePolicyInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetLifecyclePolicy(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecr_lifecycle_policy" {
+				continue
 			}
-			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
-				return nil
+
+			input := &ecr.GetLifecyclePolicyInput{
+				RepositoryName: aws.String(rs.Primary.ID),
 			}
-			return err
+
+			_, err := conn.GetLifecyclePolicyWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+					return nil
+				}
+				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
+					return nil
+				}
+				return err
+			}
 		}
+
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLifecyclePolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 		input := &ecr.GetLifecyclePolicyInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetLifecyclePolicy(input)
+		_, err := conn.GetLifecyclePolicyWithContext(ctx, input)
 		return err
 	}
 }

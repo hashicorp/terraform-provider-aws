@@ -63,6 +63,7 @@ resource "aws_emrserverless_application" "example" {
 
 The following arguments are required:
 
+* `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` – (Optional) The configuration for an application to automatically start on job submission.
 * `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
 * `initial_capacity` – (Optional) The capacity to initialize when the application is created.

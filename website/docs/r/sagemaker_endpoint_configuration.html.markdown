@@ -12,7 +12,6 @@ Provides a SageMaker endpoint configuration resource.
 
 ## Example Usage
 
-
 Basic usage:
 
 ```terraform
@@ -36,22 +35,32 @@ resource "aws_sagemaker_endpoint_configuration" "ec" {
 
 The following arguments are supported:
 
-* `production_variants` - (Required) Fields are documented below.
+* `production_variants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
+* `shadow_production_variants` - (Optional) Array of ProductionVariant objects. There is one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants. Fields are documented below.
 
 ### production_variants
 
+* `accelerator_type` - (Optional) The size of the Elastic Inference (EI) instance to use for the production variant.
+* `container_startup_health_check_timeout_in_seconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
+* `core_dump_config` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
-* `instance_type` (Optional) - The type of instance to start.
-* `accelerator_type` (Optional) - The size of the Elastic Inference (EI) instance to use for the production variant.
-* `initial_variant_weight` (Optional) - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
+* `instance_type` - (Optional)  The type of instance to start.
+* `initial_variant_weight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
+* `model_data_download_timeout_in_seconds` - (Optional) The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
 * `model_name` - (Required) The name of the model to use.
-* `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `serverless_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
+* `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
+* `volume_size_in_gb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
+
+#### core_dump_config
+
+* `destination_s3_uri` - (Required) The Amazon S3 bucket to send the core dump to.
+* `kms_key_id` - (Required) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption.
 
 #### serverless_config
 

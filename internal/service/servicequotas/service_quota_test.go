@@ -16,14 +16,15 @@ import (
 // In the basic case, we test that the resource can match the existing quota
 // without unexpected changes.
 func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
+			testAccPreCheck(ctx, t)
+			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,14 +54,15 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
+	ctx := acctest.Context(t)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			testAccPreCheck(ctx, t)
+			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -90,6 +92,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
 	quotaCode := os.Getenv("SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE")
 	if quotaCode == "" {
 		t.Skip(
@@ -114,7 +117,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -133,6 +136,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	quotaCode := os.Getenv("SERVICEQUOTAS_INCREASE_ON_UPDATE_QUOTA_CODE")
 	if quotaCode == "" {
 		t.Skip(
@@ -158,7 +162,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -186,8 +190,9 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

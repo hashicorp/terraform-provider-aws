@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,7 +15,8 @@ import (
 )
 
 func TestAccLogsDestinationPolicy_basic(t *testing.T) {
-	var destination cloudwatchlogs.Destination
+	ctx := acctest.Context(t)
+	var v string
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -22,14 +24,14 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestinationPolicyDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
 				),
 			},
 			{
@@ -40,68 +42,48 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDestinationPolicyConfig_forceUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_destination_policy" {
-			continue
-		}
-		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
-
-		if err != nil {
-			return fmt.Errorf("reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
-		}
-
-		if exists {
-			return fmt.Errorf("Bad: Destination Policy still exists: %q", rs.Primary.ID)
-		}
-	}
-
-	return nil
-
-}
-
-func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationPolicyExists(ctx context.Context, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Logs Destination Policy ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
+
+		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if !exists || destination.AccessPolicy == nil {
-			return fmt.Errorf("Bad: Destination Policy %q does not exist", rs.Primary.ID)
-		}
 
-		*d = *destination
+		*v = *output.AccessPolicy
 
 		return nil
 	}
 }
 
-func testAccDestinationPolicyBaseConfig(rName string) string {
+func testAccDestinationPolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q
   shard_count = 1
 }
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "role" {
   statement {
@@ -190,16 +172,16 @@ data "aws_iam_policy_document" "access" {
 }
 
 func testAccDestinationPolicyConfig_basic(rName string) string {
-	return testAccDestinationPolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccDestinationPolicyConfig_base(rName), `
 resource "aws_cloudwatch_log_destination_policy" "test" {
   destination_name = aws_cloudwatch_log_destination.test.name
   access_policy    = data.aws_iam_policy_document.access.json
 }
-`
+`)
 }
 
 func testAccDestinationPolicyConfig_forceUpdate(rName string) string {
-	return testAccDestinationPolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccDestinationPolicyConfig_base(rName), `
 data "aws_iam_policy_document" "access2" {
   statement {
     effect = "Allow"
@@ -227,5 +209,5 @@ resource "aws_cloudwatch_log_destination_policy" "test" {
   access_policy    = data.aws_iam_policy_document.access2.json
   force_update     = true
 }
-`
+`)
 }

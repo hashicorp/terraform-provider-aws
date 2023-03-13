@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codepipeline_custom_action_type")
 func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -28,7 +29,7 @@ func ResourceCustomActionType() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomActionTypeDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -175,9 +176,9 @@ func ResourceCustomActionType() *schema.Resource {
 }
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	category := d.Get("category").(string)
 	provider := d.Get("provider_name").(string)
@@ -221,7 +222,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -282,7 +283,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("version", actionType.Id.Version)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for CodePipeline Custom Action Type (%s): %s", arn, err)
@@ -303,13 +304,13 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating CodePipeline Custom Action Type (%s) tags: %s", arn, err)
 		}
 	}
@@ -318,7 +319,7 @@ func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 

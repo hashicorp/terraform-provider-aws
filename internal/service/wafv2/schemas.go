@@ -59,14 +59,14 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level - 1),
+				"and_statement":                         statementSchema(level),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
-				"not_statement":                         statementSchema(level - 1),
-				"or_statement":                          statementSchema(level - 1),
-				"rate_based_statement":                  rateBasedStatementSchema(level - 1),
+				"not_statement":                         statementSchema(level),
+				"or_statement":                          statementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
 				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
@@ -347,7 +347,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
-			"body":                emptySchema(),
+			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
 			"headers":             headersSchema(),
 			"json_body":           jsonBodySchema(),
@@ -549,6 +549,19 @@ func captchaConfigSchema() *schema.Schema {
 	}
 }
 
+func challengeConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_request_handling": customRequestHandlingSchema(),
+			},
+		},
+	}
+}
+
 func countConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -721,6 +734,19 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
+func bodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+			},
+		},
+	}
+}
+
 func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
@@ -828,7 +854,9 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"scope_down_statement": scopeDownStatementSchema(level - 1),
+				"rule_action_override":       ruleActionOverrideSchema(),
+				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
+				"scope_down_statement":       scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -857,6 +885,7 @@ func excludedRuleSchema() *schema.Schema {
 				},
 			},
 		},
+		Deprecated: "Use rule_action_override instead",
 	}
 }
 
@@ -904,6 +933,112 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func ruleActionOverrideSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 100,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_to_use": actionToUseSchema(),
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_bot_control_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inspection_level": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+							},
+						},
+					},
+				},
+				"login_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+					),
+				},
+				"password_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+				"payload_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+				},
+				"username_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func actionToUseSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"allow":   allowConfigSchema(),
+				"block":   blockConfigSchema(),
+				"captcha": captchaConfigSchema(),
+				"count":   countConfigSchema(),
 			},
 		},
 	}

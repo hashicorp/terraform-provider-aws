@@ -1,6 +1,7 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccSNSTopicPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,16 +26,15 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
+					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -46,6 +47,7 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_updated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,14 +56,13 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -72,11 +73,9 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 			{
 				Config: testAccTopicPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile("SNS:DeleteTopic")),
+					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("SNS:DeleteTopic")),
 				),
 			},
 		},
@@ -84,6 +83,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	topicResourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,13 +92,13 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(topicResourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
+					testAccCheckTopicExists(ctx, topicResourceName, &attributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,6 +107,7 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -115,13 +116,13 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
+					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,6 +131,7 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -138,15 +140,14 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicPolicyConfig_equivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
+					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
@@ -158,28 +159,30 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+func testAccCheckTopicPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sns_topic_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sns_topic_policy" {
+				continue
+			}
+
+			_, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SNS Topic Policy %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SNS Topic Policy %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTopicPolicyConfig_basic(rName string) string {

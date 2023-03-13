@@ -39,6 +39,7 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 }
 
 func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 	resourceName := "aws_ssm_patch_baseline.test"
 	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
@@ -47,7 +48,7 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchBaselineDestroy,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineDataSourceConfig_new(rName),

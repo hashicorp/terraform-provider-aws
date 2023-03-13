@@ -1,6 +1,7 @@
 package workspaces_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func testAccImageDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image workspaces.WorkspaceImage
 	imageID := os.Getenv("AWS_WORKSPACES_IMAGE_ID")
 	dataSourceName := "data.aws_workspaces_image.test"
@@ -29,7 +31,7 @@ func testAccImageDataSource_basic(t *testing.T) {
 			{
 				Config: testAccImageDataSourceConfig_basic(imageID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(dataSourceName, &image),
+					testAccCheckImageExists(ctx, dataSourceName, &image),
 					testAccCheckImageAttributes(dataSourceName, &image),
 				),
 			},
@@ -53,15 +55,15 @@ data aws_workspaces_image test {
 `, imageID)
 }
 
-func testAccCheckImageExists(n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
-		resp, err := conn.DescribeWorkspaceImages(&workspaces.DescribeWorkspaceImagesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		resp, err := conn.DescribeWorkspaceImagesWithContext(ctx, &workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {

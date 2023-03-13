@@ -16,15 +16,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKResource("aws_batch_scheduling_policy")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSchedulingPolicyCreate,
-		ReadContext:   resourceSchedulingPolicyRead,
-		UpdateContext: resourceSchedulingPolicyUpdate,
-		DeleteContext: resourceSchedulingPolicyDelete,
+		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
+		ReadWithoutTimeout:   resourceSchedulingPolicyRead,
+		UpdateWithoutTimeout: resourceSchedulingPolicyUpdate,
+		DeleteWithoutTimeout: resourceSchedulingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -91,9 +94,9 @@ func ResourceSchedulingPolicy() *schema.Resource {
 }
 
 func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -108,7 +111,6 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Batch Scheduling Policy %s", input)
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -127,7 +129,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -148,7 +150,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	tags := KeyValueTags(sp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, sp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -163,7 +165,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	input := &batch.UpdateSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
@@ -177,12 +179,12 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SchedulingPolicy (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("updating SchedulingPolicy (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -191,8 +193,9 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
+	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
 	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
 	})

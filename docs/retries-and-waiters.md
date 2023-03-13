@@ -278,7 +278,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).exampleconn
+	conn := meta.(*AWSClient).ExampleConn()
 
 	input := &example.OperationInput{/* ... */}
 

@@ -220,6 +220,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
+  <li><code>ivschat</code></li>
   <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
@@ -275,7 +276,9 @@ provider "aws" {
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>nimble</code> (or <code>nimblestudio</code>)</li>
+  <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
+  <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>opsworkscm</code></li>
   <li><code>organizations</code></li>
@@ -288,6 +291,7 @@ provider "aws" {
   <li><code>pinpoint</code></li>
   <li><code>pinpointemail</code></li>
   <li><code>pinpointsmsvoice</code></li>
+  <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>proton</code></li>
@@ -303,6 +307,7 @@ provider "aws" {
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
+  <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
@@ -323,6 +328,7 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>

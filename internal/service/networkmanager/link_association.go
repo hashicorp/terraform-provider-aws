@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_networkmanager_link_association")
 func ResourceLinkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkAssociationCreate,
@@ -24,7 +25,7 @@ func ResourceLinkAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceLinkAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -53,7 +54,7 @@ func ResourceLinkAssociation() *schema.Resource {
 }
 
 func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	linkID := d.Get("link_id").(string)
@@ -82,7 +83,7 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
@@ -110,7 +111,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 

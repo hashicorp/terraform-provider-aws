@@ -1,6 +1,7 @@
 package glacier_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccGlacierVaultLock_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vaultLock1 glacier.GetVaultLockOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vaultResourceName := "aws_glacier_vault.test"
@@ -24,12 +26,12 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultLockDestroy,
+		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfig_complete(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultLockExists(resourceName, &vaultLock1),
+					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -47,6 +49,7 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 }
 
 func TestAccGlacierVaultLock_completeLock(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vaultLock1 glacier.GetVaultLockOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vaultResourceName := "aws_glacier_vault.test"
@@ -56,12 +59,12 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultLockDestroy,
+		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfig_complete(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultLockExists(resourceName, &vaultLock1),
+					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -79,6 +82,7 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 }
 
 func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vaultLock1 glacier.GetVaultLockOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vaultResourceName := "aws_glacier_vault.test"
@@ -88,12 +92,12 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultLockDestroy,
+		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultLockConfig_policyOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultLockExists(resourceName, &vaultLock1),
+					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -108,7 +112,7 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckVaultLockExists(resourceName string, getVaultLockOutput *glacier.GetVaultLockOutput) resource.TestCheckFunc {
+func testAccCheckVaultLockExists(ctx context.Context, resourceName string, getVaultLockOutput *glacier.GetVaultLockOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -119,12 +123,12 @@ func testAccCheckVaultLockExists(resourceName string, getVaultLockOutput *glacie
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
 
 		input := &glacier.GetVaultLockInput{
 			VaultName: aws.String(rs.Primary.ID),
 		}
-		output, err := conn.GetVaultLock(input)
+		output, err := conn.GetVaultLockWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", rs.Primary.ID, err)
@@ -140,33 +144,35 @@ func testAccCheckVaultLockExists(resourceName string, getVaultLockOutput *glacie
 	}
 }
 
-func testAccCheckVaultLockDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
+func testAccCheckVaultLockDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glacier_vault_lock" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glacier_vault_lock" {
+				continue
+			}
+
+			input := &glacier.GetVaultLockInput{
+				VaultName: aws.String(rs.Primary.ID),
+			}
+			output, err := conn.GetVaultLockWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Glacier Vault Lock (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &glacier.GetVaultLockInput{
-			VaultName: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetVaultLock(input)
-
-		if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Glacier Vault Lock (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccVaultLockConfig_complete(rName string, completeLock bool) string {

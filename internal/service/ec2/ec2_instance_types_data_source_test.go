@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,10 +11,11 @@ import (
 )
 
 func TestAccEC2InstanceTypesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypes(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypes(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -29,10 +31,11 @@ func TestAccEC2InstanceTypesDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypes(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypes(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -47,12 +50,12 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccPreCheckInstanceTypes(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckInstanceTypes(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
-	_, err := conn.DescribeInstanceTypes(input)
+	_, err := conn.DescribeInstanceTypesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

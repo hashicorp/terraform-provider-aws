@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rolesanywhere_profile")
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceProfileCreate,
-		ReadContext:   resourceProfileRead,
-		UpdateContext: resourceProfileUpdate,
-		DeleteContext: resourceProfileDelete,
+		CreateWithoutTimeout: resourceProfileCreate,
+		ReadWithoutTimeout:   resourceProfileRead,
+		UpdateWithoutTimeout: resourceProfileUpdate,
+		DeleteWithoutTimeout: resourceProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -74,9 +75,9 @@ func ResourceProfile() *schema.Resource {
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &rolesanywhere.CreateProfileInput{
@@ -118,7 +119,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +164,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	if d.HasChangesExcept("enabled", "tags_all") {
 		input := &rolesanywhere.UpdateProfileInput{
@@ -223,7 +224,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
 	_, err := conn.DeleteProfile(ctx, &rolesanywhere.DeleteProfileInput{
@@ -243,7 +244,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.DisableProfileInput{
 		ProfileId: aws.String(profileId),
@@ -254,7 +255,7 @@ func disableProfile(ctx context.Context, profileId string, meta interface{}) err
 }
 
 func enableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.EnableProfileInput{
 		ProfileId: aws.String(profileId),

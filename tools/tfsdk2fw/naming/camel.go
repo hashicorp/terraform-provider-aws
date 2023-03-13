@@ -29,7 +29,17 @@ func ToCamelCase(s string) string {
 		}
 	}
 
-	return c.String()
+	s = c.String()
+
+	// Replace 'Arn' suffix with 'AEN'."
+	// Replace 'Id' suffix with 'ID'."
+	if strings.HasSuffix(s, "Arn") {
+		s = strings.TrimSuffix(s, "Arn") + "ARN"
+	} else if strings.HasSuffix(s, "Id") {
+		s = strings.TrimSuffix(s, "Id") + "ID"
+	}
+
+	return s
 }
 
 func isCapitalLetter(ch byte) bool {

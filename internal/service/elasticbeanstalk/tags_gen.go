@@ -8,17 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk/elasticbeanstalkiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -26,10 +23,14 @@ func ListTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.Elastic
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.ResourceTags), nil
+	return KeyValueTags(ctx, output.ResourceTags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -51,25 +52,23 @@ func Tags(tags tftags.KeyValueTags) []*elasticbeanstalk.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from elasticbeanstalk service tags.
-func KeyValueTags(tags []*elasticbeanstalk.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*elasticbeanstalk.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
 	updatedTags := oldTags.Updated(newTags)
 
@@ -97,4 +96,8 @@ func UpdateTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.Elast
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier, oldTags, newTags)
 }

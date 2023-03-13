@@ -1,6 +1,7 @@
 package signer_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
@@ -23,17 +25,17 @@ func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy,
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccSigningProfilePermissionConfig_basic(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(profileResourceName, &conf),
-					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName, profileName, &sppconf),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "statement_id"),
 				),
 			},
@@ -48,6 +50,7 @@ func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 }
 
 func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
@@ -57,17 +60,17 @@ func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy,
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccSigningProfilePermissionConfig_getSP(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(profileResourceName, &conf),
-					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName, profileName, &sppconf),
 				),
 			},
 			{
@@ -80,8 +83,8 @@ func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 				Config:  testAccSigningProfilePermissionConfig_revokeSignature(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(profileResourceName, &conf),
-					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName, profileName, &sppconf),
 				),
 			},
 		},
@@ -89,6 +92,7 @@ func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 }
 
 func TestAccSignerSigningProfilePermission_StartSigningJob_getSP(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName1 := "aws_signer_signing_profile_permission.sp1_perm"
 	resourceName2 := "aws_signer_signing_profile_permission.sp2_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
@@ -99,17 +103,17 @@ func TestAccSignerSigningProfilePermission_StartSigningJob_getSP(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy,
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfilePermissionConfig_startJobGetSP(profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(profileResourceName, &conf),
-					testAccCheckSigningProfilePermissionExists(resourceName1, profileName, &sppconf),
-					testAccCheckSigningProfilePermissionExists(resourceName2, profileName, &sppconf),
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName1, profileName, &sppconf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName2, profileName, &sppconf),
 				),
 			},
 			{
@@ -123,6 +127,7 @@ func TestAccSignerSigningProfilePermission_StartSigningJob_getSP(t *testing.T) {
 }
 
 func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_signer_signing_profile_permission.sp1_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
@@ -133,15 +138,15 @@ func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy,
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfilePermissionConfig_statementPrefix(statementNamePrefix, profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfilePermissionExists(ctx, resourceName, profileName, &sppconf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
 				),
 			},
@@ -227,7 +232,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, profileName)
 }
 
-func testAccCheckSigningProfilePermissionExists(res, profileName string, spp *signer.ListProfilePermissionsOutput) resource.TestCheckFunc {
+func testAccCheckSigningProfilePermissionExists(ctx context.Context, res, profileName string, spp *signer.ListProfilePermissionsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
 		if !ok {
@@ -238,13 +243,13 @@ func testAccCheckSigningProfilePermissionExists(res, profileName string, spp *si
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.ListProfilePermissionsInput{
 			ProfileName: aws.String(profileName),
 		}
 
-		getSp, err := conn.ListProfilePermissions(params)
+		getSp, err := conn.ListProfilePermissionsWithContext(ctx, params)
 		if err != nil {
 			return err
 		}

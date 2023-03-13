@@ -3,9 +3,13 @@ package appsync_test
 import (
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAppSync_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"APIKey": {
 			"basic":       testAccAPIKey_basic,
@@ -61,6 +65,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,
+			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
 			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
@@ -68,6 +73,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Resolver": {
 			"basic":             testAccResolver_basic,
+			"code":              testAccResolver_code,
 			"disappears":        testAccResolver_disappears,
 			"dataSource":        testAccResolver_dataSource,
 			"DataSource_lambda": testAccResolver_DataSource_lambda,
@@ -82,6 +88,10 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":      testAccAPICache_basic,
 			"disappears": testAccAPICache_disappears,
 		},
+		"Type": {
+			"basic":      testAccType_basic,
+			"disappears": testAccType_disappears,
+		},
 		"DomainName": {
 			"basic":       testAccDomainName_basic,
 			"disappears":  testAccDomainName_disappears,
@@ -93,17 +103,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func getCertDomain(t *testing.T) string {

@@ -12,7 +12,6 @@ Use this data source to retrieve information about an EventBridge connection.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform

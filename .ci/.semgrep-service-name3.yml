@@ -245,6 +245,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)RedshiftServerless"
     severity: WARNING
+  - id: resourceexplorer2-in-func-name
+    languages:
+      - go
+    message: Do not use "ResourceExplorer2" in func name inside resourceexplorer2 package
+    paths:
+      include:
+        - internal/service/resourceexplorer2
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResourceExplorer2"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: resourceexplorer2-in-test-name
+    languages:
+      - go
+    message: Include "ResourceExplorer2" in test name
+    paths:
+      include:
+        - internal/service/resourceexplorer2/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccResourceExplorer2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: resourceexplorer2-in-const-name
+    languages:
+      - go
+    message: Do not use "ResourceExplorer2" in const name inside resourceexplorer2 package
+    paths:
+      include:
+        - internal/service/resourceexplorer2
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResourceExplorer2"
+    severity: WARNING
+  - id: resourceexplorer2-in-var-name
+    languages:
+      - go
+    message: Do not use "ResourceExplorer2" in var name inside resourceexplorer2 package
+    paths:
+      include:
+        - internal/service/resourceexplorer2
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResourceExplorer2"
+    severity: WARNING
   - id: resourcegroups-in-func-name
     languages:
       - go
@@ -1085,6 +1143,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)SageMaker"
     severity: WARNING
+  - id: scheduler-in-func-name
+    languages:
+      - go
+    message: Do not use "Scheduler" in func name inside scheduler package
+    paths:
+      include:
+        - internal/service/scheduler
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Scheduler"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: scheduler-in-test-name
+    languages:
+      - go
+    message: Include "Scheduler" in test name
+    paths:
+      include:
+        - internal/service/scheduler/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccScheduler"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: scheduler-in-const-name
+    languages:
+      - go
+    message: Do not use "Scheduler" in const name inside scheduler package
+    paths:
+      include:
+        - internal/service/scheduler
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Scheduler"
+    severity: WARNING
+  - id: scheduler-in-var-name
+    languages:
+      - go
+    message: Do not use "Scheduler" in var name inside scheduler package
+    paths:
+      include:
+        - internal/service/scheduler
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Scheduler"
+    severity: WARNING
   - id: schemas-in-func-name
     languages:
       - go
@@ -1678,6 +1794,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)SES"
     severity: WARNING
+  - id: sesv2-in-func-name
+    languages:
+      - go
+    message: Do not use "SESV2" in func name inside sesv2 package
+    paths:
+      include:
+        - internal/service/sesv2
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SESV2"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: sesv2-in-test-name
+    languages:
+      - go
+    message: Include "SESV2" in test name
+    paths:
+      include:
+        - internal/service/sesv2/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccSESV2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: sesv2-in-const-name
+    languages:
+      - go
+    message: Do not use "SESV2" in const name inside sesv2 package
+    paths:
+      include:
+        - internal/service/sesv2
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SESV2"
+    severity: WARNING
+  - id: sesv2-in-var-name
+    languages:
+      - go
+    message: Do not use "SESV2" in var name inside sesv2 package
+    paths:
+      include:
+        - internal/service/sesv2
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SESV2"
+    severity: WARNING
   - id: sfn-in-func-name
     languages:
       - go
@@ -2039,6 +2213,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)SSM"
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ssm-in-test-name
@@ -2647,6 +2823,21 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-not-regex: "^TestAccTransitGateway"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: verifiedaccess-in-test-name
+    languages:
+      - go
+    message: Include "VerifiedAccess" in test name
+    paths:
+      include:
+        - internal/service/ec2/verifiedaccess_*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccVerifiedAccess"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
   - id: vpc-in-test-name

@@ -11,9 +11,9 @@ import (
 )
 
 func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandString(8)
-	resourceName1 := "aws_api_gateway_api_key.example_key"
-	dataSourceName1 := "data.aws_api_gateway_api_key.test_key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_api_key.test"
+	dataSourceName := "data.aws_api_gateway_api_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -23,14 +23,14 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
-					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName1, "name"),
-					resource.TestCheckResourceAttrPair(resourceName1, "value", dataSourceName1, "value"),
-					resource.TestCheckResourceAttrPair(resourceName1, "enabled", dataSourceName1, "enabled"),
-					resource.TestCheckResourceAttrPair(resourceName1, "description", dataSourceName1, "description"),
-					resource.TestCheckResourceAttrSet(dataSourceName1, "last_updated_date"),
-					resource.TestCheckResourceAttrSet(dataSourceName1, "created_date"),
-					resource.TestCheckResourceAttr(dataSourceName1, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "value", dataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, "enabled", dataSourceName, "enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -39,12 +39,12 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 
 func testAccAPIKeyDataSourceConfig_basic(r string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "example_key" {
-  name = "%s"
+resource "aws_api_gateway_api_key" "test" {
+  name = %[1]q
 }
 
-data "aws_api_gateway_api_key" "test_key" {
-  id = aws_api_gateway_api_key.example_key.id
+data "aws_api_gateway_api_key" "test" {
+  id = aws_api_gateway_api_key.test.id
 }
 `, r)
 }

@@ -1,6 +1,7 @@
 package codestarnotifications_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -20,14 +21,15 @@ import (
 // partition (aws or GovCloud) does not support the service
 
 func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationRuleDestroy,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleConfig_basic(rName),
@@ -51,14 +53,15 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationRuleDestroy,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleConfig_status(rName, codestarnotifications.NotificationRuleStatusDisabled),
@@ -88,14 +91,15 @@ func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationRuleDestroy,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleConfig_targets1(rName),
@@ -125,14 +129,15 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationRuleDestroy,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleConfig_tags1(rName),
@@ -168,14 +173,15 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 }
 
 func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationRuleDestroy,
+		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationRuleConfig_eventTypeIDs1(rName),
@@ -204,53 +210,55 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn
+func testAccCheckNotificationRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn()
 
-	for _, rs := range s.RootModule().Resources {
-		switch rs.Type {
-		case "aws_codestarnotifications_notification_rule":
-			_, err := conn.DescribeNotificationRule(&codestarnotifications.DescribeNotificationRuleInput{
-				Arn: aws.String(rs.Primary.ID),
-			})
+		for _, rs := range s.RootModule().Resources {
+			switch rs.Type {
+			case "aws_codestarnotifications_notification_rule":
+				_, err := conn.DescribeNotificationRuleWithContext(ctx, &codestarnotifications.DescribeNotificationRuleInput{
+					Arn: aws.String(rs.Primary.ID),
+				})
 
-			if err != nil && !tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
-				return err
-			}
-		case "aws_sns_topic":
-			res, err := conn.ListTargets(&codestarnotifications.ListTargetsInput{
-				Filters: []*codestarnotifications.ListTargetsFilter{
-					{
-						Name:  aws.String("TARGET_ADDRESS"),
-						Value: aws.String(rs.Primary.ID),
+				if err != nil && !tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
+					return err
+				}
+			case "aws_sns_topic":
+				res, err := conn.ListTargetsWithContext(ctx, &codestarnotifications.ListTargetsInput{
+					Filters: []*codestarnotifications.ListTargetsFilter{
+						{
+							Name:  aws.String("TARGET_ADDRESS"),
+							Value: aws.String(rs.Primary.ID),
+						},
+						{
+							Name:  aws.String("TARGET_TYPE"),
+							Value: aws.String("SNS"),
+						},
 					},
-					{
-						Name:  aws.String("TARGET_TYPE"),
-						Value: aws.String("SNS"),
-					},
-				},
-				MaxResults: aws.Int64(1),
-			})
-			if err != nil {
-				return err
-			}
-			if len(res.Targets) > 0 {
-				return fmt.Errorf("codestar notification target (%s) is not removed", rs.Primary.ID)
+					MaxResults: aws.Int64(1),
+				})
+				if err != nil {
+					return err
+				}
+				if len(res.Targets) > 0 {
+					return fmt.Errorf("codestar notification target (%s) is not removed", rs.Primary.ID)
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn()
 
 	input := &codestarnotifications.ListTargetsInput{
 		MaxResults: aws.Int64(1),
 	}
 
-	_, err := conn.ListTargets(input)
+	_, err := conn.ListTargetsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

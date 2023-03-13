@@ -1,6 +1,7 @@
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 )
 
 func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
 	engineVersion := "1.0.2.2"
@@ -19,7 +21,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -38,6 +40,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
 	engineVersion := "1.0.3.0"
@@ -45,7 +48,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -63,14 +66,14 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	})
 }
 
-func testAccPreCheckOrderableDBInstance(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptions(input)
+	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

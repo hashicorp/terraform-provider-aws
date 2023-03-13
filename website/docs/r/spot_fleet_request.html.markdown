@@ -112,6 +112,8 @@ resource "aws_spot_fleet_request" "foo" {
 -> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ```terraform
+variable "subnets" {}
+
 resource "aws_spot_fleet_request" "example" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
   target_capacity                     = 3
@@ -123,7 +125,6 @@ resource "aws_spot_fleet_request" "example" {
 
 
   dynamic "launch_specification" {
-
     for_each = [for s in var.subnets : {
       subnet_id = s[1]
     }]
@@ -219,7 +220,7 @@ across different markets and instance types. Conflicts with `launch_template_con
   important to your application workload, such as vCPUs, memory, or I/O.
 * `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 * `allocation_strategy` - Indicates how to allocate the target capacity across
-  the Spot pools specified by the Spot fleet request. The default is
+  the Spot pools specified by the Spot fleet request. Valid values: `lowestPrice`, `diversified`, `capacityOptimized`, `capacityOptimizedPrioritized`, and `priceCapacityOptimized`. The default is
   `lowestPrice`.
 * `instance_pools_to_use_count` - (Optional; Default: 1)
   The number of Spot pools across which to allocate your target Spot capacity.
@@ -273,7 +274,6 @@ The `launch_template_config` block supports the following:
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
 
-
 ### Overrides
 
 * `availability_zone` - (Optional) The availability zone in which to place the request.
@@ -326,6 +326,10 @@ This configuration block supports the following:
       * inference
     ```
 
+* `allowed_instance_types` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+
+    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+
 * `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -342,7 +346,10 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+
+    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+
 * `instance_generations` - (Optional) List of instance generation names. Default is any generation.
 
     ```
@@ -364,6 +371,9 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `memory_mib` - (Optional) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
@@ -393,7 +403,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `15m`)

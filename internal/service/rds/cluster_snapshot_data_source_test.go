@@ -145,7 +145,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -195,7 +195,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -245,7 +245,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {

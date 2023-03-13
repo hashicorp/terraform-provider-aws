@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,18 +15,19 @@ import (
 )
 
 func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy,
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(resourceName),
+					testAccCheckSecurityConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 				),
 			},
@@ -38,37 +40,39 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_security_configuration" {
-			continue
-		}
+func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emr_security_configuration" {
+				continue
+			}
 
-		// Try to find the Security Configuration
-		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+			// Try to find the Security Configuration
+			resp, err := conn.DescribeSecurityConfigurationWithContext(ctx, &emr.DescribeSecurityConfigurationInput{
+				Name: aws.String(rs.Primary.ID),
+			})
 
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && aws.StringValue(resp.Name) == rs.Primary.ID {
+				return fmt.Errorf("Error: EMR Security Configuration still exists: %s", aws.StringValue(resp.Name))
+			}
+
 			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && aws.StringValue(resp.Name) == rs.Primary.ID {
-			return fmt.Errorf("Error: EMR Security Configuration still exists: %s", aws.StringValue(resp.Name))
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -79,8 +83,8 @@ func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No EMR Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		resp, err := conn.DescribeSecurityConfigurationWithContext(ctx, &emr.DescribeSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

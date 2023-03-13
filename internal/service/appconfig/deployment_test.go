@@ -1,6 +1,7 @@
 package appconfig_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccAppConfigDeployment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 	appResourceName := "aws_appconfig_application.test"
@@ -30,12 +32,12 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}/deployment/1`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
@@ -58,6 +60,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 }
 
 func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 	strategy := "AppConfig.Linear50PercentEvery30Seconds"
@@ -68,12 +71,12 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_predefinedStrategy(rName, strategy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_id", strategy),
 				),
 			},
@@ -92,6 +95,7 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 }
 
 func TestAccAppConfigDeployment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 
@@ -104,7 +108,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -117,7 +121,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -126,7 +130,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(resourceName),
+					testAccCheckDeploymentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -135,7 +139,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -152,7 +156,7 @@ func testAccCheckDeploymentExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),
@@ -160,7 +164,7 @@ func testAccCheckDeploymentExists(resourceName string) resource.TestCheckFunc {
 			EnvironmentId:    aws.String(envID),
 		}
 
-		output, err := conn.GetDeployment(input)
+		output, err := conn.GetDeploymentWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Appconfig Deployment (%s): %w", rs.Primary.ID, err)

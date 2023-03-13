@@ -1,6 +1,7 @@
 package chime_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_origination.test"
 
@@ -23,12 +25,12 @@ func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"protocol": "TCP",
@@ -46,6 +48,7 @@ func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_origination.test"
 
@@ -53,13 +56,13 @@ func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVoiceConnectorOriginationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
+					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,6 +71,7 @@ func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_origination.test"
 
@@ -75,19 +79,19 @@ func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorOriginationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"protocol": "TCP",
@@ -109,7 +113,7 @@ func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVoiceConnectorOriginationExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorOriginationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -120,12 +124,12 @@ func testAccCheckVoiceConnectorOriginationExists(name string) resource.TestCheck
 			return fmt.Errorf("no Chime voice connector origination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetVoiceConnectorOrigination(input)
+		resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -138,32 +142,34 @@ func testAccCheckVoiceConnectorOriginationExists(name string) resource.TestCheck
 	}
 }
 
-func testAccCheckVoiceConnectorOriginationDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_chime_voice_connector_origination" {
-			continue
-		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
-		input := &chime.GetVoiceConnectorOriginationInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
+func testAccCheckVoiceConnectorOriginationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_chime_voice_connector_origination" {
+				continue
+			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+			input := &chime.GetVoiceConnectorOriginationInput{
+				VoiceConnectorId: aws.String(rs.Primary.ID),
+			}
+
+			resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && resp.Origination != nil {
+				return fmt.Errorf("error Chime Voice Connector Origination (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		resp, err := conn.GetVoiceConnectorOrigination(input)
-
-		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.Origination != nil {
-			return fmt.Errorf("error Chime Voice Connector Origination (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccVoiceConnectorOriginationConfig_basic(name string) string {

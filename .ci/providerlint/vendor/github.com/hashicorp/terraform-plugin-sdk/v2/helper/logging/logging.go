@@ -3,7 +3,6 @@ package logging
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -32,7 +31,7 @@ var ValidLevels = []logutils.LogLevel{"TRACE", "DEBUG", "INFO", "WARN", "ERROR"}
 // environment variable. Calls to tflog.* will have their output managed by the
 // tfsdklog sink.
 func LogOutput(t testing.T) (logOutput io.Writer, err error) {
-	logOutput = ioutil.Discard
+	logOutput = io.Discard
 
 	logLevel := LogLevel()
 	if logLevel == "" {
@@ -88,7 +87,7 @@ func LogOutput(t testing.T) (logOutput io.Writer, err error) {
 
 // SetOutput checks for a log destination with LogOutput, and calls
 // log.SetOutput with the result. If LogOutput returns nil, SetOutput uses
-// ioutil.Discard. Any error from LogOutout is fatal.
+// io.Discard. Any error from LogOutout is fatal.
 func SetOutput(t testing.T) {
 	out, err := LogOutput(t)
 	if err != nil {
@@ -96,7 +95,7 @@ func SetOutput(t testing.T) {
 	}
 
 	if out == nil {
-		out = ioutil.Discard
+		out = io.Discard
 	}
 
 	log.SetOutput(out)

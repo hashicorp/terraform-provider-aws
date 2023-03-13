@@ -2,9 +2,7 @@ package deploy
 
 import (
 	"fmt"
-)
-
-// validTagFilters confirms the "value" component of a tag filter is one of
+) // validTagFilters confirms the "value" component of a tag filter is one of
 // AWS's three allowed types.
 func validTagFilters(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
