@@ -30,7 +30,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				value, _ := strconv.ParseBool(nV.(string))
 				b = value
 			}
-			fmt.Println("METHOD UPDATE", nK, k, nV, kV)
+
 			if (nK == k) && (nV != kV) {
 				operation.Op = aws.String("replace")
 				operation.Value = aws.String(strconv.FormatBool(b))
