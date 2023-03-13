@@ -41,10 +41,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccDefaultTagsDataSourceConfig_basic(),
-				),
+				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),

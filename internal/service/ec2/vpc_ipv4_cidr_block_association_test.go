@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
@@ -26,14 +28,14 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
@@ -52,6 +54,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 }
 
 func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
@@ -61,14 +64,14 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
-					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,6 +80,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 }
 
 func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -85,15 +89,15 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, "aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, "28"),
 				),
 			},
@@ -102,6 +106,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 }
 
 func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -111,15 +116,15 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, "aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
 			},
 		},
@@ -147,31 +152,33 @@ func testAccCheckVPCAssociationCIDRPrefix(association *ec2.VpcCidrBlockAssociati
 	}
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
+				continue
+			}
+
+			_, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 VPC IPv4 CIDR Block Association %s still exists", rs.Primary.ID)
 		}
 
-		_, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 VPC IPv4 CIDR Block Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, v *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string, v *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -182,9 +189,9 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, v *ec2.VpcCidrBlock
 			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
+		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

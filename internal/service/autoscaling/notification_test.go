@@ -1,6 +1,7 @@
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	rName := sdkacctest.RandString(5)
@@ -23,12 +25,12 @@ func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckASGNDestroy,
+		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
+					testAccCheckASGNotificationExists(ctx, "aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
@@ -37,6 +39,7 @@ func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	rName := sdkacctest.RandString(5)
@@ -45,12 +48,12 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckASGNDestroy,
+		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
+					testAccCheckASGNotificationExists(ctx, "aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
@@ -58,7 +61,7 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 			{
 				Config: testAccNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName, "barfoo-terraform-test-" + rName}, &asgn),
+					testAccCheckASGNotificationExists(ctx, "aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName, "barfoo-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
@@ -67,6 +70,7 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 }
 
 func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
+	ctx := acctest.Context(t)
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	resourceName := "aws_autoscaling_notification.example"
@@ -75,12 +79,12 @@ func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckASGNDestroy,
+		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_pagination(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckASGNotificationExists(resourceName,
+					testAccCheckASGNotificationExists(ctx, resourceName,
 						[]string{
 							"foobar3-terraform-test-0",
 							"foobar3-terraform-test-1",
@@ -110,7 +114,7 @@ func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
 	})
 }
 
-func testAccCheckASGNotificationExists(n string, groups []string, asgn *autoscaling.DescribeNotificationConfigurationsOutput) resource.TestCheckFunc {
+func testAccCheckASGNotificationExists(ctx context.Context, n string, groups []string, asgn *autoscaling.DescribeNotificationConfigurationsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -121,13 +125,13 @@ func testAccCheckASGNotificationExists(n string, groups []string, asgn *autoscal
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: aws.StringSlice(groups),
 			MaxRecords:            aws.Int64(100),
 		}
 
-		resp, err := conn.DescribeNotificationConfigurations(opts)
+		resp, err := conn.DescribeNotificationConfigurationsWithContext(ctx, opts)
 		if err != nil {
 			return fmt.Errorf("Error describing notifications: %s", err)
 		}
@@ -138,29 +142,30 @@ func testAccCheckASGNotificationExists(n string, groups []string, asgn *autoscal
 	}
 }
 
-func testAccCheckASGNDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_notification" {
-			continue
-		}
+func testAccCheckASGNDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_notification" {
+				continue
+			}
 
-		groups := []*string{aws.String("foobar1-terraform-test")}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		opts := &autoscaling.DescribeNotificationConfigurationsInput{
-			AutoScalingGroupNames: groups,
-		}
+			groups := []*string{aws.String("foobar1-terraform-test")}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+			opts := &autoscaling.DescribeNotificationConfigurationsInput{
+				AutoScalingGroupNames: groups,
+			}
 
-		resp, err := conn.DescribeNotificationConfigurations(opts)
-		if err != nil {
-			return fmt.Errorf("Error describing notifications")
-		}
+			resp, err := conn.DescribeNotificationConfigurationsWithContext(ctx, opts)
+			if err != nil {
+				return fmt.Errorf("Error describing notifications")
+			}
 
-		if len(resp.NotificationConfigurations) != 0 {
-			return fmt.Errorf("Error finding notification descriptions")
+			if len(resp.NotificationConfigurations) != 0 {
+				return fmt.Errorf("Error finding notification descriptions")
+			}
 		}
-
+		return nil
 	}
-	return nil
 }
 
 func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeNotificationConfigurationsOutput) resource.TestCheckFunc {

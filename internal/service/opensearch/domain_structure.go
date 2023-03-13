@@ -16,6 +16,10 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
+			if v, ok := group["anonymous_auth_enabled"].(bool); ok {
+				config.AnonymousAuthEnabled = aws.Bool(v)
+			}
+
 			if v, ok := group["internal_user_database_enabled"].(bool); ok {
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
@@ -173,7 +177,12 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.A
 
 	m := map[string]interface{}{}
 	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
-	if aws.BoolValue(advancedSecurityOptions.Enabled) {
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
+		m["anonymous_auth_enabled"] = aws.BoolValue(advancedSecurityOptions.AnonymousAuthEnabled)
+	}
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
@@ -277,19 +286,6 @@ func getMasterUserOptions(d *schema.ResourceData) []interface{} {
 		}
 	}
 	return []interface{}{}
-}
-
-func getUserDBEnabled(d *schema.ResourceData) bool {
-	if v, ok := d.GetOk("advanced_security_options"); ok {
-		options := v.([]interface{})
-		if len(options) > 0 && options[0] != nil {
-			m := options[0].(map[string]interface{})
-			if enabled, ok := m["internal_user_database_enabled"]; ok {
-				return enabled.(bool)
-			}
-		}
-	}
-	return false
 }
 
 func expandLogPublishingOptions(m *schema.Set) map[string]*opensearchservice.LogPublishingOption {

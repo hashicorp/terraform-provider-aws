@@ -1,6 +1,8 @@
 package kms
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	AliasNamePrefix = "alias/"

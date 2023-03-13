@@ -21,12 +21,13 @@ import (
 
 const BucketACLSeparator = ","
 
+// @SDKResource("aws_s3_bucket_acl")
 func ResourceBucketACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketACLCreate,
-		ReadContext:   resourceBucketACLRead,
-		UpdateContext: resourceBucketACLUpdate,
-		DeleteContext: resourceBucketACLDelete,
+		CreateWithoutTimeout: resourceBucketACLCreate,
+		ReadWithoutTimeout:   resourceBucketACLRead,
+		UpdateWithoutTimeout: resourceBucketACLUpdate,
+		DeleteWithoutTimeout: resourceBucketACLDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -127,7 +128,7 @@ func ResourceBucketACL() *schema.Resource {
 }
 
 func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -149,7 +150,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AccessControlPolicy = expandBucketACLAccessControlPolicy(v.([]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -163,7 +164,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -205,7 +206,7 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {

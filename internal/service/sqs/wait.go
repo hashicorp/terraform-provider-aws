@@ -1,6 +1,7 @@
 package sqs
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -22,42 +23,42 @@ const (
 	queueDeletedTimeout = 3 * time.Minute
 	queueTagsTimeout    = 60 * time.Second
 
-	queuePolicyReadTimeout = 20 * time.Second
+	queueAttributeReadTimeout = 20 * time.Second
 
 	queueStateExists = "exists"
 
-	queuePolicyStateNotEqual = "notequal"
-	queuePolicyStateEqual    = "equal"
+	queueAttributeStateNotEqual = "notequal"
+	queueAttributeStateEqual    = "equal"
 )
 
-func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]string) error {
+func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{queuePolicyStateNotEqual},
-		Target:                    []string{queuePolicyStateEqual},
-		Refresh:                   statusQueueAttributeState(conn, url, expected),
+		Pending:                   []string{queueAttributeStateNotEqual},
+		Target:                    []string{queueAttributeStateEqual},
+		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
 		Timeout:                   queueAttributePropagationTimeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitQueueDeleted(conn *sqs.SQS, url string) error {
+func waitQueueDeleted(ctx context.Context, conn *sqs.SQS, url string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
-		Refresh:                   statusQueueState(conn, url),
+		Refresh:                   statusQueueState(ctx, conn, url),
 		Timeout:                   queueDeletedTimeout,
 		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

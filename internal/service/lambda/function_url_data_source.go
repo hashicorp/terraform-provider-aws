@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_lambda_function_url")
 func DataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
@@ -89,7 +90,7 @@ func DataSourceFunctionURL() *schema.Resource {
 }
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

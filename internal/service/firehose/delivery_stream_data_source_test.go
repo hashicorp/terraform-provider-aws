@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_firehose_delivery_stream.test"
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -19,7 +20,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),

@@ -22,12 +22,13 @@ import (
 
 const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
+// @SDKResource("aws_connect_contact_flow_module")
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowModuleCreate,
-		ReadContext:   resourceContactFlowModuleRead,
-		UpdateContext: resourceContactFlowModuleUpdate,
-		DeleteContext: resourceContactFlowModuleDelete,
+		CreateWithoutTimeout: resourceContactFlowModuleCreate,
+		ReadWithoutTimeout:   resourceContactFlowModuleRead,
+		UpdateWithoutTimeout: resourceContactFlowModuleUpdate,
+		DeleteWithoutTimeout: resourceContactFlowModuleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -83,9 +84,9 @@ func ResourceContactFlowModule() *schema.Resource {
 }
 
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -135,7 +136,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -171,7 +172,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)
 
-	tags := KeyValueTags(resp.ContactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.ContactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -186,7 +187,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -240,7 +241,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -249,7 +250,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {

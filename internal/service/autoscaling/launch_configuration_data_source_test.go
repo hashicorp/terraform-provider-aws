@@ -88,6 +88,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 }
 
 func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_configuration.test"
 	resourceName := "aws_launch_configuration.test"
@@ -96,7 +97,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_metaOptions(rName),

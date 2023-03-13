@@ -1,6 +1,7 @@
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,14 +12,14 @@ import (
 )
 
 // StatusDeployment fetches the Deployment and its Status
-func StatusDeployment(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) resource.StateRefreshFunc {
+func StatusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetDeploymentInput{
 			ApiId:        aws.String(apiId),
 			DeploymentId: aws.String(deploymentId),
 		}
 
-		output, err := conn.GetDeployment(input)
+		output, err := conn.GetDeploymentWithContext(ctx, input)
 
 		if err != nil {
 			return nil, apigatewayv2.DeploymentStatusFailed, err
@@ -34,9 +35,9 @@ func StatusDeployment(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId strin
 	}
 }
 
-func StatusDomainName(conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
+func StatusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainName, err := FindDomainNameByName(conn, name)
+		domainName, err := FindDomainNameByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -55,13 +56,13 @@ func StatusDomainName(conn *apigatewayv2.ApiGatewayV2, name string) resource.Sta
 }
 
 // StatusVPCLink fetches the VPC Link and its Status
-func StatusVPCLink(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
+func StatusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),
 		}
 
-		output, err := conn.GetVpcLink(input)
+		output, err := conn.GetVpcLinkWithContext(ctx, input)
 
 		if err != nil {
 			return nil, apigatewayv2.VpcLinkStatusFailed, err

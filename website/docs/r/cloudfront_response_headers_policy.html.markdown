@@ -101,15 +101,15 @@ The following arguments are supported:
 * `access_control_allow_credentials` - (Required) A Boolean value that CloudFront uses as the value for the `Access-Control-Allow-Credentials` HTTP response header.
 * `access_control_allow_headers` - (Required) Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the `Access-Control-Allow-Headers` HTTP response header.
 * `access_control_allow_methods` - (Required) Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the `Access-Control-Allow-Methods` HTTP response header. Valid values: `GET` | `POST` | `OPTIONS` | `PUT` | `DELETE` | `HEAD` | `ALL`
-* `access_control_allow_origins` - (Optional) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
+* `access_control_allow_origins` - (Required) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
 * `access_control_expose_headers` - (Optional) Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the `Access-Control-Expose-Headers` HTTP response header.
-* `access_control_max_age_sec` - (Required) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
+* `access_control_max_age_sec` - (Optional) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
 * `origin_override` - (Required) A Boolean value that determines how CloudFront behaves for the HTTP response header.
 
 ### Custom Header
 
 * `header` - (Required) The HTTP response header name.
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides a response header with the same name received from the origin with the header specifies here.
+* `override` - (Required) Whether CloudFront overrides a response header with the same name received from the origin with the header specifies here.
 * `value` - (Required) The value for the HTTP response header.
 
 ### Security Headers Config
@@ -124,39 +124,39 @@ The following arguments are supported:
 ### Content Security Policy
 
 * `content_security_policy` - (Required) The policy directives and their values that CloudFront includes as values for the `Content-Security-Policy` HTTP response header.
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `Content-Security-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
+* `override` - (Required) Whether CloudFront overrides the `Content-Security-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Content Type Options
 
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `X-Content-Type-Options` HTTP response header received from the origin with the one specified in this response headers policy.
+* `override` - (Required) Whether CloudFront overrides the `X-Content-Type-Options` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Frame Options
 
 * `frame_option` - (Required) The value of the `X-Frame-Options` HTTP response header. Valid values: `DENY` | `SAMEORIGIN`
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `X-Frame-Options` HTTP response header received from the origin with the one specified in this response headers policy.
+* `override` - (Required) Whether CloudFront overrides the `X-Frame-Options` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Referrer Policy
 
 * `referrer_policy` - (Required) The value of the `Referrer-Policy` HTTP response header. Valid Values: `no-referrer` | `no-referrer-when-downgrade` | `origin` | `origin-when-cross-origin` | `same-origin` | `strict-origin` | `strict-origin-when-cross-origin` | `unsafe-url`
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `Referrer-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
+* `override` - (Required) Whether CloudFront overrides the `Referrer-Policy` HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Strict Transport Security
 
 * `access_control_max_age_sec` - (Required) A number that CloudFront uses as the value for the `max-age` directive in the `Strict-Transport-Security` HTTP response header.
-* `include_subdomains` - (Optional) A Boolean value that determines whether CloudFront includes the `includeSubDomains` directive in the `Strict-Transport-Security` HTTP response header.
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `Strict-Transport-Security` HTTP response header received from the origin with the one specified in this response headers policy.
-* `preload` - (Optional) A Boolean value that determines whether CloudFront includes the `preload` directive in the `Strict-Transport-Security` HTTP response header.
+* `include_subdomains` - (Optional) Whether CloudFront includes the `includeSubDomains` directive in the `Strict-Transport-Security` HTTP response header.
+* `override` - (Required) Whether CloudFront overrides the `Strict-Transport-Security` HTTP response header received from the origin with the one specified in this response headers policy.
+* `preload` - (Optional) Whether CloudFront includes the `preload` directive in the `Strict-Transport-Security` HTTP response header.
 
 ### XSS Protection
 
-* `mode_block` - (Required) A Boolean value that determines whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
-* `override` - (Required) A Boolean value that determines whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
+* `mode_block` - (Required) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
+* `override` - (Required) Whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
 * `report_uri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.
 
 ### Server Timing Headers Config
 
-* `enabled` - (Required) A Boolean that determines whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `enabled` - (Required) A Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `sampling_rate` - (Required) A number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to. Valid range: Minimum value of 0.0. Maximum value of 100.0.
 
 ## Attributes Reference

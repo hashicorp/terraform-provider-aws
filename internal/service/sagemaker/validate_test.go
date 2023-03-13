@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidSageMakerName",
 		"Valid-5a63Mak3r-Name",

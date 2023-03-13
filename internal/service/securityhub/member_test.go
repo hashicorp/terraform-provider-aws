@@ -1,6 +1,7 @@
 package securityhub_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccMember_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var member securityhub.Member
 	resourceName := "aws_securityhub_member.example"
 
@@ -22,12 +24,12 @@ func testAccMember_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &member),
+					testAccCheckMemberExists(ctx, resourceName, &member),
 				),
 			},
 			{
@@ -40,6 +42,7 @@ func testAccMember_basic(t *testing.T) {
 }
 
 func testAccMember_invite(t *testing.T) {
+	ctx := acctest.Context(t)
 	var member securityhub.Member
 	resourceName := "aws_securityhub_member.example"
 
@@ -47,12 +50,12 @@ func testAccMember_invite(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberDestroy,
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &member),
+					testAccCheckMemberExists(ctx, resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 				),
@@ -66,16 +69,16 @@ func testAccMember_invite(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(n string, member *securityhub.Member) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, n string, member *securityhub.Member) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
+		resp, err := conn.GetMembersWithContext(ctx, &securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
@@ -93,38 +96,40 @@ func testAccCheckMemberExists(n string, member *securityhub.Member) resource.Tes
 	}
 }
 
-func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_securityhub_member" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securityhub_member" {
+				continue
+			}
 
-		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
-			AccountIds: []*string{aws.String(rs.Primary.ID)},
-		})
+			resp, err := conn.GetMembersWithContext(ctx, &securityhub.GetMembersInput{
+				AccountIds: []*string{aws.String(rs.Primary.ID)},
+			})
 
-		if tfawserr.ErrCodeEquals(err, tfsecurityhub.ErrCodeBadRequestException) {
-			continue
-		}
+			if tfawserr.ErrCodeEquals(err, tfsecurityhub.ErrCodeBadRequestException) {
+				continue
+			}
 
-		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-			continue
-		}
+			if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+				continue
+			}
 
-		if err != nil {
-			return fmt.Errorf("error getting Security Hub Member (%s): %w", rs.Primary.ID, err)
-		}
+			if err != nil {
+				return fmt.Errorf("error getting Security Hub Member (%s): %w", rs.Primary.ID, err)
+			}
 
-		if len(resp.Members) != 0 {
-			return fmt.Errorf("Security Hub member still exists")
+			if len(resp.Members) != 0 {
+				return fmt.Errorf("Security Hub member still exists")
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccMemberConfig_basic(accountId, email string) string {

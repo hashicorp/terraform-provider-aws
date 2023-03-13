@@ -1,6 +1,7 @@
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccSageMakerDevice_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
@@ -24,12 +26,12 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy,
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(resourceName, &device),
+					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "device.#", "1"),
@@ -46,6 +48,7 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
@@ -54,12 +57,12 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy,
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(resourceName, &device),
+					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", rName),
 				),
 			},
@@ -71,7 +74,7 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 			{
 				Config: testAccDeviceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(resourceName, &device),
+					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", "test"),
 				),
 			},
@@ -80,6 +83,7 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
@@ -88,14 +92,14 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy,
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(resourceName, &device),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
+					testAccCheckDeviceExists(ctx, resourceName, &device),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,6 +108,7 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
+	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
@@ -112,14 +117,14 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy,
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(resourceName, &device),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
+					testAccCheckDeviceExists(ctx, resourceName, &device),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,37 +132,39 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_device" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_device" {
+				continue
+			}
+
+			deviceFleetName, deviceName, err := tfsagemaker.DecodeDeviceId(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			device, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if aws.StringValue(device.DeviceName) == deviceName && aws.StringValue(device.DeviceFleetName) == deviceFleetName {
+				return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
+			}
 		}
 
-		deviceFleetName, deviceName, err := tfsagemaker.DecodeDeviceId(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		device, err := tfsagemaker.FindDeviceByName(conn, deviceFleetName, deviceName)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(device.DeviceName) == deviceName && aws.StringValue(device.DeviceFleetName) == deviceFleetName {
-			return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDeviceExists(n string, device *sagemaker.DescribeDeviceOutput) resource.TestCheckFunc {
+func testAccCheckDeviceExists(ctx context.Context, n string, device *sagemaker.DescribeDeviceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,8 +180,8 @@ func testAccCheckDeviceExists(n string, device *sagemaker.DescribeDeviceOutput) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := tfsagemaker.FindDeviceByName(conn, deviceFleetName, deviceName)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		resp, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 		if err != nil {
 			return err
 		}

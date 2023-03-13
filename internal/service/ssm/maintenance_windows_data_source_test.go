@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_maintenance_windows.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -20,7 +21,7 @@ func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowDestroy,
+		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowsDataSourceConfig_filterName(rName1, rName2, rName3),

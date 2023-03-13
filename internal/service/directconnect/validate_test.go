@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidConnectionBandWidth(t *testing.T) {
+	t.Parallel()
+
 	validBandwidths := []string{
 		"1Gbps",
 		"2Gbps",
@@ -42,6 +44,8 @@ func TestValidConnectionBandWidth(t *testing.T) {
 }
 
 func TestValidAmazonSideASN(t *testing.T) {
+	t.Parallel()
+
 	validAsns := []string{
 		"7224",
 		"9059",

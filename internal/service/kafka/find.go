@@ -35,6 +35,31 @@ func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafk
 	return output.ClusterInfo, nil
 }
 
+func findClusterV2ByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
+	input := &kafka.DescribeClusterV2Input{
+		ClusterArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeClusterV2WithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ClusterInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ClusterInfo, nil
+}
+
 func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
 	input := &kafka.DescribeClusterOperationInput{
 		ClusterOperationArn: aws.String(arn),
@@ -60,12 +85,12 @@ func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn strin
 	return output.ClusterOperationInfo, nil
 }
 
-func FindConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+func FindConfigurationByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	input := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeConfiguration(input)
+	output, err := conn.DescribeConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
 		return nil, &resource.NotFoundError{
@@ -86,13 +111,13 @@ func FindConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfi
 }
 
 // FindScramSecrets returns the matching MSK Cluster's associated secrets
-func FindScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
+func FindScramSecrets(ctx context.Context, conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	input := &kafka.ListScramSecretsInput{
 		ClusterArn: aws.String(clusterArn),
 	}
 
 	var scramSecrets []*string
-	err := conn.ListScramSecretsPages(input, func(page *kafka.ListScramSecretsOutput, lastPage bool) bool {
+	err := conn.ListScramSecretsPagesWithContext(ctx, input, func(page *kafka.ListScramSecretsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -101,4 +126,18 @@ func FindScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	})
 
 	return scramSecrets, err
+}
+
+func FindServerlessClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
+	output, err := findClusterV2ByARN(ctx, conn, arn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Serverless == nil {
+		return nil, tfresource.NewEmptyResultError(arn)
+	}
+
+	return output, nil
 }

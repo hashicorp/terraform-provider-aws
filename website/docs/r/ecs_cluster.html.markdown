@@ -90,6 +90,7 @@ The following arguments are supported:
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
 * `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
+* `service_connect_defaults` - (Optional) Configures a default Service Connect namespace. Detailed below.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -121,6 +122,10 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
 * `value` -  (Required) The value to assign to the setting. Valid values are `enabled` and `disabled`.
+
+### `service_connect_defaults`
+
+* `namespace` - (Required) The ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
 
 ## Attributes Reference
 

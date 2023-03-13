@@ -12,18 +12,19 @@ import (
 )
 
 func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists("aws_ses_email_identity.test"),
+					testAccCheckEmailIdentityExists(ctx, "aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
 				),
 			},
@@ -32,18 +33,19 @@ func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
 }
 
 func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists("aws_ses_email_identity.test"),
+					testAccCheckEmailIdentityExists(ctx, "aws_ses_email_identity.test"),
 					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
 				),
 			},

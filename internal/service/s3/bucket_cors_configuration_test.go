@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
@@ -25,12 +27,12 @@ func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -51,6 +53,7 @@ func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
@@ -58,13 +61,13 @@ func TestAccS3BucketCorsConfiguration_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketCorsConfiguration(), resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketCorsConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,6 +76,7 @@ func TestAccS3BucketCorsConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
@@ -80,13 +84,13 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 
 			{
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -102,7 +106,7 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 			{
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -124,7 +128,7 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_methods.#": "1",
@@ -137,6 +141,7 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_SingleRule(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
@@ -144,12 +149,12 @@ func TestAccS3BucketCorsConfiguration_SingleRule(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -178,6 +183,7 @@ func TestAccS3BucketCorsConfiguration_SingleRule(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_MultipleRules(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_cors_configuration.test"
 
@@ -185,12 +191,12 @@ func TestAccS3BucketCorsConfiguration_MultipleRules(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketCorsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -221,6 +227,7 @@ func TestAccS3BucketCorsConfiguration_MultipleRules(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -229,12 +236,12 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
@@ -246,7 +253,7 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 			{
 				Config: testAccBucketCORSConfigurationConfig_migrateRuleNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -263,6 +270,7 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 }
 
 func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -271,12 +279,12 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
@@ -288,7 +296,7 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 			{
 				Config: testAccBucketCORSConfigurationConfig_migrateRuleChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketCorsConfigurationExists(resourceName),
+					testAccCheckBucketCorsConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -303,46 +311,48 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketCorsConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckBucketCorsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_cors_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_cors_configuration" {
+				continue
+			}
+
+			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &s3.GetBucketCorsInput{
+				Bucket: aws.String(bucket),
+			}
+
+			if expectedBucketOwner != "" {
+				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+			}
+
+			output, err := conn.GetBucketCorsWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, tfs3.ErrCodeNoSuchCORSConfiguration) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting S3 Bucket CORS configuration (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("S3 Bucket CORS configuration (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &s3.GetBucketCorsInput{
-			Bucket: aws.String(bucket),
-		}
-
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
-
-		output, err := conn.GetBucketCors(input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, tfs3.ErrCodeNoSuchCORSConfiguration) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket CORS configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("S3 Bucket CORS configuration (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketCorsConfigurationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -353,7 +363,7 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -368,8 +378,8 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-			return conn.GetBucketCors(input)
+		corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+			return conn.GetBucketCorsWithContext(ctx, input)
 		}, tfs3.ErrCodeNoSuchCORSConfiguration)
 
 		if err != nil {

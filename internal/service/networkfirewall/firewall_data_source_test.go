@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -20,14 +21,14 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),
@@ -36,11 +37,15 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_policy_arn", policyResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.capacity_usage_summary.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
 					}),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", vpcResourceName, "id"),
@@ -55,6 +60,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 }
 
 func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -63,14 +69,14 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),
@@ -79,11 +85,15 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_policy_arn", policyResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.capacity_usage_summary.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
 					}),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", vpcResourceName, "id"),
@@ -98,6 +108,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 }
 
 func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -106,14 +117,14 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_arnandname(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),
@@ -122,11 +133,15 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.type", "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_policy_arn", policyResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.capacity_usage_summary.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
 					}),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", vpcResourceName, "id"),

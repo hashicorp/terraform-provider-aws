@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccS3ObjectCopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
@@ -25,12 +27,12 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectCopyDestroy,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName2),
 					resource.TestCheckResourceAttr(resourceName, "key", key),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
@@ -42,6 +44,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 }
 
 func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 
@@ -49,12 +52,12 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectCopyDestroy,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_bucketKeyEnabledBucket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
 				),
 			},
@@ -63,6 +66,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 }
 
 func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 
@@ -70,12 +74,12 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectCopyDestroy,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectCopyConfig_bucketKeyEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
 				),
 			},
@@ -83,28 +87,29 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	})
 }
 
-func testAccCheckObjectCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_object_copy" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_object_copy" {
+				continue
+			}
 
-		_, err := conn.HeadObject(
-			&s3.HeadObjectInput{
+			_, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 				Key:     aws.String(rs.Primary.Attributes["key"]),
 				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 			})
-		if err == nil {
-			return fmt.Errorf("AWS S3 Object still exists: %s", rs.Primary.ID)
+			if err == nil {
+				return fmt.Errorf("AWS S3 Object still exists: %s", rs.Primary.ID)
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
+func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,13 +120,12 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Object ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		_, err := conn.GetObject(
-			&s3.GetObjectInput{
-				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-				Key:     aws.String(rs.Primary.Attributes["key"]),
-				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
-			})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		_, err := conn.GetObjectWithContext(ctx, &s3.GetObjectInput{
+			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
+			Key:     aws.String(rs.Primary.Attributes["key"]),
+			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
+		})
 		if err != nil {
 			return fmt.Errorf("S3 Object error: %s", err)
 		}

@@ -1,11 +1,16 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -102,6 +107,29 @@ func CustomFiltersSchema() *schema.Schema {
 	}
 }
 
+// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
+func CustomFiltersBlock() datasourceschema.Block {
+	return datasourceschema.SetNestedBlock{
+		NestedObject: datasourceschema.NestedBlockObject{
+			Attributes: map[string]datasourceschema.Attribute{
+				"name": datasourceschema.StringAttribute{
+					Required: true,
+				},
+				"values": datasourceschema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+				},
+			},
+		},
+	}
+}
+
+// customFilterData represents a single configured filter.
+type customFilterData struct {
+	Name   types.String `tfsdk:"name"`
+	Values types.Set    `tfsdk:"values"`
+}
+
 // BuildCustomFilterList takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
 // and transforms it into a []*ec2.Filter representing the same filter
@@ -131,6 +159,35 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 		filters[filterIdx] = &ec2.Filter{
 			Name:   &name,
 			Values: values,
+		}
+	}
+
+	return filters
+}
+
+func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
+	if filterSet.IsNull() || filterSet.IsUnknown() {
+		return nil
+	}
+
+	var filters []*ec2.Filter
+
+	for _, v := range filterSet.Elements() {
+		var data customFilterData
+
+		if tfsdk.ValueAs(ctx, v, &data).HasError() {
+			continue
+		}
+
+		if data.Name.IsNull() || data.Name.IsUnknown() {
+			continue
+		}
+
+		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
+			filters = append(filters, &ec2.Filter{
+				Name:   flex.StringFromFramework(ctx, data.Name),
+				Values: v,
+			})
 		}
 	}
 

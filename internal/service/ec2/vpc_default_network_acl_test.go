@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
@@ -30,7 +32,7 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -50,6 +52,7 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,7 +66,7 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
@@ -78,6 +81,7 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -91,7 +95,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -104,7 +108,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -113,7 +117,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -123,6 +127,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +141,7 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_denyIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"protocol":   "-1",
@@ -159,6 +164,7 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -172,7 +178,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_includingIPv6Rule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -195,6 +201,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -208,7 +215,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
@@ -225,7 +232,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnetsRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,6 +246,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 }
 
 func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +260,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
@@ -278,7 +286,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 			{
 				Config: testAccVPCDefaultNetworkACLConfig_subnetsMove(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 				),
 			},
@@ -296,7 +304,7 @@ func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDefaultNetworkACLExists(n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -307,9 +315,9 @@ func testAccCheckDefaultNetworkACLExists(n string, v *ec2.NetworkAcl) resource.T
 			return fmt.Errorf("No EC2 Default Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindNetworkACLByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

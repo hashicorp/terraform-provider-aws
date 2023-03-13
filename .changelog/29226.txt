@@ -1,0 +1,8 @@
+
+```release-note:bug
+resource/aws_sns_topic: Fixes potential race condition when reading policy document.
+```
+
+```release-note:bug
+resource/aws_sns_topic_policy: Fixes potential race condition when reading policy document.
+```

@@ -11,4 +11,3 @@ Only three variables are required to run this example. They can be provided by `
 ```console
 terraform apply -var="aws_region=us-west-2"
 ```
-

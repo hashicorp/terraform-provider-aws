@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccIAMUser_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetUserOutput
 
 	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -30,12 +32,12 @@ func TestAccIAMUser_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name1, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name1, "/"),
 				),
 			},
@@ -49,7 +51,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name2, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name2, "/path2/"),
 				),
 			},
@@ -58,6 +60,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 }
 
 func TestAccIAMUser_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,13 +70,13 @@ func TestAccIAMUser_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserDisappears(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserDisappears(ctx, &user),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,6 +85,7 @@ func TestAccIAMUser_disappears(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -91,13 +95,13 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserCreatesAccessKey(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserCreatesAccessKey(ctx, &user),
 				),
 			},
 			{
@@ -112,6 +116,7 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,13 +126,13 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserCreatesLoginProfile(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserCreatesLoginProfile(ctx, &user),
 				),
 			},
 			{
@@ -142,6 +147,7 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,13 +157,13 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserCreatesMFADevice(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserCreatesMFADevice(ctx, &user),
 				),
 			},
 			{
@@ -172,6 +178,7 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,13 +188,13 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserUploadsSSHKey(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserUploadsSSHKey(ctx, &user),
 				),
 			},
 			{
@@ -201,6 +208,7 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -210,13 +218,13 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserServiceSpecificCredential(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserServiceSpecificCredential(ctx, &user),
 				),
 			},
 			{
@@ -230,6 +238,7 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 }
 
 func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -239,13 +248,13 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserUploadSigningCertificate(&user),
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserUploadSigningCertificate(ctx, t, &user),
 				),
 			},
 			{
@@ -260,6 +269,7 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 }
 
 func TestAccIAMUser_nameChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetUserOutput
 
 	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -271,12 +281,12 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name1, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 				),
 			},
 			{
@@ -289,7 +299,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name2, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 				),
 			},
 		},
@@ -297,6 +307,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 }
 
 func TestAccIAMUser_pathChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetUserOutput
 
 	name := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -308,12 +319,12 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 				),
 			},
 			{
@@ -326,7 +337,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
 				),
 			},
 		},
@@ -334,6 +345,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 }
 
 func TestAccIAMUser_permissionsBoundary(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -346,13 +358,13 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creation
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
@@ -368,7 +380,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary2),
 				),
@@ -384,7 +396,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					testAccCheckUserPermissionsBoundary(&user, ""),
 				),
@@ -393,7 +405,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
@@ -402,7 +414,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					testAccCheckUserPermissionsBoundary(&user, ""),
 				),
@@ -412,6 +424,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 }
 
 func TestAccIAMUser_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -421,12 +434,12 @@ func TestAccIAMUser_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-Name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-tag2"),
@@ -442,7 +455,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 			{
 				Config: testAccUserConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-tagUpdate"),
 				),
@@ -451,32 +464,34 @@ func TestAccIAMUser_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_user" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_user" {
+				continue
+			}
+
+			// Try to get user
+			_, err := conn.GetUserWithContext(ctx, &iam.GetUserInput{
+				UserName: aws.String(rs.Primary.ID),
+			})
+			if err == nil {
+				return fmt.Errorf("still exist.")
+			}
+
+			// Verify the error is what we want
+			if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				return err
+			}
 		}
 
-		// Try to get user
-		_, err := conn.GetUser(&iam.GetUserInput{
-			UserName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			return fmt.Errorf("still exist.")
-		}
-
-		// Verify the error is what we want
-		if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckUserExists(n string, res *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string, res *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -487,9 +502,9 @@ func testAccCheckUserExists(n string, res *iam.GetUserOutput) resource.TestCheck
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		resp, err := conn.GetUser(&iam.GetUserInput{
+		resp, err := conn.GetUserWithContext(ctx, &iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -516,13 +531,13 @@ func testAccCheckUserAttributes(user *iam.GetUserOutput, name string, path strin
 	}
 }
 
-func testAccCheckUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserDisappears(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		userName := aws.StringValue(getUserOutput.User.UserName)
 
-		_, err := conn.DeleteUser(&iam.DeleteUserInput{
+		_, err := conn.DeleteUserWithContext(ctx, &iam.DeleteUserInput{
 			UserName: aws.String(userName),
 		})
 		if err != nil {
@@ -549,15 +564,15 @@ func testAccCheckUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, expec
 	}
 }
 
-func testAccCheckUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserCreatesAccessKey(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := conn.CreateAccessKey(input); err != nil {
+		if _, err := conn.CreateAccessKeyWithContext(ctx, input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -565,9 +580,9 @@ func testAccCheckUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource
 	}
 }
 
-func testAccCheckUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserCreatesLoginProfile(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		password, err := tfiam.GeneratePassword(32)
 		if err != nil {
 			return err
@@ -577,7 +592,7 @@ func testAccCheckUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resou
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := conn.CreateLoginProfile(input); err != nil {
+		if _, err := conn.CreateLoginProfileWithContext(ctx, input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -585,16 +600,16 @@ func testAccCheckUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resou
 	}
 }
 
-func testAccCheckUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserCreatesMFADevice(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 getUserOutput.User.Path,
 			VirtualMFADeviceName: getUserOutput.User.UserName,
 		}
 
-		createVirtualMFADeviceOutput, err := conn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
+		createVirtualMFADeviceOutput, err := conn.CreateVirtualMFADeviceWithContext(ctx, createVirtualMFADeviceInput)
 		if err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -616,7 +631,7 @@ func testAccCheckUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource
 			UserName:            getUserOutput.User.UserName,
 		}
 
-		if _, err := conn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
+		if _, err := conn.EnableMFADeviceWithContext(ctx, enableVirtualMFADeviceInput); err != nil {
 			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -625,22 +640,21 @@ func testAccCheckUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource
 }
 
 // Creates an IAM User SSH Key outside of Terraform to verify that it is deleted when `force_destroy` is set
-func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserUploadsSSHKey(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		publicKey, _, err := RandSSHKeyPairSize(2048, acctest.DefaultEmailAddress)
 		if err != nil {
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         getUserOutput.User.UserName,
 			SSHPublicKeyBody: aws.String(publicKey),
 		}
 
-		_, err = conn.UploadSSHPublicKey(input)
+		_, err = conn.UploadSSHPublicKeyWithContext(ctx, input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) SSH key: %w", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -650,17 +664,16 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 }
 
 // Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
-func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserServiceSpecificCredential(ctx context.Context, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.CreateServiceSpecificCredentialInput{
 			UserName:    getUserOutput.User.UserName,
 			ServiceName: aws.String("codecommit.amazonaws.com"),
 		}
 
-		_, err := conn.CreateServiceSpecificCredential(input)
+		_, err := conn.CreateServiceSpecificCredentialWithContext(ctx, input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) Service Specifc Credential: %w", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -669,19 +682,19 @@ func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput)
 	}
 }
 
-func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		key := acctest.TLSRSAPrivateKeyPEM(2048)
-		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 		input := &iam.UploadSigningCertificateInput{
 			CertificateBody: aws.String(certificate),
 			UserName:        getUserOutput.User.UserName,
 		}
 
-		if _, err := conn.UploadSigningCertificate(input); err != nil {
+		if _, err := conn.UploadSigningCertificateWithContext(ctx, input); err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 

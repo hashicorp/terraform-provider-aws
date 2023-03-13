@@ -15,6 +15,8 @@ import (
 )
 
 func TestAvailabilityZonesSort(t *testing.T) {
+	t.Parallel()
+
 	azs := []*ec2.AvailabilityZone{
 		{
 			ZoneName: aws.String("name_YYY"),

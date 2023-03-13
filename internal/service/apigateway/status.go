@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func vpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) resource.StateRefreshFunc {
+func vpcLinkStatus(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
+		output, err := conn.GetVpcLinkWithContext(ctx, &apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),
 		})
 		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
@@ -31,9 +32,9 @@ func vpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) resource.State
 	}
 }
 
-func stageCacheStatus(conn *apigateway.APIGateway, restApiId, name string) resource.StateRefreshFunc {
+func stageCacheStatus(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStageByName(conn, restApiId, name)
+		output, err := FindStageByName(ctx, conn, restApiId, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

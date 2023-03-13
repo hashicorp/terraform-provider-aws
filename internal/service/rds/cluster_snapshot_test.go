@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccRDSClusterSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
@@ -24,12 +26,12 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
@@ -56,6 +58,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 }
 
 func TestAccRDSClusterSnapshot_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
@@ -64,12 +67,12 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -89,7 +92,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -98,7 +101,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -107,35 +110,37 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_cluster_snapshot" {
-			continue
-		}
-
-		input := &rds.DescribeDBClusterSnapshotsInput{
-			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeDBClusterSnapshots(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_cluster_snapshot" {
 				continue
 			}
-			return err
+
+			input := &rds.DescribeDBClusterSnapshotsInput{
+				DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+					continue
+				}
+				return err
+			}
+
+			if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
+				return fmt.Errorf("RDS DB Cluster Snapshot %q still exists", rs.Primary.ID)
+			}
 		}
 
-		if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("RDS DB Cluster Snapshot %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *rds.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, resourceName string, dbClusterSnapshot *rds.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -146,13 +151,13 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *r
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		request := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
 		}
 
-		response, err := conn.DescribeDBClusterSnapshots(request)
+		response, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, request)
 		if err != nil {
 			return err
 		}
@@ -251,7 +256,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -305,7 +310,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {

@@ -1,6 +1,7 @@
 package lambda_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccLambdaAlias_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
@@ -30,12 +32,12 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy,
+		CheckDestroy:             testAccCheckAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
@@ -57,6 +59,7 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 }
 
 func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.AliasConfiguration
 
 	resourceName := "aws_lambda_alias.test"
@@ -66,12 +69,12 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy,
+		CheckDestroy:             testAccCheckAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig_usingFunctionName(rName, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
@@ -89,6 +92,7 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 }
 
 func TestAccLambdaAlias_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
@@ -107,12 +111,12 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy,
+		CheckDestroy:             testAccCheckAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
@@ -126,7 +130,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 			{
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasNameUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePartUpdate),
 				),
@@ -136,6 +140,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 }
 
 func TestAccLambdaAlias_routing(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
@@ -152,12 +157,12 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy,
+		CheckDestroy:             testAccCheckAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
@@ -171,7 +176,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 			{
 				Config: testAccAliasConfig_routing(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingExistsConfig(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
@@ -180,7 +185,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 			{
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(resourceName, &conf),
+					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
@@ -190,28 +195,29 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 	})
 }
 
-func testAccCheckAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lambda_alias" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lambda_alias" {
+				continue
+			}
+
+			_, err := conn.GetAliasWithContext(ctx, &lambda.GetAliasInput{
+				FunctionName: aws.String(rs.Primary.ID),
+			})
+
+			if err == nil {
+				return fmt.Errorf("Lambda alias was not deleted")
+			}
 		}
 
-		_, err := conn.GetAlias(&lambda.GetAliasInput{
-			FunctionName: aws.String(rs.Primary.ID),
-		})
-
-		if err == nil {
-			return fmt.Errorf("Lambda alias was not deleted")
-		}
-
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAliasExists(n string, mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, n string, mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -222,14 +228,14 @@ func testAccCheckAliasExists(n string, mapping *lambda.AliasConfiguration) resou
 			return fmt.Errorf("Lambda alias not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		params := &lambda.GetAliasInput{
 			FunctionName: aws.String(rs.Primary.ID),
 			Name:         aws.String(rs.Primary.Attributes["name"]),
 		}
 
-		getAliasConfiguration, err := conn.GetAlias(params)
+		getAliasConfiguration, err := conn.GetAliasWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -322,7 +328,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
-  description = "IAM policy for for Lamda alias testing"
+  description = "IAM policy for Lamda alias testing"
 
   policy = <<EOF
 {
@@ -357,7 +363,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -380,7 +386,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -403,7 +409,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

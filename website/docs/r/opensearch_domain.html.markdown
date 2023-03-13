@@ -59,59 +59,63 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["es:*"]
+    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["66.193.100.22/32"]
+    }
+  }
+}
+
 resource "aws_opensearch_domain" "example" {
   domain_name = var.domain
 
   # ... other configuration ...
 
-  access_policies = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "es:*",
-      "Principal": "*",
-      "Effect": "Allow",
-      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
-      "Condition": {
-        "IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
-      }
-    }
-  ]
-}
-POLICY
+  access_policies = data.aws_iam_policy_document.example.json
 }
 ```
 
-### Log Publishing to CloudWatch Logs
+### Log publishing to CloudWatch Logs
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "example"
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
 
-  policy_document = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "es.amazonaws.com"
-      },
-      "Action": [
-        "logs:PutLogEvents",
-        "logs:PutLogEventsBatch",
-        "logs:CreateLogStream"
-      ],
-      "Resource": "arn:aws:logs:*"
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
     }
-  ]
+
+    actions = [
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+      "logs:CreateLogStream",
+    ]
+
+    resources = ["arn:aws:logs:*"]
+  }
 }
-CONFIG
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_name     = "example"
+  policy_document = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_opensearch_domain" "example" {
@@ -171,6 +175,20 @@ resource "aws_iam_service_linked_role" "example" {
   aws_service_name = "opensearchservice.amazonaws.com"
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["es:*"]
+    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+  }
+}
+
 resource "aws_opensearch_domain" "example" {
   domain_name    = var.domain
   engine_version = "OpenSearch_1.0"
@@ -193,25 +211,101 @@ resource "aws_opensearch_domain" "example" {
     "rest.action.multi.allow_explicit_index" = "true"
   }
 
-  access_policies = <<CONFIG
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "es:*",
-			"Principal": "*",
-			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
-		}
-	]
-}
-CONFIG
+  access_policies = data.aws_iam_policy_document.example.json
 
   tags = {
     Domain = "TestDomain"
   }
 
   depends_on = [aws_iam_service_linked_role.example]
+}
+```
+
+### Enabling fine-grained access control on an existing domain
+
+This example shows two configurations: one to create a domain without fine-grained access control and the second to modify the domain to enable fine-grained access control. For more information, see [Enabling fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html).
+
+#### First apply
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = false
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+```
+
+#### Second apply
+
+Notice that the only change is `advanced_security_options.0.enabled` is now set to `true`.
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 }
 ```
 
@@ -241,7 +335,8 @@ The following arguments are optional:
 
 ### advanced_security_options
 
-* `enabled` - (Required, Forces new resource) Whether advanced security is enabled.
+* `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
+* `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
 
@@ -311,7 +406,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
 * `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
-* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type. Valid values are between `125` and `1000`.
+* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
 
@@ -364,7 +459,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)

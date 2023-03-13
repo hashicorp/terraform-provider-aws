@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccCECostCategoryDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_cost_category.test"
@@ -23,8 +24,9 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCostCategoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cost_category_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_value", resourceName, "default_value"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule_version", resourceName, "rule_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule.%", resourceName, "rule.%"),
@@ -36,9 +38,7 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 }
 
 func testAccCostCategoryDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCostCategoryConfig_basic(rName),
-		`
+	return acctest.ConfigCompose(testAccCostCategoryConfig_basic(rName), `
 data "aws_ce_cost_category" "test" {
   cost_category_arn = aws_ce_cost_category.test.arn
 }

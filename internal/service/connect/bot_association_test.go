@@ -16,6 +16,7 @@ import (
 )
 
 func testAccBotAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
@@ -24,12 +25,12 @@ func testAccBotAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotAssociationDestroy,
+		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotAssociationExists(resourceName),
+					testAccCheckBotAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttr(resourceName, "lex_bot.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lex_bot.0.name", "aws_lex_bot.test", "name"),
@@ -46,6 +47,7 @@ func testAccBotAssociation_basic(t *testing.T) {
 }
 
 func testAccBotAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
@@ -55,13 +57,13 @@ func testAccBotAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotAssociationDestroy,
+		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
+					testAccCheckBotAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +71,7 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBotAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBotAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -85,9 +87,9 @@ func testAccCheckBotAssociationExists(resourceName string) resource.TestCheckFun
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
-		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(context.Background(), conn, instanceID, name, region)
+		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
 
 		if err != nil {
 			return fmt.Errorf("error finding Connect Bot Association (%s): %w", rs.Primary.ID, err)
@@ -101,38 +103,40 @@ func testAccCheckBotAssociationExists(resourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccCheckBotAssociationDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_bot_association" {
-			continue
+func testAccCheckBotAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_bot_association" {
+				continue
+			}
+
+			if rs.Primary.ID == "" {
+				return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
+			}
+
+			instanceID, name, region, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+
+			lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error finding Connect Bot Association (%s): %w", rs.Primary.ID, err)
+			}
+
+			if lexBot != nil {
+				return fmt.Errorf("Connect Bot Association (%s) still exists", rs.Primary.ID)
+			}
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
-		}
-
-		instanceID, name, region, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(context.Background(), conn, instanceID, name, region)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error finding Connect Bot Association (%s): %w", rs.Primary.ID, err)
-		}
-
-		if lexBot != nil {
-			return fmt.Errorf("Connect Bot Association (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-	return nil
 }
 
 func testAccBotV1AssociationConfigBase(rName, rName2 string) string {

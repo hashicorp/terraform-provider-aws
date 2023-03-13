@@ -10,7 +10,6 @@ on:
     paths:
       - .github/workflows/goreleaser-ci.yml
       - .goreleaser.yml
-      - .go-version
       - go.sum
       - main.go
       - internal/**
@@ -42,14 +41,14 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser check
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           args: check
 
@@ -62,13 +61,13 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser build
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           args: build --config .github/goreleaser-cross-compiler-test.yml --id 32-bit-arch --snapshot

@@ -17,7 +17,7 @@ func TestCompareActualEngineVersion(t *testing.T) {
 		"point version upgrade": {
 			configuredVersion:           "8.0",
 			actualVersion:               "8.0.27",
-			expectedEngineVersion:       "",
+			expectedEngineVersion:       "8.0",
 			expectedEngineVersionActual: "8.0.27",
 		},
 		"minor version upgrade": {
@@ -61,8 +61,11 @@ func TestCompareActualEngineVersion(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			r := ResourceCluster()
 			d := r.Data(nil)
+			d.Set("engine_version", test.configuredVersion)
 			compareActualEngineVersion(d, test.configuredVersion, test.actualVersion)
 
 			if want, got := test.expectedEngineVersion, d.Get("engine_version"); got != want {

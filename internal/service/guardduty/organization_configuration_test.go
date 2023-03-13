@@ -10,19 +10,20 @@ import (
 )
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// GuardDuty Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckDetectorDestroy,
+		CheckDestroy: testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
@@ -48,17 +49,18 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 }
 
 func testAccOrganizationConfiguration_s3logs(t *testing.T) {
+	ctx := acctest.Context(t)
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
@@ -90,17 +92,18 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 }
 
 func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
+	ctx := acctest.Context(t)
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(true),
@@ -134,17 +137,18 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 }
 
 func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
+	ctx := acctest.Context(t)
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(true),

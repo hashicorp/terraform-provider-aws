@@ -73,3 +73,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
+
+## Import
+
+Cloudfront Origin Request Policies can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
+```

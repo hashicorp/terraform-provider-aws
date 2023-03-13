@@ -1,6 +1,7 @@
 package cloudwatch_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
@@ -26,12 +28,12 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -45,6 +47,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 }
 
 func TestAccCloudWatchDashboard_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
@@ -53,13 +56,13 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(resourceName, &dashboard),
-					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(ctx, resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -71,8 +74,8 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 			{
 				Config: testAccDashboardConfig_updateBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(resourceName, &dashboard),
-					testAccCheckDashboardBodyIsExpected(resourceName, updatedWidget),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(ctx, resourceName, updatedWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -81,6 +84,7 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 }
 
 func TestAccCloudWatchDashboard_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := sdkacctest.RandInt()
@@ -89,42 +93,42 @@ func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(resourceName, &dashboard),
-					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(ctx, resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 			{
 				Config: testAccDashboardConfig_basic(rInt2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(resourceName, &dashboard),
-					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(ctx, resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt2)),
-					testAccCheckDashboardDestroyPrevious(testAccDashboardName(rInt)),
+					testAccCheckDashboardDestroyPrevious(ctx, testAccDashboardName(rInt)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetDashboard(&params)
+		resp, err := conn.GetDashboardWithContext(ctx, &params)
 		if err != nil {
 			return err
 		}
@@ -135,39 +139,41 @@ func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOut
 	}
 }
 
-func testAccCheckDashboardDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_dashboard" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_dashboard" {
+				continue
+			}
+
+			params := cloudwatch.GetDashboardInput{
+				DashboardName: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.GetDashboardWithContext(ctx, &params)
+			if err == nil {
+				return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+			}
+			if !tfcloudwatch.IsDashboardNotFoundErr(err) {
+				return err
+			}
 		}
 
-		params := cloudwatch.GetDashboardInput{
-			DashboardName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetDashboard(&params)
-		if err == nil {
-			return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-		}
-		if !tfcloudwatch.IsDashboardNotFoundErr(err) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
+func testAccCheckDashboardDestroyPrevious(ctx context.Context, dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(dashboardName),
 		}
 
-		_, err := conn.GetDashboard(&params)
+		_, err := conn.GetDashboardWithContext(ctx, &params)
 
 		if err == nil {
 			return fmt.Errorf("Dashboard still exists: %s", dashboardName)
@@ -241,19 +247,19 @@ EOF
 `, rInt, updatedWidget)
 }
 
-func testAccCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {
+func testAccCheckDashboardBodyIsExpected(ctx context.Context, resourceName, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetDashboard(&params)
+		resp, err := conn.GetDashboardWithContext(ctx, &params)
 		if err != nil {
 			return err
 		}
