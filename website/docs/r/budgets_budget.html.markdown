@@ -138,7 +138,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 }
 ```
 
-Create a Cost Filter using Resource Tags 
+Create a Cost Filter using Resource Tags
 
 ```terraform
 resource "aws_budgets_budget" "cost" {
@@ -149,6 +149,7 @@ resource "aws_budgets_budget" "cost" {
       "TagKey$TagValue",
     ]
   }
+}
 ```
 
 Create a cost_filter using resource tags, obtaining the tag value from a terraform variable
@@ -162,6 +163,7 @@ resource "aws_budgets_budget" "cost" {
       "TagKey${"$"}${var.TagValue}"
     ]
   }
+}
 ```
 
 ## Argument Reference
@@ -229,20 +231,20 @@ Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-mana
 
 Based on your choice of budget type, you can choose one or more of the available budget filters.
 
-  * `PurchaseType`
-  * `UsageTypeGroup`
-  * `Service`
-  * `Operation`
-  * `UsageType`
-  * `BillingEntity`
-  * `CostCategory`
-  * `LinkedAccount`
-  * `TagKeyValue`
-  * `LegalEntityName`
-  * `InvoicingEntity`
-  * `AZ`
-  * `Region`
-  * `InstanceType`
+* `PurchaseType`
+* `UsageTypeGroup`
+* `Service`
+* `Operation`
+* `UsageType`
+* `BillingEntity`
+* `CostCategory`
+* `LinkedAccount`
+* `TagKeyValue`
+* `LegalEntityName`
+* `InvoicingEntity`
+* `AZ`
+* `Region`
+* `InstanceType`
 
 Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
 
