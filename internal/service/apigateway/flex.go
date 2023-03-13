@@ -17,7 +17,8 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 	oldParametersMap := oldParameters.(map[string]interface{})
 	newParametersMap := newParameters.(map[string]interface{})
 
-	for k := range oldParametersMap {
+	for k, kV := range oldParametersMap {
+		keyValueUnchanged := false
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
@@ -29,13 +30,18 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				value, _ := strconv.ParseBool(nV.(string))
 				b = value
 			}
-			if nK == k {
+			fmt.Println("METHOD UPDATE", nK, k, nV, kV)
+			if (nK == k) && (nV != kV) {
 				operation.Op = aws.String("replace")
 				operation.Value = aws.String(strconv.FormatBool(b))
+			} else if (nK == k) && (nV == kV) {
+				keyValueUnchanged = true
 			}
 		}
 
-		operations = append(operations, &operation)
+		if !keyValueUnchanged {
+			operations = append(operations, &operation)
+		}
 	}
 
 	for nK, nV := range newParametersMap {

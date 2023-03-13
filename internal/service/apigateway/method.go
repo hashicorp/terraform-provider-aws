@@ -285,10 +285,50 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
 
+	// Get current cacheKeyParameters from integration before any request parameters are updated on method
+	replacedRequestParameters := []string{}
+	integration, _ := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
+	currentCacheKeyParameters := integration.CacheKeyParameters
+
+	for _, myKey := range operations {
+		if *myKey.Op == "replace" && strings.HasPrefix(*myKey.Path, "/requestParameters") {
+			splitRes := strings.Split(*myKey.Path, "/")
+			replacedRequestParameters = append(replacedRequestParameters, splitRes[2])
+		}
+	}
+
 	_, err := conn.UpdateMethodWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
+	}
+
+	// Update integration with cacheKeyParameters for replaced request parameters
+	integrationOperations := make([]*apigateway.PatchOperation, 0)
+
+	for _, replacedRequestParameter := range replacedRequestParameters {
+		for _, cacheKeyParameter := range currentCacheKeyParameters {
+			if *cacheKeyParameter == replacedRequestParameter {
+				integrationOperations = append(integrationOperations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpAdd),
+					Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", replacedRequestParameter)),
+					Value: aws.String(""),
+				})
+			}
+		}
+	}
+
+	integrationInput := &apigateway.UpdateIntegrationInput{
+		HttpMethod:      aws.String(d.Get("http_method").(string)),
+		PatchOperations: integrationOperations,
+		ResourceId:      aws.String(d.Get("resource_id").(string)),
+		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+	}
+
+	_, err = conn.UpdateIntegrationWithContext(ctx, integrationInput)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMethodRead(ctx, d, meta)...)
