@@ -10,7 +10,6 @@ ENHANCEMENTS:
 * resource/aws_grafana_workspace: Add `configuration` argument ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
 * resource/aws_imagbuilder_component: Add `skip_destroy` argument ([#28905](https://github.com/hashicorp/terraform-provider-aws/issues/28905))
 * resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
-* resource/aws_inspector2_organization_configuration: Add `lambda` attribute in `auto_enable` ([#28823](https://github.com/hashicorp/terraform-provider-aws/issues/28823))
 
 BUG FIXES:
 

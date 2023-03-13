@@ -23,9 +23,9 @@ func TestAccInspector2OrganizationConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":        testAccOrganizationConfiguration_basic,
-		"disappears":   testAccOrganizationConfiguration_disappears,
-		"ec2ECRLambda": testAccOrganizationConfiguration_ec2ECRLambda,
+		"basic":      testAccOrganizationConfiguration_basic,
+		"disappears": testAccOrganizationConfiguration_disappears,
+		"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -46,12 +46,11 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_basic(true, false, true),
+				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
 				),
 			},
 		},
@@ -73,7 +72,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_basic(true, false, true),
+				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
@@ -84,7 +83,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccOrganizationConfiguration_ec2ECRLambda(t *testing.T) {
+func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 	resourceName := "aws_inspector2_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -99,12 +98,11 @@ func testAccOrganizationConfiguration_ec2ECRLambda(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_basic(true, true, true),
+				Config: testAccOrganizationConfigurationConfig_basic(true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
 				),
 			},
 		},
@@ -144,7 +142,7 @@ func testAccCheckOrganizationConfigurationDestroy(s *terraform.State) error {
 			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
 		}
 
-		if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) && !aws.ToBool(out.AutoEnable.Lambda) {
+		if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) {
 			if enabledDelAdAcct {
 				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
 					return err
@@ -219,7 +217,7 @@ func testAccCheckOrganizationConfigurationExists(name string) resource.TestCheck
 	}
 }
 
-func testAccOrganizationConfigurationConfig_basic(ec2, ecr, lambda bool) string {
+func testAccOrganizationConfigurationConfig_basic(ec2, ecr bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -229,12 +227,11 @@ resource "aws_inspector2_delegated_admin_account" "test" {
 
 resource "aws_inspector2_organization_configuration" "test" {
   auto_enable {
-    ec2    = %[1]t
-    ecr    = %[2]t
-    lambda = %[3]t
+    ec2 = %[1]t
+    ecr = %[2]t
   }
 
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }
-`, ec2, ecr, lambda)
+`, ec2, ecr)
 }
