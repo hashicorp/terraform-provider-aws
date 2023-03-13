@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.6
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0
