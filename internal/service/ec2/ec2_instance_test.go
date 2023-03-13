@@ -1870,7 +1870,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 
 func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v1, v2, v3 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1881,9 +1881,9 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName),
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, false, true, "ip-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "false"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
@@ -1895,6 +1895,35 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
+				),
+			},
+			// "InvalidParameterValue: Cannot modify hostname-type for running instances".
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStopInstance(ctx, &v2),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "resource-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
+				),
 			},
 		},
 	})
@@ -6750,7 +6779,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstancePrivateDNSNameOptionsBaseConfig(rName string) string {
+func testAccInstancePrivateDNSNameOptionsConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -6784,7 +6813,7 @@ resource "aws_subnet" "test" {
 func testAccInstanceConfig_PrivateDNSNameOptions_computed(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		testAccInstancePrivateDNSNameOptionsConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -6798,10 +6827,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_PrivateDNSNameOptions_configured(rName string) string {
+func testAccInstanceConfig_PrivateDNSNameOptions_configured(rName string, enableAAAA, enableA bool, hostNameType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		testAccInstancePrivateDNSNameOptionsConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -6809,16 +6838,16 @@ resource "aws_instance" "test" {
   subnet_id     = aws_subnet.test.id
 
   private_dns_name_options {
-    enable_resource_name_dns_aaaa_record = false
-    enable_resource_name_dns_a_record    = true
-    hostname_type                        = "ip-name"
+    enable_resource_name_dns_aaaa_record = %[2]t
+    enable_resource_name_dns_a_record    = %[3]t
+    hostname_type                        = %[4]q
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, enableAAAA, enableA, hostNameType))
 }
 
 func testAccInstanceConfig_networkSecurityGroups(rName string) string {
