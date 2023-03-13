@@ -23,13 +23,13 @@ import (
 // @SDKResource("aws_quicksight_data_set")
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDataSetCreate,
-		ReadContext:   resourceDataSetRead,
-		UpdateContext: resourceDataSetUpdate,
-		DeleteContext: resourceDataSetDelete,
+		CreateWithoutTimeout: resourceDataSetCreate,
+		ReadWithoutTimeout:   resourceDataSetRead,
+		UpdateWithoutTimeout: resourceDataSetUpdate,
+		DeleteWithoutTimeout: resourceDataSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
