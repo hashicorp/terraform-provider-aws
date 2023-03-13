@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_language_model")
 func ResourceLanguageModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLanguageModelCreate,
@@ -104,7 +105,7 @@ const (
 )
 
 func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateLanguageModelInput{
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
@@ -117,13 +118,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
@@ -150,7 +151,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
@@ -203,7 +204,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -217,7 +218,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 

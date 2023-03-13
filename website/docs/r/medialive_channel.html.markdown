@@ -55,7 +55,7 @@ resource "aws_medialive_channel" "example" {
     }
 
     video_descriptions {
-      name = "example-vidoe"
+      name = "example-video"
     }
 
     output_groups {
@@ -69,7 +69,7 @@ resource "aws_medialive_channel" "example" {
 
       outputs {
         output_name             = "example-name"
-        video_description_name  = "example-vidoe"
+        video_description_name  = "example-video"
         audio_description_names = ["audio-selector"]
         output_settings {
           archive_output_settings {
@@ -247,7 +247,6 @@ The following arguments are optional:
 * `coding_mode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
 * `dialnorm` - (Optional) Sets the dialnorm for the output.
 * `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
-* `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
 * `drc_rf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
 * `height_trim` - (Optional) Height dimensional trim.
 * `surround_trim` - (Optional) Surround dimensional trim.
@@ -294,9 +293,9 @@ The following arguments are optional:
 
 * `output_settings` - (Required) Settings for output. See [Output Settings](#output-settings) for more details.
 * `audio_description_names` - (Optional) The names of the audio descriptions used as audio sources for the output.
-* `caption_description_names` - (Optional) The names of the caption descriptions used as audio sources for the output.
+* `caption_description_names` - (Optional) The names of the caption descriptions used as caption sources for the output.
 * `output_name` - (Required) The name used to identify an output.
-* `video_description_name` - (Optional) The name of the video description used as audio sources for the output.
+* `video_description_name` - (Optional) The name of the video description used as video source for the output.
 
 ### Timecode Config
 
@@ -410,7 +409,7 @@ The following arguments are optional:
 
 * `input_loss_action` - (Optional) Specifies behavior of last resort when input video os lost.
 * `timed_metadata_id3_frame` - (Optional) Indicates ID3 frame that has the timecode.
-* `timed_metadta_id3_perios`- (Optional) Timed metadata interval in seconds.
+* `timed_metadta_id3_period`- (Optional) Timed metadata interval in seconds.
 
 ### Destination
 
@@ -464,7 +463,7 @@ The following arguments are optional:
 ### FEC Output Settings
 
 * `column_depth` - (Optional) The height of the FEC protection matrix.
-* `include_fec` - (Optional) Enables column oly or column and row based FEC.
+* `include_fec` - (Optional) Enables column only or column and row based FEC.
 * `row_length` - (Optional) The width of the FEC protection matrix.
 
 ## Attributes Reference

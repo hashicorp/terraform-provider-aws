@@ -1,21 +1,24 @@
 package outposts
 
 import (
-	"fmt"
+	"context"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_outposts_assets")
 func DataSourceOutpostAssets() *schema.Resource {
 	return &schema.Resource{
-		Read: DataSourceOutpostAssetsRead,
+		ReadWithoutTimeout: DataSourceOutpostAssetsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,8 +57,9 @@ func DataSourceOutpostAssets() *schema.Resource {
 	}
 }
 
-func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func DataSourceOutpostAssetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{
@@ -71,7 +75,7 @@ func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var asset_ids []string
-	err := conn.ListAssetsPages(input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
+	err := conn.ListAssetsPagesWithContext(ctx, input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -85,14 +89,14 @@ func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Assets: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Assets: %s", err)
 	}
 	if len(asset_ids) == 0 {
-		return fmt.Errorf("no Outposts Assets found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Outposts Assets found matching criteria; try different search")
 	}
 
 	d.SetId(aws.StringValue(outpost_id))
 	d.Set("asset_ids", asset_ids)
 
-	return nil
+	return diags
 }

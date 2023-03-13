@@ -19,20 +19,18 @@ import (
 )
 
 func TestAccSESV2DedicatedIPAssignment_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccSESV2DedicatedIPAssignment_basic,
 		"disappears": testAccSESV2DedicatedIPAssignment_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccSESV2DedicatedIPAssignment_basic(t *testing.T) { // nosemgrep:ci.sesv2-in-func-name
+	ctx := acctest.Context(t)
 	if os.Getenv("SES_DEDICATED_IP") == "" {
 		t.Skip("Environment variable SES_DEDICATED_IP is not set")
 	}
@@ -42,15 +40,15 @@ func testAccSESV2DedicatedIPAssignment_basic(t *testing.T) { // nosemgrep:ci.ses
 	resourceName := "aws_sesv2_dedicated_ip_assignment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy,
+		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedIPAssignmentConfig_basic(ip, poolName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDedicatedIPAssignmentExists(resourceName),
+					testAccCheckDedicatedIPAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ip", ip),
 					resource.TestCheckResourceAttr(resourceName, "destination_pool_name", poolName),
 				),
@@ -65,6 +63,7 @@ func testAccSESV2DedicatedIPAssignment_basic(t *testing.T) { // nosemgrep:ci.ses
 }
 
 func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:ci.sesv2-in-func-name
+	ctx := acctest.Context(t)
 	if os.Getenv("SES_DEDICATED_IP") == "" {
 		t.Skip("Environment variable SES_DEDICATED_IP is not set")
 	}
@@ -74,16 +73,16 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 	resourceName := "aws_sesv2_dedicated_ip_assignment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy,
+		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedIPAssignmentConfig_basic(ip, poolName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDedicatedIPAssignmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
+					testAccCheckDedicatedIPAssignmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,34 +90,35 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 	})
 }
 
-func testAccCheckDedicatedIPAssignmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
-	ctx := context.Background()
+func testAccCheckDedicatedIPAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sesv2_dedicated_ip_assignment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sesv2_dedicated_ip_assignment" {
+				continue
+			}
+
+			_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
+			if err != nil {
+				var nfe *types.NotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				if errors.Is(err, tfsesv2.ErrIncorrectPoolAssignment) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameDedicatedIPAssignment, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			var nfe *types.NotFoundException
-			if errors.As(err, &nfe) {
-				return nil
-			}
-			if errors.Is(err, tfsesv2.ErrIncorrectPoolAssignment) {
-				return nil
-			}
-			return err
-		}
-
-		return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameDedicatedIPAssignment, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDedicatedIPAssignmentExists(name string) resource.TestCheckFunc {
+func testAccCheckDedicatedIPAssignmentExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -129,8 +129,8 @@ func testAccCheckDedicatedIPAssignmentExists(name string) resource.TestCheckFunc
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+
 		_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, rs.Primary.ID, err)

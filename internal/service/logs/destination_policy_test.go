@@ -15,12 +15,13 @@ import (
 )
 
 func TestAccLogsDestinationPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v string
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -28,7 +29,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDestinationPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &v),
+					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
 				),
@@ -41,7 +42,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDestinationPolicyConfig_forceUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &v),
+					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
 				),
@@ -50,7 +51,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDestinationPolicyExists(n string, v *string) resource.TestCheckFunc {
+func testAccCheckDestinationPolicyExists(ctx context.Context, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -61,9 +62,9 @@ func testAccCheckDestinationPolicyExists(n string, v *string) resource.TestCheck
 			return fmt.Errorf("No CloudWatch Logs Destination Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
-		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
+		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

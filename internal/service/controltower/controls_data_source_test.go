@@ -1,6 +1,7 @@
 package controltower_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,14 +13,15 @@ import (
 )
 
 func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_controltower_controls.test"
 	ouName := "Security"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -34,13 +36,13 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
 	var trails []string
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 
 	input := &cloudtrail.ListTrailsInput{}
-	err := conn.ListTrailsPages(input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
+	err := conn.ListTrailsPagesWithContext(ctx, input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

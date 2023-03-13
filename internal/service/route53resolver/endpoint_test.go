@@ -16,21 +16,22 @@ import (
 )
 
 func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
@@ -50,21 +51,22 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,20 +75,21 @@ func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
 }
 
 func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -99,7 +102,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -108,7 +111,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -118,6 +121,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 }
 
 func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -125,15 +129,15 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_outbound(rName, initialName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", initialName),
@@ -142,7 +146,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_updatedOutbound(rName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
@@ -152,31 +156,33 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_endpoint" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_resolver_endpoint" {
+				continue
+			}
+
+			_, err := tfroute53resolver.FindResolverEndpointByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Route53 Resolver Endpoint still exists: %s", rs.Primary.ID)
 		}
 
-		_, err := tfroute53resolver.FindResolverEndpointByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Route53 Resolver Endpoint still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEndpointExists(n string, v *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
+func testAccCheckEndpointExists(ctx context.Context, n string, v *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,9 +193,9 @@ func testAccCheckEndpointExists(n string, v *route53resolver.ResolverEndpoint) r
 			return fmt.Errorf("No Route53 Resolver Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
-		output, err := tfroute53resolver.FindResolverEndpointByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindResolverEndpointByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -201,12 +207,12 @@ func testAccCheckEndpointExists(n string, v *route53resolver.ResolverEndpoint) r
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.ListResolverEndpointsInput{}
 
-	_, err := conn.ListResolverEndpoints(input)
+	_, err := conn.ListResolverEndpointsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -1,6 +1,8 @@
 package kinesisanalyticsv2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -8,9 +10,9 @@ import (
 )
 
 // statusApplication fetches the ApplicationDetail and its Status
-func statusApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) resource.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		applicationDetail, err := FindApplicationDetailByName(conn, name)
+		applicationDetail, err := FindApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +27,9 @@ func statusApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string)
 }
 
 // statusSnapshotDetails fetches the SnapshotDetails and its Status
-func statusSnapshotDetails(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string) resource.StateRefreshFunc {
+func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		snapshotDetails, err := FindSnapshotDetailsByApplicationAndSnapshotNames(conn, applicationName, snapshotName)
+		snapshotDetails, err := FindSnapshotDetailsByApplicationAndSnapshotNames(ctx, conn, applicationName, snapshotName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

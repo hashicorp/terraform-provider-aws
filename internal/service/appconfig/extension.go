@@ -21,6 +21,7 @@ const (
 	ResExtension = "Extension"
 )
 
+// @SDKResource("aws_appconfig_extension")
 func ResourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,
@@ -119,9 +120,9 @@ func ResourceExtension() *schema.Resource {
 }
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	in := appconfig.CreateExtensionInput{
 		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
@@ -153,7 +154,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -176,7 +177,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
 
-	tags, err := ListTags(conn, *out.Arn)
+	tags, err := ListTags(ctx, conn, *out.Arn)
 
 	if err != nil {
 		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Get("name").(string), errors.New("error listing tags for AppConfig Extension"))
@@ -197,7 +198,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionInput{
@@ -235,7 +236,7 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),

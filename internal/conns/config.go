@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -88,6 +89,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
+		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
@@ -127,7 +129,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
-	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
+	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
 	}
@@ -139,7 +141,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
-	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
+	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
@@ -185,6 +187,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Partition = partition
 	client.Region = c.Region
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
+	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
@@ -202,17 +205,17 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if c.STSRegion != "" {
 		stsConfig.Region = aws.String(c.STSRegion)
 	}
-	client.STSConn = sts.New(sess.Copy(stsConfig))
+	client.stsConn = sts.New(sess.Copy(stsConfig))
 
 	// Services that require multiple client configurations.
 	s3Config := &aws.Config{
 		Endpoint:         aws.String(c.Endpoints[names.S3]),
 		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
 	}
-	client.S3Conn = s3.New(sess.Copy(s3Config))
+	client.s3Conn = s3.New(sess.Copy(s3Config))
 
 	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
+	client.s3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// "Global" services that require customizations.
 	globalAcceleratorConfig := &aws.Config{
@@ -250,13 +253,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
 	}
 
-	client.GlobalAcceleratorConn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
-	client.Route53Conn = route53.New(sess.Copy(route53Config))
-	client.Route53RecoveryControlConfigConn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
-	client.Route53RecoveryReadinessConn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
-	client.ShieldConn = shield.New(sess.Copy(shieldConfig))
+	client.globalacceleratorConn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
+	client.route53Conn = route53.New(sess.Copy(route53Config))
+	client.route53recoverycontrolconfigConn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
+	client.route53recoveryreadinessConn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
+	client.shieldConn = shield.New(sess.Copy(shieldConfig))
 
-	client.APIGatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.apigatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Many operations can return an error such as:
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
 		// Handle them all globally for the service client.
@@ -265,8 +268,17 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
+	client.apigatewayv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Many operations can return an error such as:
+		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+		// Handle them all globally for the service client.
+		if tfawserr.ErrMessageContains(r.Error, apigatewayv2.ErrCodeConflictException, "try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
-	client.AppAutoScalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.applicationautoscalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
 			return
 		}
@@ -278,7 +290,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	// StartDeployment operations can return a ConflictException
 	// if ongoing deployments are in-progress, thus we handle them
 	// here for the service client.
-	client.AppConfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.appconfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "StartDeployment" {
 			if tfawserr.ErrCodeEquals(r.Error, appconfig.ErrCodeConflictException) {
 				r.Retryable = aws.Bool(true)
@@ -286,7 +298,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.AppSyncConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.appsyncConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
 			if tfawserr.ErrMessageContains(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
 				r.Retryable = aws.Bool(true)
@@ -294,7 +306,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.ChimeConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.chimeConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling CreateVoiceConnector across multiple resources,
 		// the API can randomly return a BadRequestException without explanation
 		if r.Operation.Name == "CreateVoiceConnector" {
@@ -304,13 +316,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.CloudHSMV2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.cloudhsmv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.ConfigServiceConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.configserviceConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling Config Organization Rules API actions immediately
 		// after Organization creation, the API can randomly return the
 		// OrganizationAccessDeniedException error for a few minutes, even
@@ -350,14 +362,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.CloudFormationConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.cloudformationConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	// See https://github.com/aws/aws-sdk-go/pull/1276
-	client.DynamoDBConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.dynamodbConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
 			return
 		}
@@ -366,7 +378,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.EC2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ec2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch err := r.Error; r.Operation.Name {
 		case "AttachVpnGateway", "DetachVpnGateway":
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
@@ -392,10 +404,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
+
+		case "RunInstances":
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
+			if tfawserr.ErrCodeEquals(err, "InsufficientInstanceCapacity") {
+				r.Retryable = aws.Bool(false)
+			}
 		}
 	})
 
-	client.FMSConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.fmsConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Acceptance testing creates and deletes resources in quick succession.
 		// The FMS onboarding process into Organizations is opaque to consumers.
 		// Since we cannot reasonably check this status before receiving the error,
@@ -419,13 +437,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.KafkaConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.kafkaConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.KinesisConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.kinesisConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
 				r.Retryable = aws.Bool(true)
@@ -438,7 +456,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.lightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch r.Operation.Name {
 		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
 			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
@@ -452,7 +470,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.OrganizationsConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.organizationsConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
 		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
@@ -460,14 +478,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.S3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.s3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, "OperationAborted", "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17996
-	client.SecurityHubConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.securityhubConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch r.Operation.Name {
 		case "EnableOrganizationAdminAccount":
 			if tfawserr.ErrCodeEquals(r.Error, securityhub.ErrCodeResourceConflictException) {
@@ -477,7 +495,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	})
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19215
-	client.SSOAdminConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ssoadminConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "AttachManagedPolicyToPermissionSet" || r.Operation.Name == "DetachManagedPolicyFromPermissionSet" {
 			if tfawserr.ErrCodeEquals(r.Error, ssoadmin.ErrCodeConflictException) {
 				r.Retryable = aws.Bool(true)
@@ -485,14 +503,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.StorageGatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.storagegatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if tfawserr.ErrMessageContains(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
-	client.WAFV2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.wafv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
 			r.Retryable = aws.Bool(true)
 		}
@@ -515,7 +533,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	// AWS SDK for Go v2 custom API clients.
 
-	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+	client.route53domainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
 			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
 		} else if partition == endpoints.AwsPartitionID {

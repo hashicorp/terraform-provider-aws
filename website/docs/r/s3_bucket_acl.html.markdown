@@ -66,38 +66,38 @@ resource "aws_s3_bucket_acl" "example" {
 
 The following arguments are supported:
 
-* `acl` - (Optional, Conflicts with `access_control_policy`) The canned ACL to apply to the bucket.
-* `access_control_policy` - (Optional, Conflicts with `acl`) A configuration block that sets the ACL permissions for an object per grantee [documented below](#access_control_policy).
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
+* `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
+* `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
 ### access_control_policy
 
 The `access_control_policy` configuration block supports the following arguments:
 
-* `grant` - (Required) Set of `grant` configuration blocks [documented below](#grant).
-* `owner` - (Required) Configuration block of the bucket owner's display name and ID [documented below](#owner).
+* `grant` - (Required) Set of `grant` configuration blocks. [See below](#grant).
+* `owner` - (Required) Configuration block of the bucket owner's display name and ID. [See below](#owner).
 
 ### grant
 
 The `grant` configuration block supports the following arguments:
 
-* `grantee` - (Required) Configuration block for the person being granted permissions [documented below](#grantee).
+* `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
 * `permission` - (Required) Logging permissions assigned to the grantee for the bucket.
 
 ### owner
 
 The `owner` configuration block supports the following arguments:
 
-* `id` - (Required) The ID of the owner.
-* `display_name` - (Optional) The display name of the owner.
+* `id` - (Required) ID of the owner.
+* `display_name` - (Optional) Display name of the owner.
 
 ### grantee
 
 The `grantee` configuration block supports the following arguments:
 
 * `email_address` - (Optional) Email address of the grantee. See [Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for supported AWS regions where this argument can be specified.
-* `id` - (Optional) The canonical user ID of the grantee.
+* `id` - (Optional) Canonical user ID of the grantee.
 * `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
 

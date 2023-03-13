@@ -25,6 +25,7 @@ import (
 	"github.com/mattbaird/jsonpatch"
 )
 
+// @SDKResource("aws_cloudcontrolapi_resource")
 func ResourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
@@ -80,7 +81,7 @@ func ResourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlClient
+	conn := meta.(*conns.AWSClient).CloudControlClient()
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudcontrol.CreateResourceInput{
@@ -121,7 +122,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlClient
+	conn := meta.(*conns.AWSClient).CloudControlClient()
 
 	typeName := d.Get("type_name").(string)
 	resourceDescription, err := FindResource(ctx, conn,
@@ -147,7 +148,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlClient
+	conn := meta.(*conns.AWSClient).CloudControlClient()
 
 	if d.HasChange("desired_state") {
 		oldRaw, newRaw := d.GetChange("desired_state")
@@ -189,7 +190,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlClient
+	conn := meta.(*conns.AWSClient).CloudControlClient()
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudcontrol.DeleteResourceInput{
@@ -227,7 +228,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	resourceSchema := diff.Get("schema").(string)
 

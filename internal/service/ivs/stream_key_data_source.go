@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ivs_stream_key")
 func DataSourceStreamKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamKeyRead,
@@ -38,7 +39,7 @@ const (
 )
 
 func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	channelArn := d.Get("channel_arn").(string)
 
@@ -56,7 +57,7 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.IVS, create.ErrActionSetting, DSNameStreamKey, d.Id(), err)
 	}
 

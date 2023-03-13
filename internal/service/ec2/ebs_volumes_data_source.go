@@ -1,19 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ebs_volumes")
 func DataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSVolumesRead,
+		ReadWithoutTimeout: dataSourceEBSVolumesRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -31,13 +34,14 @@ func DataSourceEBSVolumes() *schema.Resource {
 	}
 }
 
-func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeVolumesInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
@@ -48,10 +52,10 @@ func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindEBSVolumes(conn, input)
+	output, err := FindEBSVolumes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Volumes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Volumes: %s", err)
 	}
 
 	var volumeIDs []string
@@ -63,5 +67,5 @@ func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", volumeIDs)
 
-	return nil
+	return diags
 }

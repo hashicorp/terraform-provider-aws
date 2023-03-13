@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_dedicated_ip_assignment")
 func ResourceDedicatedIPAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPAssignmentCreate,
@@ -57,7 +58,7 @@ const (
 )
 
 func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.PutDedicatedIpInPoolInput{
 		Ip:                  aws.String(d.Get("ip").(string)),
@@ -76,7 +77,7 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -95,7 +96,7 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 	ip, _ := splitID(d.Id())
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPAssignment %s", d.Id())

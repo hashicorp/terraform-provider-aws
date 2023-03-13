@@ -13,46 +13,43 @@ Provides a CloudFront real-time log configuration resource.
 ## Example Usage
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "cloudfront-realtime-log-config-example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "cloudfront.amazonaws.com"
-      },
-      "Effect": "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "example" {
+  name               = "cloudfront-realtime-log-config-example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "kinesis:DescribeStreamSummary",
+      "kinesis:DescribeStream",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords",
+    ]
+
+    resources = [aws_kinesis_stream.example.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "cloudfront-realtime-log-config-example"
-  role = aws_iam_role.example.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-          "kinesis:DescribeStreamSummary",
-          "kinesis:DescribeStream",
-          "kinesis:PutRecord",
-          "kinesis:PutRecords"
-        ],
-        "Resource": "${aws_kinesis_stream.example.arn}"
-    }
-  ]
-}
-EOF
+  name   = "cloudfront-realtime-log-config-example"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_cloudfront_realtime_log_config" "example" {

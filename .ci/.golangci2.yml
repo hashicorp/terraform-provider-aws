@@ -1,6 +1,12 @@
 issues:
   exclude-rules:
     - linters:
+        - paralleltest
+      text: "Function TestAcc"
+    - linters:
+        - tparallel
+      text: "TestAcc"
+    - linters:
         - unparam
       text: "always receives"
   max-per-linter: 0
@@ -9,9 +15,17 @@ issues:
 linters:
   disable-all: true
   enable:
+    - asasalint
     - asciicheck
+    - containedctx
+    - contextcheck
+    - dogsled
+    - durationcheck
     - errcheck
+    - errname
+    - errorlint
     - exportloopref
+    - goconst
     - gocritic
     - gofmt
     - gomnd
@@ -22,8 +36,12 @@ linters:
     - nakedret
     - nilerr
     - nolintlint
+    - paralleltest
+    - predeclared
     - staticcheck
     - stylecheck
+    - tenv
+    - tparallel
     - typecheck
     - unconvert
     - unparam
@@ -33,8 +51,15 @@ linters:
     - whitespace
 
 linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
   errcheck:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  errorlint:
+    errorf: false
+  goconst:
+    ignore-tests: true
+    min-occurrences: 6
   gocritic:
     enabled-tags:
       - diagnostic
@@ -62,6 +87,12 @@ linters-settings:
           - validation.*
           # Terraform Plugin Framework
           - int64validator.*
+          - listvalidator.*
+          - stringvalidator.*
+          - SetDefaultCreateTimeout
+          - SetDefaultReadTimeout
+          - SetDefaultUpdateTimeout
+          - SetDefaultDeleteTimeout
           # Go
           - make
           - strconv.FormatFloat
@@ -75,8 +106,12 @@ linters-settings:
     require-explanation: true
     require-specific: true
     allow-no-explanation:
-      - unparam
       - gomnd
+      - paralleltest
+      - tparallel
+      - unparam
+  predeclared:
+    ignore: cap,close,copy,delete,len,new
   staticcheck:
     checks: ["all", "-SA1019"]
   stylecheck:
@@ -85,6 +120,3 @@ linters-settings:
 
 run:
   timeout: 75m
-  go: 1.18
-  skip-dirs:
-    - .ci/providerlint/vendor

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_transit_gateway_registration")
 func ResourceTransitGatewayRegistration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRegistrationCreate,
@@ -26,7 +27,7 @@ func ResourceTransitGatewayRegistration() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayRegistrationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -51,7 +52,7 @@ func ResourceTransitGatewayRegistration() *schema.Resource {
 }
 
 func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
@@ -78,7 +79,7 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 
@@ -105,7 +106,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 

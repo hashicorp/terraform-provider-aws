@@ -104,7 +104,7 @@ Defaults to true.
   or will use [RDS Blue/Green deployments][blue-green].
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
-* `blue_green_update` - (Optional) Enables low-downtime updates using R[RDS Blue/Green deployments][blue-green].
+* `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
   See [blue_green_update](#blue_green_update) below
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
@@ -149,6 +149,8 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1". Can only be set when `storage_type` is `"io1"` or `"gp3"`.
+Cannot be specified for gp3 storage if the `allocated_storage` value is below a per-`engine` threshold.
+See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
 * `license_model` - (Optional, but required for some DB engines, i.e., Oracle
@@ -217,7 +219,7 @@ default is `false` if not specified.
 purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
 or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is specified,
 "gp2" if not.
-* `storage_throughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storage_type` is `"gp3"`.
+* `storage_throughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storage_type` is `"gp3"`. Cannot be specified if the `allocated_storage` value is below a per-`engine` threshold. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
@@ -307,6 +309,7 @@ in a Route 53 Alias record).
 * `id` - The RDS instance ID.
 * `instance_class`- The RDS instance class.
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
+* `listener_endpoint` - Specifies the listener connection endpoint for SQL Server Always On. See [endpoint](#endpoint) below.
 * `maintenance_window` - The instance maintenance window.
 * `multi_az` - If the RDS instance is multi AZ enabled.
 * `name` - The database name.
@@ -320,6 +323,12 @@ in a Route 53 Alias record).
 On Oracle and Microsoft SQL instances the following is exported additionally:
 
 * `character_set_name` - The character set (collation) used on Oracle and Microsoft SQL instances.
+
+### Endpoint
+
+* `address` - Specifies the DNS address of the DB instance.
+* `hosted_zone_id` - Specifies the ID that Amazon Route 53 assigns when you create a hosted zone.
+* `port` - Specifies the port that the database engine is listening on.
 
 ## Timeouts
 

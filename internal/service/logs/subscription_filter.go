@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceSubscriptionFilter() *schema.Resource {
+// @SDKResource("aws_cloudwatch_log_subscription_filter")
+func resourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubscriptionFilterPut,
 		ReadWithoutTimeout:   resourceSubscriptionFilterRead,
@@ -72,7 +73,7 @@ func ResourceSubscriptionFilter() *schema.Resource {
 }
 
 func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	logGroupName := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)
@@ -91,7 +92,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutSubscriptionFilterWithContext(ctx, input)
 		},
@@ -121,7 +122,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	subscriptionFilter, err := FindSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
 
@@ -146,7 +147,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
 	_, err := conn.DeleteSubscriptionFilterWithContext(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{
