@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.4
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5
@@ -85,7 +85,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.23 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.24 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.5 // indirect
