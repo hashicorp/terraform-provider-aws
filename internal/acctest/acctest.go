@@ -793,7 +793,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == "aws-us-gov" || Partition() == "aws-us-gov" {
+		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -817,7 +817,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 }
 
-// PreCheckRegion checks that the test region is one of the specified regions.
+// PreCheckRegion checks that the test region is one of the specified AWS Regions.
 func PreCheckRegion(t *testing.T, regions ...string) {
 	curr := Region()
 	var regionOK bool
@@ -830,11 +830,11 @@ func PreCheckRegion(t *testing.T, regions ...string) {
 	}
 
 	if !regionOK {
-		t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.DefaultRegion, curr, strings.Join(regions, ", "))
 	}
 }
 
-// PreCheckRegionNot checks that the test region is not one of the specified regions.
+// PreCheckRegionNot checks that the test region is not one of the specified AWS Regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	curr := Region()
 
@@ -845,7 +845,7 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 	}
 }
 
-// PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
+// PreCheckAlternateRegionIs checks that the alternate test region is the specified AWS Region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
 	if curr := AlternateRegion(); curr != region {
 		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AlternateRegion, curr, region)

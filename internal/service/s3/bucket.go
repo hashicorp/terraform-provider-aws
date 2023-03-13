@@ -1146,7 +1146,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
 	}
 
@@ -1171,7 +1171,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket request payment: %s", err)
 	}
 
@@ -1195,7 +1195,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket logging: %s", err)
 	}
 
@@ -1224,7 +1224,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1253,7 +1253,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 

@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.216
+	github.com/aws/aws-sdk-go v1.44.218
 	github.com/aws/aws-sdk-go-v2 v1.17.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.23
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.1
@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.88.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4
@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.4
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.4
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.4

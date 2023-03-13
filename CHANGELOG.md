@@ -1,4 +1,22 @@
 ## 4.59.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
+* resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
+* resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
+* resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
+* resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
+
+BUG FIXES:
+
+* resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
+* resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
+* resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
+* resource/aws_lightsail_instance: Fix `name` validation to allow instances to start with a numeric character ([#29903](https://github.com/hashicorp/terraform-provider-aws/issues/29903))
+* resource/aws_opensearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
+* resource/aws_sagemaker_endpoint_configuration: Fix `variant_name` generation when unset ([#29915](https://github.com/hashicorp/terraform-provider-aws/issues/29915))
+
 ## 4.58.0 (March 10, 2023)
 
 FEATURES:

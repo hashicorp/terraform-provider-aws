@@ -27,6 +27,42 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func Test_StripRevision(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{"empty", "", ""},
+		{
+			"invalid arn",
+			"some:string:thing",
+			"",
+		},
+		{
+			"with revision",
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task:42", //lintignore:AWSAT003,AWSAT005
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task",    //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			"no revision",
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task", //lintignore:AWSAT003,AWSAT005
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.StripRevision(tc.s); got != tc.want {
+				t.Errorf("StripRevision() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestAccECSTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
@@ -45,6 +81,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
@@ -52,6 +89,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{

@@ -464,6 +464,52 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_EnvironmentVariables_emptyUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaEndpointID),
+		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.56.0",
+					},
+				},
+				Config: testAccFunctionConfig_EmptyEnv_envVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
+				),
+				// We know a persistent diff is present in this version
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccFunctionConfig_EmptyEnv_envVariables(rName),
+				ResourceName:             resourceName,
+				// Newer versions of the provider should suppress the diff without requiring an apply
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccFunctionConfig_envVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2700,6 +2746,24 @@ resource "aws_lambda_function" "test" {
     variables = {
       foo = "bar"
     }
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_EmptyEnv_envVariables(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  environment {
+    variables = {}
   }
 }
 `, rName))

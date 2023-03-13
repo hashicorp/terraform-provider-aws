@@ -23,8 +23,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.216 h1:nDL5hEGBlUNHXMWbpP4dIyP8IB5tvRgksWE7biVu8JY=
-github.com/aws/aws-sdk-go v1.44.216/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.218 h1:p707+xOCazWhkSpZOeyhtTcg7Z+asxxvueGgYPSitn4=
+github.com/aws/aws-sdk-go v1.44.218/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.17.4/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.17.5 h1:TzCUW1Nq4H8Xscph5M/skINUitxM5UBAyvm2s7XBzL4=
 github.com/aws/aws-sdk-go-v2 v1.17.5/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -53,8 +53,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.0 h1:HfIi9A8XYph6xwnoevrO9
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.0/go.mod h1:wR/O51vYY5XCt2FzuaSgvHV36BozkKxKWW4NoDIXrlc=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3 h1:JkWxBPjWWDKjVWjBoiIw9zbMA72Ynde66y5fInm9Q/g=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.3/go.mod h1:U4bKXeB586zd73RIAkJX+ZmUtwI00xLJhDKJ7+hTCO0=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.88.0 h1:YVxTUKCZqTzp2bT/ctafMOf/36TYKlk+Zio9kuHYxXU=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.88.0/go.mod h1:2HxUY7Pkfmt1uIhPrFp0/O6+0aGoLaGIN5tXp/rYDL8=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.0 h1:f/mZ9YbM+c429V/3ghExrw9bpM4kRzmjyNui7bnRkaE=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.0/go.mod h1:2HxUY7Pkfmt1uIhPrFp0/O6+0aGoLaGIN5tXp/rYDL8=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.4 h1:YHeT7fN7oQY7wUzOwZv4gfzULrrojjbFq9vipBUvFgE=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.4/go.mod h1:IQGhkhTVkQE+/bVqKbLpipbH9H935C05Z0/z6k7eVPQ=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.4 h1:VFI+riYGn52qqqU8hbCgOhYkVz7ZDjKJ1HN4vsaqkdE=
@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.29.4 h1:2FnFwA3DaXibWS3gMk9/hf
 github.com/aws/aws-sdk-go-v2/service/s3control v1.29.4/go.mod h1:7N/XbfABmShA4NEeFRhn9itmFk/E3DZ9im/+1++XnCY=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.4 h1:LfCy6abbOMk2O6OdxFiMvySEMMYXyA4wLTZZzoyDU14=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.4/go.mod h1:l7ebY4UfyEXzsM+yh74U1yTsZ4c8OZZd8de4aY0G19U=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.4 h1:2bikS7i3POwibqKLlkyZBYKsdTWtFMT20QTHasMEMB4=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.4/go.mod h1:uIM2GAheOB6xz7UuG5By72Zw2B/20fViFsbDY1JVTVY=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.0 h1:0HyUGJ3DCaXmOPFkCYhvi8aDA4WOsZ42mq4GnTGSlmA=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.0/go.mod h1:uIM2GAheOB6xz7UuG5By72Zw2B/20fViFsbDY1JVTVY=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5 h1:x7FjoHx8A559fAHi0WMnrVxxk9iXwyj1UK5S7TrqFAM=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5/go.mod h1:DlzAqaXaUSJVQGuZrGPb4TWTkDG6vUs5OiIoX0AxjkU=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.4 h1:IzV/IHEKeM0taWRbFuHU8onhj7R088VzYau7Ka2jDsw=
