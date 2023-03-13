@@ -81,8 +81,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0 h1:i2AFUTfisQPZP0iZlUEJiGfOB
 github.com/aws/aws-sdk-go-v2/service/lambda v1.30.0/go.mod h1:iPDYs5hrSZ+/8Ifoq9ZpoiuHZXDEJx9Udurdoq20958=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0 h1:NkQZuHbEyoDDoyu0g4hpUrOV9fitbrZZkIHdXnEaSAA=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.30.0/go.mod h1:MDHSj74ylVyTusJYPIoFhNXqwaD8W8cIf8yTEI7+ccc=
-github.com/aws/aws-sdk-go-v2/service/oam v1.1.5 h1:b4IaVHpAfwj2cOmTUgoIFTjLjTuC1yh3Ml3K7cjZFaU=
-github.com/aws/aws-sdk-go-v2/service/oam v1.1.5/go.mod h1:wjIJYruJrl1fA6qqfQSOjUUUjASLrjbVsD7y6NYcoOc=
+github.com/aws/aws-sdk-go-v2/service/oam v1.1.6 h1:A5vCeU8BdCJRaEI/UvrY3amM3Lo3WZd7VzCDjIyE2Y8=
+github.com/aws/aws-sdk-go-v2/service/oam v1.1.6/go.mod h1:1/LZsdsqFoSCouz/3n1hP7fL8E6S05fvLUbzd187brQ=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.5 h1:3EqOT8+GTVfZny8ltIZk0VUflBjC7Ks55jw2M2edneM=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.5/go.mod h1:zyCz2VSeUsBE9LMtZc+rVaTSPqJM64cjvLL50FJbblM=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.1 h1:wA503x0d2eGCyghtrLXrRGPLjR5sHIQbFkelM9PsIYs=
