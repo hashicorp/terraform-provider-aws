@@ -1308,6 +1308,27 @@ func FindPublicIPv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.Describe
 	return output, nil
 }
 
+func FindPublicIPv4PoolByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.PublicIpv4Pool, error) {
+	input := &ec2.DescribePublicIpv4PoolsInput{
+		PoolIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindPublicIPv4Pool(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.PoolId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindLocalGatewayRouteTables(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 
