@@ -1,6 +1,7 @@
 package macie_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "MACIE_MEMBER_ACCOUNT_ID"
 	memberAcctId := os.Getenv(key)
 	if memberAcctId == "" {
@@ -21,15 +23,15 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemberAccountAssociationDestroy,
+		CheckDestroy:             testAccCheckMemberAccountAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberAccountAssociationConfig_basic(memberAcctId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberAccountAssociationExists("aws_macie_member_account_association.test"),
+					testAccCheckMemberAccountAssociationExists(ctx, "aws_macie_member_account_association.test"),
 				),
 			},
 		},
@@ -37,8 +39,9 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 }
 
 func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// master account associated with Macie it can't be disassociated.
@@ -47,48 +50,50 @@ func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
 			{
 				Config: testAccMemberAccountAssociationConfig_self,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberAccountAssociationExists("aws_macie_member_account_association.test"),
+					testAccCheckMemberAccountAssociationExists(ctx, "aws_macie_member_account_association.test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckMemberAccountAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+func testAccCheckMemberAccountAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie_member_account_association" {
-			continue
-		}
-
-		req := &macie.ListMemberAccountsInput{}
-
-		dissociated := true
-		err := conn.ListMemberAccountsPages(req, func(page *macie.ListMemberAccountsOutput, lastPage bool) bool {
-			for _, v := range page.MemberAccounts {
-				if aws.StringValue(v.AccountId) == rs.Primary.Attributes["member_account_id"] {
-					dissociated = false
-					return false
-				}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie_member_account_association" {
+				continue
 			}
 
-			return true
-		})
-		if err != nil {
-			return err
-		}
+			req := &macie.ListMemberAccountsInput{}
 
-		if !dissociated {
-			return fmt.Errorf("Member account %s is not dissociated from Macie", rs.Primary.Attributes["member_account_id"])
+			dissociated := true
+			err := conn.ListMemberAccountsPagesWithContext(ctx, req, func(page *macie.ListMemberAccountsOutput, lastPage bool) bool {
+				for _, v := range page.MemberAccounts {
+					if aws.StringValue(v.AccountId) == rs.Primary.Attributes["member_account_id"] {
+						dissociated = false
+						return false
+					}
+				}
+
+				return true
+			})
+			if err != nil {
+				return err
+			}
+
+			if !dissociated {
+				return fmt.Errorf("Member account %s is not dissociated from Macie", rs.Primary.Attributes["member_account_id"])
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckMemberAccountAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckMemberAccountAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -98,7 +103,7 @@ func testAccCheckMemberAccountAssociationExists(name string) resource.TestCheckF
 		req := &macie.ListMemberAccountsInput{}
 
 		exists := false
-		err := conn.ListMemberAccountsPages(req, func(page *macie.ListMemberAccountsOutput, lastPage bool) bool {
+		err := conn.ListMemberAccountsPagesWithContext(ctx, req, func(page *macie.ListMemberAccountsOutput, lastPage bool) bool {
 			for _, v := range page.MemberAccounts {
 				if aws.StringValue(v.AccountId) == rs.Primary.Attributes["member_account_id"] {
 					exists = true

@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
@@ -27,7 +28,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "description", "default VPC security group"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
@@ -67,6 +68,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 }
 
 func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
@@ -80,7 +82,7 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),

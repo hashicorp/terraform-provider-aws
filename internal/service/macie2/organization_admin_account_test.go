@@ -1,6 +1,7 @@
 package macie2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,21 +15,22 @@ import (
 )
 
 func testAccOrganizationAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_macie2_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
@@ -42,22 +44,23 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 }
 
 func testAccOrganizationAdminAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_macie2_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,16 +74,16 @@ func testAccErrorCheckSkipOrganizationAdminAccount(t *testing.T) resource.ErrorC
 	)
 }
 
-func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
-		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -94,34 +97,35 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 	}
 }
 
-func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie2_organization_admin_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie2_organization_admin_account" {
+				continue
+			}
+
+			adminAccount, err := tfmacie2.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
+
+			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+				continue
+			}
+
+			if adminAccount == nil {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("macie OrganizationAdminAccount %q still exists", rs.Primary.ID)
 		}
 
-		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			continue
-		}
-
-		if adminAccount == nil {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("macie OrganizationAdminAccount %q still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
-
 }
 
 func testAccOrganizationAdminAccountConfig_basic() string {

@@ -22,7 +22,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	dataSourceByNameName := "data.aws_mq_broker.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, mq.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = aws_subnet.test.*.id[count.index]
+  subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
 }
 
@@ -155,8 +155,8 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = aws_security_group.test.*.id
-  subnet_ids          = aws_subnet.test.*.id
+  security_groups     = aws_security_group.test[*].id
+  subnet_ids          = aws_subnet.test[*].id
 
   user {
     username = "Ender"

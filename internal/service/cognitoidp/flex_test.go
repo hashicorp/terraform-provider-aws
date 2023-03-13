@@ -8,6 +8,8 @@ import (
 )
 
 func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input    *cognitoidentityprovider.SchemaAttributeType
 		Expected bool

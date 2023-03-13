@@ -1,6 +1,7 @@
 package iot_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccIoTAuthorizer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -23,12 +25,12 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy,
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -49,6 +51,7 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 }
 
 func TestAccIoTAuthorizer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -57,13 +60,13 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy,
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
+					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,6 +75,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 }
 
 func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -80,12 +84,12 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy,
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_signingDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "true"),
@@ -104,6 +108,7 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 }
 
 func TestAccIoTAuthorizer_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -112,12 +117,12 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy,
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -131,7 +136,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -147,7 +152,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resource.TestCheckFunc {
+func testAccCheckAuthorizerExists(ctx context.Context, n string, v *iot.AuthorizerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,9 +163,9 @@ func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resour
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-		output, err := tfiot.FindAuthorizerByName(conn, rs.Primary.ID)
+		output, err := tfiot.FindAuthorizerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -172,28 +177,30 @@ func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resour
 	}
 }
 
-func testAccCheckAuthorizerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_authorizer" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iot_authorizer" {
+				continue
+			}
+
+			_, err := tfiot.FindAuthorizerByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IoT Authorizer %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfiot.FindAuthorizerByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IoT Authorizer %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccAuthorizerBaseConfig(rName string) string {
@@ -224,7 +231,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 `, rName)
 }

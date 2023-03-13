@@ -1,6 +1,7 @@
 package xray_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 )
 
 func TestAccXRayEncryptionConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var EncryptionConfig xray.EncryptionConfig
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"
@@ -26,7 +28,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(ctx, resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
@@ -38,7 +40,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			{
 				Config: testAccEncryptionConfigConfig_key(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(ctx, resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
 				),
@@ -46,7 +48,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
+					testAccCheckEncryptionConfigExists(ctx, resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
@@ -54,7 +56,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEncryptionConfigExists(n string, EncryptionConfig *xray.EncryptionConfig) resource.TestCheckFunc {
+func testAccCheckEncryptionConfigExists(ctx context.Context, n string, EncryptionConfig *xray.EncryptionConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -64,9 +66,9 @@ func testAccCheckEncryptionConfigExists(n string, EncryptionConfig *xray.Encrypt
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
-		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
+		config, err := conn.GetEncryptionConfigWithContext(ctx, &xray.GetEncryptionConfigInput{})
 
 		if err != nil {
 			return err

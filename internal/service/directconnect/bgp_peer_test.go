@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_VIRTUAL_INTERFACE_ID"
 	vifId := os.Getenv(key)
 	if vifId == "" {
@@ -27,7 +29,7 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBGPPeerDestroy,
+		CheckDestroy:             testAccCheckBGPPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBGPPeerConfig_basic(vifId, bgpAsn),
@@ -40,30 +42,32 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckBGPPeerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckBGPPeerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_bgp_peer" {
-			continue
-		}
-		input := &directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(rs.Primary.Attributes["virtual_interface_id"]),
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_bgp_peer" {
+				continue
+			}
+			input := &directconnect.DescribeVirtualInterfacesInput{
+				VirtualInterfaceId: aws.String(rs.Primary.Attributes["virtual_interface_id"]),
+			}
 
-		resp, err := conn.DescribeVirtualInterfaces(input)
-		if err != nil {
-			return err
-		}
-		for _, peer := range resp.VirtualInterfaces[0].BgpPeers {
-			if aws.StringValue(peer.AddressFamily) == rs.Primary.Attributes["address_family"] &&
-				strconv.Itoa(int(aws.Int64Value(peer.Asn))) == rs.Primary.Attributes["bgp_asn"] &&
-				aws.StringValue(peer.BgpPeerState) != directconnect.BGPPeerStateDeleted {
-				return fmt.Errorf("[DESTROY ERROR] Dx BGP peer (%s) not deleted", rs.Primary.ID)
+			resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, input)
+			if err != nil {
+				return err
+			}
+			for _, peer := range resp.VirtualInterfaces[0].BgpPeers {
+				if aws.StringValue(peer.AddressFamily) == rs.Primary.Attributes["address_family"] &&
+					strconv.Itoa(int(aws.Int64Value(peer.Asn))) == rs.Primary.Attributes["bgp_asn"] &&
+					aws.StringValue(peer.BgpPeerState) != directconnect.BGPPeerStateDeleted {
+					return fmt.Errorf("[DESTROY ERROR] Dx BGP peer (%s) not deleted", rs.Primary.ID)
+				}
 			}
 		}
+		return nil
 	}
-	return nil
 }
 
 func testAccCheckBGPPeerExists(name string) resource.TestCheckFunc {

@@ -1,6 +1,7 @@
 package macie_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,18 +16,19 @@ import (
 )
 
 func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3BucketAssociationDestroy,
+		CheckDestroy:             testAccCheckS3BucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
+					testAccCheckS3BucketAssociationExists(ctx, "aws_macie_s3_bucket_association.test"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "NONE"),
 				),
@@ -34,7 +36,7 @@ func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
 			{
 				Config: testAccS3BucketAssociationConfig_basicOneTime(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
+					testAccCheckS3BucketAssociationExists(ctx, "aws_macie_s3_bucket_association.test"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "FULL"),
 				),
@@ -44,18 +46,19 @@ func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
 }
 
 func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3BucketAssociationDestroy,
+		CheckDestroy:             testAccCheckS3BucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_accountIdAndPrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
+					testAccCheckS3BucketAssociationExists(ctx, "aws_macie_s3_bucket_association.test"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "NONE"),
 				),
@@ -63,7 +66,7 @@ func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 			{
 				Config: testAccS3BucketAssociationConfig_accountIdAndPrefixOneTime(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
+					testAccCheckS3BucketAssociationExists(ctx, "aws_macie_s3_bucket_association.test"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
 					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "FULL"),
 				),
@@ -72,45 +75,47 @@ func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	})
 }
 
-func testAccCheckS3BucketAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+func testAccCheckS3BucketAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie_s3_bucket_association" {
-			continue
-		}
-
-		req := &macie.ListS3ResourcesInput{}
-		acctId := rs.Primary.Attributes["member_account_id"]
-		if acctId != "" {
-			req.MemberAccountId = aws.String(acctId)
-		}
-
-		dissociated := true
-		err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
-			for _, v := range page.S3Resources {
-				if aws.StringValue(v.BucketName) == rs.Primary.Attributes["bucket_name"] && aws.StringValue(v.Prefix) == rs.Primary.Attributes["prefix"] {
-					dissociated = false
-					return false
-				}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie_s3_bucket_association" {
+				continue
 			}
 
-			return true
-		})
-		if err != nil {
-			return err
-		}
+			req := &macie.ListS3ResourcesInput{}
+			acctId := rs.Primary.Attributes["member_account_id"]
+			if acctId != "" {
+				req.MemberAccountId = aws.String(acctId)
+			}
 
-		if !dissociated {
-			return fmt.Errorf("S3 resource %s/%s is not dissociated from Macie", rs.Primary.Attributes["bucket_name"], rs.Primary.Attributes["prefix"])
+			dissociated := true
+			err := conn.ListS3ResourcesPagesWithContext(ctx, req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+				for _, v := range page.S3Resources {
+					if aws.StringValue(v.BucketName) == rs.Primary.Attributes["bucket_name"] && aws.StringValue(v.Prefix) == rs.Primary.Attributes["prefix"] {
+						dissociated = false
+						return false
+					}
+				}
+
+				return true
+			})
+			if err != nil {
+				return err
+			}
+
+			if !dissociated {
+				return fmt.Errorf("S3 resource %s/%s is not dissociated from Macie", rs.Primary.Attributes["bucket_name"], rs.Primary.Attributes["prefix"])
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckS3BucketAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckS3BucketAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -124,7 +129,7 @@ func testAccCheckS3BucketAssociationExists(name string) resource.TestCheckFunc {
 		}
 
 		exists := false
-		err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+		err := conn.ListS3ResourcesPagesWithContext(ctx, req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
 			for _, v := range page.S3Resources {
 				if aws.StringValue(v.BucketName) == rs.Primary.Attributes["bucket_name"] && aws.StringValue(v.Prefix) == rs.Primary.Attributes["prefix"] {
 					exists = true
@@ -146,12 +151,12 @@ func testAccCheckS3BucketAssociationExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 	input := &macie.ListS3ResourcesInput{}
 
-	_, err := conn.ListS3Resources(input)
+	_, err := conn.ListS3ResourcesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,6 +18,7 @@ import (
 // add sweeper to delete known test servicecat product portfolio associations
 
 func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -26,12 +28,12 @@ func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProductPortfolioAssociationDestroy,
+		CheckDestroy:             testAccCheckProductPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductPortfolioAssociationExists(resourceName),
+					testAccCheckProductPortfolioAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 				),
@@ -46,6 +48,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -55,13 +58,13 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProductPortfolioAssociationDestroy,
+		CheckDestroy:             testAccCheckProductPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
+					testAccCheckProductPortfolioAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,35 +72,37 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProductPortfolioAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckProductPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_product_portfolio_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_product_portfolio_association" {
+				continue
+			}
+
+			acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(rs.Primary.ID)
+
+			if err != nil {
+				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			err = tfservicecatalog.WaitProductPortfolioAssociationDeleted(ctx, conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationDeleteTimeout)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("waiting for Service Catalog Product Portfolio Association to be destroyed (%s): %w", rs.Primary.ID, err)
+			}
 		}
 
-		acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfservicecatalog.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationDeleteTimeout)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("waiting for Service Catalog Product Portfolio Association to be destroyed (%s): %w", rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProductPortfolioAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProductPortfolioAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -111,9 +116,9 @@ func testAccCheckProductPortfolioAssociationExists(resourceName string) resource
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-		_, err = tfservicecatalog.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationReadyTimeout)
+		_, err = tfservicecatalog.WaitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Product Portfolio Association existence (%s): %w", rs.Primary.ID, err)

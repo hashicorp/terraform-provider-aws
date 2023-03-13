@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -26,7 +27,44 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func Test_StripRevision(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{"empty", "", ""},
+		{
+			"invalid arn",
+			"some:string:thing",
+			"",
+		},
+		{
+			"with revision",
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task:42", //lintignore:AWSAT003,AWSAT005
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task",    //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			"no revision",
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task", //lintignore:AWSAT003,AWSAT005
+			"arn:aws:ecs:us-east-1:000000000000:task-definition/my-task", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.StripRevision(tc.s); got != tc.want {
+				t.Errorf("StripRevision() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestAccECSTaskDefinition_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,20 +74,22 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
@@ -65,6 +105,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -74,12 +115,12 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_scratchVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
 			{
@@ -94,6 +135,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,12 +145,12 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_dockerVolumes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                                             rName,
@@ -137,6 +179,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -146,12 +189,12 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_dockerVolumesMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                          rName,
@@ -172,6 +215,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,12 +225,12 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_runtimePlatformMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "LINUX",
@@ -206,6 +250,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -215,12 +260,12 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
@@ -240,6 +285,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -249,12 +295,12 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
@@ -273,6 +319,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -282,12 +329,12 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsVolumeMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                       rName,
@@ -308,6 +355,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -317,12 +365,12 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsVolume(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                       rName,
@@ -344,6 +392,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -352,12 +401,12 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolume(rName, "ENABLED", 2999),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                       rName,
@@ -381,6 +430,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -390,12 +440,12 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsAccessPoint(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name":                       rName,
@@ -422,6 +472,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -441,12 +492,12 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fsxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						"name": rName,
@@ -471,6 +522,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -480,12 +532,12 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_scopedDockerVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
@@ -503,6 +555,7 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/2694
 func TestAccECSTaskDefinition_service(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
@@ -513,20 +566,20 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_service(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
-					testAccCheckServiceExists("aws_ecs_service.test", &service),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					testAccCheckServiceExists(ctx, "aws_ecs_service.test", &service),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_serviceModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
-					testAccCheckServiceExists("aws_ecs_service.test", &service),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					testAccCheckServiceExists(ctx, "aws_ecs_service.test", &service),
 				),
 			},
 			{
@@ -541,6 +594,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -550,12 +604,12 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
 			{
@@ -570,6 +624,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_networkMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -579,12 +634,12 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_networkMode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
 				),
 			},
@@ -600,6 +655,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -609,12 +665,12 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_ipcMode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "host"),
 				),
 			},
@@ -630,6 +686,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_pidMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -639,12 +696,12 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_pidMode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "pid_mode", "host"),
 				),
 			},
@@ -660,6 +717,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_constraint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -669,12 +727,12 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_constraint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 					testAccCheckTaskDefinitionConstraintsAttrs(&def),
 				),
@@ -691,6 +749,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before ecs.TaskDefinition
 	var after ecs.TaskDefinition
 
@@ -701,18 +760,18 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &before),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &before),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_updatedVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &after),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &after),
 					testAccCheckTaskDefinitionRecreated(t, &before, &after),
 				),
 			},
@@ -729,6 +788,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/2336
 func TestAccECSTaskDefinition_arrays(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -738,12 +798,12 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_arrays(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &conf),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &conf),
 				),
 			},
 			{
@@ -758,6 +818,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -767,12 +828,12 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &conf),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
@@ -795,6 +856,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -804,12 +866,12 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &conf),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
@@ -829,6 +891,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -838,12 +901,12 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &conf),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &conf),
 				),
 			},
 			{
@@ -859,6 +922,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
 func TestAccECSTaskDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -868,13 +932,13 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -887,6 +951,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var taskDefinition ecs.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
@@ -895,12 +960,12 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -915,7 +980,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -924,7 +989,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 			{
 				Config: testAccTaskDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -934,6 +999,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_proxy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var taskDefinition ecs.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
@@ -952,12 +1018,12 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_proxyConfiguration(rName, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &taskDefinition),
 					testAccCheckTaskDefinitionProxyConfiguration(&taskDefinition, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
 				),
 			},
@@ -973,6 +1039,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
+	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -982,12 +1049,12 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(resourceName, &def),
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", "1"),
 				),
 			},
@@ -1002,10 +1069,27 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
+				ExpectError: regexp.MustCompile(`invalid container definition supplied at index \(1\)`),
+			},
+		},
+	})
+}
+
 func testAccTaskDefinitionConfig_proxyConfiguration(rName string, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) string {
-
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -1119,6 +1203,8 @@ func testAccCheckTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) resourc
 }
 
 func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
+	t.Parallel()
+
 	validDefinitions := []string{
 		testValidTaskDefinitionValidContainerDefinitions,
 	}
@@ -1140,42 +1226,44 @@ func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
 	}
 }
 
-func testAccCheckTaskDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+func testAccCheckTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecs_task_definition" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_task_definition" {
+				continue
+			}
+
+			input := ecs.DescribeTaskDefinitionInput{
+				TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),
+			}
+
+			out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
+
+			if err != nil {
+				return err
+			}
+
+			if out.TaskDefinition != nil && *out.TaskDefinition.Status != ecs.TaskDefinitionStatusInactive {
+				return fmt.Errorf("ECS task definition still exists:\n%#v", *out.TaskDefinition)
+			}
 		}
 
-		input := ecs.DescribeTaskDefinitionInput{
-			TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),
-		}
-
-		out, err := conn.DescribeTaskDefinition(&input)
-
-		if err != nil {
-			return err
-		}
-
-		if out.TaskDefinition != nil && *out.TaskDefinition.Status != ecs.TaskDefinitionStatusInactive {
-			return fmt.Errorf("ECS task definition still exists:\n%#v", *out.TaskDefinition)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTaskDefinitionExists(name string, def *ecs.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionExists(ctx context.Context, name string, def *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
-		out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+		out, err := conn.DescribeTaskDefinitionWithContext(ctx, &ecs.DescribeTaskDefinitionInput{
 			TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),
 		})
 		if err != nil {
@@ -1724,7 +1812,6 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName string, architecture bool, osFamily bool) string {
-
 	var arch string
 	if architecture {
 		arch = `cpu_architecture         = "X86_64"`
@@ -2615,4 +2702,33 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 }
 `)
+}
+
+func testAccTaskDefinitionConfig_invalidContainerDefinition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+	{
+		"cpu": 10,
+		"command": ["sleep", "10"],
+		"entryPoint": ["/"],
+		"essential": true,
+		"image": "mongodb",
+		"memory": 128,
+		"name": "mongodb",
+		"portMappings": [
+			{
+				"containerPort": 28017,
+				"hostPort": 28017
+			}
+		]
+	},
+	null
+]
+TASK_DEFINITION
+}
+`, rName)
 }

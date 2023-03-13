@@ -1,6 +1,7 @@
 package macie2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccClassificationJob_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,13 +25,13 @@ func testAccClassificationJob_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeOneTime),
@@ -46,6 +48,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 }
 
 func testAccClassificationJob_Name_Generated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -53,13 +56,13 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
@@ -74,6 +77,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 }
 
 func testAccClassificationJob_NamePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -82,13 +86,13 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_namePrefix(bucketName, namePrefix, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
@@ -103,6 +107,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 }
 
 func testAccClassificationJob_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,14 +115,14 @@ func testAccClassificationJob_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
 				),
 			},
 		},
@@ -125,6 +130,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 }
 
 func testAccClassificationJob_Status(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output, macie2Output2 macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -132,13 +138,13 @@ func testAccClassificationJob_Status(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_status(bucketName, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_definitions.0.buckets.0", bucketName),
@@ -148,7 +154,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 			{
 				Config: testAccClassificationJobConfig_status(bucketName, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output2),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output2),
 					testAccCheckClassificationJobNotRecreated(&macie2Output, &macie2Output2),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusUserPaused),
@@ -166,6 +172,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 }
 
 func testAccClassificationJob_complete(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -175,13 +182,13 @@ func testAccClassificationJob_complete(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_complete(bucketName, macie2.JobStatusRunning, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_definitions.0.buckets.0", bucketName),
@@ -212,7 +219,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 			{
 				Config: testAccClassificationJobConfig_complete(bucketName, macie2.JobStatusRunning, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -249,6 +256,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 }
 
 func testAccClassificationJob_WithTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -256,13 +264,13 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_completeTags(bucketName, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -275,7 +283,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 			{
 				Config: testAccClassificationJobConfig_completeTags(bucketName, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusUserPaused),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -295,6 +303,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 }
 
 func testAccClassificationJob_BucketCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	currentAccount := "data.aws_caller_identity.current"
@@ -304,13 +313,13 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationJobConfig_bucketCriteria(macie2.JobStatusRunning, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -341,7 +350,7 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 			{
 				Config: testAccClassificationJobConfig_bucketCriteria(macie2.JobStatusRunning, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
 					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -378,17 +387,17 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 	})
 }
 
-func testAccCheckClassificationJobExists(resourceName string, macie2Session *macie2.DescribeClassificationJobOutput) resource.TestCheckFunc {
+func testAccCheckClassificationJobExists(ctx context.Context, resourceName string, macie2Session *macie2.DescribeClassificationJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.DescribeClassificationJob(input)
+		resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -404,32 +413,34 @@ func testAccCheckClassificationJobExists(resourceName string, macie2Session *mac
 	}
 }
 
-func testAccCheckClassificationJobDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+func testAccCheckClassificationJobDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie2_classification_job" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie2_classification_job" {
+				continue
+			}
+			input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
+
+			resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
+
+			if tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+				tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && aws.StringValue(resp.JobStatus) != macie2.JobStatusCancelled {
+				return fmt.Errorf("macie ClassificationJob %q still exists", rs.Primary.ID)
+			}
 		}
-		input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.DescribeClassificationJob(input)
-
-		if tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && aws.StringValue(resp.JobStatus) != macie2.JobStatusCancelled {
-			return fmt.Errorf("macie ClassificationJob %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckClassificationJobNotRecreated(i, j *macie2.DescribeClassificationJobOutput) resource.TestCheckFunc {

@@ -1,6 +1,7 @@
 package macie2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,19 +15,20 @@ import (
 )
 
 func testAccAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -44,19 +46,20 @@ func testAccAccount_basic(t *testing.T) {
 }
 
 func testAccAccount_FindingPublishingFrequency(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_finding(macie2.FindingPublishingFrequencyFifteenMinutes),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -67,7 +70,7 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 			{
 				Config: testAccAccountConfig_finding(macie2.FindingPublishingFrequencyOneHour),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -85,19 +88,20 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 }
 
 func testAccAccount_WithStatus(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_status(macie2.MacieStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -108,7 +112,7 @@ func testAccAccount_WithStatus(t *testing.T) {
 			{
 				Config: testAccAccountConfig_status(macie2.MacieStatusPaused),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -126,19 +130,20 @@ func testAccAccount_WithStatus(t *testing.T) {
 }
 
 func testAccAccount_WithFindingAndStatus(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_findingAndStatus(macie2.FindingPublishingFrequencyFifteenMinutes, macie2.MacieStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -149,7 +154,7 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 			{
 				Config: testAccAccountConfig_findingAndStatus(macie2.FindingPublishingFrequencyOneHour, macie2.MacieStatusPaused),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
@@ -167,20 +172,21 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 }
 
 func testAccAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -188,45 +194,46 @@ func testAccAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_macie2_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_macie2_account" {
+				continue
+			}
+
+			input := &macie2.GetMacieSessionInput{}
+			resp, err := conn.GetMacieSessionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil {
+				return fmt.Errorf("macie account %q still enabled", rs.Primary.ID)
+			}
 		}
 
-		input := &macie2.GetMacieSessionInput{}
-		resp, err := conn.GetMacieSession(input)
-
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil {
-			return fmt.Errorf("macie account %q still enabled", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckAccountExists(resourceName string, macie2Session *macie2.GetMacieSessionOutput) resource.TestCheckFunc {
+func testAccCheckAccountExists(ctx context.Context, resourceName string, macie2Session *macie2.GetMacieSessionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetMacieSessionInput{}
 
-		resp, err := conn.GetMacieSession(input)
+		resp, err := conn.GetMacieSessionWithContext(ctx, input)
 
 		if err != nil {
 			return err

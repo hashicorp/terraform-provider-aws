@@ -21,8 +21,8 @@ Manages a Service Catalog Product.
 ```terraform
 resource "aws_servicecatalog_product" "example" {
   name  = "example"
-  owner = [aws_security_group.example.id]
-  type  = aws_subnet.main.id
+  owner = "example-owner"
+  type  = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     template_url = "https://s3.amazonaws.com/cf-templates-ozkq9d3hgiq2-us-east-1/temp1.json"
@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `read` - (Default `10m`)

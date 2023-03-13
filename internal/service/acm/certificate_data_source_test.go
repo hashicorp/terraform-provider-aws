@@ -130,15 +130,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -179,27 +179,27 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 		},
 	})
@@ -208,8 +208,8 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
-	key := acctest.TLSRSAPrivateKeyPEM(4096)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, acctest.RandomDomain().String())
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

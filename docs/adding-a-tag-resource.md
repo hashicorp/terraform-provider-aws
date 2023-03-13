@@ -20,6 +20,7 @@ import (
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
@@ -27,12 +28,12 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy,
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(resourceName),
+					testAccCheck{Service}TagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -47,6 +48,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
@@ -54,13 +56,13 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy,
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAws{Service}Tag(), resourceName),
+					testAccCheck{Service}TagExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, resourceAws{Service}Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,6 +71,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_Value(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
@@ -76,12 +79,12 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy,
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(resourceName),
+					testAccCheck{Service}TagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -94,7 +97,7 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(resourceName),
+					testAccCheck{Service}TagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
@@ -174,6 +177,3 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````
-
-
-

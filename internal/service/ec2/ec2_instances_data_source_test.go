@@ -22,6 +22,7 @@ func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_ids(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
 					// Public IP values are flakey for new EC2 instances due to eventual consistency
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
@@ -79,6 +80,7 @@ func TestAccEC2InstancesDataSource_empty(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", "0"),
 				),
@@ -99,6 +101,7 @@ func TestAccEC2InstancesDataSource_timeout(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttrSet("data.aws_instances.test", "ipv6_addresses.#"),
 					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
@@ -111,11 +114,14 @@ func testAccInstancesDataSourceConfig_ids(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  count         = 2
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  count              = 2
+  ami                = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type      = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id          = aws_subnet.test[0].id
+  ipv6_address_count = 1
 
   tags = {
     Name = %[1]q

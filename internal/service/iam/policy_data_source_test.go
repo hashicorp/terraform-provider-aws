@@ -13,6 +13,8 @@ import (
 )
 
 func TestPolicySearchDetails(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name       string
 		PathPrefix string
@@ -41,7 +43,10 @@ func TestPolicySearchDetails(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfiam.PolicySearchDetails(testCase.Name, testCase.PathPrefix)
 
 			if got != testCase.Expected {

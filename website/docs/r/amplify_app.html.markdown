@@ -124,6 +124,18 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Custom Image
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  environment_variables = {
+    "_CUSTOM_IMAGE" = "node:16",
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -143,10 +155,9 @@ The following arguments are supported:
 * `environment_variables` - (Optional) Environment variables map for an Amplify app.
 * `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
 * `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
-* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`.
+* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
 * `repository` - (Optional) Repository for an Amplify app.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 
 An `auto_branch_creation_config` block supports the following arguments:
 

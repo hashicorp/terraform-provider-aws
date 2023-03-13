@@ -1,6 +1,7 @@
 package cognitoidentity_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -18,20 +19,21 @@ import (
 )
 
 func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
@@ -44,7 +46,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(updatedName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
@@ -54,19 +56,20 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
@@ -75,7 +78,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 			{
 				Config: testAccPoolRolesAttachmentConfig_roleMappings(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
@@ -89,7 +92,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 			{
 				Config: testAccPoolRolesAttachmentConfig_roleMappingsUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
@@ -98,7 +101,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
 					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
@@ -109,20 +112,21 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolRolesAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
+					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,13 +135,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
@@ -148,13 +153,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name),
@@ -165,13 +171,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 }
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name),
@@ -181,7 +188,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t 
 	})
 }
 
-func testAccCheckPoolRolesAttachmentExists(n string) resource.TestCheckFunc {
+func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -192,9 +199,9 @@ func testAccCheckPoolRolesAttachmentExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
-		_, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
+		_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
 		})
 
@@ -202,27 +209,29 @@ func testAccCheckPoolRolesAttachmentExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPoolRolesAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
-			continue
-		}
-
-		_, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
-			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
+				continue
 			}
-			return err
-		}
-	}
 
-	return nil
+			_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+				IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
+			})
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccPoolRolesAttachmentConfig(name string) string {

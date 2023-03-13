@@ -1,6 +1,7 @@
 package cognitoidp_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -16,19 +17,20 @@ import (
 )
 
 func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_risk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRiskConfigurationDestroy,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRiskConfigurationExists(resourceName),
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
@@ -46,7 +48,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 			{
 				Config: testAccRiskConfigurationConfig_riskExceptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRiskConfigurationExists(resourceName),
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "2"),
@@ -63,19 +65,20 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 }
 
 func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_risk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRiskConfigurationDestroy,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRiskConfigurationConfig_riskExceptionClient(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRiskConfigurationExists(resourceName),
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", "aws_cognito_user_pool_client.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
@@ -96,19 +99,20 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 }
 
 func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_risk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRiskConfigurationDestroy,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRiskConfigurationConfig_compromised(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRiskConfigurationExists(resourceName),
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "1"),
@@ -129,20 +133,21 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 }
 
 func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_risk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRiskConfigurationDestroy,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRiskConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,29 +155,31 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 	})
 }
 
-func testAccCheckRiskConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+func testAccCheckRiskConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_risk_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cognito_risk_configuration" {
+				continue
+			}
+
+			_, err := tfcognitoidp.FindRiskConfigurationById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		_, err := tfcognitoidp.FindRiskConfigurationById(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRiskConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckRiskConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -183,9 +190,9 @@ func testAccCheckRiskConfigurationExists(name string) resource.TestCheckFunc {
 			return errors.New("No Cognito Risk Configuration ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-		_, err := tfcognitoidp.FindRiskConfigurationById(conn, rs.Primary.ID)
+		_, err := tfcognitoidp.FindRiskConfigurationById(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

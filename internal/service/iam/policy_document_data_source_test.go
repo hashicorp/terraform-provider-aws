@@ -263,6 +263,72 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON,
+				ExpectError: regexp.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON,
+				ExpectError: regexp.MustCompile(`"override_json" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON,
+				ExpectError: regexp.MustCompile(`"source_json" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
@@ -1441,3 +1507,39 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrinc
   ]
 }`, acctest.Partition())
 }
+
+var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString = `
+data "aws_iam_policy_document" "test" {
+  override_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  override_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString = `
+data "aws_iam_policy_document" "test" {
+  override_json = ""
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  override_json = "{"
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString = `
+data "aws_iam_policy_document" "test" {
+  source_json = ""
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  source_json = "{"
+}
+`

@@ -28,7 +28,6 @@ Follow the guide for your contribution type and refer to the Development Referen
 | [Import Support](add-import-support.md) | Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this will need to be added later. |
 | [Documentation Changes](documentation-changes.md)| The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process. |
 
-
 ### 3. Write Tests
 
 We require changes to be covered by [acceptance tests](running-and-writing-acceptance-tests.md) for all contributions. If you are unable to pay for acceptance tests for your contributions, mention this in your pull request. We will happily accept "best effort" acceptance tests implementations and run them for you on our side. Your PR may take longer to merge, but this is not a blocker for contributions.
@@ -46,3 +45,9 @@ Pull requests are usually triaged within a few days of creation and are prioriti
 ### Submit an Issue
 
 In addition to contributions, we welcome [bug reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md).
+
+### Join the Contributors Slack
+
+For frequent contributors, it's useful to join the contributors Slack channel hosted within the HashiCorp Slack workspace. This Slack channel is used to discuss topics such as general contribution questions, suggestions for improving the contribution process, coordinating on pair programming sessions, etc. The channel is not intended as a place to request status updates on open issues or pull requests. For prioritization questions, instead refer to the [prioritization guide](prioritization.md).
+
+To request to join, fill out the [request form](https://forms.gle/Gf9ZAmUYXuzafkct6) and allow time for the request to be reviewed and processed.

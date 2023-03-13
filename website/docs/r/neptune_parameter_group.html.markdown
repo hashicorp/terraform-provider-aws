@@ -40,7 +40,6 @@ Parameter blocks support the following:
 * `value` - (Required) The value of the Neptune parameter.
 * `apply_method` - (Optional) The apply method of the Neptune parameter. Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

@@ -4,7 +4,6 @@ This area is primarily for AWS provider contributors and maintainers. For inform
 
 OpenSearch is a continuation of the Elasticsearch service.
 
-
 ## Handy Links
 
 * [Find out about contributing](https://hashicorp.github.io/terraform-provider-aws/#contribute) to the AWS provider!

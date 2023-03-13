@@ -1,6 +1,7 @@
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccNeptuneParameterGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
@@ -24,12 +26,12 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("pg:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -49,6 +51,7 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 }
 
 func TestAccNeptuneParameterGroup_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
@@ -57,12 +60,12 @@ func TestAccNeptuneParameterGroup_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
@@ -77,6 +80,7 @@ func TestAccNeptuneParameterGroup_description(t *testing.T) {
 }
 
 func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_parameter_group.test"
@@ -85,12 +89,12 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "pending-reboot"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -114,7 +118,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
@@ -124,6 +128,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 }
 
 func TestAccNeptuneParameterGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBParameterGroup
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -133,12 +138,12 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_tagsSingle(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -151,7 +156,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tagsSingle(rName, "key1", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
 				),
@@ -159,7 +164,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tagsMultiple(rName, "key2", "value2", "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
@@ -169,33 +174,34 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_neptune_parameter_group" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_neptune_parameter_group" {
+				continue
+			}
 
-		// Try to find the Group
-		resp, err := conn.DescribeDBParameterGroups(
-			&neptune.DescribeDBParameterGroupsInput{
+			// Try to find the Group
+			resp, err := conn.DescribeDBParameterGroupsWithContext(ctx, &neptune.DescribeDBParameterGroupsInput{
 				DBParameterGroupName: aws.String(rs.Primary.ID),
 			})
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-				return nil
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+					return nil
+				}
+				return err
 			}
-			return err
+
+			if len(resp.DBParameterGroups) != 0 && aws.StringValue(resp.DBParameterGroups[0].DBParameterGroupName) == rs.Primary.ID {
+				return fmt.Errorf("DB Parameter Group still exists")
+			}
 		}
 
-		if len(resp.DBParameterGroups) != 0 && aws.StringValue(resp.DBParameterGroups[0].DBParameterGroupName) == rs.Primary.ID {
-			return fmt.Errorf("DB Parameter Group still exists")
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckParameterGroupAttributes(v *neptune.DBParameterGroup, rName string) resource.TestCheckFunc {
@@ -212,7 +218,7 @@ func testAccCheckParameterGroupAttributes(v *neptune.DBParameterGroup, rName str
 	}
 }
 
-func testAccCheckParameterGroupExists(n string, v *neptune.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, n string, v *neptune.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -223,13 +229,13 @@ func testAccCheckParameterGroupExists(n string, v *neptune.DBParameterGroup) res
 			return fmt.Errorf("No Neptune Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		opts := neptune.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.DescribeDBParameterGroups(&opts)
+		resp, err := conn.DescribeDBParameterGroupsWithContext(ctx, &opts)
 
 		if err != nil {
 			return err

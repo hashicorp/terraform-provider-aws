@@ -24,6 +24,8 @@ const (
 	ErrActionWaitingForCreation   = "waiting for creation"
 	ErrActionWaitingForDeletion   = "waiting for delete"
 	ErrActionWaitingForUpdate     = "waiting for update"
+	ErrActionExpandingResourceId  = "expanding resource id"
+	ErrActionFlatteningResourceId = "flattening resource id"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings
@@ -53,6 +55,15 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 		diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
+		},
+	}
+}
+
+func DiagErrorMessage(service, action, resource, id, message string) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
 		},
 	}
 }

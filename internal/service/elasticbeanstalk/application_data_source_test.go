@@ -7,11 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
@@ -23,7 +19,6 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEKSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_basic(rName),
@@ -49,28 +44,4 @@ data "aws_elastic_beanstalk_application" "test" {
   name = aws_elastic_beanstalk_application.tftest.name
 }
 `, testAccApplicationConfig_maxAge(rName))
-}
-
-func testAccCheckEKSClusterDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_eks_cluster" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
-
-		_, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EKS Cluster %s still exists", rs.Primary.ID)
-	}
-
-	return nil
 }

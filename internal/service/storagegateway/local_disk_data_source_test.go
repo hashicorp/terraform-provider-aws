@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
@@ -20,7 +21,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
@@ -40,6 +41,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 }
 
 func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
@@ -47,7 +49,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),

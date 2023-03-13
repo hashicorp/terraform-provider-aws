@@ -1,6 +1,7 @@
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,7 +15,9 @@ import (
 )
 
 func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
-	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests due to potential KMS key corruption")
+
+	ctx := acctest.Context(t)
 
 	var settings glue.DataCatalogEncryptionSettings
 
@@ -31,7 +34,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 			{
 				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "false"),
@@ -49,7 +52,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 			{
 				Config: testAccDataCatalogEncryptionSettingsConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "true"),
@@ -62,7 +65,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 			{
 				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "false"),
@@ -76,7 +79,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, v *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
+func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resourceName string, v *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc { //nolint:unused // This function is used in a skipped acceptance test
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -87,9 +90,9 @@ func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, v *glu
 			return fmt.Errorf("No Glue Data Catalog Encryption Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
-		output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
+		output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),
 		})
 
@@ -103,7 +106,7 @@ func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, v *glu
 	}
 }
 
-func testAccDataCatalogEncryptionSettingsConfig_encrypted(rName string) string {
+func testAccDataCatalogEncryptionSettingsConfig_encrypted(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -142,7 +145,7 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 `, rName)
 }
 
-func testAccDataCatalogEncryptionSettingsConfig_nonEncrypted() string {
+func testAccDataCatalogEncryptionSettingsConfig_nonEncrypted() string { //nolint:unused // This function is used in a skipped acceptance test
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

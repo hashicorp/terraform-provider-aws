@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	// OperationTimeout is the Timout Value for Operations
-	OperationTimeout = 20 * time.Minute
+	// OperationTimeout is the Timeout Value for Operations
+	OperationTimeout = 30 * time.Minute
 	// OperationDelay is the Delay Value for Operations
 	OperationDelay = 5 * time.Second
-	// OperationMinTimeout is the MinTimout Value for Operations
+	// OperationMinTimeout is the MinTimeout Value for Operations
 	OperationMinTimeout = 3 * time.Second
 
 	// DatabaseStateModifying is a state value for a Relational Database undergoing a modification
@@ -26,26 +26,26 @@ const (
 	// DatabaseStateAvailable is a state value for a Relational Database available for modification
 	DatabaseStateAvailable = "available"
 
-	// DatabaseTimeout is the Timout Value for Relational Database Modifications
-	DatabaseTimeout = 20 * time.Minute
+	// DatabaseTimeout is the Timeout Value for Relational Database Modifications
+	DatabaseTimeout = 30 * time.Minute
 	// DatabaseDelay is the Delay Value for Relational Database Modifications
 	DatabaseDelay = 5 * time.Second
-	// DatabaseMinTimeout is the MinTimout Value for Relational Database Modifications
+	// DatabaseMinTimeout is the MinTimeout Value for Relational Database Modifications
 	DatabaseMinTimeout = 3 * time.Second
 )
 
-// waitOperation waits for an Operation to return Succeeded or Compleated
-func waitOperation(conn *lightsail.Lightsail, oid *string) error {
+// waitOperation waits for an Operation to return Succeeded or Completed
+func waitOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(conn, oid),
+		Refresh:    statusOperation(ctx, conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return err
@@ -55,17 +55,17 @@ func waitOperation(conn *lightsail.Lightsail, oid *string) error {
 }
 
 // waitDatabaseModified waits for a Modified Database return available
-func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
+func waitDatabaseModified(ctx context.Context, conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    statusDatabase(conn, db),
+		Refresh:    statusDatabase(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
 		return output, err
@@ -76,17 +76,36 @@ func waitDatabaseModified(conn *lightsail.Lightsail, db *string) (*lightsail.Get
 
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
 
-func waitDatabaseBackupRetentionModified(conn *lightsail.Lightsail, db *string, status *bool) error {
+func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
-		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
-		Refresh:    statusDatabaseBackupRetention(conn, db),
+		Pending:    []string{strconv.FormatBool(!target)},
+		Target:     []string{strconv.FormatBool(target)},
+		Refresh:    statusDatabaseBackupRetention(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
+		return err
+	}
+
+	return err
+}
+
+func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{strconv.FormatBool(!target)},
+		Target:     []string{strconv.FormatBool(target)},
+		Refresh:    statusDatabasePubliclyAccessible(ctx, conn, db),
+		Timeout:    DatabaseTimeout,
+		Delay:      DatabaseDelay,
+		MinTimeout: DatabaseMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
 		return err
@@ -204,6 +223,45 @@ func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *ligh
 			tfresource.SetLastError(err, errors.New("The deployment failed. Use the GetContainerLog action to view the log events for the containers in the deployment to try to determine the reason for the failure."))
 		}
 
+		return err
+	}
+
+	return err
+}
+
+func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail, id *string) (*lightsail.GetInstanceStateOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "stopping"},
+		Target:     []string{"stopped", "running"},
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    OperationTimeout,
+		Delay:      OperationDelay,
+		MinTimeout: OperationMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if out, ok := outputRaw.(*lightsail.GetInstanceStateOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+// waitOperation waits for an Operation to return Succeeded or Completed with context
+func waitOperationWithContext(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{lightsail.OperationStatusStarted},
+		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
+		Refresh:    statusOperation(ctx, conn, oid),
+		Timeout:    OperationTimeout,
+		Delay:      OperationDelay,
+		MinTimeout: OperationMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return err
 	}
 

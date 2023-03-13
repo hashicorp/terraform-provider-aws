@@ -32,19 +32,26 @@ resource "aws_vpc_ipam" "main" {
 Shared with multiple operating_regions:
 
 ```terraform
+resource "aws_vpc_ipam" "main" {
+  description = "multi region ipam"
+  dynamic operating_regions {
+    for_each = local.all_ipam_regions
+    content {
+      region_name = operating_regions.value
+    }
+  }
+}
+
+data "aws_region" "current" {}
+
 variable "ipam_regions" {
   type    = list
   default = ["us-east-1", "us-west-2"]
 }
 
-resource "aws_vpc_ipam" "example" {
-  description = "test4"
-  dynamic operating_regions {
-    for_each = var.ipam_regions
-    content {
-      region_name = operating_regions.value
-    }
-  }
+locals {
+  # ensure current provider region is an operating_regions entry
+  all_ipam_regions = distinct(concat([data.aws_region.current.name], var.ipam_regions))
 }
 ```
 
@@ -72,7 +79,6 @@ In addition to all arguments above, the following attributes are exported:
 IP space. The public scope is intended for all internet-routable IP space.
 * `scope_count` - The number of scopes in the IPAM.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 

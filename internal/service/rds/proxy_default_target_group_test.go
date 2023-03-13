@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -26,15 +28,15 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
@@ -56,6 +58,7 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -65,15 +68,15 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_emptyConnectionPoolConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
@@ -95,6 +98,7 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -104,15 +108,15 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_connectionBorrowTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "120"),
 				),
 			},
@@ -124,7 +128,7 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_connectionBorrowTimeout(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "90"),
 				),
 			},
@@ -133,6 +137,7 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -142,15 +147,15 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_initQuery(rName, "SET x=1, y=2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET x=1, y=2"),
 				),
 			},
@@ -162,7 +167,7 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_initQuery(rName, "SET a=2, b=1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET a=2, b=1"),
 				),
 			},
@@ -171,6 +176,7 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -180,15 +186,15 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxConnectionsPercent(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "100"),
 				),
 			},
@@ -200,7 +206,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxConnectionsPercent(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "75"),
 				),
 			},
@@ -209,6 +215,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,15 +225,15 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxIdleConnectionsPercent(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "50"),
 				),
 			},
@@ -238,7 +245,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxIdleConnectionsPercent(rName, 33),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "33"),
 				),
 			},
@@ -247,6 +254,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -257,15 +265,15 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 	sessionPinningFilters := "EXCLUDE_VARIABLE_SETS"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
 				),
 			},
@@ -277,7 +285,7 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_sessionPinningFilters(rName, sessionPinningFilters),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.0", sessionPinningFilters),
 				),
@@ -287,6 +295,7 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -296,18 +305,18 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyExists(resourceName, &v),
+					testAccCheckProxyExists(ctx, resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -315,37 +324,38 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProxyTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckProxyTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_proxy_default_target_group" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_proxy_default_target_group" {
+				continue
+			}
 
-		// Try to find the Group
-		resp, err := conn.DescribeDBProxyTargetGroups(
-			&rds.DescribeDBProxyTargetGroupsInput{
+			// Try to find the Group
+			resp, err := conn.DescribeDBProxyTargetGroupsWithContext(ctx, &rds.DescribeDBProxyTargetGroupsInput{
 				DBProxyName:     aws.String(rs.Primary.ID),
 				TargetGroupName: aws.String("default"),
 			})
 
-		if err == nil {
-			if len(resp.TargetGroups) != 0 &&
-				*resp.TargetGroups[0].DBProxyName == rs.Primary.ID {
-				return fmt.Errorf("DB Proxy Target Group still exists")
+			if err == nil {
+				if len(resp.TargetGroups) != 0 &&
+					*resp.TargetGroups[0].DBProxyName == rs.Primary.ID {
+					return fmt.Errorf("DB Proxy Target Group still exists")
+				}
+			}
+
+			if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+				return err
 			}
 		}
 
-		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup) resource.TestCheckFunc {
+func testAccCheckProxyTargetGroupExists(ctx context.Context, n string, v *rds.DBProxyTargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -356,14 +366,14 @@ func testAccCheckProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup) res
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
 			DBProxyName:     aws.String(rs.Primary.ID),
 			TargetGroupName: aws.String("default"),
 		}
 
-		resp, err := conn.DescribeDBProxyTargetGroups(&opts)
+		resp, err := conn.DescribeDBProxyTargetGroupsWithContext(ctx, &opts)
 
 		if err != nil {
 			return err
@@ -395,7 +405,7 @@ resource "aws_db_proxy" "test" {
   require_tls            = true
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
