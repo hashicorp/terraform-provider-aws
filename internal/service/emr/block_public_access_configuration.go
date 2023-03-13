@@ -61,8 +61,6 @@ const (
 )
 
 func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	d.SetId(dummyIDBlockPublicAccessConfiguration)
-
 	conn := meta.(*conns.AWSClient).EMRConn()
 
 	blockPublicAccessConfiguration := &emr.BlockPublicAccessConfiguration{}
@@ -81,6 +79,7 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 	if err != nil {
 		return create.DiagError(names.EMR, create.ErrActionCreating, ResNameBlockPublicAccessConfiguration, d.Id(), err)
 	}
+	d.SetId(dummyIDBlockPublicAccessConfiguration)
 
 	return resourceBlockPublicAccessConfigurationRead(ctx, d, meta)
 }
@@ -103,8 +102,6 @@ func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.R
 }
 
 func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	d.SetId(dummyIDBlockPublicAccessConfiguration)
-
 	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Print("[INFO] Restoring EMR Block Public Access Configuration to default settings")
@@ -171,7 +168,6 @@ func flattenPermittedPublicSecurityGroupRuleRanges(apiObjects []*emr.PortRange) 
 }
 
 func expandPermittedPublicSecurityGroupRuleRange(tfMap map[string]interface{}) *emr.PortRange {
-
 	a := &emr.PortRange{}
 
 	a.MinRange = aws.Int64(int64(tfMap["min_range"].(int)))
