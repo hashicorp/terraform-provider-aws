@@ -50,7 +50,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 func testAccTableDataSourceConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 20
   write_capacity = 20
   hash_key       = "UserId"
