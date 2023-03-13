@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_qldb_ledger")
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLedgerCreate,
@@ -29,6 +30,11 @@ func ResourceLedger() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,7 +82,7 @@ func ResourceLedger() *schema.Resource {
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
@@ -99,7 +105,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.Name))
 
-	if _, err := waitLedgerCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitLedgerCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) create: %s", d.Id(), err)
 	}
 
@@ -203,7 +209,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteLedgerWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)
@@ -216,7 +222,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitLedgerDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitLedgerDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) delete: %s", d.Id(), err)
 	}
 
@@ -271,12 +277,12 @@ func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) resour
 	}
 }
 
-func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{qldb.LedgerStateCreating},
 		Target:     []string{qldb.LedgerStateActive},
 		Refresh:    statusLedgerState(ctx, conn, name),
-		Timeout:    8 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -289,12 +295,12 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, name string) (*qldb
 	return nil, err
 }
 
-func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{qldb.LedgerStateActive, qldb.LedgerStateDeleting},
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),
-		Timeout:    5 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
 

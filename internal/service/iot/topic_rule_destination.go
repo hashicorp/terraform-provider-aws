@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_topic_rule_destination")
 func ResourceTopicRuleDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicRuleDestinationCreate,
@@ -94,7 +95,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleDestinationWithContext(ctx, input)
 		},

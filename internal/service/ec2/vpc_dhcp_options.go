@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_dhcp_options")
 func ResourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsCreate,
@@ -95,7 +96,7 @@ func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
@@ -125,7 +126,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindDHCPOptionsByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -158,7 +159,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -224,7 +225,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 

@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_opensearch_domain")
 func DataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,
@@ -33,6 +34,10 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"anonymous_auth_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,

@@ -21,7 +21,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T
 	settingName := ecs.SettingNameContainerInstanceLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -50,7 +50,7 @@ func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	settingName := ecs.SettingNameServiceLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -79,7 +79,7 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	settingName := ecs.SettingNameTaskLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -108,7 +108,7 @@ func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 	settingName := ecs.SettingNameAwsvpcTrunking
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 	settingName := ecs.SettingNameContainerInsights
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),

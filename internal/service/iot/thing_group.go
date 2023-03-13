@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_thing_group")
 func ResourceThingGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingGroupCreate,
@@ -126,7 +127,7 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
@@ -266,7 +267,7 @@ func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, thingGroupDeleteTimeout,
+	_, err := tfresource.RetryWhen(ctx, thingGroupDeleteTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteThingGroupWithContext(ctx, &iot.DeleteThingGroupInput{
 				ThingGroupName: aws.String(d.Id()),

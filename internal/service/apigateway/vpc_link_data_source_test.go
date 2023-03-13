@@ -11,11 +11,12 @@ import (
 )
 
 func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_vpc_link.vpc_link"
 	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

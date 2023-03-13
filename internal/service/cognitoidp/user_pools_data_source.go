@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cognito_user_pools")
 func DataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolsRead,

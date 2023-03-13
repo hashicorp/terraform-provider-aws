@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_hsm_configuration")
 func ResourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,
@@ -77,7 +78,7 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
@@ -135,7 +136,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
-	tags := KeyValueTags(hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

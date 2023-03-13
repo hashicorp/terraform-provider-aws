@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_appautoscaling_target")
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetPut,
@@ -111,7 +112,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, 2*time.Minute,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
 		func() (interface{}, error) {
 			return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 		},
@@ -161,7 +162,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
 		return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
 

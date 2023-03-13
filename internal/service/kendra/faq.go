@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kendra_faq")
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFaqCreate,
@@ -144,7 +145,7 @@ func ResourceFaq() *schema.Resource {
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -174,7 +175,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Creating Kendra Faq %#v", input)
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateFaq(ctx, input)
 		},

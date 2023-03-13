@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_code_repository")
 func ResourceCodeRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCodeRepositoryCreate,
@@ -79,7 +80,7 @@ func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	name := d.Get("code_repository_name").(string)
 
 	input := &sagemaker.CreateCodeRepositoryInput{

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_flow_definition")
 func ResourceFlowDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowDefinitionCreate,
@@ -245,7 +246,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("flow_definition_name").(string)
 	input := &sagemaker.CreateFlowDefinitionInput{
@@ -272,7 +273,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateFlowDefinitionWithContext(ctx, input)
 	}, "ValidationException")
 

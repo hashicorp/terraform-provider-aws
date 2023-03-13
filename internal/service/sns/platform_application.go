@@ -97,6 +97,7 @@ var (
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
+// @SDKResource("aws_sns_platform_application")
 func ResourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlatformApplicationCreate,
@@ -128,7 +129,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreatePlatformApplicationWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -221,7 +222,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.SetPlatformApplicationAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 

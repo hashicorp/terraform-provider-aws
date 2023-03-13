@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_autoscaling_lifecycle_hook")
 func ResourceLifecycleHook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecycleHookPut,
@@ -76,7 +77,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Putting Auto Scaling Lifecycle Hook: %s", input)
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutLifecycleHookWithContext(ctx, input)
 		},

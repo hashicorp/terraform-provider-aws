@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticsearch_domain")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -393,7 +394,7 @@ func ResourceDomain() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(125, 1000),
+							ValidateFunc: validation.IntAtLeast(125),
 						},
 						"volume_size": {
 							Type:     schema.TypeInt,
@@ -535,7 +536,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -659,7 +660,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Creating Elasticsearch Domain: %s", input)
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateElasticsearchDomainWithContext(ctx, input)
 		},

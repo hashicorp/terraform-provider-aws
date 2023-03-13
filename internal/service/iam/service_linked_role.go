@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_service_linked_role")
 func ResourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
@@ -85,7 +86,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("aws_service_name").(string)
 	input := &iam.CreateServiceLinkedRoleInput{
@@ -143,7 +144,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
@@ -168,7 +169,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

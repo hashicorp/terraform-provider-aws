@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_worklink_website_certificate_authority_association")
 func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebsiteCertificateAuthorityAssociationCreate,

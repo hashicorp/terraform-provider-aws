@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudformation_stack")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -132,7 +133,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
 	name := d.Get("name").(string)
@@ -188,7 +189,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateStackWithContext(ctx, input)
 		},
@@ -299,7 +300,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -329,7 +330,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.UpdateStackInput{
@@ -383,7 +384,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
-	_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.UpdateStackWithContext(ctx, input)
 		},

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_msk_serverless_cluster")
 func ResourceServerlessCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerlessClusterCreate,
@@ -116,7 +117,7 @@ func ResourceServerlessCluster() *schema.Resource {
 func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterV2Input{
@@ -176,7 +177,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

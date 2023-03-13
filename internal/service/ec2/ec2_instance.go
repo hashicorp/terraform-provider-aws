@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_instance")
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -530,19 +531,16 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 						},
 					},
@@ -807,7 +805,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -815,7 +813,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
-	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
+	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(ctx, d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
@@ -856,7 +854,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstancesWithContext(ctx, input)
 		},
@@ -1144,7 +1142,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	tags := KeyValueTags(instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1161,7 +1159,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		if err := d.Set("volume_tags", KeyValueTags(volumeTags).IgnoreAWS().Map()); err != nil {
+		if err := d.Set("volume_tags", KeyValueTags(ctx, volumeTags).IgnoreAWS().Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
 		}
 	}
@@ -1811,6 +1809,34 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("private_dns_name_options") && !d.IsNewResource() {
+		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			input := &ec2.ModifyPrivateDnsNameOptionsInput{
+				InstanceId: aws.String(d.Id()),
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_aaaa_record") {
+				input.EnableResourceNameDnsAAAARecord = aws.Bool(tfMap["enable_resource_name_dns_aaaa_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_a_record") {
+				input.EnableResourceNameDnsARecord = aws.Bool(tfMap["enable_resource_name_dns_a_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.hostname_type") {
+				input.PrivateDnsHostnameType = aws.String(tfMap["hostname_type"].(string))
+			}
+
+			_, err := conn.ModifyPrivateDnsNameOptionsWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -1894,7 +1920,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
@@ -2064,7 +2090,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, i
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = KeyValueTags(vol.Tags).IgnoreAWS().Map()
+			bd["tags"] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {

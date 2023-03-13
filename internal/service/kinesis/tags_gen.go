@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -22,10 +23,14 @@ func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier stri
 	output, err := conn.ListTagsForStreamWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).KinesisConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -47,22 +52,23 @@ func Tags(tags tftags.KeyValueTags) []*kinesis.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from kinesis service tags.
-func KeyValueTags(tags []*kinesis.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*kinesis.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		for _, removedTags := range removedTags.Chunks(10) {
@@ -95,4 +101,8 @@ func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisConn(), identifier, oldTags, newTags)
 }

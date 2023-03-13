@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -178,7 +179,7 @@ var (
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateSecurityGroupInput{
@@ -314,7 +315,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting egress: %s", err)
 	}
 
-	tags := KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -380,7 +381,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		2*time.Minute, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
@@ -400,7 +401,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
 			d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
@@ -420,7 +421,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 

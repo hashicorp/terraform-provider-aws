@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_vpc_ipam_preview_next_cidr")
 func DataSourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPreviewNextCIDRRead,

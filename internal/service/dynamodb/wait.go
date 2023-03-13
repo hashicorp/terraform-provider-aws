@@ -158,20 +158,22 @@ func waitGSIDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName, ind
 
 func waitPITRUpdated(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, toEnable bool, timeout time.Duration) (*dynamodb.PointInTimeRecoveryDescription, error) {
 	var pending []string
-	target := []string{dynamodb.TimeToLiveStatusDisabled}
+	target := []string{dynamodb.PointInTimeRecoveryStatusDisabled}
 
 	if toEnable {
 		pending = []string{
-			"ENABLING",
+			dynamodb.TimeToLiveStatusEnabling,          // "ENABLING" const not available for PITR
+			dynamodb.PointInTimeRecoveryStatusDisabled, // reports say it can get in fast enough to be in this state
 		}
 		target = []string{dynamodb.PointInTimeRecoveryStatusEnabled}
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Timeout: maxDuration(pitrUpdateTimeout, timeout),
-		Refresh: statusPITR(ctx, conn, tableName),
+		Pending:    pending,
+		Target:     target,
+		Timeout:    maxDuration(pitrUpdateTimeout, timeout),
+		Refresh:    statusPITR(ctx, conn, tableName),
+		MinTimeout: 15 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

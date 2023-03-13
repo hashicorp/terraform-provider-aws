@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_backup_region_settings")
 func ResourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionSettingsUpdate,

@@ -23,7 +23,7 @@ const (
 )
 
 func retryWhenBucketNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, f, s3.ErrCodeNoSuchBucket)
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }
 
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {
