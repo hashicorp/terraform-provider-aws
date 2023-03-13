@@ -1,3 +1,3 @@
 ```release-note:bug
-data/aws_opensearch_domain: Add missing `anonymous_auth_enabled` parameter to `aws_opensearch_domain` data resource
+data-source/aws_opensearch_domain: Add missing `advanced_security_options.anonymous_auth_enabled` attribute
 ```
