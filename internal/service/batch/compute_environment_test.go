@@ -1036,9 +1036,11 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.1.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
@@ -2461,9 +2463,15 @@ resource "aws_batch_compute_environment" "test" {
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
     instance_type = ["optimal"]
+
     ec2_configuration {
       image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
       image_type        = "ECS_AL2"
+    }
+
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_type        = "ECS_AL2_NVIDIA"
     }
 
     max_vcpus = 16
