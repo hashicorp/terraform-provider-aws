@@ -3,21 +3,20 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_public_ipv4_pools"
 description: |-
-  Terraform data source for managing AWS VPC (Virtual Private Cloud) Public IPv4 Pools.
+  Terraform data source for getting information about AWS VPC (Virtual Private Cloud) Public IPv4 Pools.
 ---
 
 # Data Source: aws_ec2_public_ipv4_pools
 
-Terraform data source for managing AWS VPC (Virtual Private Cloud) Public IPv4 Pools
+Terraform data source for getting information about AWS VPC (Virtual Private Cloud) Public IPv4 Pools.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_vpc_public_ipv4_pools" "example" {
-  pool_ids = ["ipv4pool-ec2-000df99cff0c1ec10", "ipv4pool-ec2-000fe121a300ffc94"]
-}
+# Returns all public IPv4 pools.
+data "aws_vpc_public_ipv4_pools" "example" {}
 ```
 
 ### Usage with Filter
@@ -34,22 +33,15 @@ data "aws_vpc_public_ipv4_pools" "example" {
 
 The following arguments are optional:
 
-* `pool_ids` - (Optional) List of AWS resource IDs of public IPv4 pools (as strings) for which this data source will fetch detailed information. If not specified, then this data source will return info about all pools in the configured region.
-* `filter` - (Optional) One or more filters for results. Supported filters include `tag` and `tag-key`.
-* `tags` - (Optional) One or more tags, which are used to filter results.
+* `filter` - (Optional) Custom filter block as described below.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired pools.
+
+More complex filters can be expressed using one or more `filter` sub-blocks,
+which take the following arguments:
+
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribePublicIpv4Pools.html).
+* `values` - (Required) Set of values that are accepted for the given field. Pool IDs will be selected if any one of the given values match.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
-
-* `pools` - List of Public IPv4 Pool records. Each of these contains:
-  - `description` - Description of the pool, if any.
-  - `network_border_group` - Name of the location from which the address pool is advertised.
-  - `pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
-    - `address_count` - Number of addresses in the range.
-    - `available_address_count` - Number of available addresses in the range.
-    - `first_address` - First address in the range.
-    - `last_address` - Last address in the range.
-  - `tags` - Any tags for the address pool.
-  - `total_address_count` - Total number of addresses in the pool.
-  - `total_available_address_count` - Total number of available addresses in the pool.
+* `pool_ids` - List of all the pool IDs found.

@@ -336,6 +336,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpc_peering_connections",
 		},
 		{
+			Factory:  DataSourcePublicIPv4Pools,
+			TypeName: "aws_vpc_public_ipv4_pools",
+		},
+		{
 			Factory:  DataSourceVPCs,
 			TypeName: "aws_vpcs",
 		},

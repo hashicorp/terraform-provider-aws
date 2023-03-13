@@ -8,45 +8,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePublicIpv4Pools() *schema.Resource {
+// @SDKDataSource("aws_vpc_public_ipv4_pools")
+func DataSourcePublicIPv4Pools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIpv4PoolsRead,
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"pool_ids": {
 				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"pools": {
-				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{Type: schema.TypeString},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNamePublicIpv4Pools = "Public IPv4 Pools Data Source"
-)
-
 func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribePublicIpv4PoolsInput{}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if v, ok := d.GetOk("pool_ids"); ok {
-		input.PoolIds = aws.StringSlice([]string{v.(string)})
-	}
+	input := &ec2.DescribePublicIpv4PoolsInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
@@ -60,20 +47,20 @@ func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	publicIpv4Pools := []map[string]interface{}{}
-
 	output, err := FindPublicIPv4Pools(ctx, conn, input)
+
 	if err != nil {
-		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pools, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pools: %s", err)
 	}
 
+	var poolIDs []string
+
 	for _, v := range output {
-		pool := flattenPublicIpv4Pool(v)
-		publicIpv4Pools = append(publicIpv4Pools, pool)
+		poolIDs = append(poolIDs, aws.StringValue(v.PoolId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("pools", publicIpv4Pools)
+	d.Set("pool_ids", poolIDs)
 
-	return nil
+	return diags
 }
