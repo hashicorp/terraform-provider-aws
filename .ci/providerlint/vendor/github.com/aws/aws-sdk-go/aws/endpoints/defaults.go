@@ -20851,6 +20851,9 @@ var awsPartition = partition{
 					Region: "ap-northeast-2",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-south-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "ap-southeast-1",
 				}: endpoint{},
 				endpointKey{
@@ -34606,12 +34609,22 @@ var awsusgovPartition = partition{
 		"participant.connect": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "us-gov-west-1",
+					Region: "fips-us-gov-west-1",
 				}: endpoint{
 					Hostname: "participant.connect.us-gov-west-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "us-gov-west-1",
 					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "us-gov-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "participant.connect.us-gov-west-1.amazonaws.com",
 				},
 			},
 		},
