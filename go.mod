@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.6
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.5
