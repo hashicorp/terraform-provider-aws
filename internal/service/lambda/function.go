@@ -719,7 +719,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	if getFunctionOutput.Concurrency != nil {
@@ -907,7 +907,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 			return true
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Lambda Function (%s): %w", d.Id(), err)
 		}
 
 		d.Set("version", lastVersion)

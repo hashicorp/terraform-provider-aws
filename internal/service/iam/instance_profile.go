@@ -116,7 +116,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("creating IAM instance profile %s: %w", name, err)
+		return fmt.Errorf("creating IAM Instance Profile (%s): %w", name, err)
 	}
 
 	waiterRequest := &iam.GetInstanceProfileInput{
@@ -194,7 +194,7 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, conn *iam.IAM) error 
 	if role, ok := d.GetOk("role"); ok {
 		err := instanceProfileRemoveRole(conn, d.Id(), role.(string))
 		if err != nil {
-			return fmt.Errorf("removing role %s from IAM instance profile %s: %w", role, d.Id(), err)
+			return fmt.Errorf("removing role (%s): %w", role, err)
 		}
 	}
 
@@ -210,14 +210,14 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		if oldRole.(string) != "" {
 			err := instanceProfileRemoveRole(conn, d.Id(), oldRole.(string))
 			if err != nil {
-				return fmt.Errorf("removing role %s to IAM instance profile %s: %w", oldRole.(string), d.Id(), err)
+				return fmt.Errorf("removing role %s to IAM Instance Profile (%s): %w", oldRole.(string), d.Id(), err)
 			}
 		}
 
 		if newRole.(string) != "" {
 			err := instanceProfileAddRole(conn, d.Id(), newRole.(string))
 			if err != nil {
-				return fmt.Errorf("adding role %s to IAM instance profile %s: %w", newRole.(string), d.Id(), err)
+				return fmt.Errorf("adding role %s to IAM Instance Profile (%s): %w", newRole.(string), d.Id(), err)
 			}
 		}
 	}
@@ -255,7 +255,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("reading IAM instance profile %s: %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Instance Profile (%s): %w", d.Id(), err)
 	}
 
 	instanceProfile := result.InstanceProfile
@@ -270,10 +270,10 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				err := instanceProfileRemoveRole(conn, d.Id(), roleName)
 				if err != nil {
-					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
+					return fmt.Errorf("removing role %s to IAM Instance Profile (%s): %w", roleName, d.Id(), err)
 				}
 			}
-			return fmt.Errorf("reading IAM Role %s attached to IAM Instance Profile %s: %w", roleName, d.Id(), err)
+			return fmt.Errorf("reading IAM Role %s attached to IAM Instance Profile (%s): %w", roleName, d.Id(), err)
 		}
 	}
 
@@ -284,7 +284,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if err := instanceProfileRemoveAllRoles(d, conn); err != nil {
-		return err
+		return fmt.Errorf("deleting IAM Instance Profile (%s): %w", d.Id(), err)
 	}
 
 	request := &iam.DeleteInstanceProfileInput{
@@ -295,7 +295,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("deleting IAM instance profile %s: %w", d.Id(), err)
+		return fmt.Errorf("deleting IAM Instance Profile (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -306,18 +306,10 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.SetId(aws.StringValue(result.InstanceProfileName))
-	if err := d.Set("name", result.InstanceProfileName); err != nil {
-		return err
-	}
-	if err := d.Set("arn", result.Arn); err != nil {
-		return err
-	}
-	if err := d.Set("create_date", result.CreateDate.Format(time.RFC3339)); err != nil {
-		return err
-	}
-	if err := d.Set("path", result.Path); err != nil {
-		return err
-	}
+	d.Set("name", result.InstanceProfileName)
+	d.Set("arn", result.Arn)
+	d.Set("create_date", result.CreateDate.Format(time.RFC3339))
+	d.Set("path", result.Path)
 	d.Set("unique_id", result.InstanceProfileId)
 
 	if result.Roles != nil && len(result.Roles) > 0 {

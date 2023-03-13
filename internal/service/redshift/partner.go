@@ -110,7 +110,7 @@ func resourcePartnerDelete(d *schema.ResourceData, meta interface{}) error {
 
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Redshift Partner (%s): %w", d.Id(), err)
 	}
 
 	deleteInput := redshift.DeletePartnerInput{

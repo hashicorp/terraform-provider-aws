@@ -113,7 +113,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	tOut, err := conn.GetTemplate(&tInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation Stack (%s): reading template: %w", name, err)
 	}
 
 	template, err := verify.NormalizeJSONOrYAMLString(*tOut.TemplateBody)

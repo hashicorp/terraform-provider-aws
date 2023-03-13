@@ -241,7 +241,7 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppSync Resolver (%s): %w", d.Id(), err)
 	}
 
 	input := &appsync.GetResolverInput{
@@ -259,7 +259,7 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppSync Resolver (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading AppSync Resolver (%s): %w", d.Id(), err)
 	}
 
 	resolver := resp.Resolver
@@ -363,7 +363,7 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteResolverInput{
@@ -381,7 +381,7 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
-		return fmt.Errorf("error deleting AppSync Resolver (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting AppSync Resolver (%s): %s", d.Id(), err)
 	}
 
 	return nil

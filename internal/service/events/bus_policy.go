@@ -120,7 +120,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy from EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading policy from EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	busName := aws.StringValue(output.Name)
@@ -130,9 +130,8 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("event_bus_name", busName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading policy from EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -170,7 +169,7 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err = conn.PutPermission(&input)
 	if err != nil {
-		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	return resourceBusPolicyRead(d, meta)
@@ -193,7 +192,7 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 	return nil
 }

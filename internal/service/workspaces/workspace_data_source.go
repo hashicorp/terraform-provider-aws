@@ -107,17 +107,17 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 			WorkspaceIds: aws.StringSlice([]string{workspaceID.(string)}),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading WorkSpaces Workspace (%s): %s", workspaceID, err)
 		}
 
 		if len(resp.Workspaces) != 1 {
-			return fmt.Errorf("expected 1 result for WorkSpace  %q, found %d", workspaceID, len(resp.Workspaces))
+			return fmt.Errorf("expected 1 result for WorkSpaces Workspace (%s), found %d", workspaceID, len(resp.Workspaces))
 		}
 
 		workspace = resp.Workspaces[0]
 
 		if workspace == nil {
-			return fmt.Errorf("no WorkSpace with ID %q found", workspaceID)
+			return fmt.Errorf("no WorkSpaces Workspace with ID %q found", workspaceID)
 		}
 	}
 
@@ -128,17 +128,17 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 			UserName:    aws.String(userName),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading WorkSpaces Workspace (%s:%s): %s", directoryID, userName, err)
 		}
 
 		if len(resp.Workspaces) != 1 {
-			return fmt.Errorf("expected 1 result for %q WorkSpace in %q directory, found %d", userName, directoryID, len(resp.Workspaces))
+			return fmt.Errorf("expected 1 result for %q Workspace in %q directory, found %d", userName, directoryID, len(resp.Workspaces))
 		}
 
 		workspace = resp.Workspaces[0]
 
 		if workspace == nil {
-			return fmt.Errorf("no %q WorkSpace in %q directory found", userName, directoryID)
+			return fmt.Errorf("no %q Workspace in %q directory found", userName, directoryID)
 		}
 	}
 
@@ -158,11 +158,11 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %w", err)
+		return fmt.Errorf("listing tags: %w", err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

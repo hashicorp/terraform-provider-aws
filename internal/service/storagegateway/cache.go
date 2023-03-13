@@ -49,10 +49,9 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Adding Storage Gateway cache: %s", input)
 	_, err := conn.AddCache(input)
 	if err != nil {
-		return fmt.Errorf("error adding Storage Gateway cache: %s", err)
+		return fmt.Errorf("creating Storage Gateway Cache: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
@@ -93,26 +92,25 @@ func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 
 	gatewayARN, diskID, err := DecodeCacheID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Storage Gateway Cache (%s): %s", d.Id(), err)
 	}
 
 	input := &storagegateway.DescribeCacheInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway cache: %s", input)
 	output, err := conn.DescribeCache(input)
 	if err != nil {
 		if IsErrGatewayNotFound(err) {
-			log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+			log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Storage Gateway cache: %s", err)
+		return fmt.Errorf("reading Storage Gateway Cache (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.DiskIds) == 0 {
-		log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -126,7 +124,7 @@ func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !found {
-		log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

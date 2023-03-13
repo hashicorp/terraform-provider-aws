@@ -1,6 +1,7 @@
 package elb
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -123,9 +124,9 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
+	assigned, err := resourceSticknessPolicyAssigned(conn, policyName, lbName, lbPort)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ELB Classic App Cookie Stickiness Policy (%s): %w", d.Id(), err)
 	}
 	if !d.IsNewResource() && !assigned {
 		log.Printf("[WARN] ELB Classic LB (%s) App Cookie Policy (%s) exists, but isn't assigned to a listener", lbName, policyName)
@@ -152,7 +153,7 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 }
 
 // Determine if a particular policy is assigned to an ELB listener
-func resourceSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *elb.ELB) (bool, error) {
+func resourceSticknessPolicyAssigned(conn *elb.ELB, policyName, lbName, lbPort string) (bool, error) {
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(lbName)},
 	}
@@ -163,11 +164,11 @@ func resourceSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *el
 	}
 
 	if err != nil {
-		return false, fmt.Errorf("Error retrieving ELB description: %s", err)
+		return false, fmt.Errorf("retrieving LB: %s", err)
 	}
 
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return false, fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
+		return false, errors.New("retrieving LB: empty response")
 	}
 
 	lb := describeResp.LoadBalancerDescriptions[0]

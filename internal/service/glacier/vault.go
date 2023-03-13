@@ -177,7 +177,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error reading Glacier Vault: %w", err)
+		return fmt.Errorf("reading Glacier Vault (%s): %w", d.Id(), err)
 	}
 
 	awsClient := meta.(*conns.AWSClient)
@@ -186,7 +186,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 
 	location, err := buildVaultLocation(awsClient.AccountID, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glacier Vault (%s): %w", d.Id(), err)
 	}
 	d.Set("location", location)
 
@@ -215,12 +215,12 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("access_policy", "")
 	} else if err != nil {
-		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Glacier Vault (%s): reading policy: %w", d.Id(), err)
 	} else if pol != nil && pol.Policy != nil {
 		policy, err := verify.PolicyToSet(d.Get("access_policy").(string), aws.StringValue(pol.Policy.Policy))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Glacier Vault (%s): setting policy: %w", d.Id(), err)
 		}
 
 		d.Set("access_policy", policy)

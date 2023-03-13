@@ -134,7 +134,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeResp, err := conn.DescribeClusterParameterGroups(&describeOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Redshift Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if len(describeResp.ParameterGroups) != 1 ||
@@ -174,7 +174,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeParametersResp, err := conn.DescribeClusterParameters(&describeParametersOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Redshift Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
@@ -233,7 +233,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil && tfawserr.ErrCodeEquals(err, "RedshiftParameterGroupNotFoundFault") {
 		return nil
 	}
-	return err
+	return fmt.Errorf("deleting Redshift Parameter Group (%s): %w", d.Id(), err)
 }
 
 func resourceParameterHash(v interface{}) int {

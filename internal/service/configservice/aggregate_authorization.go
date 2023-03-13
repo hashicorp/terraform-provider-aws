@@ -82,7 +82,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -158,7 +158,7 @@ func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := &configservice.DeleteAggregationAuthorizationInput{
@@ -168,7 +168,7 @@ func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface
 
 	_, err = conn.DeleteAggregationAuthorization(req)
 	if err != nil {
-		return fmt.Errorf("Error deleting aggregate authorization: %s", err)
+		return fmt.Errorf("deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
 	return nil

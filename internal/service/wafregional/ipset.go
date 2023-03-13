@@ -69,7 +69,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateIPSet(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Regional IPSet: %w", err)
 	}
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
@@ -86,12 +86,12 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetIPSet(params)
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] WAF Regional IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regional IPSet: %w", err)
 	}
 
 	d.Set("ip_set_descriptor", flattenIPSetDescriptorWR(resp.IPSet.IPSetDescriptors))
@@ -133,7 +133,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateIPSetResourceWR(d.Id(), oldD, newD, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
+			return fmt.Errorf("updating WAF Regional IPSet: %s", err)
 		}
 	}
 	return resourceIPSetRead(d, meta)
@@ -150,7 +150,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 		err := updateIPSetResourceWR(d.Id(), oldD, noD, conn, region)
 
 		if err != nil {
-			return fmt.Errorf("Error Deleting IPSetDescriptors: %s", err)
+			return fmt.Errorf("deleting IPSetDescriptors: %s", err)
 		}
 	}
 
@@ -160,11 +160,11 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 			ChangeToken: token,
 			IPSetId:     aws.String(d.Id()),
 		}
-		log.Printf("[INFO] Deleting WAF IPSet")
+		log.Printf("[INFO] Deleting WAF Regional IPSet")
 		return conn.DeleteIPSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Deleting WAF IPSet: %s", err)
+		return fmt.Errorf("deleting WAF Regional IPSet: %s", err)
 	}
 
 	return nil
@@ -179,12 +179,11 @@ func updateIPSetResourceWR(id string, oldD, newD []interface{}, conn *wafregiona
 				IPSetId:     aws.String(id),
 				Updates:     ipSetUpdates,
 			}
-			log.Printf("[INFO] Updating IPSet descriptor: %s", req)
 
 			return conn.UpdateIPSet(req)
 		})
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
+			return fmt.Errorf("updating WAF Regional IPSet: %s", err)
 		}
 	}
 

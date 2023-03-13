@@ -461,22 +461,18 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
+			log.Printf("[WARN] Elastic Transcoder Pipeline (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Elastic Transcoder Pipeline (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elastic Transcoder Pipeline Read response: %#v", resp)
 
 	pipeline := resp.Pipeline
 
 	d.Set("arn", pipeline.Arn)
 
-	if arn := pipeline.AwsKmsKeyArn; arn != nil {
-		d.Set("aws_kms_key_arn", arn)
-	}
+	d.Set("aws_kms_key_arn", pipeline.AwsKmsKeyArn)
 
 	if pipeline.ContentConfig != nil {
 		err := d.Set("content_config", flattenETPipelineOutputConfig(pipeline.ContentConfig))
@@ -496,10 +492,8 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
-	if notifications != nil {
-		if err := d.Set("notifications", notifications); err != nil {
-			return fmt.Errorf("error setting notifications: %s", err)
-		}
+	if err := d.Set("notifications", notifications); err != nil {
+		return fmt.Errorf("error setting notifications: %s", err)
 	}
 
 	d.Set("role", pipeline.Role)
@@ -518,9 +512,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if pipeline.OutputBucket != nil {
-		d.Set("output_bucket", pipeline.OutputBucket)
-	}
+	d.Set("output_bucket", pipeline.OutputBucket)
 
 	return nil
 }

@@ -114,7 +114,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 
 	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
 	}
 
 	request := &elb.DescribeLoadBalancerPoliciesInput{
@@ -133,7 +133,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
+		return fmt.Errorf("reading ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {
@@ -167,7 +167,7 @@ func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}
 
 	lbName, _, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
 	}
 
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
@@ -180,7 +180,7 @@ func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
-		return fmt.Errorf("Error removing SSLNegotiationPolicy: %s", err)
+		return fmt.Errorf("removing SSLNegotiationPolicy: %s", err)
 	}
 
 	request := &elb.DeleteLoadBalancerPolicyInput{
@@ -189,7 +189,7 @@ func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if _, err := conn.DeleteLoadBalancerPolicy(request); err != nil {
-		return fmt.Errorf("Error deleting SSL negotiation policy %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
 	}
 	return nil
 }

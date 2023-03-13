@@ -78,7 +78,7 @@ func resourceUserInGroupRead(d *schema.ResourceData, meta interface{}) error {
 	found, err := FindCognitoUserInGroup(conn, groupName, userPoolId, username)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Cognito User Group Membership: %w", err)
 	}
 
 	if !found {

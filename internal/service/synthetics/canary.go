@@ -275,7 +275,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if code, err := expandCanaryCode(d); err != nil {
-		return err
+		return fmt.Errorf("creating Synthetics Canary (%s): %w", name, err)
 	} else {
 		input.Code = code
 	}
@@ -308,11 +308,10 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Synthetics Canary: %s", input)
 	output, err := conn.CreateCanary(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Synthetics Canary (%s): %w", name, err)
+		return fmt.Errorf("creating Synthetics Canary (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Canary.Name))
@@ -342,12 +341,12 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating Synthetics Canary (%s): waiting for completion: %w", name, err)
 	}
 
 	if d.Get("start_canary").(bool) {
 		if err := startCanary(d.Id(), conn); err != nil {
-			return err
+			return fmt.Errorf("creating Synthetics Canary (%s): %w", name, err)
 		}
 	}
 
@@ -451,7 +450,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
 			if code, err := expandCanaryCode(d); err != nil {
-				return err
+				return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 			} else {
 				input.Code = code
 			}
@@ -487,30 +486,29 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		status := d.Get("status").(string)
 		if status == synthetics.CanaryStateRunning {
 			if err := stopCanary(d.Id(), conn); err != nil {
-				return err
+				return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating Synthetics Canary: %s", input)
 		_, err := conn.UpdateCanary(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Synthetics Canary (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 		}
 
 		if status != synthetics.CanaryStateReady {
 			if _, err := waitCanaryStopped(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", d.Id(), err)
+				return fmt.Errorf("updating Synthetics Canary (%s): waiting for Canary to stop: %w", d.Id(), err)
 			}
 		} else {
 			if _, err := waitCanaryReady(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for Synthetics Canary (%s) ready: %w", d.Id(), err)
+				return fmt.Errorf("updating Synthetics Canary (%s): waiting for Canary to be ready: %w", d.Id(), err)
 			}
 		}
 
 		if d.Get("start_canary").(bool) {
 			if err := startCanary(d.Id(), conn); err != nil {
-				return err
+				return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -520,13 +518,13 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.Get("start_canary").(bool) {
 			if status != synthetics.CanaryStateRunning {
 				if err := startCanary(d.Id(), conn); err != nil {
-					return err
+					return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 				}
 			}
 		} else {
 			if status == synthetics.CanaryStateRunning {
 				if err := stopCanary(d.Id(), conn); err != nil {
-					return err
+					return fmt.Errorf("updating Synthetics Canary (%s): %w", d.Id(), err)
 				}
 			}
 		}
@@ -548,7 +546,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
 		if err := stopCanary(d.Id(), conn); err != nil {
-			return err
+			return fmt.Errorf("deleting Synthetics Canary (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -563,13 +561,13 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Synthetics Canary (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Synthetics Canary (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitCanaryDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting Synthetics Canary (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -803,13 +801,13 @@ func startCanary(name string, conn *synthetics.Synthetics) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error starting Synthetics Canary (%s): %w", name, err)
+		return fmt.Errorf("starting Synthetics Canary: %w", err)
 	}
 
 	_, err = waitCanaryRunning(conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) start: %w", name, err)
+		return fmt.Errorf("starting Synthetics Canary: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -826,13 +824,13 @@ func stopCanary(name string, conn *synthetics.Synthetics) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)
+		return fmt.Errorf("stopping Synthetics Canary: %w", err)
 	}
 
 	_, err = waitCanaryStopped(conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", name, err)
+		return fmt.Errorf("stopping Synthetics Canary: waiting for completion: %w", err)
 	}
 
 	return nil

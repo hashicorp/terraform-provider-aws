@@ -240,7 +240,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
 		if err := setDocumentPermissions(d, meta); err != nil {
-			return err
+			return fmt.Errorf("creating SSM document: setting permissions: %s", err)
 		}
 	} else {
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
@@ -336,7 +336,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	gp, err := getDocumentPermissions(d, meta)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM document permissions: %s", err)
+		return fmt.Errorf("reading SSM document permissions: %s", err)
 	}
 
 	d.Set("permissions", gp)
@@ -362,7 +362,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("parameter", params); err != nil {
-		return err
+		return fmt.Errorf("setting parameter: %w", err)
 	}
 
 	tags := KeyValueTags(doc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -404,7 +404,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("permissions") {
 		if err := setDocumentPermissions(d, meta); err != nil {
-			return err
+			return fmt.Errorf("updating SSM Document (%s): setting permissions: %s", d.Id(), err)
 		}
 	} else {
 		log.Printf("[DEBUG] Not setting document permissions on %q", d.Id())
@@ -419,7 +419,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChangesExcept("tags", "tags_all", "permissions") {
 		if err := updateDocument(d, meta); err != nil {
-			return err
+			return fmt.Errorf("updating SSM Document (%s): %s", d.Id(), err)
 		}
 
 		_, err := waitDocumentActive(conn, d.Id())
@@ -435,7 +435,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn()
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
-		return err
+		return fmt.Errorf("deleting SSM Document (%s): deleting permissions: %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting SSM Document: %s", d.Id())
@@ -446,7 +446,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteDocument(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SSM Document (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitDocumentDeleted(conn, d.Id())
@@ -526,7 +526,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
-			return fmt.Errorf("error modifying SSM document permissions: %s", err)
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

@@ -155,7 +155,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppConfig Configuration Profile (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.GetConfigurationProfileInput{
@@ -172,11 +172,11 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
+		return fmt.Errorf("reading AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Configuration Profile (%s) for Application (%s): empty response", confProfID, appID)
+		return fmt.Errorf("reading AppConfig Configuration Profile (%s) for Application (%s): empty response", confProfID, appID)
 	}
 
 	d.Set("application_id", output.ApplicationId)
@@ -227,7 +227,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating AppConfig Configuration Profile (%s): %w", d.Id(), err)
 		}
 
 		updateInput := &appconfig.UpdateConfigurationProfileInput{
@@ -274,7 +274,7 @@ func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting AppConfig Configuration Profile (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.DeleteConfigurationProfileInput{

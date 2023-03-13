@@ -250,6 +250,7 @@ func init() {
 			"aws_spot_fleet_request",
 			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
+			"aws_grafana_workspace",
 		},
 	})
 

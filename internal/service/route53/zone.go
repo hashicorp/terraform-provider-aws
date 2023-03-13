@@ -169,7 +169,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 	}
@@ -302,7 +302,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 
@@ -315,7 +315,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCDisassociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Route53 Hosted Zone (%s): disassociating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 	}

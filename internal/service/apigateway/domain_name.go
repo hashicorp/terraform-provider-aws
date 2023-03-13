@@ -406,7 +406,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
 	return resourceDomainNameRead(d, meta)
@@ -425,7 +425,7 @@ func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting API Gateway domain name: %s", err)
+		return fmt.Errorf("deleting API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
 	return nil

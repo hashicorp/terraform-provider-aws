@@ -339,7 +339,7 @@ func DeleteUserGroupMemberships(conn *iam.IAM, username string) error {
 	for _, g := range groups {
 		// use iam group membership func to remove user from all groups
 		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", username, g)
-		if err := removeUsersFromGroup(conn, []*string{aws.String(username)}, g); err != nil {
+		if err := removeUsersFromGroup(conn, []string{username}, g); err != nil {
 			return err
 		}
 	}

@@ -156,7 +156,7 @@ func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting CloudFront PublicKey (%s): %s", d.Id(), err)
 	}
 
 	return nil

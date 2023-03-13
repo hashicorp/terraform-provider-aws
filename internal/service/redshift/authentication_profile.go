@@ -118,8 +118,8 @@ func resourceAuthenticationProfileDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeAuthenticationProfileNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Authentication Profile (%s): %w", d.Id(), err)
 	}
 
-	return err
+	return nil
 }

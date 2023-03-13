@@ -289,7 +289,7 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.GetDataSourceInput{
@@ -304,7 +304,7 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	dataSource := resp.DataSource
@@ -347,7 +347,7 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.UpdateDataSourceInput{
@@ -386,8 +386,9 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateDataSource(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
+
 	return resourceDataSourceRead(d, meta)
 }
 
@@ -397,7 +398,7 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteDataSourceInput{
@@ -410,7 +411,7 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	return nil

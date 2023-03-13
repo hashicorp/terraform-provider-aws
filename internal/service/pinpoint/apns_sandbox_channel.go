@@ -126,7 +126,7 @@ func resourceAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) er
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint APNs Sandbox Channel for application %s not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint APNs Sandbox Channel for application %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

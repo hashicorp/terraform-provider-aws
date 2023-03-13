@@ -135,7 +135,7 @@ func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Service Quota (%s): %s", d.Id(), err)
 	}
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
@@ -208,7 +208,7 @@ func resourceServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Service Quota (%s): %s", d.Id(), err)
 	}
 
 	input := &servicequotas.RequestServiceQuotaIncreaseInput{

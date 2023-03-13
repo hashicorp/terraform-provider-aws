@@ -60,7 +60,7 @@ func ResourceMember() *schema.Resource {
 
 func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
-	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
+	log.Printf("[DEBUG] Creating Security Hub Member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
 		AccountDetails: []*securityhub.AccountDetails{
@@ -72,27 +72,27 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating Security Hub member %s: %s", d.Get("account_id").(string), err)
+		return fmt.Errorf("Error creating Security Hub Member %s: %s", d.Get("account_id").(string), err)
 	}
 
 	if len(resp.UnprocessedAccounts) > 0 {
-		return fmt.Errorf("Error creating Security Hub member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
+		return fmt.Errorf("Error creating Security Hub Member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
 	}
 
 	d.SetId(d.Get("account_id").(string))
 
 	if d.Get("invite").(bool) {
-		log.Printf("[INFO] Inviting Security Hub member %s", d.Id())
+		log.Printf("[INFO] Inviting Security Hub Member %s", d.Id())
 		iresp, err := conn.InviteMembers(&securityhub.InviteMembersInput{
 			AccountIds: []*string{aws.String(d.Get("account_id").(string))},
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error inviting Security Hub member %s: %s", d.Id(), err)
+			return fmt.Errorf("Error inviting Security Hub Member %s: %s", d.Id(), err)
 		}
 
 		if len(iresp.UnprocessedAccounts) > 0 {
-			return fmt.Errorf("Error inviting Security Hub member %s: UnprocessedAccounts is not empty", d.Id())
+			return fmt.Errorf("Error inviting Security Hub Member %s: UnprocessedAccounts is not empty", d.Id())
 		}
 	}
 
@@ -102,22 +102,22 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
-	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
+	log.Printf("[DEBUG] Reading Security Hub Member %s", d.Id())
 	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Security Hub Member (%s): %w", d.Id(), err)
 	}
 
 	if len(resp.Members) == 0 {
-		log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -147,7 +147,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error disassociating Security Hub member %s: %w", d.Id(), err)
+		return fmt.Errorf("Error disassociating Security Hub Member %s: %w", d.Id(), err)
 	}
 
 	resp, err := conn.DeleteMembers(&securityhub.DeleteMembersInput{
@@ -158,11 +158,11 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Security Hub member %s: %w", d.Id(), err)
+		return fmt.Errorf("Error deleting Security Hub Member %s: %w", d.Id(), err)
 	}
 
 	if len(resp.UnprocessedAccounts) > 0 {
-		return fmt.Errorf("Error deleting Security Hub member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
+		return fmt.Errorf("Error deleting Security Hub Member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
 	}
 
 	return nil

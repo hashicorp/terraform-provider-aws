@@ -112,7 +112,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Secrets Manager Secret Version (%s): %w", d.Id(), err)
 	}
 
 	input := &secretsmanager.GetSecretValueInput{
@@ -184,7 +184,7 @@ func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Secrets Manager Secret Version (%s): %w", d.Id(), err)
 	}
 
 	o, n := d.GetChange("version_stages")
@@ -233,7 +233,7 @@ func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Secrets Manager Secret Version (%s): %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok {

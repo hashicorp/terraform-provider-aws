@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceThreatintelset() *schema.Resource {
+func ResourceThreatIntelSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceThreatintelsetCreate,
-		Read:   resourceThreatintelsetRead,
-		Update: resourceThreatintelsetUpdate,
-		Delete: resourceThreatintelsetDelete,
+		Create: resourceThreatIntelSetCreate,
+		Read:   resourceThreatIntelSetRead,
+		Update: resourceThreatIntelSetUpdate,
+		Delete: resourceThreatIntelSetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -73,15 +73,16 @@ func ResourceThreatintelset() *schema.Resource {
 	}
 }
 
-func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceThreatIntelSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	detectorID := d.Get("detector_id").(string)
+	name := d.Get("name").(string)
 	input := &guardduty.CreateThreatIntelSetInput{
 		DetectorId: aws.String(detectorID),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(name),
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
@@ -93,7 +94,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 
 	resp, err := conn.CreateThreatIntelSet(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating GuardDuty Threat Intel Set (%s): %w", name, err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -104,24 +105,23 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty ThreatIntelSet status to be \"%s\" or \"%s\": %s",
-			guardduty.ThreatIntelSetStatusActive, guardduty.ThreatIntelSetStatusInactive, err)
+	if _, err = stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("creating GuardDuty Threat Intel Set (%s): waiting for completion: %w", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.ThreatIntelSetId))
-	return resourceThreatintelsetRead(d, meta)
+	d.SetId(fmt.Sprintf("%s:%s", detectorID, aws.StringValue(resp.ThreatIntelSetId)))
+
+	return resourceThreatIntelSetRead(d, meta)
 }
 
-func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceThreatIntelSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	threatIntelSetId, detectorId, err := DecodeThreatintelsetID(d.Id())
+	threatIntelSetId, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 	}
 	input := &guardduty.GetThreatIntelSetInput{
 		DetectorId:       aws.String(detectorId),
@@ -135,7 +135,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -167,12 +167,12 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceThreatIntelSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
+	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChanges("activate", "location", "name") {
@@ -191,9 +191,8 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 			input.Activate = aws.Bool(d.Get("activate").(bool))
 		}
 
-		_, err = conn.UpdateThreatIntelSet(input)
-		if err != nil {
-			return err
+		if _, err = conn.UpdateThreatIntelSet(input); err != nil {
+			return fmt.Errorf("updating GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -201,19 +200,19 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Threat Intel Set (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating GuardDuty Threat Intel Set (%s): setting tags: %w", d.Id(), err)
 		}
 	}
 
-	return resourceThreatintelsetRead(d, meta)
+	return resourceThreatIntelSetRead(d, meta)
 }
 
-func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceThreatIntelSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
+	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 	}
 	input := &guardduty.DeleteThreatIntelSetInput{
 		DetectorId:       aws.String(detectorId),
@@ -222,7 +221,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = conn.DeleteThreatIntelSet(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting GuardDuty Threat Intel Set (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -261,7 +260,7 @@ func threatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID
 	}
 }
 
-func DecodeThreatintelsetID(id string) (threatIntelSetID, detectorID string, err error) {
+func DecodeThreatIntelSetID(id string) (threatIntelSetID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		err = fmt.Errorf("GuardDuty ThreatIntelSet ID must be of the form <Detector ID>:<ThreatIntelSet ID>, was provided: %s", id)

@@ -210,12 +210,12 @@ func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route Table Association (%s): %w", associationID, err)
+		return fmt.Errorf("deleting Route Table Association (%s): %w", associationID, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
 	if _, err := WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
-		return fmt.Errorf("error waiting for Route Table Association (%s) delete: %w", associationID, err)
+		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}
 
 	return nil

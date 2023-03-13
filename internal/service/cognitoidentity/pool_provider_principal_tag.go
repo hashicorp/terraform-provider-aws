@@ -78,7 +78,7 @@ func resourcePoolProviderPrincipalTagCreate(d *schema.ResourceData, meta interfa
 
 	_, err := conn.SetPrincipalTagAttributeMap(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito Identity Provider Principal Tags: %w", err)
+		return fmt.Errorf("creating Cognito Identity Provider Principal Tags: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", poolId, providerName))
@@ -93,7 +93,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 
 	if err != nil {
-		return err
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	ret, err := conn.GetPrincipalTagAttributeMap(&cognitoidentity.GetPrincipalTagAttributeMapInput{
@@ -116,7 +116,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	d.Set("use_defaults", ret.UseDefaults)
 
 	if err := d.Set("principal_tags", aws.StringValueMap(ret.PrincipalTags)); err != nil {
-		return fmt.Errorf("error setting attribute_mapping error: %w", err)
+		return fmt.Errorf("setting principal_tags: %w", err)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func resourcePoolProviderPrincipalTagUpdate(d *schema.ResourceData, meta interfa
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Cognito Identity Provider Principal Tags (%s): %w", d.Id(), err)
 	}
 
 	params := &cognitoidentity.SetPrincipalTagAttributeMapInput{
@@ -142,7 +142,7 @@ func resourcePoolProviderPrincipalTagUpdate(d *schema.ResourceData, meta interfa
 
 		_, err = conn.SetPrincipalTagAttributeMap(params)
 		if err != nil {
-			return fmt.Errorf("Error updating Cognito Identity Provider: %w", err)
+			return fmt.Errorf("updating Cognito Identity Provider Principal Tags (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -155,7 +155,7 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Cognito Identity Provider Principal Tags (%s): %w", d.Id(), err)
 	}
 	emptyList := make(map[string]string)
 	params := &cognitoidentity.SetPrincipalTagAttributeMapInput{
@@ -171,7 +171,7 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Cognito Identity Provider Principal Tags (%s): %w", d.Id(), err)
 	}
 	return nil
 }

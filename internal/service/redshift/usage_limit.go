@@ -181,7 +181,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Usage Limit (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Usage Limit (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -195,15 +195,14 @@ func resourceUsageLimitDelete(d *schema.ResourceData, meta interface{}) error {
 		UsageLimitId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting snapshot copy grant: %s", d.Id())
 	_, err := conn.DeleteUsageLimit(&deleteInput)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeUsageLimitNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	return err
+	return nil
 }

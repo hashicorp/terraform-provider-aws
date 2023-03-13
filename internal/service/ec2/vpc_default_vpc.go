@@ -220,7 +220,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.CreateDefaultVpc(input)
 
 		if err != nil {
-			return fmt.Errorf("error creating EC2 Default VPC: %w", err)
+			return fmt.Errorf("creating EC2 Default VPC: %w", err)
 		}
 
 		vpc = output.Vpc
@@ -245,7 +245,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := modifyVPCAttributesOnCreate(conn, d, vpcInfo); err != nil {
-		return err
+		return fmt.Errorf("creating EC2 Default VPC: %w", err)
 	}
 
 	// Configure IPv6.
@@ -274,7 +274,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			newIPv6CIDRBlockNetworkBorderGroup)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Default VPC: %w", err)
 		}
 
 		d.Set("ipv6_association_id", associationID)
@@ -290,7 +290,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			"")
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Default VPC: %w", err)
 		}
 
 		d.Set("ipv6_association_id", associationID)

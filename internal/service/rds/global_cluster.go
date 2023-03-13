@@ -242,7 +242,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("engine_version") {
 		if err := globalClusterUpgradeEngineVersion(d, meta, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return fmt.Errorf("updating RDS Global Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -254,11 +254,11 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Global Cluster: %s", err)
+		return fmt.Errorf("updating RDS Global Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForGlobalClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+		return fmt.Errorf("updating RDS Global Cluster (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return resourceGlobalClusterRead(d, meta)

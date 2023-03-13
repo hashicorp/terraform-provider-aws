@@ -93,7 +93,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateRule(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Regional Rule (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRuleOutput)
 	d.SetId(aws.StringValue(resp.Rule.RuleId))
@@ -103,7 +103,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		noPredicates := []interface{}{}
 		err := updateRuleResource(d.Id(), noPredicates, newPredicates, meta)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Regional Rule: %s", err)
+			return fmt.Errorf("updating WAF Regional Rule: %s", err)
 		}
 	}
 	return resourceRuleRead(d, meta)
@@ -126,7 +126,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regional Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -141,18 +141,18 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Regional Rule (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for WAF Regional Rule (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	d.Set("predicate", flattenPredicates(resp.Rule.Predicates))
@@ -171,7 +171,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateRuleResource(d.Id(), oldP, newP, meta)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+			return fmt.Errorf("updating WAF Rule: %s", err)
 		}
 	}
 
@@ -179,7 +179,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -195,7 +195,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		noPredicates := []interface{}{}
 		err := updateRuleResource(d.Id(), oldPredicates, noPredicates, meta)
 		if err != nil {
-			return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
+			return fmt.Errorf("removing WAF Rule Predicates: %s", err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteRule(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule: %s", err)
+		return fmt.Errorf("deleting WAF Rule: %s", err)
 	}
 
 	return nil
@@ -231,7 +231,7 @@ func updateRuleResource(id string, oldP, newP []interface{}, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		return fmt.Errorf("updating WAF Rule: %s", err)
 	}
 
 	return nil

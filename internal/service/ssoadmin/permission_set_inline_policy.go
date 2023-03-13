@@ -78,7 +78,7 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 
 	// (Re)provision ALL accounts after making the above changes
 	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
-		return err
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 
 	return resourcePermissionSetInlinePolicyRead(d, meta)
@@ -116,7 +116,7 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 	policyToSet, err := verify.PolicyToSet(d.Get("inline_policy").(string), aws.StringValue(output.InlinePolicy))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 
 	d.Set("inline_policy", policyToSet)

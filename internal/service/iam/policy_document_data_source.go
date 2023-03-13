@@ -129,7 +129,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("source_json"); ok {
 		if err := json.Unmarshal([]byte(v.(string)), mergedDoc); err != nil {
-			return err
+			return fmt.Errorf("writing IAM Policy Document: %w", err)
 		}
 	}
 
@@ -150,14 +150,14 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			sourceDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
-				return err
+				return fmt.Errorf("writing IAM Policy Document: merging source document %d: %w", sourceJSONIndex, err)
 			}
 
 			// assure all statements in sourceDoc are unique before merging
 			for stmtIndex, stmt := range sourceDoc.Statements {
 				if stmt.Sid != "" {
 					if _, sidExists := sidMap[stmt.Sid]; sidExists {
-						return fmt.Errorf("duplicate Sid (%s) in source_policy_documents (item %d; statement %d). Remove the Sid or ensure Sids are unique.", stmt.Sid, sourceJSONIndex, stmtIndex)
+						return fmt.Errorf("writing IAM Policy Document: merging source document %d: duplicate Sid (%s) in source_policy_documents (statement %d). Remove the Sid or ensure Sids are unique.", sourceJSONIndex, stmt.Sid, stmtIndex)
 					}
 					sidMap[stmt.Sid] = struct{}{}
 				}
@@ -189,7 +189,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			if sid, ok := cfgStmt["sid"]; ok {
 				if _, ok := sidMap[sid.(string)]; ok {
-					return fmt.Errorf("duplicate Sid (%s). Remove the Sid or ensure the Sid is unique.", sid.(string))
+					return fmt.Errorf("writing IAM Policy Document: duplicate Sid (%s). Remove the Sid or ensure the Sid is unique.", sid.(string))
 				}
 				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
@@ -258,13 +258,13 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 	// merge override_policy_documents policies into mergedDoc in order specified
 	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]interface{})) > 0 {
-		for _, overrideJSON := range v.([]interface{}) {
+		for overrideJSONIndex, overrideJSON := range v.([]interface{}) {
 			if overrideJSON == nil {
 				continue
 			}
 			overrideDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
-				return err
+				return fmt.Errorf("writing IAM Policy Document: merging override document %d: %w", overrideJSONIndex, err)
 			}
 
 			mergedDoc.Merge(overrideDoc)
@@ -275,7 +275,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("override_json"); ok {
 		overrideDoc := &IAMPolicyDoc{}
 		if err := json.Unmarshal([]byte(v.(string)), overrideDoc); err != nil {
-			return err
+			return fmt.Errorf("writing IAM Policy Document: merging override JSON: %w", err)
 		}
 
 		mergedDoc.Merge(overrideDoc)
@@ -284,7 +284,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return err
+		return fmt.Errorf("writing IAM Policy Document: formatting JSON: %w", err)
 	}
 	jsonString := string(jsonDoc)
 

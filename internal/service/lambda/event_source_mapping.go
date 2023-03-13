@@ -214,6 +214,20 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 1000),
 				},
 			},
+			"scaling_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_concurrency": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 1000),
+						},
+					},
+				},
+			},
 			"self_managed_event_source": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -385,6 +399,10 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 		input.Queues = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SelfManagedEventSource = expandSelfManagedEventSource(v.([]interface{})[0].(map[string]interface{}))
 
@@ -520,6 +538,13 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
 	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
 	d.Set("queues", aws.StringValueSlice(eventSourceMappingConfiguration.Queues))
+	if v := eventSourceMappingConfiguration.ScalingConfig; v != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenScalingConfig(v)}); err != nil {
+			return fmt.Errorf("error setting scaling_config: %w", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
+	}
 	if eventSourceMappingConfiguration.SelfManagedEventSource != nil {
 		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
 			return fmt.Errorf("error setting self_managed_event_source: %w", err)
@@ -620,6 +645,15 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("parallelization_factor") {
 		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
+	}
+
+	if d.HasChange("scaling_config") {
+		if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			// AWS ignores the removal if this is left as nil.
+			input.ScalingConfig = &lambda.ScalingConfig{}
+		}
 	}
 
 	if d.HasChange("source_access_configuration") {
@@ -1031,6 +1065,34 @@ func flattenFilter(apiObject *lambda.Filter) map[string]interface{} {
 
 	if v := apiObject.Pattern; v != nil {
 		tfMap["pattern"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandScalingConfig(tfMap map[string]interface{}) *lambda.ScalingConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.ScalingConfig{}
+
+	if v, ok := tfMap["maximum_concurrency"].(int); ok && v != 0 {
+		apiObject.MaximumConcurrency = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfig(apiObject *lambda.ScalingConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaximumConcurrency; v != nil {
+		tfMap["maximum_concurrency"] = int(aws.Int64Value(v))
 	}
 
 	return tfMap

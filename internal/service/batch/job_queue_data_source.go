@@ -84,15 +84,13 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	desc, err := conn.DescribeJobQueues(params)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Batch Job Queue (%s): %w", d.Get("name").(string), err)
 	}
 
-	if len(desc.JobQueues) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("name").(string))
-	}
-
-	if len(desc.JobQueues) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("name").(string))
+	if l := len(desc.JobQueues); l == 0 {
+		return fmt.Errorf("reading Batch Job Queue (%s): empty response", d.Get("name").(string))
+	} else if l > 1 {
+		return fmt.Errorf("reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get("name").(string), l)
 	}
 
 	jobQueue := desc.JobQueues[0]

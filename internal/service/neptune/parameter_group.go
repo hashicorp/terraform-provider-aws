@@ -129,16 +129,16 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Neptune Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if describeResp == nil {
-		return fmt.Errorf("Unable to get Describe Response for Neptune Parameter Group (%s)", d.Id())
+		return fmt.Errorf("reading Neptune Parameter Group (%s): empty result", d.Id())
 	}
 
 	if len(describeResp.DBParameterGroups) != 1 ||
 		aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
+		return fmt.Errorf("reading Neptune Parameter Group (%s): no match", d.Id())
 	}
 
 	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
@@ -160,7 +160,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			return !lastPage
 		})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Neptune Parameter Group (%s) parameters: %w", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {

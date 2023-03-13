@@ -64,10 +64,9 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 		DestinationType: aws.String(d.Get("destination_type").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating GuardDuty publishing destination: %s", input)
 	output, err := conn.CreatePublishingDestination(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty publishing destination failed: %w", err)
+		return fmt.Errorf("creating GuardDuty Publishing Destination: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
@@ -85,10 +84,10 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return fmt.Errorf("reading GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	input := &guardduty.DescribePublishingDestinationInput{
@@ -96,15 +95,14 @@ func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{})
 		DestinationId: aws.String(destinationId),
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty publishing destination: %s", input)
 	gdo, err := conn.DescribePublishingDestination(input)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
-			log.Printf("[WARN] GuardDuty publishing destination: %q not found, removing from state", d.Id())
+			log.Printf("[WARN] GuardDuty Publishing Destination: %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty publishing destination: '%s' failed: %w", d.Id(), err)
+		return fmt.Errorf("reading GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	d.Set("detector_id", detectorId)
@@ -117,10 +115,10 @@ func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{})
 func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return fmt.Errorf("updating GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	input := guardduty.UpdatePublishingDestinationInput{
@@ -132,10 +130,8 @@ func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	log.Printf("[DEBUG] Update GuardDuty publishing destination: %s", input)
-	_, err := conn.UpdatePublishingDestination(&input)
-	if err != nil {
-		return fmt.Errorf("Updating GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
+	if _, err = conn.UpdatePublishingDestination(&input); err != nil {
+		return fmt.Errorf("updating GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	return resourcePublishingDestinationRead(d, meta)
@@ -144,10 +140,10 @@ func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{
 func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return fmt.Errorf("deleting GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	input := guardduty.DeletePublishingDestinationInput{
@@ -155,15 +151,15 @@ func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{
 		DetectorId:    aws.String(detectorId),
 	}
 
-	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
-	_, err := conn.DeletePublishingDestination(&input)
+	log.Printf("[DEBUG] Delete GuardDuty Publishing Destination: %s", input)
+	_, err = conn.DeletePublishingDestination(&input)
 
 	if tfawserr.ErrCodeEquals(err, guardduty.ErrCodeBadRequestException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
+		return fmt.Errorf("deleting GuardDuty Publishing Destination (%s): %w", d.Id(), err)
 	}
 
 	return nil

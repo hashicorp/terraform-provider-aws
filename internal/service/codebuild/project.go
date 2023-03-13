@@ -1589,7 +1589,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			_, err = conn.UpdateProject(params)
 		}
 		if err != nil {
-			return fmt.Errorf("[ERROR] Error updating CodeBuild project (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating CodeBuild project (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1602,7 +1602,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
-	return err
+	return fmt.Errorf("deleting CodeBuild project (%s): %w", d.Id(), err)
 }
 
 func flattenProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {

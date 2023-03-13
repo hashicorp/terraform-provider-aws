@@ -159,7 +159,7 @@ func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
 	if err := transitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceTransitVirtualInterfaceRead(d, meta)
@@ -172,7 +172,7 @@ func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
@@ -225,11 +225,11 @@ func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 
 func resourceTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if err := transitVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceTransitVirtualInterfaceRead(d, meta)

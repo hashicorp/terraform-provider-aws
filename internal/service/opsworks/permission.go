@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -80,7 +81,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 				return nil
 			}
 		}
-		return err
+		return fmt.Errorf("reading OpsWorks Permissions (%s): %w", d.Id(), err)
 	}
 
 	found := false
@@ -137,7 +138,7 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("setting OpsWorks Permissions (%s): %w", d.Id(), err)
 	}
 
 	return resourcePermissionRead(d, meta)

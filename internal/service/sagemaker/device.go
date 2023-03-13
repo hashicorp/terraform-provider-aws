@@ -96,7 +96,7 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker Device (%s): %w", d.Id(), err)
 	}
 	device, err := FindDeviceByName(conn, deviceFleetName, deviceName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -126,7 +126,7 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	deviceFleetName, _, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	input := &sagemaker.UpdateDevicesInput{
@@ -134,10 +134,10 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] sagemaker Device update config: %s", input.String())
+	log.Printf("[DEBUG] SageMaker Device update config: %s", input.String())
 	_, err = conn.UpdateDevices(input)
 	if err != nil {
-		return fmt.Errorf("updating SageMaker Device: %w", err)
+		return fmt.Errorf("updating SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	return resourceDeviceRead(d, meta)
@@ -148,7 +148,7 @@ func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	input := &sagemaker.DeregisterDevicesInput{

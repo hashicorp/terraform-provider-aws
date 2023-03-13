@@ -98,7 +98,7 @@ func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF SQL Injection Match Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)

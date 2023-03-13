@@ -541,16 +541,16 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for Redshift Cluster (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating Redshift Cluster (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	if _, err := waitClusterRelocationStatusResolved(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolution: %w", d.Id(), err)
+		return fmt.Errorf("creating Redshift Cluster (%s): waiting for relocation: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if err := enableSnapshotCopy(conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
-			return err
+			return fmt.Errorf("creating Redshift Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -558,10 +558,8 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		if v, ok := tfMap["enable"].(bool); ok && v {
-			err := enableLogging(conn, d.Id(), tfMap)
-
-			if err != nil {
-				return err
+			if err := enableLogging(conn, d.Id(), tfMap); err != nil {
+				return fmt.Errorf("creating Redshift Cluster (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -610,7 +608,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Redshift Cluster (%s): %w", d.Id(), err)
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
@@ -886,18 +884,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("snapshot_copy") {
 		if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			err := enableSnapshotCopy(conn, d.Id(), v.([]interface{})[0].(map[string]interface{}))
-
-			if err != nil {
-				return err
+			if err := enableSnapshotCopy(conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
+				return fmt.Errorf("updating Redshift Cluster (%s): %w", d.Id(), err)
 			}
 		} else {
-			_, err := conn.DisableSnapshotCopy(&redshift.DisableSnapshotCopyInput{
-				ClusterIdentifier: aws.String(d.Id()),
-			})
-
-			if err != nil {
-				return fmt.Errorf("disabling Redshift Cluster (%s) snapshot copy: %w", d.Id(), err)
+			if err := disableSnapshotCopy(conn, d.Id()); err != nil {
+				return fmt.Errorf("updating Redshift Cluster (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -907,24 +899,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			if v, ok := tfMap["enable"].(bool); ok && v {
-				err := enableLogging(conn, d.Id(), tfMap)
-
-				if err != nil {
-					return err
+				if err := enableLogging(conn, d.Id(), tfMap); err != nil {
+					return fmt.Errorf("updating Redshift Cluster (%s): %w", d.Id(), err)
 				}
 			} else {
-				_, err := tfresource.RetryWhenAWSErrCodeEquals(
-					clusterInvalidClusterStateFaultTimeout,
-					func() (interface{}, error) {
-						return conn.DisableLogging(&redshift.DisableLoggingInput{
-							ClusterIdentifier: aws.String(d.Id()),
-						})
-					},
-					redshift.ErrCodeInvalidClusterStateFault,
-				)
-
-				if err != nil {
-					return fmt.Errorf("disabling Redshift Cluster (%s) logging: %w", d.Id(), err)
+				if err := disableLogging(conn, d.Id()); err != nil {
+					return fmt.Errorf("updating Redshift Cluster (%s): %w", d.Id(), err)
 				}
 			}
 		}
@@ -1021,7 +1001,27 @@ func enableLogging(conn *redshift.Redshift, clusterID string, tfMap map[string]i
 	)
 
 	if err != nil {
-		return fmt.Errorf("enabling Redshift Cluster (%s) logging: %w", clusterID, err)
+		return fmt.Errorf("enabling logging: %w", err)
+	}
+
+	return nil
+}
+
+func disableLogging(conn *redshift.Redshift, clusterID string) error {
+	input := &redshift.DisableLoggingInput{
+		ClusterIdentifier: aws.String(clusterID),
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+		clusterInvalidClusterStateFaultTimeout,
+		func() (interface{}, error) {
+			return conn.DisableLogging(input)
+		},
+		redshift.ErrCodeInvalidClusterStateFault,
+	)
+
+	if err != nil {
+		return fmt.Errorf("disabling logging: %w", err)
 	}
 
 	return nil
@@ -1042,9 +1042,21 @@ func enableSnapshotCopy(conn *redshift.Redshift, clusterID string, tfMap map[str
 	}
 
 	_, err := conn.EnableSnapshotCopy(input)
-
 	if err != nil {
-		return fmt.Errorf("enabling Redshift Cluster (%s) snapshot copy: %w", clusterID, err)
+		return fmt.Errorf("enabling snapshot copy: %w", err)
+	}
+
+	return nil
+}
+
+func disableSnapshotCopy(conn *redshift.Redshift, clusterID string) error {
+	input := &redshift.DisableSnapshotCopyInput{
+		ClusterIdentifier: aws.String(clusterID),
+	}
+
+	_, err := conn.DisableSnapshotCopy(input)
+	if err != nil {
+		return fmt.Errorf("disabling snapshot copy: %w", err)
 	}
 
 	return nil

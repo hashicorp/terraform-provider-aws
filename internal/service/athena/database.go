@@ -135,11 +135,11 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.StartQueryExecution(input)
 
 	if err != nil {
-		return fmt.Errorf("error starting Athena Database (%s) query execution: %w", name, err)
+		return fmt.Errorf("creating Athena Database (%s): %w", name, err)
 	}
 
-	if err := executeAndExpectNoRows(*resp.QueryExecutionId, "create", conn); err != nil {
-		return err
+	if err := executeAndExpectNoRows(conn, aws.StringValue(resp.QueryExecutionId)); err != nil {
+		return fmt.Errorf("creating Athena Database (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -191,11 +191,11 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.StartQueryExecution(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Athena Database (%s): %w", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRows(*resp.QueryExecutionId, "delete", conn); err != nil {
-		return err
+	if err := executeAndExpectNoRows(conn, aws.StringValue(resp.QueryExecutionId)); err != nil {
+		return fmt.Errorf("deleting Athena Database (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -250,22 +250,22 @@ func expandResultConfigurationACLConfig(config []interface{}) *athena.AclConfigu
 	return encryptionConfig
 }
 
-func executeAndExpectNoRows(qeid, action string, conn *athena.Athena) error {
-	rs, err := QueryExecutionResult(qeid, conn)
+func executeAndExpectNoRows(conn *athena.Athena, qeid string) error {
+	rs, err := QueryExecutionResult(conn, qeid)
 	if err != nil {
 		return err
 	}
 	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena %s database, unexpected query result: %s", action, flattenResultSet(rs))
+		return fmt.Errorf("unexpected query result: %s", flattenResultSet(rs))
 	}
 	return nil
 }
 
-func QueryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, error) {
+func QueryExecutionResult(conn *athena.Athena, qeid string) (*athena.ResultSet, error) {
 	executionStateConf := &resource.StateChangeConf{
 		Pending:    []string{athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning},
 		Target:     []string{athena.QueryExecutionStateSucceeded},
-		Refresh:    queryExecutionStateRefreshFunc(qeid, conn),
+		Refresh:    queryExecutionStateRefreshFunc(conn, qeid),
 		Timeout:    10 * time.Minute,
 		Delay:      3 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -285,7 +285,7 @@ func QueryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, 
 	return resp.ResultSet, nil
 }
 
-func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.StateRefreshFunc {
+func queryExecutionStateRefreshFunc(conn *athena.Athena, qeid string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),

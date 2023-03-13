@@ -126,7 +126,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Neptune Subnet Group (%s): %w", d.Id(), err)
 	}
 
 	if len(subnetGroups) == 0 {
@@ -197,7 +197,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Neptune Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -205,7 +205,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Subnet Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 

@@ -171,7 +171,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 		PatchOperations: resourceDeploymentUpdateOperations(d),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Deployment (%s): %w", d.Id(), err)
 	}
 
 	return resourceDeploymentRead(d, meta)

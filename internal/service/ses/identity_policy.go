@@ -41,10 +41,11 @@ func ResourceIdentityPolicy() *schema.Resource {
 				),
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -61,7 +62,6 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 	policyName := d.Get("name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
@@ -87,11 +87,10 @@ func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
@@ -115,7 +114,7 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
 	input := &ses.GetIdentityPoliciesInput{
@@ -150,9 +149,8 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", policyName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -165,7 +163,7 @@ func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) erro
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
 	input := &ses.DeleteIdentityPolicyInput{

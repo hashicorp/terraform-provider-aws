@@ -31,7 +31,7 @@ func dataSourceCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) err
 	req := &s3.ListBucketsInput{}
 	resp, err := conn.ListBuckets(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("listing S3 Buckets: %w", err)
 	}
 	if resp == nil || resp.Owner == nil {
 		return fmt.Errorf("no canonical user ID found")

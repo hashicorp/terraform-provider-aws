@@ -157,9 +157,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_name", out.RepositoryMetadata.RepositoryName)
 
 	if _, ok := d.GetOk("default_branch"); ok {
-		if out.RepositoryMetadata.DefaultBranch != nil {
-			d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
-		}
+		d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))

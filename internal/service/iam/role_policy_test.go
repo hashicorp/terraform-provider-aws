@@ -247,6 +247,34 @@ func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 	})
 }
 
+// When there are unknowns in the policy (interpolation), TF puts a
+// random GUID (e.g., 14730d5f-efa3-5a5e-94b5-f8bad6f88282) in state
+// at first for the policy which, obviously, behaves differently than
+// a JSON policy. This test checks to make sure nothing goes wrong
+// during that step.
+func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
+	var rolePolicy1 iam.GetRolePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+	roleName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyConfig_unknowns(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRolePolicyExists(roleName, resourceName, &rolePolicy1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRolePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
@@ -701,6 +729,64 @@ resource "aws_iam_role_policy" "test" {
   }
 }
 EOF
+}
+`, rName)
+}
+
+func testAccRolePolicyConfig_unknowns(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = ""
+      Effect = "Allow"
+      Principal = {
+        Service = "firehose.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = ""
+      Effect = "Allow"
+      Action = [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject",
+      ]
+      Resource = [
+        aws_s3_bucket.test.arn,
+        "${aws_s3_bucket.test.arn}/*"
+      ]
+    }]
+  })
 }
 `, rName)
 }

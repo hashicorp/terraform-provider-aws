@@ -833,7 +833,7 @@ func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting CodeDeploy Deployment Group (%s): %w", d.Id(), err)
 	}
 
 	return nil

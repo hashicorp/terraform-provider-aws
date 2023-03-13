@@ -58,15 +58,13 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading OpenSearch Domain Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading OpenSearch Domain Policy (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received OpenSearch domain: %s", ds)
 
 	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading OpenSearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_policies", policies)
@@ -89,13 +87,13 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 		AccessPolicies: aws.String(policy),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating OpenSearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	d.SetId("esd-policy-" + domainName)
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain Policy (%s) to be updated: %w", d.Id(), err)
+		return fmt.Errorf("updating OpenSearch Domain Policy (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceDomainPolicyRead(d, meta)
@@ -109,13 +107,13 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		AccessPolicies: aws.String(""),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting OpenSearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch domain policy %q to be deleted", d.Get("domain_name").(string))
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting OpenSearch Domain Policy (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

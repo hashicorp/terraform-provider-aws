@@ -46,12 +46,12 @@ func resourceAvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{
 	availabilityZone, err := FindAvailabilityZoneGroupByName(conn, groupName)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Availability Zone Group (%s): %w", groupName, err)
+		return fmt.Errorf("creating EC2 Availability Zone Group (%s): %w", groupName, err)
 	}
 
 	if v := d.Get("opt_in_status").(string); v != aws.StringValue(availabilityZone.OptInStatus) {
 		if err := modifyAvailabilityZoneOptInStatus(conn, groupName, v); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Availability Zone Group (%s): %w", groupName, err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func resourceAvailabilityZoneGroupUpdate(d *schema.ResourceData, meta interface{
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if err := modifyAvailabilityZoneOptInStatus(conn, d.Id(), d.Get("opt_in_status").(string)); err != nil {
-		return err
+		return fmt.Errorf("updating EC2 Availability Zone Group (%s): %w", d.Id(), err)
 	}
 
 	return resourceAvailabilityZoneGroupRead(d, meta)
@@ -96,7 +96,7 @@ func modifyAvailabilityZoneOptInStatus(conn *ec2.EC2, groupName, optInStatus str
 	}
 
 	if _, err := conn.ModifyAvailabilityZoneGroup(input); err != nil {
-		return fmt.Errorf("modifying EC2 Availability Zone Group (%s): %w", groupName, err)
+		return err
 	}
 
 	waiter := WaitAvailabilityZoneGroupOptedIn
@@ -105,7 +105,7 @@ func modifyAvailabilityZoneOptInStatus(conn *ec2.EC2, groupName, optInStatus str
 	}
 
 	if _, err := waiter(conn, groupName); err != nil {
-		return fmt.Errorf("waiting for EC2 Availability Zone Group (%s) opt-in status update: %w", groupName, err)
+		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
 	return nil

@@ -192,7 +192,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	input := &appsync.GetFunctionInput{
@@ -207,7 +207,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error getting AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("reading AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	function := resp.FunctionConfiguration
@@ -239,7 +239,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	input := &appsync.UpdateFunctionInput{
@@ -280,7 +280,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateFunction(input)
 	if err != nil {
-		return fmt.Errorf("error updating AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("updating AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	return resourceFunctionRead(d, meta)
@@ -291,7 +291,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	input := &appsync.DeleteFunctionInput{
@@ -304,7 +304,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("deleting AppSync Function (%s): %w", d.Id(), err)
 	}
 
 	return nil

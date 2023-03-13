@@ -91,7 +91,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -119,11 +119,11 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	}
 	if err != nil {
 		if certificate == nil {
-			log.Printf("[WARN] %s - removing from state", err)
+			log.Printf("[WARN] ELB v2 Listener Certificate (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): %w", d.Id(), err)
 	}
 
 	d.Set("certificate_arn", certificateArn)

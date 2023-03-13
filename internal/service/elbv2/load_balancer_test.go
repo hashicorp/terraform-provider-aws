@@ -7,15 +7,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -163,6 +162,29 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 					"enable_waf_fail_open",
 					"idle_timeout",
 				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelbv2.ResourceLoadBalancer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1311,7 +1333,7 @@ func testAccChecklbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckLoadBalancerExists(n string, v *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1319,23 +1341,20 @@ func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No LB ID is set")
+			return errors.New("No ELBv2 Load Balancer ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading LB (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if lb != nil {
-			*res = *lb
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("LB (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -1378,19 +1397,17 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
+		_, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeContains(err, elb.ErrCodeAccessPointNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("Unexpected error checking LB (%s) destroyed: %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if lb != nil && aws.StringValue(lb.LoadBalancerArn) == rs.Primary.ID {
-			return fmt.Errorf("LB %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("ELBv2 Load Balancer %s still exists", rs.Primary.ID)
 	}
 
 	return nil

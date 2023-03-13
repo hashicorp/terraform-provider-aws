@@ -2,7 +2,6 @@ package batch
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -68,19 +67,16 @@ func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) 
 	params := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
 	}
-	log.Printf("[DEBUG] Reading Batch Compute Environment: %s", params)
 	desc, err := conn.DescribeComputeEnvironments(params)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Batch Compute Environment (%s): %w", d.Get("compute_environment_name").(string), err)
 	}
 
-	if len(desc.ComputeEnvironments) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("compute_environment_name").(string))
-	}
-
-	if len(desc.ComputeEnvironments) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("compute_environment_name").(string))
+	if l := len(desc.ComputeEnvironments); l == 0 {
+		return fmt.Errorf("reading Batch Compute Environment (%s): empty response", d.Get("compute_environment_name").(string))
+	} else if l > 1 {
+		return fmt.Errorf("reading Batch Compute Environment (%s): too many results: wanted 1, got %d", d.Get("compute_environment_name").(string), l)
 	}
 
 	computeEnvironment := desc.ComputeEnvironments[0]

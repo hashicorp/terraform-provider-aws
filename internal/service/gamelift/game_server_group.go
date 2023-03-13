@@ -265,7 +265,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading GameLift Game Server Group (%s): %w", gameServerGroupName, err)
+		return fmt.Errorf("reading GameLift Game Server Group (%s): %w", gameServerGroupName, err)
 	}
 
 	autoScalingGroupName := strings.Split(aws.StringValue(gameServerGroup.AutoScalingGroupArn), "/")[1]
@@ -273,7 +273,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 		AutoScalingGroupNames: []*string{aws.String(autoScalingGroupName)},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading GameLift Game Server Group (%s): reading AutoScaling Group: %w", gameServerGroupName, err)
 	}
 	if autoScalingGroupOutput == nil || len(autoScalingGroupOutput.AutoScalingGroups) == 0 {
 		return fmt.Errorf("error describing Auto Scaling Group (%s): not found", autoScalingGroupName)

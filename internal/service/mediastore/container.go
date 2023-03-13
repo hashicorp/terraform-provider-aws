@@ -65,7 +65,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateContainer(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating MediaStore Container: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Container.Name))
@@ -81,7 +81,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("creating MediaStore Container (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceContainerRead(d, meta)
@@ -102,7 +102,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing media store container %s: %s", d.Id(), err)
+		return fmt.Errorf("reading MediaStore Container %s: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(resp.Container.ARN)
@@ -113,7 +113,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for media store container (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for MediaStore Container (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -138,7 +138,7 @@ func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating media store container (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating MediaStore Container (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -156,7 +156,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting MediaStore Container (%s): %w", d.Id(), err)
 	}
 
 	dcinput := &mediastore.DescribeContainerInput{
@@ -176,7 +176,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DescribeContainer(dcinput)
 	}
 	if err != nil {
-		return fmt.Errorf("error waiting for Media Store Container (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("deleting MediaStore Container (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

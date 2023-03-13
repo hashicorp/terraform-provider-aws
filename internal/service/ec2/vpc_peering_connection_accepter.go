@@ -103,12 +103,12 @@ func resourceVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) 
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if len(tags) > 0 {

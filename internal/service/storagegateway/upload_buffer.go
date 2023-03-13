@@ -101,7 +101,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 
 	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Storage Gateway Upload Buffer (%s): %w", d.Id(), err)
 	}
 
 	foundDiskID, err := FindUploadBufferDisk(conn, gatewayARN, diskID)

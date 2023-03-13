@@ -277,12 +277,6 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
-	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
-	if err != nil {
-		return err
-	}
-
 	var elbName string
 	if v, ok := d.GetOk("name"); ok {
 		elbName = v.(string)
@@ -295,6 +289,11 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		d.Set("name", elbName)
 	}
 
+	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
+	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
+	if err != nil {
+		return fmt.Errorf("creating ELB Classic Load Balancer (%s): %s", elbName, err)
+	}
 	// Provision the elb
 	elbOpts := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
@@ -321,12 +320,11 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] ELB create configuration: %#v", elbOpts)
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
 		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %w", err))
+			return resource.RetryableError(fmt.Errorf("creating ELB Listener with SSL Cert, retrying: %w", err))
 		}
 
 		if err != nil {
@@ -339,7 +337,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		_, err = elbconn.CreateLoadBalancer(elbOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating ELB: %s", err)
+		return fmt.Errorf("creating ELB Classic Load Balancer (%s): %s", elbName, err)
 	}
 
 	// Assign the elb's unique identifier for use later
@@ -384,11 +382,11 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn(), elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
+	return flattenLoadBalancerResource(d, meta.(*conns.AWSClient).EC2Conn(), elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
-// flattenLoadBalancerEResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
+// flattenLoadBalancerResource takes a *elb.LoadBalancerDescription and populates all respective resource fields.
+func flattenLoadBalancerResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -458,7 +456,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
-			return err
+			return fmt.Errorf("reading ELB Classic Load Balancer (%s): setting access_logs: %w", d.Id(), err)
 		}
 	}
 
@@ -506,7 +504,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		remove, _ := ExpandListeners(os.Difference(ns).List())
 		add, err := ExpandListeners(ns.Difference(os).List())
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ELB Classic Load Balancer (%s): %s", d.Id(), err)
 		}
 
 		if len(remove) > 0 {

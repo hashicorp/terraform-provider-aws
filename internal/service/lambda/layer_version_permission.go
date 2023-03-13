@@ -109,7 +109,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
 	input := &lambda.GetLayerVersionPolicyInput{
@@ -126,13 +126,13 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
 	policyDoc := &IAMPolicyDoc{}
 
 	if err := json.Unmarshal([]byte(aws.StringValue(layerVersionPolicyOutput.Policy)), policyDoc); err != nil {
-		return err
+		return fmt.Errorf("reading Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
 	d.Set("layer_name", layerName)
@@ -194,7 +194,7 @@ func resourceLayerVersionPermissionDelete(d *schema.ResourceData, meta interface
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lambda Layer Version Permission (%s): %w", d.Id(), err)
 	}
 
 	input := &lambda.RemoveLayerVersionPermissionInput{

@@ -103,7 +103,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	sm, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
@@ -168,7 +168,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeArtifact Domain (%s): %w", d.Id(), err)
 	}
 
 	input := &codeartifact.DeleteDomainInput{
@@ -183,7 +183,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CodeArtifact Domain (%s): %w", d.Id(), err)
 	}
 
 	return nil

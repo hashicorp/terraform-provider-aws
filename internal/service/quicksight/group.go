@@ -96,7 +96,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	descOpts := &quicksight.DescribeGroupInput{
@@ -112,7 +112,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing QuickSight Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.Group.Arn)
@@ -129,7 +129,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	updateOpts := &quicksight.UpdateGroupInput{
@@ -155,7 +155,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	deleteOpts := &quicksight.DeleteGroupInput{

@@ -276,7 +276,7 @@ func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.CreatePatchBaseline(params)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SSM Patch Baseline: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BaselineId))
@@ -364,7 +364,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading SSM Patch Baseline (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", resp.Name)

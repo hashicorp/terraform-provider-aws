@@ -178,7 +178,7 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SchedulingPolicy (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("updating SchedulingPolicy (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("tags_all") {

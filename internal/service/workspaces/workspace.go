@@ -157,29 +157,25 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.WorkspaceProperties = ExpandWorkspaceProperties(d.Get("workspace_properties").([]interface{}))
 
-	log.Printf("[DEBUG] Creating workspace...\n%#v\n", *input)
 	resp, err := conn.CreateWorkspaces(&workspaces.CreateWorkspacesInput{
 		Workspaces: []*workspaces.WorkspaceRequest{input},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WorkSpaces Workspace: %w", err)
 	}
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("workspace creation failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
+		return fmt.Errorf("creating WorkSpaces Workspace: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
+	d.SetId(workspaceID)
 
-	log.Printf("[DEBUG] Waiting for workspace %q to be available...", workspaceID)
 	_, err = WaitWorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("workspace %q is not available: %s", workspaceID, err)
+		return fmt.Errorf("creating WorkSpaces Workspace: waiting for completion: %s", err)
 	}
-
-	d.SetId(workspaceID)
-	log.Printf("[DEBUG] Workspace %q is available", workspaceID)
 
 	return resourceWorkspaceRead(d, meta)
 }
@@ -191,10 +187,10 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	rawOutput, state, err := StatusWorkspaceState(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("error reading workspace (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading WorkSpaces Workspace (%s): %s", d.Id(), err)
 	}
 	if state == workspaces.WorkspaceStateTerminated {
-		log.Printf("[WARN] workspace (%s) is not found, removing from state", d.Id())
+		log.Printf("[WARN] WorkSpaces Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -210,23 +206,23 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
 	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
-		return fmt.Errorf("error setting workspace properties: %s", err)
+		return fmt.Errorf("setting workspace properties: %s", err)
 	}
 
 	tags, err := ListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %s", err)
+		return fmt.Errorf("listing tags: %s", err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -241,38 +237,38 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("workspace_properties.0.compute_type_name") {
 		if err := workspacePropertyUpdate("compute_type_name", conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.root_volume_size_gib") {
 		if err := workspacePropertyUpdate("root_volume_size_gib", conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.running_mode") {
 		if err := workspacePropertyUpdate("running_mode", conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes") {
 		if err := workspacePropertyUpdate("running_mode_auto_stop_timeout_in_minutes", conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("workspace_properties.0.user_volume_size_gib") {
 		if err := workspacePropertyUpdate("user_volume_size_gib", conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces Workspace (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -286,7 +282,6 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
-	log.Printf("[DEBUG] Terminating workspace %q", id)
 	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
 			{
@@ -295,28 +290,24 @@ func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 		},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting WorkSpaces Workspace (%s): %w", id, err)
 	}
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("workspace termination failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
+		return fmt.Errorf("deleting WorkSpaces Workspace (%s): %s: %s", id, aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
-	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)
 	_, err = WaitWorkspaceTerminated(conn, id, timeout)
 	if err != nil {
-		return fmt.Errorf("workspace %q was not terminated: %s", id, err)
+		return fmt.Errorf("deleting WorkSpaces Workspace (%s): waiting for completion: %w", id, err)
 	}
-	log.Printf("[DEBUG] Workspace %q is terminated", id)
 
 	return nil
 }
 
 func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.ResourceData) error {
 	id := d.Id()
-
-	log.Printf("[DEBUG] Modifying workspace %q %s property...", id, p)
 
 	var wsp *workspaces.WorkspaceProperties
 
@@ -353,15 +344,13 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 		WorkspaceProperties: wsp,
 	})
 	if err != nil {
-		return fmt.Errorf("workspace %q %s property was not modified: %w", d.Id(), p, err)
+		return fmt.Errorf("modifying property %q: %w", p, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for workspace %q %s property to be modified...", d.Id(), p)
 	_, err = WaitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error modifying workspace %q property %q was not modified: %w", d.Id(), p, err)
+		return fmt.Errorf("modifying property %q: waiting for completion: %w", p, err)
 	}
-	log.Printf("[DEBUG] Workspace %q %s property is modified", d.Id(), p)
 
 	return nil
 }

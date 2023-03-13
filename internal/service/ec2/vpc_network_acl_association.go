@@ -42,7 +42,7 @@ func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{
 	associationID, err := networkACLAssociationCreate(conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.SetId(associationID)
@@ -62,7 +62,7 @@ func resourceNetworkACLAssociationRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Network ACL Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("network_acl_id", association.NetworkAclId)
@@ -83,18 +83,18 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 	nacl, err := FindNetworkACL(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL for Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Network ACL for Association (%s): %w", d.Id(), err)
 	}
 
 	vpcID := aws.StringValue(nacl.VpcId)
 	defaultNACL, err := FindVPCDefaultNetworkACL(conn, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
+		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 	}
 
 	if err := networkACLAssociationDelete(conn, d.Id(), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil
@@ -106,7 +106,7 @@ func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string
 	association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
 
 	if err != nil {
-		return "", fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+		return "", fmt.Errorf("reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
 	}
 
 	input := &ec2.ReplaceNetworkAclAssociationInput{
@@ -120,7 +120,7 @@ func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string
 	}, errCodeInvalidAssociationIDNotFound)
 
 	if err != nil {
-		return "", fmt.Errorf("error creating EC2 Network ACL (%s) Association: %w", naclID, err)
+		return "", fmt.Errorf("creating EC2 Network ACL (%s) Association: %w", naclID, err)
 	}
 
 	return aws.StringValue(outputRaw.(*ec2.ReplaceNetworkAclAssociationOutput).NewAssociationId), nil
@@ -161,7 +161,7 @@ func networkACLAssociationDelete(conn *ec2.EC2, associationID, naclID string) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network ACL Association (%s): %w", associationID, err)
+		return fmt.Errorf("deleting EC2 Network ACL Association (%s): %w", associationID, err)
 	}
 
 	return nil
@@ -173,7 +173,7 @@ func networkACLAssociationsDelete(conn *ec2.EC2, vpcID string, subnetIDs []inter
 	defaultNACL, err := FindVPCDefaultNetworkACL(conn, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
+		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 	}
 
 	for _, v := range subnetIDs {
@@ -186,7 +186,7 @@ func networkACLAssociationsDelete(conn *ec2.EC2, vpcID string, subnetIDs []inter
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+			return fmt.Errorf("reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
 		}
 
 		if err := networkACLAssociationDelete(conn, aws.StringValue(association.NetworkAclAssociationId), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {

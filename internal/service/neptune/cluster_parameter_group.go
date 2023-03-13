@@ -175,7 +175,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 
 	describeParametersResp, err := conn.DescribeDBClusterParameters(&describeParametersOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {

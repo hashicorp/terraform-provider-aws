@@ -97,7 +97,7 @@ func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta 
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
@@ -165,7 +165,7 @@ func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, met
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %s", d.Id())

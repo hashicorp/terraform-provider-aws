@@ -935,7 +935,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	err = resourceEndpointSetState(d, endpoint)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, d.Get("endpoint_arn").(string))
@@ -1304,7 +1304,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
 	}
 
-	return err
+	return nil
 }
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

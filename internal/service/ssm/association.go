@@ -268,7 +268,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
 	if err := d.Set("parameters", flattenParameters(association.Parameters)); err != nil {
-		return err
+		return fmt.Errorf("reading SSM Association (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {

@@ -670,14 +670,11 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.DocumentClassifierProperties); ok {
-		var ues *resource.UnexpectedStateError
-		if errors.As(err, &ues) {
-			if ues.State == string(types.ModelStatusInError) {
-				err = errors.New(aws.ToString(out.Message))
-			}
+	if output, ok := outputRaw.(*types.DocumentClassifierProperties); ok {
+		if output.Status == types.ModelStatusInError {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
-		return out, err
+		return output, err
 	}
 
 	return nil, err

@@ -59,7 +59,7 @@ func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway API Key (%s): %w", d.Get("id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))

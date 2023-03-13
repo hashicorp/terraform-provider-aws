@@ -78,7 +78,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	var localGatewayRoute *ec2.LocalGatewayRoute
@@ -114,7 +114,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Local Gateway Route: %s", err)
+		return fmt.Errorf("reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	if localGatewayRoute == nil {
@@ -142,7 +142,7 @@ func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) e
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	input := &ec2.DeleteLocalGatewayRouteInput{
@@ -158,7 +158,7 @@ func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Local Gateway Route: %s", err)
+		return fmt.Errorf("deleting EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	return nil

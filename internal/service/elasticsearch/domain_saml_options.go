@@ -151,13 +151,13 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("setting Elasticsearch Domain SAML Options (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(domainName)
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
+		return fmt.Errorf("setting Elasticsearch Domain SAML Options (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceDomainSAMLOptionsRead(d, meta)
@@ -175,13 +175,13 @@ func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) e
 		AdvancedSecurityOptions: &config,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Elasticsearch Domain SAML Options (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting Elasticsearch Domain SAML Options (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

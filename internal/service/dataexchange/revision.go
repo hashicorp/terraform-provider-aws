@@ -83,7 +83,7 @@ func resourceRevisionRead(d *schema.ResourceData, meta interface{}) error {
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataExchange Revision (%s): %w", d.Id(), err)
 	}
 
 	revision, err := FindRevisionById(conn, dataSetId, revisionId)
@@ -95,7 +95,7 @@ func resourceRevisionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataExchange Revision (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataExchange Revision (%s): %w", d.Id(), err)
 	}
 
 	d.Set("data_set_id", revision.DataSetId)

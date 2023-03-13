@@ -110,7 +110,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := validateAuthorizerType(d); err != nil {
-		return err
+		return fmt.Errorf("creating API Gateway Authorizer: %w", err)
 	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
 		input.AuthorizerUri = aws.String(v.(string))
@@ -141,7 +141,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
 	out, err := conn.CreateAuthorizer(&input)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Authorizer: %w", err)
+		return fmt.Errorf("creating API Gateway Authorizer: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.Id))
@@ -187,7 +187,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 
-	if authorizer.AuthorizerResultTtlInSeconds != nil {
+	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
 	} else {
 		d.Set("authorizer_result_ttl_in_seconds", DefaultAuthorizerTTL)

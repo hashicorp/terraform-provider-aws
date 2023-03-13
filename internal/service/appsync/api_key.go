@@ -82,12 +82,12 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	key, err := GetAPIKey(apiID, keyID, conn)
 	if err != nil {
-		return fmt.Errorf("error getting Appsync API Key %q: %s", d.Id(), err)
+		return fmt.Errorf("reading Appsync API Key (%s): %s", d.Id(), err)
 	}
 	if key == nil && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync API Key (%s) not found, removing from state", d.Id())
@@ -107,7 +107,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	params := &appsync.UpdateApiKeyInput{
@@ -124,7 +124,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateApiKey(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	return resourceAPIKeyRead(d, meta)
@@ -135,7 +135,7 @@ func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteApiKeyInput{
@@ -147,7 +147,7 @@ func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -129,8 +129,8 @@ func resourceSubnetCIDRReservationDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Subnet CIDR Reservation (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Subnet CIDR Reservation (%s): %w", d.Id(), err)
 	}
 
-	return err
+	return nil
 }

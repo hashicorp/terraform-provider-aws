@@ -201,12 +201,16 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 			output, err := conn.CreateStackInstances(input)
 
 			if err != nil {
-				return nil, fmt.Errorf("error creating CloudFormation StackSet (%s) Instance: %w", stackSetName, err)
+				return nil, err
 			}
 
 			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountID, region))
 
-			return WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+			operation, err := WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return nil, fmt.Errorf("waiting for completion: %w", err)
+			}
+			return operation, nil
 		},
 		func(err error) (bool, error) {
 			if err == nil {
@@ -248,7 +252,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFormation StackSet (%s) Instance: %w", stackSetName, err)
 	}
 
 	return resourceStackSetInstanceRead(d, meta)
@@ -262,7 +266,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	callAs := d.Get("call_as").(string)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
 	}
 
 	// Determine correct account ID for the Instance if created with deployment targets;
@@ -288,7 +292,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
 	}
 
 	d.Set("account_id", stackInstance.Account)
@@ -311,7 +315,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating CloudFormation StackSet Instance (%s): %w", d.Id(), err)
 		}
 
 		input := &cloudformation.UpdateStackInstancesInput{
@@ -345,11 +349,11 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		output, err := conn.UpdateStackInstances(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudFormation StackSet Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating CloudFormation StackSet Instance (%s): %w", d.Id(), err)
 		}
 
 		if _, err := WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
+			return fmt.Errorf("updating CloudFormation StackSet Instance (%s): waiting for completion: %w", d.Id(), err)
 		}
 	}
 
@@ -362,7 +366,7 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
 	input := &cloudformation.DeleteStackInstancesInput{
@@ -395,11 +399,11 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("deleting CloudFormation StackSet Instance (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return nil

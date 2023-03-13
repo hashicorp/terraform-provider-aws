@@ -95,7 +95,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ACM PCA Permission (%s): %w", d.Id(), err)
 	}
 
 	permission, err := FindPermission(conn, caARN, principal, sourceAccount)
@@ -125,7 +125,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ACM PCA Permission: %s", err)
 	}
 
 	input := &acmpca.DeletePermissionInput{

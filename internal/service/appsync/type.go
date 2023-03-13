@@ -81,7 +81,7 @@ func resourceTypeRead(d *schema.ResourceData, meta interface{}) error {
 
 	apiID, format, name, err := DecodeTypeID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Appsync Type %q: %s", d.Id(), err)
 	}
 
 	resp, err := FindTypeByID(conn, apiID, format, name)
@@ -92,7 +92,7 @@ func resourceTypeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Appsync Type %q: %s", d.Id(), err)
+		return fmt.Errorf("reading Appsync Type %q: %s", d.Id(), err)
 	}
 
 	d.Set("api_id", apiID)

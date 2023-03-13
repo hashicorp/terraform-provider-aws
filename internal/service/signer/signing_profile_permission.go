@@ -93,7 +93,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 			revisionId = ""
 		} else {
-			return err
+			return fmt.Errorf("creating Signer Signing Profile Permission: %w", err)
 		}
 	} else {
 		revisionId = aws.StringValue(getProfilePermissionsOutput.RevisionId)
@@ -113,7 +113,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 		addProfilePermissionInput.ProfileVersion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Adding new Signer signing profile permission: %s", addProfilePermissionInput)
+	log.Printf("[DEBUG] Adding new Signer Signing Profile Permission: %s", addProfilePermissionInput)
 	// Retry for IAM eventual consistency
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddProfilePermission(addProfilePermissionInput)
@@ -132,7 +132,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error adding new Signer signing profile permission for %q: %s", profileName, err)
+		return fmt.Errorf("error adding new Signer Signing Profile Permission for %q: %s", profileName, err)
 	}
 
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
@@ -141,11 +141,11 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 				return resource.RetryableError(
-					fmt.Errorf("error reading newly created Signer signing profile permission for %s, retrying: %s",
+					fmt.Errorf("error reading newly created Signer Signing Profile Permission for %s, retrying: %s",
 						*addProfilePermissionInput.ProfileName, err))
 			}
 
-			log.Printf("[ERROR] An actual error occurred when expecting Signer signing profile permission to be there: %s", err)
+			log.Printf("[ERROR] An actual error occurred when expecting Signer Signing Profile Permission to be there: %s", err)
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -170,7 +170,7 @@ func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface
 		ProfileName: aws.String(d.Get("profile_name").(string)),
 	}
 
-	log.Printf("[DEBUG] Getting Signer signing profile permissions: %s", listProfilePermissionsInput)
+	log.Printf("[DEBUG] Getting Signer Signing Profile Permissions: %s", listProfilePermissionsInput)
 	var listProfilePermissionsOutput *signer.ListProfilePermissionsOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		// IAM is eventually consistent :/
@@ -202,7 +202,7 @@ func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface
 	statementId := d.Get("statement_id").(string)
 	permission := getProfilePermission(listProfilePermissionsOutput.Permissions, statementId)
 	if permission == nil {
-		log.Printf("[WARN] No Signer signing profile permission found matching statement id: %s", statementId)
+		log.Printf("[WARN] No Signer Signing Profile Permission found matching statement id: %s", statementId)
 		d.SetId("")
 		return nil
 	}
@@ -252,10 +252,10 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 	listProfilePermissionsOutput, err := conn.ListProfilePermissions(listProfilePermissionsInput)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] No Signer signing profile permission found for: %v", listProfilePermissionsInput)
+			log.Printf("[WARN] No Signer Signing Profile Permission found for: %v", listProfilePermissionsInput)
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Signer Signing Profile Permission (%s): %w", d.Id(), err)
 	}
 
 	revisionId := aws.StringValue(listProfilePermissionsOutput.RevisionId)
@@ -263,7 +263,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 	statementId := d.Get("statement_id").(string)
 	permission := getProfilePermission(listProfilePermissionsOutput.Permissions, statementId)
 	if permission == nil {
-		log.Printf("[WARN] No Signer signing profile permission found matching statement id: %s", statementId)
+		log.Printf("[WARN] No Signer Signing Profile Permission found matching statement id: %s", statementId)
 		return nil
 	}
 
@@ -280,7 +280,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 			log.Printf("[WARN] No Signer Signing Profile Permission found: %v", removeProfilePermissionInput)
 			return nil
 		}
-		return fmt.Errorf("error removing Signer Signing Profile Permission (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Signer Signing Profile Permission (%s): %w", d.Id(), err)
 	}
 
 	params := &signer.ListProfilePermissionsInput{
@@ -294,7 +294,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Signer signing profile permissions: %s", err)
+		return fmt.Errorf("error getting Signer Signing Profile Permissions: %s", err)
 	}
 
 	if len(resp.Permissions) > 0 {
@@ -304,7 +304,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	log.Printf("[DEBUG] Signer signing profile permission with ID %q removed", statementId)
+	log.Printf("[DEBUG] Signer Signing Profile Permission with ID %q removed", statementId)
 
 	return nil
 }

@@ -151,7 +151,7 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	mapping, err := conn.GetBasePathMapping(&apigateway.GetBasePathMappingInput{
@@ -165,7 +165,7 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		return fmt.Errorf("error reading API Gateway Base Path Mapping (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	mappingBasePath := aws.StringValue(mapping.BasePath)
@@ -187,7 +187,7 @@ func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) err
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	_, err = conn.DeleteBasePathMapping(&apigateway.DeleteBasePathMappingInput{
@@ -200,7 +200,7 @@ func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("deleting API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	return nil

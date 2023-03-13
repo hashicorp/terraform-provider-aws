@@ -89,5 +89,5 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
-	return fmt.Errorf("error reading %s: %w", resourceType, err)
+	return fmt.Errorf("reading %s: %w", resourceType, err)
 }

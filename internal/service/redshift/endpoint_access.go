@@ -217,11 +217,11 @@ func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) erro
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Endpoint Access (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitEndpointAccessDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Endpoint Access (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

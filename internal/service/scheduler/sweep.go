@@ -105,7 +105,7 @@ func sweepSchedules(region string) error {
 			groupName := aws.ToString(it.GroupName)
 			scheduleName := aws.ToString(it.Name)
 
-			r := ResourceSchedule()
+			r := resourceSchedule()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s/%s", groupName, scheduleName))
 

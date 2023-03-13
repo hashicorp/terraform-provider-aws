@@ -46,23 +46,24 @@ func ResourceContainerPolicy() *schema.Resource {
 func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
+	name := d.Get("container_name").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return fmt.Errorf("putting MediaStore Container Policy (%s): %w", name, err)
 	}
 
 	input := &mediastore.PutContainerPolicyInput{
-		ContainerName: aws.String(d.Get("container_name").(string)),
+		ContainerName: aws.String(name),
 		Policy:        aws.String(policy),
 	}
 
 	_, err = conn.PutContainerPolicy(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("putting MediaStore Container Policy (%s): %w", name, err)
 	}
 
-	d.SetId(d.Get("container_name").(string))
+	d.SetId(name)
 	return resourceContainerPolicyRead(d, meta)
 }
 
@@ -76,24 +77,23 @@ func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.GetContainerPolicy(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
+			log.Printf("[WARN] MediaStore Container Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
-			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
+			log.Printf("[WARN] MediaStore Container Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading MediaStore Container Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("container_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(resp.Policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading MediaStore Container Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -119,7 +119,7 @@ func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) err
 		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
 		// 	return nil
 		// }
-		return err
+		return fmt.Errorf("deleting MediaStore Container Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

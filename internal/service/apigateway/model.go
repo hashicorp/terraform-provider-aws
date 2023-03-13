@@ -164,15 +164,14 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	out, err := conn.UpdateModel(&apigateway.UpdateModelInput{
+	_, err := conn.UpdateModel(&apigateway.UpdateModelInput{
 		ModelName:       aws.String(d.Get("name").(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		PatchOperations: operations,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Model (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 
 	return resourceModelRead(d, meta)
 }
@@ -193,7 +192,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting API gateway model: %s", err)
+		return fmt.Errorf("deleting API Gateway Model (%s): %s", d.Id(), err)
 	}
 	return nil
 }

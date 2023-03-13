@@ -214,7 +214,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateApplicationSettings(&req)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() {
@@ -243,12 +243,12 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
 	settings, err := conn.GetApplicationSettings(&pinpoint.GetApplicationSettingsInput{
@@ -256,12 +256,12 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading Pinpoint Application (%s) settings: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(app.ApplicationResponse.Arn)
@@ -311,7 +311,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return err
+	return fmt.Errorf("deleting Pinpoint Application (%s): %s", d.Id(), err)
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

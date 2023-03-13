@@ -111,7 +111,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	input, err := buildPutRuleInputStruct(d, name)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EventBridge Rule (%s): %w", name, err)
 	}
 
 	if len(tags) > 0 {
@@ -130,7 +130,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating EventBridge Rule (%s): %w", name, err)
+		return fmt.Errorf("creating EventBridge Rule (%s): %w", name, err)
 	}
 
 	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
@@ -160,7 +160,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	output, err := FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
@@ -172,7 +172,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.Arn)
@@ -194,7 +194,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	enabled, err := RuleEnabledFromState(aws.StringValue(output.State))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	d.Set("is_enabled", enabled)
@@ -231,13 +231,13 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	input, err := buildPutRuleInputStruct(d, ruleName)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	// IAM Roles take some time to propagate
@@ -260,7 +260,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating EventBridge Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -288,7 +288,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	input := &eventbridge.DeleteRuleInput{
@@ -322,7 +322,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EventBridge Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -16,7 +16,7 @@ import (
 func virtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := virtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
-		return nil, fmt.Errorf("error reading Direct Connect virtual interface (%s): %s", id, err)
+		return nil, fmt.Errorf("reading Direct Connect virtual interface (%s): %s", id, err)
 	}
 	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
@@ -36,7 +36,7 @@ func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {
-			return fmt.Errorf("error modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
+			return fmt.Errorf("modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
 		}
 	}
 	if d.HasChange("sitelink_enabled") {
@@ -47,7 +47,7 @@ func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {
-			return fmt.Errorf("error modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
+			return fmt.Errorf("modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
 		}
 	}
 
@@ -56,7 +56,7 @@ func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Direct Connect virtual interface (%s) tags: %s", arn, err)
+			return fmt.Errorf("updating Direct Connect virtual interface (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -74,7 +74,7 @@ func virtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Direct Connect virtual interface (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting Direct Connect virtual interface (%s): %s", d.Id(), err)
 	}
 
 	deleteStateConf := &resource.StateChangeConf{
@@ -97,7 +97,7 @@ func virtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err = deleteStateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for Direct Connect virtual interface (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Direct Connect virtual interface (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func virtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
+		return fmt.Errorf("waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
 	}
 
 	return nil

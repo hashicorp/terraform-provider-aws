@@ -131,7 +131,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateDBSnapshot(params)
 	if err != nil {
-		return fmt.Errorf("Error creating AWS DB Snapshot %s: %s", dBInstanceIdentifier, err)
+		return fmt.Errorf("creating AWS DB Snapshot (%s): %s", dBInstanceIdentifier, err)
 	}
 	d.SetId(aws.StringValue(resp.DBSnapshot.DBSnapshotIdentifier))
 
@@ -144,10 +144,9 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("creating AWS DB Snapshot (%s): waiting for completion: %s", dBInstanceIdentifier, err)
 	}
 
 	return resourceSnapshotRead(d, meta)

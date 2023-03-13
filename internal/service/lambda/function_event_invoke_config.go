@@ -144,7 +144,7 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", id, err)
+		return fmt.Errorf("creating Lambda Function Event Invoke Config (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -158,7 +158,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Lambda Function Event Invoke Config (%s): %w", d.Id(), err)
 	}
 
 	input := &lambda.GetFunctionEventInvokeConfigInput{
@@ -178,7 +178,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Lambda Function Event Invoke Config (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("destination_config", flattenFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
@@ -199,7 +199,7 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Lambda Function Event Invoke Config (%s): %w", d.Id(), err)
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
@@ -242,7 +242,7 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return fmt.Errorf("updating Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	return resourceFunctionEventInvokeConfigRead(d, meta)
@@ -254,7 +254,7 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lambda Function Event Invoke Config (%s): %w", d.Id(), err)
 	}
 
 	input := &lambda.DeleteFunctionEventInvokeConfigInput{
@@ -272,7 +272,7 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting Lambda Function Event Invoke Config (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -179,7 +179,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ReimportApi(importReq)
 
 		if err != nil {
-			return fmt.Errorf("error importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
+			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
 		}
 
 		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -187,7 +187,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 		corsConfiguration := d.Get("cors_configuration")
 
 		if err := resourceAPIRead(d, meta); err != nil {
-			return err
+			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
 		}
 
 		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
@@ -257,17 +257,16 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 		req.Version = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 API: %s", req)
 	resp, err := conn.CreateApi(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API: %s", err)
+		return fmt.Errorf("creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ApiId))
 
 	err = resourceImportOpenAPI(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
 	}
 
 	return resourceAPIRead(d, meta)
@@ -395,7 +394,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("body") {
 		err := resourceImportOpenAPI(d, meta)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating API Gateway v2 API (%s): %s", d.Id(), err)
 		}
 	}
 

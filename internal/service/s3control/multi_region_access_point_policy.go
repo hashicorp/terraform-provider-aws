@@ -60,10 +60,11 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 							ValidateFunc: validateS3MultiRegionAccessPointName,
 						},
 						"policy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateFunc:     validation.StringIsJSON,
-							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+							Type:                  schema.TypeString,
+							Required:              true,
+							ValidateFunc:          validation.StringIsJSON,
+							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+							DiffSuppressOnRefresh: true,
 							StateFunc: func(v interface{}) string {
 								json, _ := structure.NormalizeJsonString(v)
 								return json
@@ -250,7 +251,6 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 
 	if v, ok := tfMap["policy"].(string); ok {
 		policy, err := structure.NormalizeJsonString(v)
-
 		if err != nil {
 			policy = v
 		}

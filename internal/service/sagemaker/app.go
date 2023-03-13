@@ -141,13 +141,13 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	appArn := aws.StringValue(output.AppArn)
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SageMaker App (%s): %w", appArn, err)
 	}
 
 	d.SetId(appArn)
 
 	if _, err := WaitAppInService(conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
-		return fmt.Errorf("waiting for SageMaker App (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("create SageMaker App (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceAppRead(d, meta)
@@ -160,7 +160,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker App (%s): %w", d.Id(), err)
 	}
 
 	app, err := FindAppByName(conn, domainID, userProfileOrSpaceName, appType, appName)

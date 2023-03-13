@@ -136,12 +136,17 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "Use the aws_s3_bucket_policy resource instead",
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				Deprecated:            "Use the aws_s3_bucket_policy resource instead",
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"cors_rule": {
@@ -987,7 +992,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
-		d.Set("policy", output.Policy)
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
+		if err != nil {
+			return fmt.Errorf("while setting policy (%s), encountered: %w", aws.StringValue(output.Policy), err)
+		}
+
+		d.Set("policy", policyToSet)
 	} else {
 		d.Set("policy", nil)
 	}
@@ -1077,7 +1087,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	if ws, ok := wsResponse.(*s3.GetBucketWebsiteOutput); ok {
 		website, err := flattenBucketWebsite(ws)
 		if err != nil {
-			return err
+			return fmt.Errorf("setting website: %w", err)
 		}
 		if err := d.Set("website", website); err != nil {
 			return fmt.Errorf("setting website: %w", err)
@@ -1348,14 +1358,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	region := discoveredRegion.(string)
-	if err := d.Set("region", region); err != nil {
-		return err
-	}
+	d.Set("region", region)
 
 	// Add the bucket_regional_domain_name as an attribute
 	regionalEndpoint, err := BucketRegionalDomainName(d.Get("bucket").(string), region)
 	if err != nil {
-		return err
+		return fmt.Errorf("getting S3 Bucket regional domain name: %s", err)
 	}
 	d.Set("bucket_regional_domain_name", regionalEndpoint)
 
@@ -1378,17 +1386,13 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Bucket (%s): %w", d.Id(), err)
 	}
+
 	if websiteEndpoint != nil {
-		if err := d.Set("website_endpoint", websiteEndpoint.Endpoint); err != nil {
-			return err
-		}
-		if err := d.Set("website_domain", websiteEndpoint.Domain); err != nil {
-			return err
-		}
+		d.Set("website_endpoint", websiteEndpoint.Endpoint)
+		d.Set("website_domain", websiteEndpoint.Domain)
 	}
 
 	// Retry due to S3 eventual consistency
@@ -1927,7 +1931,6 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 
 func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
 	}

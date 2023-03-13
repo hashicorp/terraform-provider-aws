@@ -47,7 +47,7 @@ func dataSourceSolutionStackRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading Elastic Beanstalk Solution Stack: %s", params)
 	resp, err := conn.ListAvailableSolutionStacks(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Solution Stack: %w", err)
 	}
 
 	var filteredSolutionStacks []*string

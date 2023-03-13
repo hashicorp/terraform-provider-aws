@@ -334,10 +334,7 @@ func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("version", version)
-
-	if output.VoiceId != nil {
-		d.Set("voice_id", output.VoiceId)
-	}
+	d.Set("voice_id", output.VoiceId)
 
 	return nil
 }

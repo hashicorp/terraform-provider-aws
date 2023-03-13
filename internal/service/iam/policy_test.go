@@ -239,6 +239,94 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/28833
+func TestAccIAMPolicy_diffs(t *testing.T) {
+	var out iam.GetPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPolicyConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccPolicyConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(resource string, res *iam.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
@@ -447,4 +535,74 @@ EOF
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPolicyConfig_diffs(rName string, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Id      = %[1]q
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "60c9d11f"
+      Effect = "Allow"
+      Action = [
+        "kms:Describe*",
+        "kms:Get*",
+        "kms:List*",
+        "kms:CreateKey",
+        "kms:DescribeKey",
+        "kms:ScheduleKeyDeletion",
+        "kms:TagResource",
+        "kms:UntagResource",
+        "s3:ListMultipartUploadParts",
+        "s3:ListBucketVersions",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListBucket",
+        "s3:GetReplicationConfiguration",
+        "s3:GetObjectVersionTorrent",
+        "s3:GetObjectVersionTagging",
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersionAcl",
+        "s3:GetObjectVersion",
+        "s3:GetObjectTorrent",
+        "s3:GetObjectTagging",
+        "s3:GetObjectRetention",
+        "s3:GetObjectLegalHold",
+        "s3:GetObjectAcl",
+        "s3:GetObject",
+        "s3:GetMetricsConfiguration",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetJobTagging",
+        "s3:GetInventoryConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetBucketWebsite",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketTagging",
+        "s3:GetBucketRequestPayment",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketObjectLockConfiguration",
+        "s3:GetBucketNotification",
+        "s3:GetBucketLogging",
+        "s3:GetBucketLocation",
+        "s3:GetBucketCORS",
+        "s3:GetBucketAcl",
+        "s3:GetAnalyticsConfiguration",
+        "s3:GetAccessPointPolicyStatus",
+        "s3:GetAccessPointPolicy",
+        "s3:GetAccelerateConfiguration",
+        "s3:DescribeJob",
+      ]
+      Resource = "*"
+    }]
+  })
+
+  %[2]s
+}
+`, rName, tags)
 }

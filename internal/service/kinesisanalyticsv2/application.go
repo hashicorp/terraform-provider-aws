@@ -953,7 +953,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return fmt.Errorf("creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
 	}
 
 	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
@@ -964,7 +964,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("start_application"); ok {
 		if err := startApplication(conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return fmt.Errorf("creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
 		}
 	}
 
@@ -1514,11 +1514,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("start_application") {
 		if _, ok := d.GetOk("start_application"); ok {
 			if err := startApplication(conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
 		} else {
 			if err := stopApplication(conn, expandStopApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -1531,7 +1531,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {
-		return fmt.Errorf("error parsing create_timestamp: %w", err)
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application (%s): parsing create_timestamp: %w", d.Id(), err)
 	}
 
 	applicationName := d.Get("name").(string)
@@ -1547,13 +1547,13 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1562,13 +1562,13 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return []*schema.ResourceData{}, fmt.Errorf("Error parsing ARN %q: %w", d.Id(), err)
+		return []*schema.ResourceData{}, fmt.Errorf("parsing ARN %q: %w", d.Id(), err)
 	}
 
 	// application/<name>
 	parts := strings.Split(arn.Resource, "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected ARN format: %q", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected ARN format: %q", d.Id())
 	}
 
 	d.Set("name", parts[1])
@@ -1582,7 +1582,7 @@ func startApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesi
 	application, err := FindApplicationDetailByName(conn, applicationName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return fmt.Errorf("starting application: %w", err)
 	}
 
 	applicationARN := aws.StringValue(application.ApplicationARN)
@@ -1605,11 +1605,11 @@ func startApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesi
 	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
 	if _, err := conn.StartApplication(input); err != nil {
-		return fmt.Errorf("error starting Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+		return fmt.Errorf("starting application: %w", err)
 	}
 
 	if _, err := waitApplicationStarted(conn, applicationName, timeout); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to start: %w", applicationARN, err)
+		return fmt.Errorf("starting application: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -1621,7 +1621,7 @@ func stopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesis
 	application, err := FindApplicationDetailByName(conn, applicationName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return fmt.Errorf("stopping application: %w", err)
 	}
 
 	applicationARN := aws.StringValue(application.ApplicationARN)
@@ -1634,11 +1634,11 @@ func stopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesis
 	log.Printf("[DEBUG] Stopping Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
 	if _, err := conn.StopApplication(input); err != nil {
-		return fmt.Errorf("error stopping Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+		return fmt.Errorf("stopping application: %w", err)
 	}
 
 	if _, err := waitApplicationStopped(conn, applicationName, timeout); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to stop: %w", applicationARN, err)
+		return fmt.Errorf("stopping application: waiting for completion: %w", err)
 	}
 
 	return nil

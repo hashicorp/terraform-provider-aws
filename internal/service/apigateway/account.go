@@ -51,10 +51,9 @@ func ResourceAccount() *schema.Resource {
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
 	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Account: %w", err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Account: %s", account)
@@ -65,7 +64,9 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		// (e.g. for referencing throttle_settings)
 		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
 	}
-	d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings))
+	if err := d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings)); err != nil {
+		return fmt.Errorf("reading API Gateway Account: %w", err)
+	}
 
 	return nil
 }

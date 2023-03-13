@@ -221,7 +221,7 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateVpc(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 VPC: %w", err)
+		return fmt.Errorf("creating EC2 VPC: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.Vpc.VpcId))
@@ -252,7 +252,7 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := modifyVPCAttributesOnCreate(conn, d, &vpcInfo); err != nil {
-		return err
+		return fmt.Errorf("creating EC2 VPC: %w", err)
 	}
 
 	return resourceVPCRead(d, meta)
@@ -407,37 +407,37 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_dns_support") {
 		if err := modifyVPCDNSSupport(conn, d.Id(), d.Get("enable_dns_support").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_network_address_usage_metrics") {
 		if err := modifyVPCNetworkAddressUsageMetrics(conn, d.Id(), d.Get("enable_network_address_usage_metrics").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_classiclink") {
 		if err := modifyVPCClassicLink(conn, d.Id(), d.Get("enable_classiclink").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("enable_classiclink_dns_support") {
 		if err := modifyVPCClassicLinkDNSSupport(conn, d.Id(), d.Get("enable_classiclink_dns_support").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("instance_tenancy") {
 		if err := modifyVPCTenancy(conn, d.Id(), d.Get("instance_tenancy").(string)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -451,7 +451,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			d.Get("ipv6_cidr_block_network_border_group").(string))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 
 		d.Set("ipv6_association_id", associationID)
@@ -467,7 +467,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			"")
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 		}
 
 		d.Set("ipv6_association_id", associationID)
@@ -477,7 +477,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPC (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 VPC (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -628,7 +628,7 @@ func modifyVPCClassicLink(conn *ec2.EC2, vpcID string, v bool) error {
 		}
 
 		if _, err := conn.EnableVpcClassicLink(input); err != nil {
-			return fmt.Errorf("error enabling EC2 VPC (%s) ClassicLink: %w", vpcID, err)
+			return fmt.Errorf("enabling EnableDnsHostnames: %w", err)
 		}
 	} else {
 		input := &ec2.DisableVpcClassicLinkInput{
@@ -636,7 +636,7 @@ func modifyVPCClassicLink(conn *ec2.EC2, vpcID string, v bool) error {
 		}
 
 		if _, err := conn.DisableVpcClassicLink(input); err != nil {
-			return fmt.Errorf("error disabling EC2 VPC (%s) ClassicLink: %w", vpcID, err)
+			return fmt.Errorf("disabling EnableDnsHostnames: %w", err)
 		}
 	}
 
@@ -650,7 +650,7 @@ func modifyVPCClassicLinkDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 		}
 
 		if _, err := conn.EnableVpcClassicLinkDnsSupport(input); err != nil {
-			return fmt.Errorf("error enabling EC2 VPC (%s) ClassicLinkDnsSupport: %w", vpcID, err)
+			return fmt.Errorf("enabling ClassicLinkDnsSupport: %w", err)
 		}
 	} else {
 		input := &ec2.DisableVpcClassicLinkDnsSupportInput{
@@ -658,7 +658,7 @@ func modifyVPCClassicLinkDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 		}
 
 		if _, err := conn.DisableVpcClassicLinkDnsSupport(input); err != nil {
-			return fmt.Errorf("error disabling EC2 VPC (%s) ClassicLinkDnsSupport: %w", vpcID, err)
+			return fmt.Errorf("disabling ClassicLinkDnsSupport: %w", err)
 		}
 	}
 
@@ -674,11 +674,11 @@ func modifyVPCDNSHostnames(conn *ec2.EC2, vpcID string, v bool) error {
 	}
 
 	if _, err := conn.ModifyVpcAttribute(input); err != nil {
-		return fmt.Errorf("error modifying EC2 VPC (%s) EnableDnsHostnames: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
 	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableDnsHostnames, v); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableDnsHostnames update: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -693,11 +693,11 @@ func modifyVPCDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 	}
 
 	if _, err := conn.ModifyVpcAttribute(input); err != nil {
-		return fmt.Errorf("error modifying EC2 VPC (%s) EnableDnsSupport: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
 	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableDnsSupport, v); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableDnsSupport update: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -712,11 +712,11 @@ func modifyVPCNetworkAddressUsageMetrics(conn *ec2.EC2, vpcID string, v bool) er
 	}
 
 	if _, err := conn.ModifyVpcAttribute(input); err != nil {
-		return fmt.Errorf("error modifying EC2 VPC (%s) EnableNetworkAddressUsageMetrics: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
 	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableNetworkAddressUsageMetrics update: %w", vpcID, err)
+		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -733,13 +733,13 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 		_, err := conn.DisassociateVpcCidrBlock(input)
 
 		if err != nil {
-			return "", fmt.Errorf("error disassociating EC2 VPC (%s) IPv6 CIDR block (%s): %w", vpcID, associationID, err)
+			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): %w", associationID, err)
 		}
 
 		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout)
 
 		if err != nil {
-			return "", fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become disassociated: %w", vpcID, associationID, err)
+			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): waiting for completion: %w", associationID, err)
 		}
 	}
 
@@ -771,7 +771,7 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 		output, err := conn.AssociateVpcCidrBlock(input)
 
 		if err != nil {
-			return "", fmt.Errorf("error associating EC2 VPC (%s) IPv6 CIDR block: %w", vpcID, err)
+			return "", fmt.Errorf("associating IPv6 CIDR block: %w", err)
 		}
 
 		associationID = aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId)
@@ -779,7 +779,7 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout)
 
 		if err != nil {
-			return "", fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become associated: %w", vpcID, associationID, err)
+			return "", fmt.Errorf("associating IPv6 CIDR block: waiting for completion: %w", err)
 		}
 	}
 
@@ -793,7 +793,7 @@ func modifyVPCTenancy(conn *ec2.EC2, vpcID string, v string) error {
 	}
 
 	if _, err := conn.ModifyVpcTenancy(input); err != nil {
-		return fmt.Errorf("error modifying EC2 VPC (%s) Tenancy: %w", vpcID, err)
+		return fmt.Errorf("modifying Tenancy: %w", err)
 	}
 
 	return nil

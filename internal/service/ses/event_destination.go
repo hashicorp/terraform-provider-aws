@@ -258,7 +258,10 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 		EventDestinationName: aws.String(d.Id()),
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting SES Event Destination (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

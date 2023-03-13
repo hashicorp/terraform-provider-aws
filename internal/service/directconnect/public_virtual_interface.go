@@ -150,7 +150,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
 	if err := publicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourcePublicVirtualInterfaceRead(d, meta)
@@ -163,7 +163,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
@@ -215,7 +215,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 
 func resourcePublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourcePublicVirtualInterfaceRead(d, meta)

@@ -45,10 +45,10 @@ func resourceUserGroupMembershipCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
-	groupList := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
+	groupList := flex.ExpandStringValueSet(d.Get("groups").(*schema.Set))
 
 	if err := addUserToGroups(conn, user, groupList); err != nil {
-		return err
+		return fmt.Errorf("assigning IAM User Group Membership (%s): %w", user, err)
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
@@ -144,15 +144,15 @@ func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{})
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		add := flex.ExpandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringValueSet(os.Difference(ns))
+		add := flex.ExpandStringValueSet(ns.Difference(os))
 
 		if err := removeUserFromGroups(conn, user, remove); err != nil {
-			return err
+			return fmt.Errorf("updating IAM User Group Membership (%s): %w", user, err)
 		}
 
 		if err := addUserToGroups(conn, user, add); err != nil {
-			return err
+			return fmt.Errorf("updating IAM User Group Membership (%s): %w", user, err)
 		}
 	}
 
@@ -162,40 +162,54 @@ func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{})
 func resourceUserGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
-	groups := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
+	groups := flex.ExpandStringValueSet(d.Get("groups").(*schema.Set))
 
-	err := removeUserFromGroups(conn, user, groups)
-	return err
-}
-
-func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
-	for _, group := range groups {
-		_, err := conn.RemoveUserFromGroup(&iam.RemoveUserFromGroupInput{
-			UserName:  &user,
-			GroupName: group,
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-				continue
-			}
-			return err
-		}
+	if err := removeUserFromGroups(conn, user, groups); err != nil {
+		return fmt.Errorf("deleting IAM User Group Membership (%s): %w", user, err)
 	}
-
 	return nil
 }
 
-func addUserToGroups(conn *iam.IAM, user string, groups []*string) error {
+func removeUserFromGroups(conn *iam.IAM, user string, groups []string) error {
 	for _, group := range groups {
-		_, err := conn.AddUserToGroup(&iam.AddUserToGroupInput{
-			UserName:  &user,
-			GroupName: group,
-		})
-		if err != nil {
+		if err := removeUserFromGroup(conn, user, group); err != nil {
 			return err
 		}
 	}
+	return nil
+}
 
+func addUserToGroups(conn *iam.IAM, user string, groups []string) error {
+	for _, group := range groups {
+		if err := addUserToGroup(conn, user, group); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addUserToGroup(conn *iam.IAM, user, group string) error {
+	_, err := conn.AddUserToGroup(&iam.AddUserToGroupInput{
+		UserName:  aws.String(user),
+		GroupName: aws.String(group),
+	})
+	if err != nil {
+		return fmt.Errorf("adding User (%s) to Group (%s): %w", user, group, err)
+	}
+	return nil
+}
+
+func removeUserFromGroup(conn *iam.IAM, user, group string) error {
+	_, err := conn.RemoveUserFromGroup(&iam.RemoveUserFromGroupInput{
+		UserName:  aws.String(user),
+		GroupName: aws.String(group),
+	})
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("removing User (%s) from Group (%s): %w", user, group, err)
+	}
 	return nil
 }
 

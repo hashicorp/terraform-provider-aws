@@ -49,7 +49,7 @@ func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta inte
 	d.SetId(vpcPeeringConnectionID)
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionOptionsRead(d, meta)
@@ -101,7 +101,7 @@ func resourceVPCPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionOptionsRead(d, meta)

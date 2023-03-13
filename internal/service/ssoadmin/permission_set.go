@@ -236,7 +236,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	// Re-provision ALL accounts after making the above changes
 	if err := provisionPermissionSet(conn, arn, instanceArn); err != nil {
-		return err
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", arn, err)
 	}
 
 	return resourcePermissionSetRead(d, meta)

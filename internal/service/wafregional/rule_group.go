@@ -105,7 +105,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateRuleGroup(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Regional Rule Group (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRuleGroupOutput)
 	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
@@ -116,7 +116,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
+			return fmt.Errorf("updating WAF Regional Rule Group: %s", err)
 		}
 	}
 
@@ -140,14 +140,14 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regional Rule Group (%s): %w", d.Id(), err)
 	}
 
 	rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing activated rules in WAF Regional Rule Group (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -161,17 +161,17 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Regional Rule Group (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for WAF Regional Rule Group (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
@@ -191,7 +191,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
+			return fmt.Errorf("updating WAF Regional Rule Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -199,7 +199,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -213,7 +213,7 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := DeleteRuleGroup(d.Id(), oldRules, conn, region)
 
-	return err
+	return fmt.Errorf("deleting WAF Regional Rule Group (%s): %w", d.Id(), err)
 }
 
 func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
@@ -221,7 +221,7 @@ func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFReg
 		noRules := []interface{}{}
 		err := updateRuleGroupResourceWR(id, oldRules, noRules, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional Rule Group Predicates: %s", err)
+			return fmt.Errorf("updating WAF Regional Rule Group Predicates: %s", err)
 		}
 	}
 
@@ -235,7 +235,7 @@ func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFReg
 		return conn.DeleteRuleGroup(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Regional Rule Group: %s", err)
+		return fmt.Errorf("deleting WAF Regional Rule Group: %s", err)
 	}
 	return nil
 }
@@ -252,7 +252,7 @@ func updateRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn
 		return conn.UpdateRuleGroup(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
+		return fmt.Errorf("updating WAF Regional Rule Group: %s", err)
 	}
 
 	return nil

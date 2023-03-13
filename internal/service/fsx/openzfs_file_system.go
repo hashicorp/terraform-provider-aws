@@ -410,14 +410,9 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", filesystem.ResourceARN)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("deployment_type", openzfsConfig.DeploymentType)
-	if openzfsConfig.ThroughputCapacity != nil {
-		d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
-	}
+	d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)

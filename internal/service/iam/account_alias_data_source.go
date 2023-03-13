@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -31,17 +32,16 @@ func dataSourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error 
 	req := &iam.ListAccountAliasesInput{}
 	resp, err := conn.ListAccountAliases(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Account Alias: %w", err)
 	}
 
 	// 'AccountAliases': [] if there is no alias.
 	if resp == nil || len(resp.AccountAliases) == 0 {
-		return fmt.Errorf("no IAM account alias found")
+		return errors.New("reading IAM Account Alias: empty result")
 	}
 
 	alias := aws.StringValue(resp.AccountAliases[0])
 	d.SetId(alias)
-	log.Printf("[DEBUG] Setting AWS IAM Account Alias to %s.", alias)
 	d.Set("account_alias", alias)
 
 	return nil

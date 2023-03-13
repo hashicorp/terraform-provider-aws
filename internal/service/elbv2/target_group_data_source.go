@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -161,6 +162,7 @@ func DataSourceTargetGroup() *schema.Resource {
 func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeTargetGroupsInput{}
 
@@ -170,21 +172,37 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	var results []*elbv2.TargetGroup
-
-	err := conn.DescribeTargetGroupsPages(input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		results = append(results, page.TargetGroups...)
-
-		return !lastPage
-	})
+	results, err := FindTargetGroups(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("retrieving LB Target Group: %w", err)
+		return fmt.Errorf("reading ELBv2 Target Groups: %w", err)
 	}
+
+	if len(tagsToMatch) > 0 {
+		var targetGroups []*elbv2.TargetGroup
+
+		for _, targetGroup := range results {
+			arn := aws.StringValue(targetGroup.TargetGroupArn)
+			tags, err := ListTags(conn, arn)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("listing tags for ELBv2 Target Group (%s): %w", arn, err)
+			}
+
+			if !tags.ContainsAll(tagsToMatch) {
+				continue
+			}
+
+			targetGroups = append(targetGroups, targetGroup)
+		}
+
+		results = targetGroups
+	}
+
 	if len(results) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
 	}
@@ -280,7 +298,7 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for LB Target Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for ELBv2 Target Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

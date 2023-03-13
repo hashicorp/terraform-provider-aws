@@ -70,7 +70,7 @@ func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{
 	out, err := conn.PutAccountSettingDefault(&input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating ECS Account Setting Defauilt (%s): %w", settingName, err)
 	}
 	log.Printf("[DEBUG] Account Setting Default %s set", aws.StringValue(out.Setting.Value))
 
@@ -92,7 +92,7 @@ func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{})
 	resp, err := conn.ListAccountSettings(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Account Setting Defauilt (%s): %w", d.Get("name").(string), err)
 	}
 
 	if len(resp.Settings) == 0 {

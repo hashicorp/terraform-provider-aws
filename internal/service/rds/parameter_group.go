@@ -148,7 +148,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading RDS DB Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if len(describeResp.DBParameterGroups) != 1 ||
@@ -184,7 +184,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			return !lastPage
 		})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS DB Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	var userParams []*rds.Parameter

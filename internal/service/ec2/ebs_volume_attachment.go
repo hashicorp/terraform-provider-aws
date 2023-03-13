@@ -154,7 +154,7 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
 		if err := StopInstance(conn, instanceID, InstanceStopTimeout); err != nil {
-			return err
+			return fmt.Errorf("deleting EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
 		}
 	}
 

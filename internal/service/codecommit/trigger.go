@@ -122,9 +122,11 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 		Triggers:       []*codecommit.RepositoryTrigger{},
 	}
 
-	_, err := conn.PutRepositoryTriggers(input)
+	if _, err := conn.PutRepositoryTriggers(input); err != nil {
+		return fmt.Errorf("deleting CodeCommit Trigger (%s): %w", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 func expandTriggers(configured []interface{}) []*codecommit.RepositoryTrigger {

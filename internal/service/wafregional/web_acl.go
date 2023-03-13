@@ -191,7 +191,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateWebACL(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Regional Web ACL (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateWebACLOutput)
 	d.SetId(aws.StringValue(resp.WebACL.WebACLId))

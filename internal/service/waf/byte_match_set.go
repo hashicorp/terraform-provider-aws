@@ -73,7 +73,7 @@ func ResourceByteMatchSet() *schema.Resource {
 func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn()
 
-	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating WAF ByteMatchSet: %s", d.Get("name").(string))
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -84,7 +84,7 @@ func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error 
 		return conn.CreateByteMatchSet(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating ByteMatchSet: %s", err)
+		return fmt.Errorf("creating WAF ByteMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
@@ -95,7 +95,7 @@ func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn()
-	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading WAF ByteMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetByteMatchSetInput{
 		ByteMatchSetId: aws.String(d.Id()),
 	}
@@ -103,12 +103,12 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetByteMatchSet(params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] WAF ByteMatchSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.ByteMatchSet.Name)
@@ -120,14 +120,14 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn()
 
-	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Updating WAF ByteMatchSet: %s", d.Get("name").(string))
 
 	if d.HasChange("byte_match_tuples") {
 		o, n := d.GetChange("byte_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 		err := updateByteMatchSetResource(d.Id(), oldT, newT, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
+			return fmt.Errorf("updating WAF ByteMatchSet: %s", err)
 		}
 	}
 
@@ -142,7 +142,7 @@ func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error 
 		noTuples := []interface{}{}
 		err := updateByteMatchSetResource(d.Id(), oldTuples, noTuples, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
+			return fmt.Errorf("updating WAF ByteMatchSet: %s", err)
 		}
 	}
 
@@ -156,7 +156,7 @@ func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error 
 		return conn.DeleteByteMatchSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
+		return fmt.Errorf("deleting WAF ByteMatchSet: %s", err)
 	}
 
 	return nil
@@ -174,7 +174,7 @@ func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.W
 		return conn.UpdateByteMatchSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating ByteMatchSet: %s", err)
+		return fmt.Errorf("updating ByteMatchSet: %s", err)
 	}
 
 	return nil

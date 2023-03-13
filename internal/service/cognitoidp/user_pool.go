@@ -878,25 +878,14 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname("cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flex.FlattenStringSet(userPool.AutoVerifiedAttributes))
 
-	if userPool.EmailVerificationSubject != nil {
-		d.Set("email_verification_subject", userPool.EmailVerificationSubject)
-	}
-	if userPool.EmailVerificationMessage != nil {
-		d.Set("email_verification_message", userPool.EmailVerificationMessage)
-	}
+	d.Set("email_verification_subject", userPool.EmailVerificationSubject)
+	d.Set("email_verification_message", userPool.EmailVerificationMessage)
 	if err := d.Set("lambda_config", flattenUserPoolLambdaConfig(userPool.LambdaConfig)); err != nil {
 		return fmt.Errorf("failed setting lambda_config: %w", err)
 	}
-	if userPool.SmsVerificationMessage != nil {
-		d.Set("sms_verification_message", userPool.SmsVerificationMessage)
-	}
-	if userPool.SmsAuthenticationMessage != nil {
-		d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
-	}
-
-	if userPool.DeletionProtection != nil {
-		d.Set("deletion_protection", userPool.DeletionProtection)
-	}
+	d.Set("sms_verification_message", userPool.SmsVerificationMessage)
+	d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
+	d.Set("deletion_protection", userPool.DeletionProtection)
 
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return fmt.Errorf("failed setting device_configuration: %w", err)
@@ -906,16 +895,12 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting account_recovery_setting: %w", err)
 	}
 
-	if userPool.EmailConfiguration != nil {
-		if err := d.Set("email_configuration", flattenUserPoolEmailConfiguration(userPool.EmailConfiguration)); err != nil {
-			return fmt.Errorf("failed setting email_configuration: %w", err)
-		}
+	if err := d.Set("email_configuration", flattenUserPoolEmailConfiguration(userPool.EmailConfiguration)); err != nil {
+		return fmt.Errorf("failed setting email_configuration: %w", err)
 	}
 
-	if userPool.Policies != nil && userPool.Policies.PasswordPolicy != nil {
-		if err := d.Set("password_policy", flattenUserPoolPasswordPolicy(userPool.Policies.PasswordPolicy)); err != nil {
-			return fmt.Errorf("failed setting password_policy: %w", err)
-		}
+	if err := d.Set("password_policy", flattenUserPoolPasswordPolicy(userPool.Policies.PasswordPolicy)); err != nil {
+		return fmt.Errorf("failed setting password_policy: %w", err)
 	}
 
 	var configuredSchema []interface{}
@@ -934,9 +919,7 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting user_attribute_update_settings: %w", err)
 	}
 
-	if userPool.UsernameAttributes != nil {
-		d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
-	}
+	d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
 
 	if err := d.Set("username_configuration", flattenUserPoolUsernameConfiguration(userPool.UsernameConfiguration)); err != nil {
 		return fmt.Errorf("failed setting username_configuration: %w", err)

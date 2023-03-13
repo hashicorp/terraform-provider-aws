@@ -67,7 +67,6 @@ func TestAccLogsStream_disappears(t *testing.T) {
 
 func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
-	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_stream.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -82,7 +81,6 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
-					testAccCheckGroupExists(logGroupResourceName, &lg),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,

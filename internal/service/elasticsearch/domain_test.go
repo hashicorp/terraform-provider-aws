@@ -1340,7 +1340,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 		}})
 }
 
-func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1392,7 +1392,7 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
-func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

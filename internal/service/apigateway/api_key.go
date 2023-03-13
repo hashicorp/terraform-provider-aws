@@ -195,7 +195,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		PatchOperations: resourceAPIKeyUpdateOperations(d),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway API Key (%s): %w", d.Id(), err)
 	}
 
 	return resourceAPIKeyRead(d, meta)

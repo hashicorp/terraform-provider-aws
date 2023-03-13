@@ -179,7 +179,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
 	}
 	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s): %w", clusterID, err)
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): %w", clusterID, err)
 	}
 
 	d.SetId(aws.StringValue(cluster.CacheClusterId))
@@ -200,9 +200,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
 	}
 
-	if cluster.ReplicationGroupId != nil {
-		d.Set("replication_group_id", cluster.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", cluster.ReplicationGroupId)
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
@@ -223,7 +221,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setCacheNodeData(d, cluster); err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): %w", clusterID, err)
 	}
 
 	d.Set("arn", cluster.ARN)

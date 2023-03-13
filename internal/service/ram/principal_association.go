@@ -127,7 +127,7 @@ func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting RAM Resource Share Principal Association (%s): %s", d.Id(), err)
 	}
 
 	request := &ram.DisassociateResourceShareInput{
@@ -143,11 +143,11 @@ func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RAM Resource Share (%s) Principal Association (%s): %s", resourceShareArn, principal, err)
+		return fmt.Errorf("deleting RAM Resource Share Principal Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitResourceSharePrincipalDisassociated(conn, resourceShareArn, principal); err != nil {
-		return fmt.Errorf("error waiting for RAM Resource Share (%s) Principal Association (%s) disassociation: %s", resourceShareArn, principal, err)
+		return fmt.Errorf("deleting RAM Resource Share Principal Association (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return nil

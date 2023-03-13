@@ -40,14 +40,14 @@ func resourceProductSubscriptionCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	productArn := d.Get("product_arn").(string)
 
-	log.Printf("[DEBUG] Enabling Security Hub product subscription for product %s", productArn)
+	log.Printf("[DEBUG] Enabling Security Hub Product Subscription for product %s", productArn)
 
 	resp, err := conn.EnableImportFindingsForProduct(&securityhub.EnableImportFindingsForProductInput{
 		ProductArn: aws.String(productArn),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error enabling Security Hub product subscription for product %s: %s", productArn, err)
+		return fmt.Errorf("Error enabling Security Hub Product Subscription for product %s: %s", productArn, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", productArn, *resp.ProductSubscriptionArn))
@@ -61,19 +61,19 @@ func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) e
 	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Reading Security Hub product subscriptions to find %s", d.Id())
+	log.Printf("[DEBUG] Reading Security Hub Product Subscriptions to find %s", d.Id())
 
 	exists, err := ProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 	if err != nil {
-		return fmt.Errorf("Error reading Security Hub product subscriptions to find %s: %s", d.Id(), err)
+		return fmt.Errorf("reading Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
 	if !exists {
-		log.Printf("[WARN] Security Hub product subscriptions (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Product Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -109,7 +109,7 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Expected Security Hub product subscription ID in format <product_arn>,<arn> - received: %s", id)
+		return "", "", fmt.Errorf("Expected Security Hub Product Subscription ID in format <product_arn>,<arn> - received: %s", id)
 	}
 
 	return parts[0], parts[1], nil
@@ -117,12 +117,12 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 
 func resourceProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
-	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
+	log.Printf("[DEBUG] Disabling Security Hub Product Subscription %s", d.Id())
 
 	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("disabling Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
 	_, err = conn.DisableImportFindingsForProduct(&securityhub.DisableImportFindingsForProductInput{
@@ -130,7 +130,7 @@ func resourceProductSubscriptionDelete(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error disabling Security Hub product subscription %s: %s", d.Id(), err)
+		return fmt.Errorf("disabling Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"log"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -27,6 +28,10 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	loadBalancerTagPropagationTimeout = 2 * time.Minute
+)
+
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLoadBalancerCreate,
@@ -43,9 +48,9 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(loadBalancerCreateTimeout),
-			Update: schema.DefaultTimeout(loadBalancerUpdateTimeout),
-			Delete: schema.DefaultTimeout(loadBalancerDeleteTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -386,7 +391,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 	log.Printf("[INFO] LB ID: %s", d.Id())
 
-	_, err = waitLoadBalancerActive(conn, aws.StringValue(lb.LoadBalancerArn), d.Timeout(schema.TimeoutCreate))
+	_, err = waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
@@ -414,24 +419,14 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	lb, err := FindLoadBalancerByARN(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-		// The ALB is gone now, so just remove it from the state
-		log.Printf("[WARN] ALB %s not found in AWS, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELBv2 Load Balancer %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving ALB (%s): %w", d.Id(), err)
-	}
-
-	if lb == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("retrieving ALB (%s): empty output after creation", d.Id())
-		}
-		log.Printf("[WARN] ALB %s not found in AWS, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading ELBv2 Load Balancer (%s): %w", d.Id(), err)
 	}
 
 	return flattenResource(d, meta, lb)
@@ -688,6 +683,113 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+func FindLoadBalancerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.LoadBalancer, error) {
+	input := &elbv2.DescribeLoadBalancersInput{
+		LoadBalancerArns: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := FindLoadBalancer(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.LoadBalancerArn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindLoadBalancers(conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) ([]*elbv2.LoadBalancer, error) {
+	var output []*elbv2.LoadBalancer
+
+	err := conn.DescribeLoadBalancersPages(input, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LoadBalancers {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindLoadBalancer(conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) (*elbv2.LoadBalancer, error) {
+	output, err := FindLoadBalancers(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func statusLoadBalancerState(conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindLoadBalancerByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State.Code), nil
+	}
+}
+
+func waitLoadBalancerActive(conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
+		Target:     []string{elbv2.LoadBalancerStateEnumActive},
+		Refresh:    statusLoadBalancerState(conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*elbv2.LoadBalancer); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.State.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*elbv2.LoadBalancerAttribute {
 	for i, a := range attributes {
 		if aws.StringValue(a.Key) == key {
@@ -747,6 +849,9 @@ func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
+	const (
+		loadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
+	)
 	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {

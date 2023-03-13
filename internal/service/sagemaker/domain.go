@@ -618,22 +618,22 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] sagemaker domain create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
 	output, err := conn.CreateDomain(input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker domain: %w", err)
+		return fmt.Errorf("creating SageMaker Domain: %w", err)
 	}
 
 	domainArn := aws.StringValue(output.DomainArn)
 	domainID, err := DecodeDomainID(domainArn)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SageMaker Domain (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(domainID)
 
 	if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker domain (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("creating SageMaker Domain (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceDomainRead(d, meta)
@@ -723,14 +723,14 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker Domain update config: %#v", *input)
 		_, err := conn.UpdateDomain(input)
 		if err != nil {
-			return fmt.Errorf("updating SageMaker domain: %w", err)
+			return fmt.Errorf("updating SageMaker Domain: %w", err)
 		}
 
 		if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker Domain (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -738,7 +738,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker domain (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -758,13 +758,13 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := conn.DeleteDomain(input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("deleting SageMaker domain (%s): %w", d.Id(), err)
+			return fmt.Errorf("deleting SageMaker Domain (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitDomainDeleted(conn, d.Id()); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker Domain (%s) to delete: %w", d.Id(), err)
 		}
 	}
 

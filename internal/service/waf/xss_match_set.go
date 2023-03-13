@@ -113,7 +113,7 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF XSS Match Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.XssMatchSet.Name)

@@ -42,7 +42,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 	invitationId, err := resourceInviteAccepterGetInvitationID(conn, d.Get("master_id").(string))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("accepting Security Hub invitation: %w", err)
 	}
 
 	_, err = conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
@@ -51,7 +51,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return fmt.Errorf("error accepting Security Hub invitation: %w", err)
+		return fmt.Errorf("accepting Security Hub invitation: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -65,7 +65,7 @@ func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, master
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
 
 	if err != nil {
-		return "", fmt.Errorf("error listing Security Hub invitations: %w", err)
+		return "", fmt.Errorf("listing Security Hub invitations: %w", err)
 	}
 
 	for _, invitation := range resp.Invitations {

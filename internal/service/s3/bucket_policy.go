@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceBucketPolicy() *schema.Resource {
@@ -35,10 +38,15 @@ func ResourceBucketPolicy() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -50,7 +58,6 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	bucket := d.Get("bucket").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
 	}
@@ -98,30 +105,24 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	v := ""
-	if err == nil && pol.Policy != nil {
-		v = aws.StringValue(pol.Policy)
+	if err != nil {
+		return create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), err)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), v)
-
-	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	if pol.Policy == nil {
+		return create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), errors.New("empty policy returned"))
 	}
 
-	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pol.Policy))
 	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+		return fmt.Errorf("setting policy: %w", err)
 	}
 
 	if err := d.Set("policy", policyToSet); err != nil {
-		return err
+		return fmt.Errorf("setting policy: %w", err)
 	}
 
-	if err := d.Set("bucket", d.Id()); err != nil {
-		return err
-	}
+	d.Set("bucket", d.Id())
 
 	return nil
 }

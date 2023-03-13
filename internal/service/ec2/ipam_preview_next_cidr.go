@@ -99,7 +99,7 @@ func resourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) e
 	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 IPAM Preview Next CIDR: %w", err)
 	}
 
 	d.Set("cidr", cidr)

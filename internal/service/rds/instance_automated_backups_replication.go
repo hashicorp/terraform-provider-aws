@@ -130,14 +130,14 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
 	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
 	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Stopping RDS Instance Automated Backups Replication: %s", d.Id())
@@ -150,7 +150,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return fmt.Errorf("stopping RDS Instance Automated Backups Replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.
@@ -160,7 +160,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	}
 
 	if _, err := waitDBInstanceAutomatedBackupDeleted(ctx, sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DB instance automated backup (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

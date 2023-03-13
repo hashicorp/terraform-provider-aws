@@ -187,17 +187,17 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FMS Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading FMS Policy (%s): %w", d.Id(), err)
 	}
 
 	if err := resourcePolicyFlattenPolicy(d, output); err != nil {
-		return err
+		return fmt.Errorf("reading FMS Policy (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for FMS Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading FMS Policy (%s): listing tags: %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -290,20 +290,20 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 	d.Set("name", resp.Policy.PolicyName)
 	d.Set("exclude_resource_tags", resp.Policy.ExcludeResourceTags)
 	if err := d.Set("exclude_map", flattenPolicyMap(resp.Policy.ExcludeMap)); err != nil {
-		return err
+		return fmt.Errorf("setting exclude_map: %w", err)
 	}
 	if err := d.Set("include_map", flattenPolicyMap(resp.Policy.IncludeMap)); err != nil {
-		return err
+		return fmt.Errorf("setting include_map: %w", err)
 	}
 	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
 	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
-		return err
+		return fmt.Errorf("setting resource_type_list: %w", err)
 	}
 	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
 	d.Set("resource_type", resp.Policy.ResourceType)
 	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
 	if err := d.Set("resource_tags", flattenResourceTags(resp.Policy.ResourceTags)); err != nil {
-		return err
+		return fmt.Errorf("setting resource_tags: %w", err)
 	}
 
 	securityServicePolicy := []map[string]string{{
@@ -311,7 +311,7 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
-		return err
+		return fmt.Errorf("setting security_service_policy_data: %w", err)
 	}
 
 	return nil

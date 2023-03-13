@@ -171,7 +171,7 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Configuration Set (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("delivery_options", flattenConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {

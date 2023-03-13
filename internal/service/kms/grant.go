@@ -164,7 +164,7 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
 				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
 				return resource.RetryableError(
-					fmt.Errorf("error creating KMS Grant for Key (%s), retrying: %w", keyId, err))
+					fmt.Errorf("creating KMS Grant for Key (%s), retrying: %w", keyId, err))
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -176,7 +176,7 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating KMS Grant for Key (%s): %w", keyId, err)
+		return fmt.Errorf("creating KMS Grant for Key (%s): %w", keyId, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", keyId, aws.StringValue(out.GrantId)))
@@ -191,22 +191,22 @@ func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
 
 	keyId, grantId, err := decodeGrantID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading KMS Grant (%s): %w", d.Id(), err)
 	}
 
 	grant, err := findGrantByIdRetry(conn, keyId, grantId)
 
 	if err != nil {
 		if tfresource.NotFound(err) {
-			log.Printf("[WARN] KMS Grant (%s) not found for Key (%s), removing from state file", grantId, keyId)
+			log.Printf("[WARN] KMS Grant (%s) not found for Key (%s), removing from state", grantId, keyId)
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading KMS Grant (%s): %w", d.Id(), err)
 	}
 
 	if grant == nil {
-		log.Printf("[WARN] KMS Grant (%s) not found for Key (%s), removing from state file", grantId, keyId)
+		log.Printf("[WARN] KMS Grant (%s) not found for Key (%s), removing from state", grantId, keyId)
 		d.SetId("")
 		return nil
 	}
@@ -249,13 +249,12 @@ func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
 func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn()
 
-	keyId, grantId, decodeErr := decodeGrantID(d.Id())
-	if decodeErr != nil {
-		return decodeErr
+	keyId, grantId, err := decodeGrantID(d.Id())
+	if err != nil {
+		return fmt.Errorf("deleting KMS Grant (%s): %w", d.Id(), err)
 	}
 	doRetire := d.Get("retire_on_delete").(bool)
 
-	var err error
 	if doRetire {
 		retireInput := kms.RetireGrantInput{
 			GrantId: aws.String(grantId),
@@ -278,13 +277,13 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting KMS Grant (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Checking if grant is revoked: %s", grantId)
-	err = WaitForGrantToBeRevoked(conn, keyId, grantId)
-
-	return err
+	if err := WaitForGrantToBeRevoked(conn, keyId, grantId); err != nil {
+		return fmt.Errorf("deleting KMS Grant (%s): waiting for completion: %w", d.Id(), err)
+	}
+	return nil
 }
 
 func getGrantByID(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {
@@ -390,7 +389,7 @@ func findGrantByID(conn *kms.KMS, keyId string, grantId string, marker *string) 
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("error listing KMS Grants: %w", err)
+		return nil, fmt.Errorf("listing KMS Grants: %w", err)
 	}
 
 	grant = getGrantByID(out.Grants, grantId)

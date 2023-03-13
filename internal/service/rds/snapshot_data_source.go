@@ -147,10 +147,9 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		params.DBSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
 	}
 
-	log.Printf("[DEBUG] Reading DB Snapshot: %s", params)
 	resp, err := conn.DescribeDBSnapshots(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS Snapshot: %w", err)
 	}
 
 	if len(resp.DBSnapshots) < 1 {

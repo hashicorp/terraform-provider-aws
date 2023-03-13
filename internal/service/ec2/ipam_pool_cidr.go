@@ -110,7 +110,7 @@ func resourceIPAMPoolCIDRRead(d *schema.ResourceData, meta interface{}) error {
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IPAM Pool CIDR (%s): %w", d.Id(), err)
 	}
 
 	output, err := FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
@@ -137,7 +137,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IPAM Pool CIDR (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())

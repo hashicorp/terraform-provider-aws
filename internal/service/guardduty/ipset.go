@@ -93,7 +93,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateIPSet(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating GuardDuty IPSet (%s): %w", d.Get("name").(string), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -106,10 +106,11 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty IpSet status to be \"%s\" or \"%s\": %s", guardduty.IpSetStatusActive, guardduty.IpSetStatusInactive, err)
+		return fmt.Errorf("creating GuardDuty IPSet (%s): waiting for completion: %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
+
 	return resourceIPSetRead(d, meta)
 }
 
@@ -120,7 +121,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("creating GuardDuty IPSet (%s): %w", d.Id(), err)
 	}
 	input := &guardduty.GetIPSetInput{
 		DetectorId: aws.String(detectorId),
@@ -130,11 +131,11 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetIPSet(input)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty IpSet %q not found, removing from state", ipSetId)
+			log.Printf("[WARN] GuardDuty IPSet (%s) not found, removing from state", ipSetId)
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading GuardDuty IPSet (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -171,7 +172,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChanges("activate", "location", "name") {
@@ -192,7 +193,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err = conn.UpdateIPSet(input)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating GuardDuty IPSet (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -200,7 +201,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty IP Set (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating GuardDuty IPSet (%s): setting tags: %s", d.Id(), err)
 		}
 	}
 
@@ -212,7 +213,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 	input := &guardduty.DeleteIPSetInput{
 		DetectorId: aws.String(detectorId),
@@ -221,7 +222,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteIPSet(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -240,7 +241,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty IpSet status to be \"%s\": %s", guardduty.IpSetStatusDeleted, err)
+		return fmt.Errorf("deleting GuardDuty IPSet (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return nil

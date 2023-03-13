@@ -57,7 +57,7 @@ func dataSourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFront Origin Access Identity (%s): %w", id, err)
 	}
 
 	// Update attributes from DistributionConfig

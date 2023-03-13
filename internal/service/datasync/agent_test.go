@@ -163,7 +163,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 	securityGroupResourceName := "aws_security_group.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -248,28 +248,11 @@ func testAccCheckAgentNotRecreated(i, j *datasync.DescribeAgentOutput) resource.
 	}
 }
 
-func testAccAgentAgentBaseConfig(rName string) string {
-	return fmt.Sprintf(`
+func testAccAgentAgentConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 # Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
 data "aws_ssm_parameter" "aws_service_datasync_ami" {
   name = "/aws/service/datasync/ami"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_internet_gateway" "test" {
@@ -294,7 +277,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.test[0].id
   route_table_id = aws_route_table.test.id
 }
 
@@ -330,17 +313,17 @@ resource "aws_instance" "test" {
   # Default instance type from sync.sh
   instance_type          = "c5.2xlarge"
   vpc_security_group_ids = [aws_security_group.test.id]
-  subnet_id              = aws_subnet.test.id
+  subnet_id              = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAgentConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), `
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 }
@@ -348,7 +331,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_name(rName, agentName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
@@ -357,7 +340,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -369,7 +352,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -382,11 +365,11 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_vpcEndpointID(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   name                  = %[1]q
   security_group_arns   = [aws_security_group.test.arn]
-  subnet_arns           = [aws_subnet.test.arn]
+  subnet_arns           = [aws_subnet.test[0].arn]
   vpc_endpoint_id       = aws_vpc_endpoint.test.id
   ip_address            = aws_instance.test.public_ip
   private_link_endpoint = data.aws_network_interface.test.private_ip
@@ -398,7 +381,7 @@ resource "aws_vpc_endpoint" "test" {
   service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
   vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = [aws_subnet.test[0].id]
   vpc_endpoint_type  = "Interface"
 
   tags = {

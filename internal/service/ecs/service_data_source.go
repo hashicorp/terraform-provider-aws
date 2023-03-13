@@ -65,7 +65,7 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	desc, err := conn.DescribeServices(params)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Service (%s): %w", serviceName, err)
 	}
 
 	if desc == nil || len(desc.Services) == 0 {

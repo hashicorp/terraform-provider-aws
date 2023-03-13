@@ -95,7 +95,7 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
 
-	// Perform one time fetch of activation key from gateway IP address
+	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -187,18 +187,21 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Agent: %s", input)
 	output, err := conn.CreateAgent(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Agent: %w", err)
+		return fmt.Errorf("creating DataSync Agent: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.AgentArn))
 
 	// Agent activations can take a few minutes
-	if _, err := waitAgentReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
+	_, err = tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return FindAgentByARN(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for DataSync Agent (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAgentRead(d, meta)
@@ -212,13 +215,13 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindAgentByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Agent (%s)not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Agent (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Agent (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.AgentArn)
@@ -238,18 +241,18 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Agent (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -264,11 +267,10 @@ func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 			Name:     aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating DataSync Agent: %s", input)
 		_, err := conn.UpdateAgent(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating DataSync Agent (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -276,7 +278,7 @@ func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating DataSync Agent (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -296,7 +298,7 @@ func resourceAgentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Agent (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	return nil

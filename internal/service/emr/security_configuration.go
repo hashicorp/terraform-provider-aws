@@ -1,6 +1,7 @@
 package emr
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -74,7 +75,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EMR Security Configuration (%s): %w", emrSCName, err)
 	}
 
 	d.SetId(aws.StringValue(resp.Name))
@@ -93,7 +94,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading EMR Security Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("creation_date", aws.TimeValue(resp.CreationDateTime).Format(time.RFC3339))
@@ -113,7 +114,7 @@ func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting EMR Security Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

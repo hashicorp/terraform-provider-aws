@@ -65,7 +65,7 @@ func resourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading SES Active Receipt Rule Set: %w", err)
 	}
 
 	if response.Metadata == nil {

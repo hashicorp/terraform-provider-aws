@@ -78,7 +78,7 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(d *schema.ResourceData,
 	d.Set("arn", arn)
 
 	if err := hostedTransitVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedTransitVirtualInterfaceAccepterUpdate(d, meta)
@@ -91,7 +91,7 @@ func resourceHostedTransitVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
@@ -131,7 +131,7 @@ func resourceHostedTransitVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 
 func resourceHostedTransitVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedTransitVirtualInterfaceAccepterRead(d, meta)

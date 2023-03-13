@@ -56,16 +56,14 @@ func dataSourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("invoking Lambda Function (%s): %w", functionName, err)
 	}
 
 	if res.FunctionError != nil {
-		return fmt.Errorf("Lambda function (%s) returned error: (%s)", functionName, string(res.Payload))
+		return fmt.Errorf(`invoking Lambda Function (%s): returned error: "%s"`, functionName, string(res.Payload))
 	}
 
-	if err = d.Set("result", string(res.Payload)); err != nil {
-		return err
-	}
+	d.Set("result", string(res.Payload))
 
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))
 

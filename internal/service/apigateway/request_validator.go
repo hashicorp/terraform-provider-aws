@@ -142,7 +142,7 @@ func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.UpdateRequestValidator(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Updated Request Validator %s", d.Id())
@@ -162,7 +162,7 @@ func resourceRequestValidatorDelete(d *schema.ResourceData, meta interface{}) er
 		// XXX: Figure out a way to delete the method that depends on the request validator first
 		// otherwise the validator will be dangling until the API is deleted
 		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
-			return fmt.Errorf("Deleting Request Validator failed: %s", err)
+			return fmt.Errorf("deleting API Gateway Request Validator (%s): %s", d.Id(), err)
 		}
 	}
 

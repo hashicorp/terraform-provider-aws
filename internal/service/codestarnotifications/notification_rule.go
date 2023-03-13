@@ -148,7 +148,7 @@ func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) er
 
 	res, err := conn.CreateNotificationRule(params)
 	if err != nil {
-		return fmt.Errorf("error creating codestar notification rule: %s", err)
+		return fmt.Errorf("creating CodeStar Notification Rule: %s", err)
 	}
 
 	d.SetId(aws.StringValue(res.Arn))
@@ -182,7 +182,7 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 		eventTypeIds = append(eventTypeIds, aws.StringValue(et.EventTypeId))
 	}
 	if err := d.Set("event_type_ids", eventTypeIds); err != nil {
-		return fmt.Errorf("error setting event_type_ids: %s", err)
+		return fmt.Errorf("setting event_type_ids: %s", err)
 	}
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
@@ -191,11 +191,11 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
@@ -207,7 +207,7 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 		})
 	}
 	if err = d.Set("target", targets); err != nil {
-		return fmt.Errorf("error setting codestar notification target: %s", err)
+		return fmt.Errorf("setting CodeStar notification target: %s", err)
 	}
 
 	return nil
@@ -280,20 +280,20 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := conn.UpdateNotificationRule(params); err != nil {
-		return fmt.Errorf("error updating codestar notification rule: %s", err)
+		return fmt.Errorf("updating CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating codestar notification rule tags: %s", err)
+			return fmt.Errorf("updating CodeStar Notification Rule (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("target") {
 		o, n := d.GetChange("target")
 		if err := cleanupNotificationRuleTargets(conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
-			return err
+			return fmt.Errorf("updating CodeStar Notification Rule (%s): cleaning targets: %s", d.Id(), err)
 		}
 	}
 
@@ -308,11 +308,11 @@ func resourceNotificationRuleDelete(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting codestar notification rule: %s", err)
+		return fmt.Errorf("deleting CodeStar Notification Rule: %s", err)
 	}
 
 	if err = cleanupNotificationRuleTargets(conn, d.Get("target").(*schema.Set), nil); err != nil {
-		return fmt.Errorf("error deleting codestar notification targets: %s", err)
+		return fmt.Errorf("deleting CodeStar notification targets: %s", err)
 	}
 
 	return nil

@@ -152,7 +152,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 	routeTable, err := FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Default Route Table (%s): %w", routeTableID, err)
+		return fmt.Errorf("reading EC2 Default Route Table (%s): %w", routeTableID, err)
 	}
 
 	d.SetId(aws.StringValue(routeTable.RouteTableId))
@@ -160,7 +160,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 	// Remove all existing VGW associations.
 	for _, v := range routeTable.PropagatingVgws {
 		if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -210,13 +210,13 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
+			return fmt.Errorf("deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
 		}
 
 		_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
+			return fmt.Errorf("waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
 		}
 	}
 
@@ -226,7 +226,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			v := v.(string)
 
 			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -237,14 +237,14 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			v := v.(map[string]interface{})
 
 			if err := routeTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
 
 	if len(tags) > 0 {
 		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error adding tags: %w", err)
+			return fmt.Errorf("adding tags: %w", err)
 		}
 	}
 

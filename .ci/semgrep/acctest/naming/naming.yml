@@ -6,8 +6,9 @@ rules:
       include:
         - "internal/**/*_test.go"
     patterns:
-      - pattern: func $FUNCNAME(s *terraform.State) { ... }
+      - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:
           metavariable: "$FUNCNAME"
-          regex: "^testAcc(?!Check)[a-zA-Z]+Destroy$"
+          regex: "^testAcc((?!Check)[a-zA-Z]+Destroy$|(Check)?Destroy)"
+          # regex: "^testAccCheckDestroy"
     severity: WARNING

@@ -131,14 +131,8 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("aggregation", resp.ProtectionGroup.Aggregation)
 	d.Set("protection_group_id", resp.ProtectionGroup.ProtectionGroupId)
 	d.Set("pattern", resp.ProtectionGroup.Pattern)
-
-	if resp.ProtectionGroup.Members != nil {
-		d.Set("members", resp.ProtectionGroup.Members)
-	}
-
-	if resp.ProtectionGroup.ResourceType != nil {
-		d.Set("resource_type", resp.ProtectionGroup.ResourceType)
-	}
+	d.Set("members", resp.ProtectionGroup.Members)
+	d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 
 	tags, err := ListTags(conn, arn)
 

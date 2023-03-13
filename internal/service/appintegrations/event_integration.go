@@ -171,7 +171,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
 		}
 	}
 

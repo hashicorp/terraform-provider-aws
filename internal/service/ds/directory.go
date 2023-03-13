@@ -304,19 +304,19 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("alias"); ok {
 		if err := createAlias(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
 		if err := updateNumberOfDomainControllers(conn, d.Id(), v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if _, ok := d.GetOk("enable_sso"); ok {
 		if err := enableSSO(conn, d.Id()); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -400,18 +400,18 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("enable_sso") {
 		if _, ok := d.GetOk("enable_sso"); ok {
 			if err := enableSSO(conn, d.Id()); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		} else {
 			if err := disableSSO(conn, d.Id()); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}

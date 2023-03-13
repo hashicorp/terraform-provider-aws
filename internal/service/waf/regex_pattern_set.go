@@ -79,7 +79,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regex Pattern Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.RegexPatternSet.Name)

@@ -99,7 +99,7 @@ func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) e
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
 	snapshot, err := FindSnapshotDetailsByApplicationAndSnapshotNames(conn, applicationName, snapshotName)
@@ -111,7 +111,7 @@ func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
 	d.Set("application_name", applicationName)
@@ -128,7 +128,7 @@ func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{})
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
 	snapshotCreationTimestamp, err := time.Parse(time.RFC3339, d.Get("snapshot_creation_timestamp").(string))
@@ -152,13 +152,13 @@ func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitSnapshotDeleted(conn, applicationName, snapshotName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("deleting Kinesis Analytics v2 Application Snapshot (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

@@ -67,10 +67,11 @@ func ResourceUser() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -156,7 +157,6 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
 		}
@@ -215,9 +215,8 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("home_directory_type", user.HomeDirectoryType)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(user.Policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Transfer User (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -271,7 +270,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("policy") {
 			policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 			if err != nil {
 				return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 			}

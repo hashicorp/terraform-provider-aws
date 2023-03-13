@@ -161,13 +161,13 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateNetworkAcl(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Network ACL: %w", err)
+		return fmt.Errorf("creating EC2 Network ACL: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.NetworkAcl.NetworkAclId))
 
 	if err := modifyNetworkACLAttributesOnCreate(conn, d); err != nil {
-		return err
+		return fmt.Errorf("creating EC2 Network ACL: %w", err)
 	}
 
 	return resourceNetworkACLRead(d, meta)
@@ -189,7 +189,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
 	nacl := outputRaw.(*ec2.NetworkAcl)
@@ -229,21 +229,21 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err := d.Set("egress", flattenNetworkACLEntries(egressEntries)); err != nil {
-		return fmt.Errorf("error setting egress: %w", err)
+		return fmt.Errorf("setting egress: %w", err)
 	}
 	if err := d.Set("ingress", flattenNetworkACLEntries(ingressEntries)); err != nil {
-		return fmt.Errorf("error setting ingress: %w", err)
+		return fmt.Errorf("setting ingress: %w", err)
 	}
 
 	tags := KeyValueTags(nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -253,7 +253,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if err := modifyNetworkACLAttributesOnUpdate(conn, d, true); err != nil {
-		return err
+		return fmt.Errorf("updating EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
 	return resourceNetworkACLRead(d, meta)
@@ -266,7 +266,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	nacl, err := FindNetworkACLByID(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
 	var subnetIDs []interface{}
@@ -275,7 +275,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	if len(subnetIDs) > 0 {
 		if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), subnetIDs); err != nil {
-			return err
+			return fmt.Errorf("deleting EC2 Network ACL (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -293,7 +293,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network ACL (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -369,7 +369,7 @@ func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, d
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Network ACL (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Network ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -440,7 +440,7 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 		_, err := conn.CreateNetworkAclEntry(input)
 
 		if err != nil {
-			return fmt.Errorf("error creating EC2 Network ACL (%s) Entry: %w", naclID, err)
+			return fmt.Errorf("creating EC2 Network ACL (%s) Entry: %w", naclID, err)
 		}
 	}
 
@@ -475,7 +475,7 @@ func deleteNetworkACLEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.Ne
 		_, err := conn.DeleteNetworkAclEntry(input)
 
 		if err != nil {
-			return fmt.Errorf("error deleting EC2 Network ACL (%s) Entry: %w", naclID, err)
+			return fmt.Errorf("deleting EC2 Network ACL (%s) Entry: %w", naclID, err)
 		}
 	}
 

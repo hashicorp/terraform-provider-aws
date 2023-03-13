@@ -258,7 +258,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	out, err := conn.GetTemplate(&tInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation Stack (%s): reading template: %w", d.Id(), err)
 	}
 
 	template, err := verify.NormalizeJSONOrYAMLString(*out.TemplateBody)
@@ -285,14 +285,14 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	if len(stack.NotificationARNs) > 0 {
 		err = d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
 		if err != nil {
-			return err
+			return fmt.Errorf("reading CloudFormation Stack (%s): %w", d.Id(), err)
 		}
 	}
 
 	originalParams := d.Get("parameters").(map[string]interface{})
 	err = d.Set("parameters", flattenParameters(stack.Parameters, originalParams))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -308,13 +308,13 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = d.Set("outputs", flattenOutputs(stack.Outputs))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	if len(stack.Capabilities) > 0 {
 		err = d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
 		if err != nil {
-			return err
+			return fmt.Errorf("reading CloudFormation Stack (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -412,21 +412,18 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Deleting CloudFormation stack %s", input)
 	_, err := conn.DeleteStack(input)
 	if tfawserr.ErrCodeEquals(err, "ValidationError") {
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudFormation Stack deletion: %w", err)
+		return fmt.Errorf("deleting CloudFormation Stack (%s): waiting for completion: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] CloudFormation stack (%s) deleted", d.Id())
 
 	return nil
 }

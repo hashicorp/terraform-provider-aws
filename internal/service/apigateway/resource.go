@@ -133,7 +133,7 @@ func resourceResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Resource (%s): %s", d.Id(), err)
 	}
 
 	return resourceResourceRead(d, meta)
@@ -154,7 +154,7 @@ func resourceResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting API Gateway Resource: %s", err)
+		return fmt.Errorf("deleting API Gateway Resource (%s): %s", d.Id(), err)
 	}
 	return nil
 }

@@ -1,11 +1,12 @@
 package lightsail
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -37,7 +38,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Lightsail Domain: %w", err)
 	}
 
 	d.SetId(d.Get("domain_name").(string))
@@ -52,15 +53,12 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Domain (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return err
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail Domain (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Domain (%s):%w", d.Id(), err)
 	}
 
 	d.Set("arn", resp.Domain.Arn)
@@ -73,5 +71,5 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainName: aws.String(d.Id()),
 	})
 
-	return err
+	return fmt.Errorf("deleting Lightsail Domain (%s):%w", d.Id(), err)
 }

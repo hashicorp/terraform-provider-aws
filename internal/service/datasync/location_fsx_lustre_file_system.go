@@ -127,13 +127,13 @@ func resourceLocationFSxLustreFileSystemRead(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx Lustre (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location Fsx Lustre (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location Fsx Lustre (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)

@@ -82,9 +82,9 @@ func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) e
 		RestApiId:  aws.String(apiId),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Documentation Part: %w", err)
 	}
-	d.SetId(apiId + "/" + *out.Id)
+	d.SetId(apiId + "/" + aws.StringValue(out.Id))
 
 	return nil
 }
@@ -96,7 +96,7 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
 
 	docPart, err := conn.GetDocumentationPart(&apigateway.GetDocumentationPartInput{
@@ -109,7 +109,7 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Documentation Part (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
 
 	d.Set("rest_api_id", apiId)
@@ -124,7 +124,7 @@ func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) e
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
 
 	input := apigateway.UpdateDocumentationPartInput{
@@ -144,14 +144,9 @@ func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) e
 
 	input.PatchOperations = operations
 
-	log.Printf("[INFO] Updating API Gateway Documentation Part: %s", input)
-
-	out, err := conn.UpdateDocumentationPart(&input)
-	if err != nil {
-		return err
+	if _, err := conn.UpdateDocumentationPart(&input); err != nil {
+		return fmt.Errorf("updating API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] API Gateway Documentation Part updated: %s", out)
 
 	return resourceDocumentationPartRead(d, meta)
 }
@@ -161,14 +156,14 @@ func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) e
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
 
 	_, err = conn.DeleteDocumentationPart(&apigateway.DeleteDocumentationPartInput{
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
-	return err
+	return fmt.Errorf("deleting API Gateway Documentation Part (%s): %w", d.Id(), err)
 }
 
 func expandDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {

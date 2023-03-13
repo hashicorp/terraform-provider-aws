@@ -103,7 +103,7 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Route 53 Zone Association (%s): %w", d.Id(), err)
 	}
 
 	// Continue supporting older resources without VPC Region in ID
@@ -124,12 +124,12 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("getting Route 53 Zone Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Route 53 Zone Association (%s): %w", d.Id(), err)
 	}
 
 	if hostedZoneSummary == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("getting Route 53 Zone Association (%s): missing after creation", d.Id())
+			return fmt.Errorf("reading Route 53 Zone Association (%s): missing after creation", d.Id())
 		}
 
 		log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
@@ -151,7 +151,7 @@ func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Route 53 Hosted Zone Association (%s): %w", zoneID, err)
 	}
 
 	// Continue supporting older resources without VPC Region in ID

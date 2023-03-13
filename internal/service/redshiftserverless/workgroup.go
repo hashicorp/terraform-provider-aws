@@ -336,11 +336,11 @@ func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Serverless Workgroup (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitWorkgroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Workgroup (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Serverless Workgroup (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

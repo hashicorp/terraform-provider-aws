@@ -315,35 +315,35 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	// CoreNetworkConfiguration
 	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
 	if err != nil {
-		return err
+		return fmt.Errorf("writing Network Manager Core Network Policy Document: %w", err)
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
 	// AttachmentPolicies
 	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
 	if err != nil {
-		return err
+		return fmt.Errorf("writing Network Manager Core Network Policy Document: %w", err)
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
 	// SegmentActions
 	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
 	if err != nil {
-		return err
+		return fmt.Errorf("writing Network Manager Core Network Policy Document: %w", err)
 	}
 	mergedDoc.SegmentActions = segment_actions
 
 	// Segments
 	segments, err := expandDataCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
 	if err != nil {
-		return err
+		return fmt.Errorf("writing Network Manager Core Network Policy Document: %w", err)
 	}
 	mergedDoc.Segments = segments
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return err
+		return fmt.Errorf("writing Network Manager Core Network Policy Document: formatting JSON: %w", err)
 	}
 	jsonString := string(jsonDoc)
 

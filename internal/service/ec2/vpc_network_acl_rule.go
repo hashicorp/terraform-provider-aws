@@ -120,7 +120,7 @@ func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) erro
 	protocolNumber, err := networkACLProtocolNumber(protocol)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EC2 Network ACL Rule: %w", err)
 	}
 
 	egress := d.Get("egress").(bool)
@@ -160,7 +160,7 @@ func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) erro
 	_, err = conn.CreateNetworkAclEntry(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Network ACL (%s) Rule (egress:%t)(%d): %w", naclID, egress, ruleNumber, err)
+		return fmt.Errorf("creating EC2 Network ACL (%s) Rule (egress: %t)(%d): %w", naclID, egress, ruleNumber, err)
 	}
 
 	d.SetId(NetworkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
@@ -186,7 +186,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACL Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Network ACL Rule (%s): %w", d.Id(), err)
 	}
 
 	naclEntry := outputRaw.(*ec2.NetworkAclEntry)
@@ -211,7 +211,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading EC2 Network ACL Rule (%s): %w", d.Id(), err)
 		}
 
 		d.Set("protocol", strconv.Itoa(protocolNumber))
@@ -237,7 +237,7 @@ func resourceNetworkACLRuleDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network ACL Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Network ACL Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil

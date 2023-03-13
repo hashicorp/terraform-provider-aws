@@ -113,9 +113,8 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	aliasARN := aws.StringValue(alias.AliasArn)
 	targetKeyID := aws.StringValue(alias.TargetKeyId)
 	targetKeyARN, err := AliasARNToKeyARN(aliasARN, targetKeyID)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading KMS Alias (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", aliasARN)

@@ -900,7 +900,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// Update attributes from DistributionConfig
 	err = flattenDistributionConfig(d, resp.Distribution.DistributionConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFront Distribution (%s): %w", d.Id(), err)
 	}
 
 	// Update other attributes outside of DistributionConfig

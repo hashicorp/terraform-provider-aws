@@ -269,22 +269,38 @@ func FindAppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string
 }
 
 func listAppsByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.AppDetails, error) {
+	var apps []*sagemaker.AppDetails
+
 	input := &sagemaker.ListAppsInput{
 		DomainIdEquals: aws.String(domainID),
 	}
 
-	output, err := conn.ListApps(input)
+	err := conn.ListAppsPages(input, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, app := range page.Apps {
+			if app == nil {
+				continue
+			}
+
+			apps = append(apps, app)
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
+	if len(apps) == 0 {
 		return nil, nil
 	}
 
 	var foundApp *sagemaker.AppDetails
-	for _, app := range output.Apps {
+	for _, app := range apps {
 		if aws.StringValue(app.AppName) == appName &&
 			aws.StringValue(app.AppType) == appType &&
 			(aws.StringValue(app.SpaceName) == userProfileOrSpaceName ||

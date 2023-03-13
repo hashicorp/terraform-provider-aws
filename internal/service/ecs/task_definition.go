@@ -437,7 +437,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	input := ecs.RegisterTaskDefinitionInput{
@@ -491,7 +491,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	if len(constraints) > 0 {
 		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 		}
 		input.PlacementConstraints = cons
 	}
@@ -526,7 +526,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
+		return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	taskDefinition := *out.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
@@ -578,7 +578,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
@@ -604,11 +604,11 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 	err = d.Set("container_definitions", defs)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
@@ -757,10 +757,8 @@ func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) erro
 		TaskDefinition: aws.String(d.Get("arn").(string)),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ECS Task Definition (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Task definition %q deregistered.", d.Get("arn").(string))
 
 	return nil
 }

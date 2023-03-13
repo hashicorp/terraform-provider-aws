@@ -102,7 +102,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateRuleGroup(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Rule Group (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRuleGroupOutput)
 	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
@@ -113,7 +113,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateRuleGroupResource(d.Id(), noActivatedRules, activatedRules, conn)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+			return fmt.Errorf("updating WAF Rule Group: %s", err)
 		}
 	}
 
@@ -137,7 +137,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Rule Group (%s): %w", d.Id(), err)
 	}
 
 	rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
@@ -206,9 +206,10 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
-	err := deleteRuleGroup(d.Id(), oldRules, conn)
-
-	return err
+	if err := deleteRuleGroup(d.Id(), oldRules, conn); err != nil {
+		return fmt.Errorf("deleting WAF Rule Group (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func deleteRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error {

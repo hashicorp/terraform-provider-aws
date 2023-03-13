@@ -48,13 +48,14 @@ func resourceGroupMembershipCreate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group := d.Get("group").(string)
-	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 
 	if err := addUsersToGroup(conn, userList, group); err != nil {
-		return err
+		return fmt.Errorf("creating IAM Group Membership (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(d.Get("name").(string))
+
 	return resourceGroupMembershipRead(d, meta)
 }
 
@@ -113,11 +114,11 @@ func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group Membership (%s): %w", group, err)
+		return fmt.Errorf("reading IAM Group Membership (%s): %w", group, err)
 	}
 
 	if err := d.Set("users", ul); err != nil {
-		return fmt.Errorf("Error setting user list from IAM Group Membership (%s), error: %s", group, err)
+		return fmt.Errorf("setting user list from IAM Group Membership (%s): %s", group, err)
 	}
 
 	return nil
@@ -139,15 +140,15 @@ func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) err
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		add := flex.ExpandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringValueSet(os.Difference(ns))
+		add := flex.ExpandStringValueSet(ns.Difference(os))
 
 		if err := removeUsersFromGroup(conn, remove, group); err != nil {
-			return err
+			return fmt.Errorf("updating IAM Group Membership (%s): %w", d.Get("name").(string), err)
 		}
 
 		if err := addUsersToGroup(conn, add, group); err != nil {
-			return err
+			return fmt.Errorf("updating IAM Group Membership (%s): %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -156,39 +157,27 @@ func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
-	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)
 
-	err := removeUsersFromGroup(conn, userList, group)
-	return err
+	if err := removeUsersFromGroup(conn, userList, group); err != nil {
+		return fmt.Errorf("deleting IAM Group Membership (%s): %w", d.Get("name").(string), err)
+	}
+	return nil
 }
 
-func removeUsersFromGroup(conn *iam.IAM, users []*string, group string) error {
-	for _, u := range users {
-		_, err := conn.RemoveUserFromGroup(&iam.RemoveUserFromGroupInput{
-			UserName:  u,
-			GroupName: aws.String(group),
-		})
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return nil
-		}
-
-		if err != nil {
+func removeUsersFromGroup(conn *iam.IAM, users []string, group string) error {
+	for _, user := range users {
+		if err := removeUserFromGroup(conn, user, group); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func addUsersToGroup(conn *iam.IAM, users []*string, group string) error {
-	for _, u := range users {
-		_, err := conn.AddUserToGroup(&iam.AddUserToGroupInput{
-			UserName:  u,
-			GroupName: aws.String(group),
-		})
-
-		if err != nil {
+func addUsersToGroup(conn *iam.IAM, users []string, group string) error {
+	for _, user := range users {
+		if err := addUserToGroup(conn, user, group); err != nil {
 			return err
 		}
 	}

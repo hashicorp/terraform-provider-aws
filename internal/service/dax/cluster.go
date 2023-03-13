@@ -312,7 +312,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading DAX cluster (%s): %s", d.Id(), err)
 	}
 
 	if len(res.Clusters) == 0 {
@@ -352,7 +352,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setClusterNodeData(d, c); err != nil {
-		return err
+		return fmt.Errorf("reading DAX cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("server_side_encryption", flattenEncryptAtRestOptions(c.SSEDescription)); err != nil {
@@ -491,13 +491,13 @@ func setClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
 	copy(sortedNodes, c.Nodes)
 	sort.Sort(byNodeId(sortedNodes))
 
-	nodeDate := make([]map[string]interface{}, 0, len(sortedNodes))
+	nodeData := make([]map[string]interface{}, 0, len(sortedNodes))
 
 	for _, node := range sortedNodes {
 		if node.NodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.AvailabilityZone == nil {
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
-		nodeDate = append(nodeDate, map[string]interface{}{
+		nodeData = append(nodeData, map[string]interface{}{
 			"id":                aws.StringValue(node.NodeId),
 			"address":           aws.StringValue(node.Endpoint.Address),
 			"port":              aws.Int64Value(node.Endpoint.Port),
@@ -505,7 +505,7 @@ func setClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
 		})
 	}
 
-	return d.Set("nodes", nodeDate)
+	return d.Set("nodes", nodeData)
 }
 
 type byNodeId []*dax.Node

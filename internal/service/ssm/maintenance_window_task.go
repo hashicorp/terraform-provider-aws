@@ -716,7 +716,7 @@ func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{
 
 	resp, err := conn.RegisterTaskWithMaintenanceWindow(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SSM Maintenance Window Task: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.WindowTaskId))

@@ -75,7 +75,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.PutLifecyclePolicy(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating ECR Lifecycle Policy (%s): %w", d.Get("repository").(string), err)
 	}
 	d.SetId(aws.StringValue(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
@@ -172,7 +172,7 @@ func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting ECR Lifecycle Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

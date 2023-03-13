@@ -756,7 +756,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading OpenSearch domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading OpenSearch Domain (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received OpenSearch domain: %s", ds)
@@ -766,7 +766,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading OpenSearch Domain (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received config for OpenSearch domain: %s", outDescribeDomainConfig)
@@ -777,7 +777,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading OpenSearch Domain (%s): %w", d.Id(), err)
 		}
 
 		d.Set("access_policies", policies)
@@ -828,7 +828,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	if v := dc.AutoTuneOptions; v != nil {
 		err = d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading OpenSearch Domain (%s): setting auto_tune_options: %w", d.Id(), err)
 		}
 	}
 
@@ -842,10 +842,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
-		err = d.Set("endpoint", endpoints["vpc"])
-		if err != nil {
-			return err
-		}
+		d.Set("endpoint", endpoints["vpc"])
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
@@ -1010,11 +1007,11 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateDomainConfig(&input)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating OpenSearch Domain (%s): %w", d.Id(), err)
 		}
 
 		if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for OpenSearch Domain Update (%s) to succeed: %w", d.Id(), err)
+			return fmt.Errorf("updating OpenSearch Domain (%s): waiting for completion: %w", d.Id(), err)
 		}
 
 		if d.HasChange("engine_version") {
@@ -1025,11 +1022,11 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.UpgradeDomain(&upgradeInput)
 			if err != nil {
-				return fmt.Errorf("Failed to upgrade OpenSearch domain: %w", err)
+				return fmt.Errorf("updating OpenSearch Domain (%s): upgrading: %w", d.Id(), err)
 			}
 
 			if _, err := waitUpgradeSucceeded(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for OpenSearch Domain Upgrade (%s) to succeed: %w", d.Id(), err)
+				return fmt.Errorf("updating OpenSearch Domain (%s): upgrading: waiting for completion: %w", d.Id(), err)
 			}
 		}
 	}
@@ -1057,12 +1054,12 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting OpenSearch Domain (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch domain %q to be deleted", domainName)
 	if err := waitForDomainDelete(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting OpenSearch Domain (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1317,4 +1314,32 @@ func ParseEngineVersion(engineVersion string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
+	permittedTypes := []string{opensearchservice.VolumeTypeGp3, opensearchservice.VolumeTypeIo1}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
+}
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
+	permittedTypes := []string{opensearchservice.VolumeTypeGp3}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
 }

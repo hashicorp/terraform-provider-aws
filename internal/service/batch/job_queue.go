@@ -121,7 +121,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	jq, err := GetJobQueue(conn, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Batch Job Queue (%s): %w", d.Get("name").(string), err)
 	}
 	if jq == nil {
 		log.Printf("[WARN] Batch Job Queue (%s) not found, removing from state", d.Id())
@@ -193,7 +193,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateJobQueue(updateInput)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Batch Job Queue (%s): %w", d.Get("name").(string), err)
 		}
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
@@ -206,7 +206,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Batch Job Queue (%s): waiting for completion: %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -304,7 +304,6 @@ func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	numJobQueues := len(resp.JobQueues)
 	switch {
 	case numJobQueues == 0:
-		log.Printf("[DEBUG] Job Queue %q is already gone", sn)
 		return nil, nil
 	case numJobQueues == 1:
 		return resp.JobQueues[0], nil
