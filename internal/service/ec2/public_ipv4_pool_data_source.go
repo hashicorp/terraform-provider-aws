@@ -16,6 +16,7 @@ import (
 func DataSourcePublicIpv4Pool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIpv4PoolRead,
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"pool_id": {
@@ -56,7 +57,7 @@ func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	output, err := FindPublicIpv4Pool(ctx, conn, input)
+	output, err := FindPublicIPv4Pool(ctx, conn, input)
 	if err != nil {
 		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pool, d.Id(), err)
 	}

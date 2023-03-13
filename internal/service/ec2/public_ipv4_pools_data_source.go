@@ -62,7 +62,7 @@ func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 
 	publicIpv4Pools := []map[string]interface{}{}
 
-	output, err := FindPublicIpv4Pools(ctx, conn, input)
+	output, err := FindPublicIPv4Pools(ctx, conn, input)
 	if err != nil {
 		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pools, d.Id(), err)
 	}

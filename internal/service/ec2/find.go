@@ -1257,7 +1257,7 @@ func FindInstanceTypeOfferings(ctx context.Context, conn *ec2.EC2, input *ec2.De
 	return output, nil
 }
 
-func FindPublicIpv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
+func FindPublicIPv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
 	var output *ec2.DescribePublicIpv4PoolsOutput
 	var result []*ec2.PublicIpv4Pool
 
@@ -1271,7 +1271,7 @@ func FindPublicIpv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeP
 	return result, nil
 }
 
-func FindPublicIpv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
+func FindPublicIPv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
 	var output []*ec2.PublicIpv4Pool
 
 	err := conn.DescribePublicIpv4PoolsPages(input, func(page *ec2.DescribePublicIpv4PoolsOutput, lastPage bool) bool {
