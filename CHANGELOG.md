@@ -57,7 +57,7 @@ ENHANCEMENTS:
 * data-source/aws_ec2_transit_gateway_attachment: Add `association_state` and `association_transit_gateway_route_table_id` attributes ([#29648](https://github.com/hashicorp/terraform-provider-aws/issues/29648))
 * data-source/aws_instances: Add `ipv6_addresses` attribute ([#29794](https://github.com/hashicorp/terraform-provider-aws/issues/29794))
 * resource/aws_acm_certificate: Change `options` to `Computed` ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
-* resource/aws_amplify_domain_association: Add `enable_auto_sub_domain` argument ([#92814](https://github.com/hashicorp/terraform-provider-aws/issues/92814))
+* resource/aws_amplify_domain_association: Add `enable_auto_sub_domain` argument ([#29814](https://github.com/hashicorp/terraform-provider-aws/issues/29814))
 * resource/aws_cloudhsm_v2_hsm: Enforce `ExactlyOneOf` for `availability_zone` and `subnet_id` arguments ([#20891](https://github.com/hashicorp/terraform-provider-aws/issues/20891))
 * resource/aws_db_instance: Add `listener_endpoint` attribute ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
 * resource/aws_db_instance: Add plan time validations for `backup_retention_period`, `monitoring_interval`, and `monitoring_role_arn` ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
