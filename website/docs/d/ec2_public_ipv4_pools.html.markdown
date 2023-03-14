@@ -20,6 +20,7 @@ data "aws_ec2_public_ipv4_pools" "example" {}
 ```
 
 ### Usage with Filter
+
 ```terraform
 data "aws_ec2_public_ipv4_pools" "example" {
   filter {
