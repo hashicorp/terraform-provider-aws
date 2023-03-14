@@ -28,10 +28,10 @@ By default, each AWS region is equipped with a block public access configuration
 resource "aws_emr_block_public_access_configuration" "example" {
   block_public_security_group_rules = true
 
-	permitted_public_security_group_rule_range {
-		min_range = 22
-		max_range = 22
-	}
+  permitted_public_security_group_rule_range {
+    min_range = 22
+    max_range = 22
+  }
 }
 ```
 
@@ -45,15 +45,15 @@ The resource permits specification of multiple `permitted_public_security_group_
 resource "aws_emr_block_public_access_configuration" "example" {
   block_public_security_group_rules = true
 
-	permitted_public_security_group_rule_range {
-		min_range = 22
-		max_range = 22
-	}
+  permitted_public_security_group_rule_range {
+    min_range = 22
+    max_range = 22
+  }
 
   permitted_public_security_group_rule_range {
-		min_range = 100
-		max_range = 101
-	}
+    min_range = 100
+    max_range = 101
+  }
 }
 ```
 
@@ -83,6 +83,10 @@ This block is used to define a range of TCP ports that should form exceptions to
 
 * `min_range` - (Required) The first port in the range of TCP ports.
 * `max_range` - (Required) The final port in the range of TCP ports.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

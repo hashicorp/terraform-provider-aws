@@ -341,34 +341,34 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccBlockPublicAccessConfigurationConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_emr_block_public_access_configuration" "test" {
-	block_public_security_group_rules = %[1]t
+  block_public_security_group_rules = %[1]t
 }
 `, enabled)
 }
 
 const blockPublicAccessConfigurationConfig_defaultString = `
 resource "aws_emr_block_public_access_configuration" "test" {
-	block_public_security_group_rules = true
+  block_public_security_group_rules = true
 
-	permitted_public_security_group_rule_range {
-		min_range = 22
-		max_range = 22
-	}
+  permitted_public_security_group_rule_range {
+    min_range = 22
+    max_range = 22
+  }
 }
 `
 
 const blockPublicAccessConfigurationConfig_enabledMultiRangeString = `
 resource "aws_emr_block_public_access_configuration" "test" {
-	block_public_security_group_rules = true
-	
-	permitted_public_security_group_rule_range {
-		min_range = 22
-		max_range = 22
-	}
-	
-	permitted_public_security_group_rule_range {
-		min_range = 100
-		max_range = 101
-	}
+  block_public_security_group_rules = true
+
+  permitted_public_security_group_rule_range {
+    min_range = 22
+    max_range = 22
+  }
+
+  permitted_public_security_group_rule_range {
+    min_range = 100
+    max_range = 101
+  }
 }
 `
