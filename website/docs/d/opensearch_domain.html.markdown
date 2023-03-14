@@ -76,7 +76,8 @@ The following attributes are exported:
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboard_endpoint` - Domain-specific endpoint used to access the Dashboard application.
+* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `kibana_endpoint` - Domain-specific endpoint used to access the Kibana application. OpenSearch Dashboards do not use Kibana, so this attribute will be **DEPRECATED** in a future version.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.
     * `cloudwatch_log_group_arn` - CloudWatch Log Group where the logs are published.
