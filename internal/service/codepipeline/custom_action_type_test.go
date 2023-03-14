@@ -24,7 +24,7 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -68,7 +68,7 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -95,7 +95,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -144,7 +144,7 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),

@@ -3936,7 +3936,7 @@ func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
 	if v, ok := m["column_depth"].(int); ok {
 		settings.ColumnDepth = int32(v)
 	}
-	if v, ok := m["column_depth"].(string); ok && v != "" {
+	if v, ok := m["include_fec"].(string); ok && v != "" {
 		settings.IncludeFec = types.FecOutputIncludeFec(v)
 	}
 	if v, ok := m["row_length"].(int); ok {

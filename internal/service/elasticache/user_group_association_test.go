@@ -27,7 +27,7 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
@@ -59,7 +59,7 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
@@ -90,7 +90,7 @@ func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
@@ -118,7 +118,7 @@ func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
 	resourceName2 := "aws_elasticache_user_group_association.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),

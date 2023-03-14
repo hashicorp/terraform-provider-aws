@@ -1,14 +1,58 @@
-## 4.58.0 (Unreleased)
+## 4.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
+* **New Resource:** `aws_codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
+* **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
+
+ENHANCEMENTS:
+
+* data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
+* data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
+* resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
+* resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
+* resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
+* resource/aws_dynamodb_table: Add `deletion_protection_enabled` argument ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
+* resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
+* resource/aws_fms_policy: Add `description` argument ([#29926](https://github.com/hashicorp/terraform-provider-aws/issues/29926))
+* resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
+* resource/aws_inspector2_organization_configuration: Add `lambda` attribute to `auto_enable` configuration block ([#28961](https://github.com/hashicorp/terraform-provider-aws/issues/28961))
+* resource/aws_instance: Add ability to update `private_dns_name_options` in place ([#26305](https://github.com/hashicorp/terraform-provider-aws/issues/26305))
+* resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
+* resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
+
+BUG FIXES:
+
+* data-source/aws_opensearch_domain: Add missing `advanced_security_options.anonymous_auth_enabled` attribute ([#26746](https://github.com/hashicorp/terraform-provider-aws/issues/26746))
+* resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
+* resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
+* resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
+* resource/aws_lightsail_instance: Fix `name` validation to allow instances to start with a numeric character ([#29903](https://github.com/hashicorp/terraform-provider-aws/issues/29903))
+* resource/aws_opensearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
+* resource/aws_sagemaker_endpoint_configuration: Fix `variant_name` generation when unset ([#29915](https://github.com/hashicorp/terraform-provider-aws/issues/29915))
+
+## 4.58.0 (March 10, 2023)
 
 FEATURES:
 
 * **New Data Source:** `aws_ecs_task_execution` ([#29783](https://github.com/hashicorp/terraform-provider-aws/issues/29783))
+* **New Data Source:** `aws_licensemanager_grants` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Data Source:** `aws_licensemanager_received_license` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Data Source:** `aws_licensemanager_received_licenses` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Resource:** `aws_licensemanager_grant` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
+* **New Resource:** `aws_licensemanager_grant_accepter` ([#29741](https://github.com/hashicorp/terraform-provider-aws/issues/29741))
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_transit_gateway_attachment: Add `association_state` and `association_transit_gateway_route_table_id` attributes ([#29648](https://github.com/hashicorp/terraform-provider-aws/issues/29648))
+* data-source/aws_instances: Add `ipv6_addresses` attribute ([#29794](https://github.com/hashicorp/terraform-provider-aws/issues/29794))
+* resource/aws_acm_certificate: Change `options` to `Computed` ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
+* resource/aws_amplify_domain_association: Add `enable_auto_sub_domain` argument ([#92814](https://github.com/hashicorp/terraform-provider-aws/issues/92814))
 * resource/aws_cloudhsm_v2_hsm: Enforce `ExactlyOneOf` for `availability_zone` and `subnet_id` arguments ([#20891](https://github.com/hashicorp/terraform-provider-aws/issues/20891))
 * resource/aws_db_instance: Add `listener_endpoint` attribute ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
 * resource/aws_db_instance: Add plan time validations for `backup_retention_period`, `monitoring_interval`, and `monitoring_role_arn` ([#28434](https://github.com/hashicorp/terraform-provider-aws/issues/28434))
+* resource/aws_flow_log: Add `deliver_cross_account_role` argument ([#29254](https://github.com/hashicorp/terraform-provider-aws/issues/29254))
 * resource/aws_grafana_workspace: Add `network_access_control` argument ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
 * resource/aws_sesv2_configuration_set: Add `vdm_options` argument ([#28812](https://github.com/hashicorp/terraform-provider-aws/issues/28812))
 * resource/aws_transfer_server: Add `protocol_details` argument ([#28621](https://github.com/hashicorp/terraform-provider-aws/issues/28621))
@@ -17,8 +61,12 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_acm_certificate: Update `options.certificate_transparency_logging_preference` in place rather than replacing the resource ([#29763](https://github.com/hashicorp/terraform-provider-aws/issues/29763))
 * resource/aws_batch_job_definition: Prevents perpetual diff when container properties environment variable has empty value. ([#29820](https://github.com/hashicorp/terraform-provider-aws/issues/29820))
+* resource/aws_elastic_beanstalk_configuration_template: Map errors like `InvalidParameterValue: No Platform named '...' found.` to `resource.NotFoundError` so `terraform refesh` correctly removes the resource from state ([#29863](https://github.com/hashicorp/terraform-provider-aws/issues/29863))
+* resource/aws_flow_log: Fix IAM eventual consistency errors on resource Create ([#29254](https://github.com/hashicorp/terraform-provider-aws/issues/29254))
 * resource/aws_grafana_workspace: Allow removing `vpc_configuration` ([#29793](https://github.com/hashicorp/terraform-provider-aws/issues/29793))
+* resource/aws_medialive_channel: Fix setting of the `include_fec` attribute in `fec_output_settings` ([#29808](https://github.com/hashicorp/terraform-provider-aws/issues/29808))
 * resource/aws_medialive_channel: Fix setting of the `video_pid` attribute in `m2ts_settings` ([#29824](https://github.com/hashicorp/terraform-provider-aws/issues/29824))
 
 ## 4.57.1 (March  6, 2023)

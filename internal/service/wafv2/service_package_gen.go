@@ -5,39 +5,67 @@ package wafv2
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_wafv2_ip_set":            DataSourceIPSet,
-		"aws_wafv2_regex_pattern_set": DataSourceRegexPatternSet,
-		"aws_wafv2_rule_group":        DataSourceRuleGroup,
-		"aws_wafv2_web_acl":           DataSourceWebACL,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceIPSet,
+			TypeName: "aws_wafv2_ip_set",
+		},
+		{
+			Factory:  DataSourceRegexPatternSet,
+			TypeName: "aws_wafv2_regex_pattern_set",
+		},
+		{
+			Factory:  DataSourceRuleGroup,
+			TypeName: "aws_wafv2_rule_group",
+		},
+		{
+			Factory:  DataSourceWebACL,
+			TypeName: "aws_wafv2_web_acl",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_wafv2_ip_set":                        ResourceIPSet,
-		"aws_wafv2_regex_pattern_set":             ResourceRegexPatternSet,
-		"aws_wafv2_rule_group":                    ResourceRuleGroup,
-		"aws_wafv2_web_acl":                       ResourceWebACL,
-		"aws_wafv2_web_acl_association":           ResourceWebACLAssociation,
-		"aws_wafv2_web_acl_logging_configuration": ResourceWebACLLoggingConfiguration,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceIPSet,
+			TypeName: "aws_wafv2_ip_set",
+		},
+		{
+			Factory:  ResourceRegexPatternSet,
+			TypeName: "aws_wafv2_regex_pattern_set",
+		},
+		{
+			Factory:  ResourceRuleGroup,
+			TypeName: "aws_wafv2_rule_group",
+		},
+		{
+			Factory:  ResourceWebACL,
+			TypeName: "aws_wafv2_web_acl",
+		},
+		{
+			Factory:  ResourceWebACLAssociation,
+			TypeName: "aws_wafv2_web_acl_association",
+		},
+		{
+			Factory:  ResourceWebACLLoggingConfiguration,
+			TypeName: "aws_wafv2_web_acl_logging_configuration",
+		},
 	}
 }
 

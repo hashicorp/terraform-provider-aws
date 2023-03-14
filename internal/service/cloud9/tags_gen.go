@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloud9/cloud9iface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -26,6 +27,10 @@ func ListTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -60,7 +65,8 @@ func KeyValueTags(ctx context.Context, tags []*cloud9.Tag) tftags.KeyValueTags {
 // UpdateTags updates cloud9 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -91,4 +97,8 @@ func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier stri
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier, oldTags, newTags)
 }
