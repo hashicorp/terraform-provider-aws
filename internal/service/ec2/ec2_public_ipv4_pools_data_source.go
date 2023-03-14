@@ -12,7 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_vpc_public_ipv4_pools")
+// @SDKDataSource("aws_ec2_public_ipv4_pools")
 func DataSourcePublicIPv4Pools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIpv4PoolsRead,

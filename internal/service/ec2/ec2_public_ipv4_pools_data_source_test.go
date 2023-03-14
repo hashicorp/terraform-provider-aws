@@ -12,7 +12,7 @@ import (
 
 func TestAccEC2PublicIPv4PoolsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_vpc_public_ipv4_pools.test"
+	dataSourceName := "data.aws_ec2_public_ipv4_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -31,7 +31,7 @@ func TestAccEC2PublicIPv4PoolsDataSource_basic(t *testing.T) {
 
 func TestAccEC2PublicIPv4PoolsDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_vpc_public_ipv4_pools.test"
+	dataSourceName := "data.aws_ec2_public_ipv4_pools.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,12 +50,12 @@ func TestAccEC2PublicIPv4PoolsDataSource_tags(t *testing.T) {
 }
 
 const testPublicIPv4PoolsDataSourceConfig_basic = `
-data "aws_vpc_public_ipv4_pools" "test" {}
+data "aws_ec2_public_ipv4_pools" "test" {}
 `
 
 func testPublicIPv4PoolsDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
-data "aws_vpc_public_ipv4_pools" "test" {
+data "aws_ec2_public_ipv4_pools" "test" {
   tags = {
     Name = %[1]q
   }

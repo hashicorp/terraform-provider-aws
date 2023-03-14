@@ -1,14 +1,14 @@
 ---
-subcategory: "VPC (Virtual Private Cloud)"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_vpc_public_ipv4_pools"
+page_title: "AWS: aws_ec2_public_ipv4_pools"
 description: |-
-  Terraform data source for getting information about AWS VPC (Virtual Private Cloud) Public IPv4 Pools.
+  Terraform data source for getting information about AWS EC2 Public IPv4 Pools.
 ---
 
 # Data Source: aws_ec2_public_ipv4_pools
 
-Terraform data source for getting information about AWS VPC (Virtual Private Cloud) Public IPv4 Pools.
+Terraform data source for getting information about AWS EC2 Public IPv4 Pools.
 
 ## Example Usage
 
@@ -16,12 +16,12 @@ Terraform data source for getting information about AWS VPC (Virtual Private Clo
 
 ```terraform
 # Returns all public IPv4 pools.
-data "aws_vpc_public_ipv4_pools" "example" {}
+data "aws_ec2_public_ipv4_pools" "example" {}
 ```
 
 ### Usage with Filter
 ```terraform
-data "aws_vpc_public_ipv4_pools" "example" {
+data "aws_ec2_public_ipv4_pools" "example" {
   filter {
     name   = "tag-key"
     values = ["ExampleTagKey"]

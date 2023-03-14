@@ -51,9 +51,9 @@ func testAccPreCheckPublicIPv4Pools(ctx context.Context, t *testing.T) {
 }
 
 const testPublicIPv4PoolDataSourceConfig_basic = `
-data "aws_vpc_public_ipv4_pools" "test" {}
+data "aws_ec2_public_ipv4_pools" "test" {}
 
 data "aws_vpc_public_ipv4_pool" "test" {
-  pool_id = data.aws_vpc_public_ipv4_pools.test.pool_ids[0]
+  pool_id = data.aws_ec2_public_ipv4_pools.test.pool_ids[0]
 }
 `
