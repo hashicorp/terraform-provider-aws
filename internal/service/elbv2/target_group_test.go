@@ -1364,7 +1364,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1374,11 +1374,11 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, false, false),
+				Config: testAccTargetGroupConfig_appStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -1395,11 +1395,11 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, true, true),
+				Config: testAccTargetGroupConfig_appStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -1421,11 +1421,11 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, true, false),
+				Config: testAccTargetGroupConfig_appStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -2279,6 +2279,77 @@ func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
 	})
 }
 
+func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
+				continue
+			}
+
+			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTargetGroupExists(ctx context.Context, n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No ELBv2 Target Group ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+
+		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckTargetGroupNotRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.TargetGroupArn) != aws.StringValue(j.TargetGroupArn) {
+			return errors.New("ELBv2 Target Group was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.TargetGroupArn) == aws.StringValue(j.TargetGroupArn) {
+			return errors.New("ELBv2 Target Group was not recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccTargetGroupConfig_albDefaults(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
@@ -2685,7 +2756,7 @@ resource "aws_lb_target_group" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_appStickiness(targetGroupName string, addAppStickinessBlock bool, enabled bool) string {
+func testAccTargetGroupConfig_appStickiness(rName string, addAppStickinessBlock bool, enabled bool) string {
 	var appSstickinessBlock string
 
 	if addAppStickinessBlock {
@@ -2726,10 +2797,10 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-lb-target-group-stickiness"
+    Name = %[1]q
   }
 }
-`, targetGroupName, appSstickinessBlock)
+`, rName, appSstickinessBlock)
 }
 
 func testAccTargetGroupConfig_basic(rName string, deregDelay int) string {
@@ -3342,77 +3413,6 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
-				continue
-			}
-
-			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTargetGroupExists(ctx context.Context, n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("No ELBv2 Target Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
-
-		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckTargetGroupNotRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.TargetGroupArn) != aws.StringValue(j.TargetGroupArn) {
-			return errors.New("ELBv2 Target Group was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.TargetGroupArn) == aws.StringValue(j.TargetGroupArn) {
-			return errors.New("ELBv2 Target Group was not recreated")
-		}
-
-		return nil
-	}
 }
 
 func testAccTargetGroupConfig_nlbDefaults(rName, healthCheckBlock string) string {
