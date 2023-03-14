@@ -33,12 +33,6 @@ const (
 // @SDKResource("aws_lb_target_group")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		// NLBs have restrictions on them at this time
-		CustomizeDiff: customdiff.Sequence(
-			resourceTargetGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
-
 		CreateWithoutTimeout: resourceTargetGroupCreate,
 		ReadWithoutTimeout:   resourceTargetGroupRead,
 		UpdateWithoutTimeout: resourceTargetGroupUpdate,
@@ -48,6 +42,12 @@ func ResourceTargetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		// NLBs have restrictions on them at this time
+		CustomizeDiff: customdiff.Sequence(
+			resourceTargetGroupCustomizeDiff,
+			verify.SetTagsDiff,
+		),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -56,6 +56,11 @@ func ResourceTargetGroup() *schema.Resource {
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"deregistration_delay": {
 				Type:         nullable.TypeNullableInt,
@@ -132,6 +137,13 @@ func ResourceTargetGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
 			},
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
@@ -220,11 +232,6 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"connection_termination": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -274,13 +281,8 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -313,8 +315,6 @@ func ResourceTargetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.TargetTypeEnum_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
