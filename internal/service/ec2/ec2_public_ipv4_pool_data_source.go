@@ -15,7 +15,7 @@ import (
 // @SDKDataSource("aws_ec2_public_ipv4_pool")
 func DataSourcePublicIPv4Pool() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePublicIpv4PoolRead,
+		ReadWithoutTimeout: dataSourcePublicIPv4PoolRead,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -67,7 +67,7 @@ func DataSourcePublicIPv4Pool() *schema.Resource {
 	}
 }
 
-func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -82,7 +82,7 @@ func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(poolID)
 	d.Set("description", pool.Description)
 	d.Set("network_border_group", pool.NetworkBorderGroup)
-	if err := d.Set("pool_address_ranges", flattenPublicIpv4PoolRanges(pool.PoolAddressRanges)); err != nil {
+	if err := d.Set("pool_address_ranges", flattenPublicIPv4PoolRanges(pool.PoolAddressRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pool_address_ranges: %s", err)
 	}
 	if err := d.Set("tags", KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -94,7 +94,7 @@ func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func flattenPublicIpv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]interface{} {
+func flattenPublicIPv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -120,7 +120,7 @@ func flattenPublicIpv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]i
 	return tfMap
 }
 
-func flattenPublicIpv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interface{} {
+func flattenPublicIPv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -132,7 +132,7 @@ func flattenPublicIpv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interf
 			continue
 		}
 
-		tfList = append(tfList, flattenPublicIpv4PoolRange(apiObject))
+		tfList = append(tfList, flattenPublicIPv4PoolRange(apiObject))
 	}
 
 	return tfList

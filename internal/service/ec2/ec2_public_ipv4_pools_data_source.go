@@ -15,7 +15,7 @@ import (
 // @SDKDataSource("aws_ec2_public_ipv4_pools")
 func DataSourcePublicIPv4Pools() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePublicIpv4PoolsRead,
+		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -29,7 +29,7 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 	}
 }
 
-func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
