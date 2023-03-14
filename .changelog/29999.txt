@@ -1,0 +1,3 @@
+```release-note:bug    
+resource/aws_neptune_cluster: decrease ServerlessMinNCUs default value from 2.5 to 1.0
+```
