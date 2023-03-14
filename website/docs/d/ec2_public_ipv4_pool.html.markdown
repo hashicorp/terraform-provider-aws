@@ -1,21 +1,21 @@
 ---
-subcategory: "VPC (Virtual Private Cloud)"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_vpc_public_ipv4_pool"
+page_title: "AWS: aws_ec2_public_ipv4_pool"
 description: |-
-  Provides details about a specific AWS VPC (Virtual Private Cloud) Public IPv4 Pool.
+  Provides details about a specific AWS EC2 Public IPv4 Pool.
 ---
 
 # Data Source: aws_ec2_public_ipv4_pool
 
-Provides details about a specific AWS VPC (Virtual Private Cloud) Public IPv4 Pool.
+Provides details about a specific AWS EC2 Public IPv4 Pool.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_vpc_public_ipv4_pool" "example" {
+data "aws_ec2_public_ipv4_pool" "example" {
   pool_id = "ipv4pool-ec2-000df99cff0c1ec10"
 }
 ```

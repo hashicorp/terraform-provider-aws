@@ -13,7 +13,7 @@ import (
 
 func TestAccEC2PublicIPv4PoolDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_vpc_public_ipv4_pool.test"
+	dataSourceName := "data.aws_ec2_public_ipv4_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPublicIPv4Pools(ctx, t) },
@@ -53,7 +53,7 @@ func testAccPreCheckPublicIPv4Pools(ctx context.Context, t *testing.T) {
 const testPublicIPv4PoolDataSourceConfig_basic = `
 data "aws_ec2_public_ipv4_pools" "test" {}
 
-data "aws_vpc_public_ipv4_pool" "test" {
+data "aws_ec2_public_ipv4_pool" "test" {
   pool_id = data.aws_ec2_public_ipv4_pools.test.pool_ids[0]
 }
 `
