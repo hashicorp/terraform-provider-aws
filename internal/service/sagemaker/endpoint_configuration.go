@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_endpoint_configuration")
 func ResourceEndpointConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointConfigurationCreate,
@@ -618,8 +619,8 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.InstanceType = aws.String(v)
 		}
 
-		if v, ok := data["variant_name"]; ok {
-			l.VariantName = aws.String(v.(string))
+		if v, ok := data["variant_name"].(string); ok && v != "" {
+			l.VariantName = aws.String(v)
 		} else {
 			l.VariantName = aws.String(resource.UniqueId())
 		}

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_routing_profile")
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoutingProfileCreate,

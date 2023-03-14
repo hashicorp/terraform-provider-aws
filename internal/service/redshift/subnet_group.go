@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_subnet_group")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,

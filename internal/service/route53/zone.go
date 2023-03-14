@@ -33,6 +33,7 @@ const (
 	zoneChangeSyncMaxPollInterval = 30
 )
 
+// @SDKResource("aws_route53_zone")
 func ResourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,

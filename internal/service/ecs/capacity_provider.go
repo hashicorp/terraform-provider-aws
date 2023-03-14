@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecs_capacity_provider")
 func ResourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,

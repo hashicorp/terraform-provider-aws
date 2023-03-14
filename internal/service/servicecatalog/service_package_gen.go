@@ -5,28 +5,104 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceConstraint,
+			TypeName: "aws_servicecatalog_constraint",
+		},
+		{
+			Factory:  DataSourceLaunchPaths,
+			TypeName: "aws_servicecatalog_launch_paths",
+		},
+		{
+			Factory:  DataSourcePortfolio,
+			TypeName: "aws_servicecatalog_portfolio",
+		},
+		{
+			Factory:  DataSourcePortfolioConstraints,
+			TypeName: "aws_servicecatalog_portfolio_constraints",
+		},
+		{
+			Factory:  DataSourceProduct,
+			TypeName: "aws_servicecatalog_product",
+		},
+		{
+			Factory:  DataSourceProvisioningArtifacts,
+			TypeName: "aws_servicecatalog_provisioning_artifacts",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceBudgetResourceAssociation,
+			TypeName: "aws_servicecatalog_budget_resource_association",
+		},
+		{
+			Factory:  ResourceConstraint,
+			TypeName: "aws_servicecatalog_constraint",
+		},
+		{
+			Factory:  ResourceOrganizationsAccess,
+			TypeName: "aws_servicecatalog_organizations_access",
+		},
+		{
+			Factory:  ResourcePortfolio,
+			TypeName: "aws_servicecatalog_portfolio",
+		},
+		{
+			Factory:  ResourcePortfolioShare,
+			TypeName: "aws_servicecatalog_portfolio_share",
+		},
+		{
+			Factory:  ResourcePrincipalPortfolioAssociation,
+			TypeName: "aws_servicecatalog_principal_portfolio_association",
+		},
+		{
+			Factory:  ResourceProduct,
+			TypeName: "aws_servicecatalog_product",
+		},
+		{
+			Factory:  ResourceProductPortfolioAssociation,
+			TypeName: "aws_servicecatalog_product_portfolio_association",
+		},
+		{
+			Factory:  ResourceProvisionedProduct,
+			TypeName: "aws_servicecatalog_provisioned_product",
+		},
+		{
+			Factory:  ResourceProvisioningArtifact,
+			TypeName: "aws_servicecatalog_provisioning_artifact",
+		},
+		{
+			Factory:  ResourceServiceAction,
+			TypeName: "aws_servicecatalog_service_action",
+		},
+		{
+			Factory:  ResourceTagOption,
+			TypeName: "aws_servicecatalog_tag_option",
+		},
+		{
+			Factory:  ResourceTagOptionResourceAssociation,
+			TypeName: "aws_servicecatalog_tag_option_resource_association",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

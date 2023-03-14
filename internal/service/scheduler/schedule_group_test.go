@@ -29,7 +29,7 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -78,7 +78,7 @@ func TestAccSchedulerScheduleGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -105,7 +105,7 @@ func TestAccSchedulerScheduleGroup_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -137,7 +137,7 @@ func TestAccSchedulerScheduleGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -170,7 +170,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},

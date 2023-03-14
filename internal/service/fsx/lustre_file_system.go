@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_lustre_file_system")
 func ResourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLustreFileSystemCreate,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_schema")
 func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchemaCreate,

@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_global_networks")
 func DataSourceGlobalNetworks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalNetworksRead,

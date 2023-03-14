@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_security_groups")
 func DataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupsRead,

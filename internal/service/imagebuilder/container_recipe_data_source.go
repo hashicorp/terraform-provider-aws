@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_container_recipe")
 func DataSourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipeRead,

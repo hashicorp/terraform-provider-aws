@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_security_group")
 func DataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupRead,

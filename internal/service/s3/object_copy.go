@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_object_copy")
 func ResourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,

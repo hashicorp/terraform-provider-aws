@@ -171,6 +171,7 @@ var (
 	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
+// @SDKResource("aws_sqs_queue")
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,

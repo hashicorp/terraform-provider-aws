@@ -55,7 +55,7 @@ func TestAccAuditManagerFrameworkShare_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
@@ -89,7 +89,7 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
@@ -103,7 +103,7 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 					// Sleep briefly to prevent intermittent validation errors when revoking
 					// a new framework share request
 					acctest.CheckSleep(t, 10*time.Second),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +119,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),

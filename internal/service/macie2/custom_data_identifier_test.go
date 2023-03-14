@@ -24,7 +24,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -56,7 +56,7 @@ func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -85,7 +85,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -111,7 +111,7 @@ func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -144,7 +144,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	descriptionUpdated := "this is a updated description"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -186,7 +186,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),

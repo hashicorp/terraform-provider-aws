@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_model_package_group")
 func ResourceModelPackageGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceModelPackageGroupCreate,

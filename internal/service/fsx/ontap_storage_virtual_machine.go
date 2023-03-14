@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_ontap_storage_virtual_machine")
 func ResourceOntapStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOntapStorageVirtualMachineCreate,

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_trigger")
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lambda_function_event_invoke_config")
 func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionEventInvokeConfigCreate,

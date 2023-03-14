@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_key_pair")
 func DataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyPairRead,

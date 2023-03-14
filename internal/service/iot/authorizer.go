@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,

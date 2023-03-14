@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_member")
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,

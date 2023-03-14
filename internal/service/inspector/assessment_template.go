@@ -23,6 +23,7 @@ const (
 	ResNameAssessmentTemplate = "Assessment Template"
 )
 
+// @SDKResource("aws_inspector_assessment_template")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,

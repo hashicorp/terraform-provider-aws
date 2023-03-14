@@ -22,11 +22,17 @@ import (
 )
 
 const (
-	GlobalClusterRemovalTimeout = 30 * time.Minute
-	globalClusterCreateTimeout  = 30 * time.Minute
-	globalClusterUpdateTimeout  = 90 * time.Minute
+	globalClusterCreateTimeout = 30 * time.Minute
+	globalClusterUpdateTimeout = 90 * time.Minute
+	// globalClusterDeleteTimeout is the overall timeout for detaching cluster members if needed
+	// and deleting the cluster
+	globalClusterDeleteTimeout = 30 * time.Minute
+	// GlobalClusterClusterDeleteTimeout is the timeout for actual deletion of the cluster
+	// This operation will be quick if successful
+	GlobalClusterClusterDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_rds_global_cluster")
 func ResourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
@@ -40,7 +46,7 @@ func ResourceGlobalCluster() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(globalClusterCreateTimeout),
 			Update: schema.DefaultTimeout(globalClusterUpdateTimeout),
-			Delete: schema.DefaultTimeout(GlobalClusterRemovalTimeout),
+			Delete: schema.DefaultTimeout(globalClusterDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -273,8 +279,13 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get("force_destroy").(bool) {
+		log.Printf("[DEBUG] Removing cluster members from  RDS Global Cluster: %s", d.Id())
+
+		// The writer cluster must be removed last
+		var writerARN string
 		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 			globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
 
@@ -285,6 +296,11 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
 
 			if !ok {
+				continue
+			}
+
+			if globalClusterMember["is_writer"].(bool) {
+				writerARN = dbClusterArn
 				continue
 			}
 
@@ -303,9 +319,26 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
 			}
 
-			if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, d.Timeout(schema.TimeoutDelete)); err != nil {
+			if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, deadline.Remaining()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
 			}
+		}
+
+		input := &rds.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(writerARN),
+			GlobalClusterIdentifier: aws.String(d.Id()),
+		}
+
+		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+		if err != nil {
+			if !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+				return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", writerARN, d.Id(), err)
+			}
+		}
+
+		if err := waitForGlobalClusterRemoval(ctx, conn, writerARN, deadline.Remaining()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", writerARN, d.Id(), err)
 		}
 	}
 
@@ -317,7 +350,13 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 
 	// Allow for eventual consistency
 	// InvalidGlobalClusterStateFault: Global Cluster arn:aws:rds::123456789012:global-cluster:tf-acc-test-5618525093076697001-0 is not empty
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var timeout time.Duration
+	if x, y := deadline.Remaining(), GlobalClusterClusterDeleteTimeout; x < y {
+		timeout = x
+	} else {
+		timeout = y
+	}
+	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
@@ -343,7 +382,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Global Cluster: %s", err)
 	}
 
-	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) deletion: %s", d.Id(), err)
 	}
 

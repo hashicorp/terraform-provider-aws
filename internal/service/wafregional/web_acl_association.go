@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_wafregional_web_acl_association")
 func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,

@@ -2539,8 +2539,8 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AacSettings
-	if v, ok := m["bitrate"].(float32); ok {
-		out.Bitrate = float64(v)
+	if v, ok := m["bitrate"].(float64); ok {
+		out.Bitrate = v
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.AacCodingMode(v)
@@ -2557,8 +2557,8 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	if v, ok := m["raw_format"].(string); ok && v != "" {
 		out.RawFormat = types.AacRawFormat(v)
 	}
-	if v, ok := m["sample_rate"].(float32); ok {
-		out.SampleRate = float64(v)
+	if v, ok := m["sample_rate"].(float64); ok {
+		out.SampleRate = v
 	}
 	if v, ok := m["spec"].(string); ok && v != "" {
 		out.Spec = types.AacSpec(v)
@@ -3938,7 +3938,7 @@ func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
 	if v, ok := m["column_depth"].(int); ok {
 		settings.ColumnDepth = int32(v)
 	}
-	if v, ok := m["column_depth"].(string); ok && v != "" {
+	if v, ok := m["include_fec"].(string); ok && v != "" {
 		settings.IncludeFec = types.FecOutputIncludeFec(v)
 	}
 	if v, ok := m["row_length"].(int); ok {
@@ -4104,7 +4104,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.TransportStreamId = int32(v)
 	}
 	if v, ok := m["video_pid"].(string); ok && v != "" {
-		s.TimedMetadataPid = aws.String(v)
+		s.VideoPid = aws.String(v)
 	}
 
 	return &s
@@ -5535,13 +5535,13 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":           float32(in.Bitrate),
+		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
 		"profile":           string(in.Profile),
 		"rate_control_mode": string(in.RateControlMode),
 		"raw_format":        string(in.RawFormat),
-		"sample_rate":       float32(in.SampleRate),
+		"sample_rate":       in.SampleRate,
 		"spec":              string(in.Spec),
 		"vbr_quality":       string(in.VbrQuality),
 	}

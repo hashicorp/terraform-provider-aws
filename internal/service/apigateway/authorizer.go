@@ -23,6 +23,7 @@ import (
 
 const DefaultAuthorizerTTL = 300
 
+// @SDKResource("aws_api_gateway_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,

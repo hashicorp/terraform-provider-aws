@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -95,6 +96,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
@@ -238,6 +240,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		codeartifact.ServicePackage,
 		codebuild.ServicePackage,
 		codecommit.ServicePackage,
+		codegurureviewer.ServicePackage,
 		codepipeline.ServicePackage,
 		codestarconnections.ServicePackage,
 		codestarnotifications.ServicePackage,
@@ -290,6 +293,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		grafana.ServicePackage,
 		greengrass.ServicePackage,
 		guardduty.ServicePackage,
+		healthlake.ServicePackage,
 		iam.ServicePackage,
 		identitystore.ServicePackage,
 		imagebuilder.ServicePackage,

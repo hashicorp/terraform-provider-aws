@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_directory_service_region")
 func ResourceRegion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionCreate,

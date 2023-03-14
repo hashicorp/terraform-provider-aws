@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kendra_index")
 func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIndexRead,

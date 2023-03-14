@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie2_findings_filter")
 func ResourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingsFilterCreate,

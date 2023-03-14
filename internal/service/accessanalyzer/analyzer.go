@@ -28,6 +28,7 @@ const (
 	organizationCreationTimeout = 10 * time.Minute
 )
 
+// @SDKResource("aws_accessanalyzer_analyzer")
 func ResourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,

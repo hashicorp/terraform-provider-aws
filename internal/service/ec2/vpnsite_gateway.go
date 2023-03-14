@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpn_gateway")
 func ResourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayCreate,

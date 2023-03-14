@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_endpoint")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -417,6 +418,7 @@ func ResourceEndpoint() *schema.Resource {
 				},
 			},
 			"s3_settings": {
+				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -1595,7 +1597,6 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
-		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
@@ -2236,8 +2237,9 @@ func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.Resour
 
 		if o != nil && config != nil {
 			diff := o.Difference(config)
+			diff2 := n.Difference(config)
 
-			return diff.Len() == 0 || diff.Equal(n)
+			return (diff.Len() == 0 && diff2.Len() == 0) || diff.Equal(n)
 		}
 	}
 	return false

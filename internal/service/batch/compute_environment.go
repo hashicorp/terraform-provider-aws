@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_batch_compute_environment")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -90,7 +91,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							MaxItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"image_id_override": {

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_location_object_storage")
 func ResourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,

@@ -21,7 +21,7 @@ func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 	license := "na"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -48,7 +48,7 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r5.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

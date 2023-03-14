@@ -120,6 +120,7 @@ type TemplateData struct {
 	AWSService             string
 	AWSServiceIfacePackage string
 	ClientType             string
+	ProviderNameUpper      string
 	ServicePackage         string
 
 	GetTagFunc              string
@@ -158,6 +159,7 @@ type TemplateData struct {
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
+	ConnsPkg        bool
 	ContextPkg      bool
 	FmtPkg          bool
 	HelperSchemaPkg bool
@@ -199,6 +201,12 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	providerNameUpper, err := names.ProviderNameUpper(servicePackage)
+
+	if err != nil {
+		g.Fatalf("encountered: %s", err)
+	}
+
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -219,8 +227,10 @@ func main() {
 		AWSService:             awsPkg,
 		AWSServiceIfacePackage: awsIntfPkg,
 		ClientType:             clientType,
+		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
+		ConnsPkg:        *listTags || *updateTags,
 		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
