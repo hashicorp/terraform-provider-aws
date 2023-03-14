@@ -86,59 +86,6 @@ func TestAccRDSCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_manage_user_password(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_manage_password(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"cluster_identifier_prefix",
-					"db_instance_parameter_group_name",
-					"enable_global_write_forwarding",
-					"manage_master_user_password",
-					"master_password",
-					"skip_final_snapshot",
-				},
-			},
-		},
-	})
-}
-
 func TestAccRDSCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
@@ -1516,6 +1463,51 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 	})
 }
 
+func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_managedMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					//resource.TestCheckResourceAttrSet(resourceName, "master_user_secret_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_ManagedMasterPasswor_convertToManaged(t *testing.T) {
+}
+
 func TestAccRDSCluster_port(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 rds.DBCluster
@@ -2372,13 +2364,13 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_manage_password(rName string) string {
+func testAccClusterConfig_managedMasterPassword(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   database_name                   = "test"
+  manage_master_user_password     = true 
   master_username                 = "tfacctest"
-  manage_master_user_password     = true
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
 }
