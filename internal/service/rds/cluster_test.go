@@ -1484,7 +1484,6 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					//resource.TestCheckResourceAttrSet(resourceName, "master_user_secret_arn"),
 				),
 			},
 			{
@@ -1497,6 +1496,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 					"cluster_identifier_prefix",
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
+					"manage_master_user_password",
 					"skip_final_snapshot",
 				},
 			},
@@ -1504,7 +1504,57 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_ManagedMasterPasswor_convertToManaged(t *testing.T) {
+func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "manage_master_user_password"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccClusterConfig_managedMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccRDSCluster_port(t *testing.T) {
