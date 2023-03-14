@@ -33,10 +33,10 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Description of the pool, if any.
 * `network_border_group` - Name of the location from which the address pool is advertised.
 * pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
-  * `address_count` - Number of addresses in the range.
-  * `available_address_count` - Number of available addresses in the range.
-  * `first_address` - First address in the range.
-  * `last_address` - Last address in the range.
+    * `address_count` - Number of addresses in the range.
+    * `available_address_count` - Number of available addresses in the range.
+    * `first_address` - First address in the range.
+    * `last_address` - Last address in the range.
 * `tags` - Any tags for the address pool.
 * `total_address_count` - Total number of addresses in the pool.
 * `total_available_address_count` - Total number of available addresses in the pool.
