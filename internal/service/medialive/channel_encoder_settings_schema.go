@@ -2578,8 +2578,8 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Ac3Settings
-	if v, ok := m["bitrate"].(float32); ok {
-		out.Bitrate = float64(v)
+	if v, ok := m["bitrate"].(float64); ok {
+		out.Bitrate = v
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
 		out.BitstreamMode = types.Ac3BitstreamMode(v)
@@ -5555,7 +5555,7 @@ func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":          float32(in.Bitrate),
+		"bitrate":          in.Bitrate,
 		"bitstream_mode":   string(in.BitstreamMode),
 		"coding_mode":      string(in.CodingMode),
 		"dialnorm":         int(in.Dialnorm),

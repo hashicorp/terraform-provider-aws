@@ -244,11 +244,16 @@ func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
-						"audio_selector_name": rName,
-						"name":                rName,
+						"audio_selector_name": "audio_1",
+						"name":                "audio_1",
 						"codec_settings.0.aac_settings.0.rate_control_mode": string(types.AacRateControlModeCbr),
 						"codec_settings.0.aac_settings.0.bitrate":           "192000",
 						"codec_settings.0.aac_settings.0.sample_rate":       "48000",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": "audio_2",
+						"name":                "audio_2",
+						"codec_settings.0.ac3_settings.0.bitrate": "384000",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						"name": "test-video-name",
@@ -994,13 +999,24 @@ resource "aws_medialive_channel" "test" {
     }
 
     audio_descriptions {
-      audio_selector_name = %[1]q
-      name                = %[1]q
+      audio_selector_name = "audio_1"
+      name                = "audio_1"
       codec_settings {
         aac_settings {
           rate_control_mode = "CBR"
           bitrate           = 192000
           sample_rate       = 48000
+        }
+      }
+    }
+
+    audio_descriptions {
+      audio_selector_name = "audio_2"
+      name                = "audio_2"
+
+      codec_settings {
+        ac3_settings {
+          bitrate = 384000
         }
       }
     }
@@ -1021,7 +1037,7 @@ resource "aws_medialive_channel" "test" {
       outputs {
         output_name             = "test-output-name"
         video_description_name  = "test-video-name"
-        audio_description_names = [%[1]q]
+        audio_description_names = ["audio_1", "audio_2"]
         output_settings {
           archive_output_settings {
             name_modifier = "_1"
