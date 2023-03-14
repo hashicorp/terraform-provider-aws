@@ -2,9 +2,7 @@ package sns
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -78,7 +76,7 @@ func ResourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", "data-protection-policy", topicArn))
+	d.SetId(topicArn)
 
 	return ResourceTopicDataProtectionPolicyRead(ctx, d, meta)
 }
@@ -88,11 +86,11 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).SNSConn()
 
 	output, err := conn.GetDataProtectionPolicyWithContext(ctx, &sns.GetDataProtectionPolicyInput{
-		ResourceArn: new(string),
+		ResourceArn: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sns.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] SNS Data Protection Policy (%s) not found, removing from state", arn)
+		log.Printf("[WARN] SNS Data Protection Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -102,7 +100,7 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 	}
 
 	if output == nil || output.DataProtectionPolicy == nil {
-		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy (%s): empty output", arn)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy (%s): empty output", d.Id())
 	}
 
 	dataProtectionPolicy := output.DataProtectionPolicy
@@ -114,12 +112,4 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 
 func ResourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
-}
-
-func ParseResourceID(id string) (string, string, error) {
-	idParts := strings.Split(id, ",")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%q), expected PERMISSION_SET_ARN,INSTANCE_ARN", id)
-	}
-	return idParts[0], idParts[1], nil
 }
