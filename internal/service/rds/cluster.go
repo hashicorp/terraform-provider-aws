@@ -1253,17 +1253,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 
-		if d.Get("manage_master_user_password").(bool) {
-			if d.HasChange("manage_master_user_password") {
-				input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
-			}
-			if d.HasChange("master_user_secret_kms_key_id") {
-				input.MasterUserSecretKmsKeyId = aws.String(d.Get("master_user_secret_kms_key_id").(string))
-			}
+		if d.HasChange("manage_master_user_password") {
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
-
 		if d.HasChange("master_password") {
 			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		}
+		if d.HasChange("master_user_secret_kms_key_id") {
+			input.MasterUserSecretKmsKeyId = aws.String(d.Get("master_user_secret_kms_key_id").(string))
 		}
 
 		if d.HasChange("network_type") {
