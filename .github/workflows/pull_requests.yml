@@ -10,7 +10,7 @@ jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Apply Labels
         uses: actions/labeler@v4
         with:
@@ -19,7 +19,7 @@ jobs:
   NeedsTriageLabeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Apply needs-triage Label
         uses: actions/labeler@v4
         if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
