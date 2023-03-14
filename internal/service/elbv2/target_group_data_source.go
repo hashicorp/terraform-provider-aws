@@ -154,11 +154,11 @@ func DataSourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"target_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
