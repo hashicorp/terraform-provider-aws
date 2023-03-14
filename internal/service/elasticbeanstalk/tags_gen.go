@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk/elasticbeanstalkiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -26,6 +27,10 @@ func ListTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAP
 	}
 
 	return KeyValueTags(ctx, output.ResourceTags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -60,7 +65,8 @@ func KeyValueTags(ctx context.Context, tags []*elasticbeanstalk.Tag) tftags.KeyV
 // UpdateTags updates elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
@@ -90,4 +96,8 @@ func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalk
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier, oldTags, newTags)
 }

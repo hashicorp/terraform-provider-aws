@@ -17,7 +17,7 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/sdf"
 
     ebs {
       volume_size = 20
@@ -168,7 +168,7 @@ To find out more information for an existing AMI to override the configuration, 
 
 Each `block_device_mappings` supports the following:
 
-* `device_name` - (Optional) The name of the device to mount.
+* `device_name` - (Required) The name of the device to mount.
 * `ebs` - (Optional) Configure EBS volume properties.
 * `no_device` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - (Optional) The [Instance Store Device
@@ -182,7 +182,7 @@ The `ebs` block supports the following:
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
+  This must be set with a `volume_type` of `"io1/io2/gp3"`.
 * `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.

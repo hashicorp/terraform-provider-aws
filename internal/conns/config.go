@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -263,6 +264,15 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
 		// Handle them all globally for the service client.
 		if tfawserr.ErrMessageContains(r.Error, apigateway.ErrCodeConflictException, "try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.apigatewayv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Many operations can return an error such as:
+		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+		// Handle them all globally for the service client.
+		if tfawserr.ErrMessageContains(r.Error, apigatewayv2.ErrCodeConflictException, "try again later") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
