@@ -26,7 +26,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -86,7 +86,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -150,7 +150,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -199,7 +199,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -224,7 +224,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -258,7 +258,7 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),

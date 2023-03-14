@@ -11,11 +11,12 @@ import (
 )
 
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -45,11 +46,12 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 }
 
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

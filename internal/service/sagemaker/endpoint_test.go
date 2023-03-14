@@ -21,7 +21,7 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -59,7 +59,7 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 	sagemakerEndpointConfigurationResourceName2 := "aws_sagemaker_endpoint_configuration.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -97,7 +97,7 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -178,7 +178,7 @@ func TestAccSageMakerEndpoint_deploymentConfig_full(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -218,7 +218,7 @@ func TestAccSageMakerEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),

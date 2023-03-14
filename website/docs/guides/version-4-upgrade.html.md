@@ -21,8 +21,6 @@ See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
-~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
-
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
