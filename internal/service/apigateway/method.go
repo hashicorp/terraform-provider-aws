@@ -303,7 +303,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
 	}
 
-	// Update integration with cacheKeyParameters for replaced request parameters
+	//Update integration with cacheKeyParameters for replaced request parameters
 	integrationOperations := make([]*apigateway.PatchOperation, 0)
 
 	for _, replacedRequestParameter := range replacedRequestParameters {
