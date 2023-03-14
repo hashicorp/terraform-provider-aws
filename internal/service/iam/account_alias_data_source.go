@@ -38,11 +38,6 @@ func dataSourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: %s", err)
 	}
 
-	// 'AccountAliases': [] if there is no alias.
-	if resp == nil || len(resp.AccountAliases) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: empty result")
-	}
-
 	alias := aws.StringValue(resp.AccountAliases[0])
 	d.SetId(alias)
 	d.Set("account_alias", alias)
