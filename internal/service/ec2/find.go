@@ -1278,7 +1278,7 @@ func FindPublicIPv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeP
 func FindPublicIPv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
 	var output []*ec2.PublicIpv4Pool
 
-	err := conn.DescribePublicIpv4PoolsPages(input, func(page *ec2.DescribePublicIpv4PoolsOutput, lastPage bool) bool {
+	err := conn.DescribePublicIpv4PoolsPagesWithContext(ctx, input, func(page *ec2.DescribePublicIpv4PoolsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
