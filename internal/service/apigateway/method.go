@@ -291,8 +291,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	currentCacheKeyParameters := integration.CacheKeyParameters
 
 	for _, myKey := range operations {
-		if *myKey.Op == "replace" && strings.HasPrefix(*myKey.Path, "/requestParameters") {
-			splitRes := strings.Split(*myKey.Path, "/")
+		if aws.StringValue(myKey.Op) == "replace" && strings.HasPrefix(aws.StringValue(myKey.Path), "/requestParameters") {
+			splitRes := strings.Split(aws.StringValue(myKey.Path), "/")
 			replacedRequestParameters = append(replacedRequestParameters, splitRes[2])
 		}
 	}
@@ -308,7 +308,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	for _, replacedRequestParameter := range replacedRequestParameters {
 		for _, cacheKeyParameter := range currentCacheKeyParameters {
-			if *cacheKeyParameter == replacedRequestParameter {
+			if aws.StringValue(cacheKeyParameter) == replacedRequestParameter {
 				integrationOperations = append(integrationOperations, &apigateway.PatchOperation{
 					Op:    aws.String(apigateway.OpAdd),
 					Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", replacedRequestParameter)),
