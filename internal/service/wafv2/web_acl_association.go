@@ -33,6 +33,10 @@ func ResourceWebACLAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(webACLAssociationCreateTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"resource_arn": {
 				Type:         schema.TypeString,
@@ -62,7 +66,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLAssociationCreateTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.AssociateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 
