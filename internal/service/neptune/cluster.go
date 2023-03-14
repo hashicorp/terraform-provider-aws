@@ -31,7 +31,7 @@ const (
 
 	DefaultPort = 8182
 
-	ServerlessMinNCUs = 1
+	ServerlessMinNCUs = 1.0
 	ServerlessMaxNCUs = 128.0
 )
 
