@@ -9,12 +9,15 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
+* data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
 * resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
 * resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
+* resource/aws_dynamodb_table: Add `deletion_protection_enabled` argument ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
 * resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
 * resource/aws_fms_policy: Add `description` argument ([#29926](https://github.com/hashicorp/terraform-provider-aws/issues/29926))
 * resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
+* resource/aws_inspector2_organization_configuration: Add `lambda` attribute to `auto_enable` configuration block ([#28961](https://github.com/hashicorp/terraform-provider-aws/issues/28961))
 * resource/aws_instance: Add ability to update `private_dns_name_options` in place ([#26305](https://github.com/hashicorp/terraform-provider-aws/issues/26305))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
