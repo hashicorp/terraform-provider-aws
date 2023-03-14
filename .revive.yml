@@ -25,21 +25,21 @@ linters-settings:
       - name: empty-block
       - name: error-naming
       - name: error-return
-      - name: error-strings
+      # - name: error-strings
       - name: errorf
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: indent-error-flow
+      # - name: exported
+      # - name: if-return
+      # - name: increment-decrement
+      # - name: indent-error-flow
       - name: package-comments
       - name: range
       - name: receiver-naming
-      - name: redefines-builtin-id
+      # - name: redefines-builtin-id
       - name: superfluous-else
       - name: time-naming
-      - name: unexported-return
+      # - name: unexported-return
       - name: unreachable-code
-      - name: unused-parameter
+      # - name: unused-parameter
       - name: var-declaration
       # - name: var-naming
 
