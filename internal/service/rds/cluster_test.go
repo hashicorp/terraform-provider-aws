@@ -77,7 +77,6 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					"cluster_identifier_prefix",
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
-					"manage_master_user_password",
 					"master_password",
 					"skip_final_snapshot",
 				},
