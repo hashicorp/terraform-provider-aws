@@ -46,10 +46,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceCluster)
-}
-
 // newResourceCluster instantiates a new Resource for the aws_rds_cluster resource.
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
@@ -632,7 +628,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, data.Tags))
 	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if response.Diagnostics.HasError() {
