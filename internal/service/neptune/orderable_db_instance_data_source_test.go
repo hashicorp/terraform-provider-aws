@@ -21,7 +21,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -48,7 +48,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

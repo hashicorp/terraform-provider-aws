@@ -34,6 +34,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"

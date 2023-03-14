@@ -19,7 +19,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -52,6 +52,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 }
 
 func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
+	ctx := acctest.Context(t)
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
@@ -59,7 +60,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
@@ -147,7 +148,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},

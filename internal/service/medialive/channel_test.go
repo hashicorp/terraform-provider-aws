@@ -31,7 +31,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -88,7 +88,7 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -155,7 +155,7 @@ func TestAccMediaLiveChannel_UDP_outputSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -277,7 +277,7 @@ func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -329,7 +329,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -381,7 +381,7 @@ func TestAccMediaLiveChannel_status(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -420,7 +420,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -498,7 +498,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
@@ -547,7 +547,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
