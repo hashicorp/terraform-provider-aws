@@ -937,7 +937,7 @@ func ParseRecordID(id string) [4]string {
 		recZone = parts[0]
 	}
 	if len(parts) >= 3 {
-		var recTypeIndex int = -1
+		recTypeIndex := -1
 		for i, maybeRecType := range parts[1:] {
 			if validRecordType(maybeRecType) {
 				recTypeIndex = i + 1
