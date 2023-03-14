@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_public_ipv4_pool` ([#28245](https://github.com/hashicorp/terraform-provider-aws/issues/28245))
+* **New Data Source:** `aws_ec2_public_ipv4_pools` ([#28245](https://github.com/hashicorp/terraform-provider-aws/issues/28245))
 * **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
 * **New Resource:** `aws_codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
 * **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
@@ -10,6 +12,7 @@ ENHANCEMENTS:
 
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
 * data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
+* data-source/aws_opensearch_domain: Add `dashboard_endpoint` attribute ([#29867](https://github.com/hashicorp/terraform-provider-aws/issues/29867))
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
 * resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
 * resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
@@ -19,6 +22,8 @@ ENHANCEMENTS:
 * resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
 * resource/aws_inspector2_organization_configuration: Add `lambda` attribute to `auto_enable` configuration block ([#28961](https://github.com/hashicorp/terraform-provider-aws/issues/28961))
 * resource/aws_instance: Add ability to update `private_dns_name_options` in place ([#26305](https://github.com/hashicorp/terraform-provider-aws/issues/26305))
+* resource/aws_lb_target_group: Add `load_balancing_cross_zone_enabled` argument ([#29920](https://github.com/hashicorp/terraform-provider-aws/issues/29920))
+* resource/aws_opensearch_domain: Add `dashboard_endpoint` attribute ([#29867](https://github.com/hashicorp/terraform-provider-aws/issues/29867))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
 
@@ -29,6 +34,10 @@ BUG FIXES:
 * resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
 * resource/aws_lightsail_instance: Fix `name` validation to allow instances to start with a numeric character ([#29903](https://github.com/hashicorp/terraform-provider-aws/issues/29903))
+* resource/aws_medialive_channel: Fix setting of `bitrate` and `sample_rate` for `aac_settings`. ([#29807](https://github.com/hashicorp/terraform-provider-aws/issues/29807))
+* resource/aws_medialive_channel: Fix setting of `bitrate` for `eac3_settings`. ([#29809](https://github.com/hashicorp/terraform-provider-aws/issues/29809))
+* resource/aws_medialive_channel: Fix spelling for attribute `audio_only_timecode_control` and correct type for `event_id` in `ms_smooth_group_settings` ([#29917](https://github.com/hashicorp/terraform-provider-aws/issues/29917))
+* resource/aws_medialive_channel: Removed `Compute` flag from `audio_normalization_settings` and `remix_settings` in `audio_descriptions` ([#29859](https://github.com/hashicorp/terraform-provider-aws/issues/29859))
 * resource/aws_opensearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_sagemaker_endpoint_configuration: Fix `variant_name` generation when unset ([#29915](https://github.com/hashicorp/terraform-provider-aws/issues/29915))
 
