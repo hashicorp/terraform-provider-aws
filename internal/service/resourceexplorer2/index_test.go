@@ -20,7 +20,10 @@ func testAccIndex_basic(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -47,7 +50,10 @@ func testAccIndex_disappears(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -56,7 +62,7 @@ func testAccIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfresourceexplorer2.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +75,10 @@ func testAccIndex_tags(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -113,7 +122,10 @@ func testAccIndex_type(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),

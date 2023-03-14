@@ -8,7 +8,6 @@ on:
   pull_request:
     paths:
       - .github/workflows/golangci-lint.yml
-      - .go-version
       - .ci/.golangci*.yml
       - internal/**
       - go.sum
@@ -22,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -36,9 +35,9 @@ jobs:
     runs-on: [custom, linux, large]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:

@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "example" {
 resource "aws_iam_role_policy" "example" {
   name   = "example"
   role   = aws_iam_role.example.id
-  policy = data.aws_iam_role_policy.example.json
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_appsync_graphql_api" "example" {

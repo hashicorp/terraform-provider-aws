@@ -6,10 +6,10 @@ on:
   pull_request:
     paths:
       - .github/workflows/examples.yml
-      - .go-version
       - .ci/.tflint.hcl
       - .ci/tools/go.mod
       - examples/**
+      - go.mod
 
 env:
   AWS_DEFAULT_REGION: us-west-2
@@ -21,18 +21,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/cache@v3
+      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
 
       - name: install tflint
         run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -70,13 +70,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/cache@v3
+      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: go build
         run: go build -o terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 .
       - name: override plugin

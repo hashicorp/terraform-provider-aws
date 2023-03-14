@@ -2,6 +2,7 @@ package networkmanager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -58,9 +59,21 @@ func ResourceCoreNetwork() *schema.Resource {
 				Computed: true,
 			},
 			"base_policy_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidRegionName,
+				Deprecated: "Use the base_policy_regions argument instead. " +
+					"This argument will be removed in the next major version of the provider.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidRegionName,
+				ConflictsWith: []string{"base_policy_regions"},
+			},
+			"base_policy_regions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidRegionName,
+				},
+				ConflictsWith: []string{"base_policy_region"},
 			},
 			"create_base_policy": {
 				Type:          schema.TypeBool,
@@ -178,13 +191,18 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	// this is required for the first terraform apply if there attachments to the core network
 	// and the core network is created without the policy_document argument set
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		// if user supplies a region use it in the base policy, otherwise use current region
-		region := meta.(*conns.AWSClient).Region
+		// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+		regions := []interface{}{meta.(*conns.AWSClient).Region}
 		if v, ok := d.GetOk("base_policy_region"); ok {
-			region = v.(string)
+			regions = []interface{}{v.(string)}
+		} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+			regions = v.(*schema.Set).List()
 		}
 
-		policyDocumentTarget := buildCoreNetworkBasePolicyDocument(region)
+		policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
+		if err != nil {
+			return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+		}
 		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
@@ -304,14 +322,21 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("create_base_policy") {
 		if _, ok := d.GetOk("create_base_policy"); ok {
-			// if user supplies a region use it in the base policy, otherwise use current region
-			region := meta.(*conns.AWSClient).Region
+			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+			regions := []interface{}{meta.(*conns.AWSClient).Region}
 			if v, ok := d.GetOk("base_policy_region"); ok {
-				region = v.(string)
+				regions = []interface{}{v.(string)}
+			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+				regions = v.(*schema.Set).List()
 			}
 
-			policyDocumentTarget := buildCoreNetworkBasePolicyDocument(region)
-			err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
+			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
+
+			if err != nil {
+				return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+			}
+
+			err = PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
 
 			if err != nil {
 				return diag.FromErr(err)
@@ -609,6 +634,31 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 }
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document
-func buildCoreNetworkBasePolicyDocument(region string) string {
-	return fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
+func buildCoreNetworkBasePolicyDocument(regions []interface{}) (string, error) {
+	edgeLocations := make([]*CoreNetworkEdgeLocation, len(regions))
+	for i, location := range regions {
+		edgeLocations[i] = &CoreNetworkEdgeLocation{Location: location.(string)}
+	}
+
+	basePolicy := &CoreNetworkPolicyDoc{
+		Version: "2021.12",
+		CoreNetworkConfiguration: &CoreNetworkPolicyCoreNetworkConfiguration{
+			AsnRanges:     CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"}),
+			EdgeLocations: edgeLocations,
+		},
+		Segments: []*CoreNetworkPolicySegment{
+			{
+				Name:        "segment",
+				Description: "base-policy",
+			},
+		},
+	}
+
+	b, err := json.MarshalIndent(basePolicy, "", "  ")
+	if err != nil {
+		// should never happen if the above code is correct
+		return "", fmt.Errorf("building base policy document: %s", err)
+	}
+
+	return string(b), nil
 }

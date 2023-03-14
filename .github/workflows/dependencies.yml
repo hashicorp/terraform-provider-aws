@@ -64,9 +64,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
+          go-version-file: go.mod
       - name: go mod
         run: |
           echo "==> Checking source code with go mod tidy..."

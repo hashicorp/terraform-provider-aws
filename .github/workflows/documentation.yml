@@ -8,8 +8,8 @@ on:
       - .ci/.markdownlinkcheck.json
       - .markdownlint.yml
       - .github/workflows/documentation.yml
-      - .go-version
       - docs/**
+      - go.mod
 
 jobs:
   markdown-link-check:
@@ -38,10 +38,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
-          go-version-file: .go-version
-      - uses: actions/cache@v3
+          go-version-file: go.mod
+      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         continue-on-error: true
         timeout-minutes: 2
         with:

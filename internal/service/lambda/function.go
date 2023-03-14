@@ -112,6 +112,17 @@ func ResourceFunction() *schema.Resource {
 						},
 					},
 				},
+				// Suppress diff if change is to an empty list
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == "1" {
+						_, n := d.GetChange("environment.0.variables")
+						newn, ok := n.(map[string]interface{})
+						if ok && len(newn) == 0 {
+							return true
+						}
+					}
+					return false
+				},
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
@@ -219,9 +230,10 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"memory_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  128,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      128,
+				ValidateFunc: validation.IntBetween(128, 10240),
 			},
 			"package_type": {
 				Type:             schema.TypeString,
@@ -260,8 +272,9 @@ func ResourceFunction() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"runtime": {
 				Type:             schema.TypeString,
@@ -327,9 +340,10 @@ func ResourceFunction() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  3,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(1, 900),
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
@@ -635,6 +649,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
+	// Support in-place update of non-refreshable attribute.
+	d.Set("skip_destroy", d.Get("skip_destroy"))
 	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
