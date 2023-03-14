@@ -1088,8 +1088,22 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("iops", dbc.Iops)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// We could potentialy expose the MasterUserSecret structure elements?
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if dbc.MasterUserSecret != nil {
-		d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
+		d.Set("master_user_secret_kms_key_id", dbc.MasterUserSecret.KmsKeyId)
+		//Should we expose the ARN secret here on the resource, or would it be better on the data source?
+		//d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
