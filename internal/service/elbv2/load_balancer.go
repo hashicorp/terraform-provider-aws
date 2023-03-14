@@ -317,89 +317,61 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", name)
 
-	elbOpts := &elbv2.CreateLoadBalancerInput{
+	lbType := d.Get("load_balancer_type").(string)
+	input := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
-		Type: aws.String(d.Get("load_balancer_type").(string)),
-	}
-
-	if len(tags) > 0 {
-		elbOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if _, ok := d.GetOk("internal"); ok {
-		elbOpts.Scheme = aws.String("internal")
-	}
-
-	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("subnet_mapping"); ok {
-		rawMappings := v.(*schema.Set).List()
-		elbOpts.SubnetMappings = make([]*elbv2.SubnetMapping, len(rawMappings))
-		for i, mapping := range rawMappings {
-			subnetMap := mapping.(map[string]interface{})
-
-			elbOpts.SubnetMappings[i] = &elbv2.SubnetMapping{
-				SubnetId: aws.String(subnetMap["subnet_id"].(string)),
-			}
-
-			if subnetMap["allocation_id"].(string) != "" {
-				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
-			}
-
-			if subnetMap["private_ipv4_address"].(string) != "" {
-				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
-			}
-
-			if subnetMap["ipv6_address"].(string) != "" {
-				elbOpts.SubnetMappings[i].IPv6Address = aws.String(subnetMap["ipv6_address"].(string))
-			}
-		}
-	}
-
-	if v, ok := d.GetOk("ip_address_type"); ok {
-		elbOpts.IpAddressType = aws.String(v.(string))
+		Type: aws.String(lbType),
 	}
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
-		elbOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
+		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
+	if _, ok := d.GetOk("internal"); ok {
+		input.Scheme = aws.String(elbv2.LoadBalancerSchemeEnumInternal)
+	}
 
-	resp, err := conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		input.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_groups"); ok {
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("subnet_mapping"); ok && v.(*schema.Set).Len() > 0 {
+		input.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("subnets"); ok {
+		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	output, err := conn.CreateLoadBalancerWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
-	if elbOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
-		elbOpts.Tags = nil
-		resp, err = conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+		input.Tags = nil
+		output, err = conn.CreateLoadBalancerWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating %s Load Balancer: %s", d.Get("load_balancer_type").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 %s Load Balancer (%s): %s", lbType, name, err)
 	}
 
-	if len(resp.LoadBalancers) != 1 {
-		return sdkdiag.AppendErrorf(diags, "no load balancers returned following creation of %s", d.Get("name").(string))
-	}
+	d.SetId(aws.StringValue(output.LoadBalancers[0].LoadBalancerArn))
 
-	lb := resp.LoadBalancers[0]
-	d.SetId(aws.StringValue(lb.LoadBalancerArn))
-	log.Printf("[INFO] LB ID: %s", d.Id())
-
-	_, err = waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Load Balancer (%s) to be active: %s", d.Get("name").(string), err)
+	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) create: %s", d.Id(), err)
 	}
 
 	// Post-create tagging supported in some partitions
-	if elbOpts.Tags == nil && len(tags) > 0 {
+	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
@@ -976,15 +948,15 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
-	d.Set("vpc_id", lb.VpcId)
-	d.Set("zone_id", lb.CanonicalHostedZoneId)
+	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
-	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
+	d.Set("name", lb.LoadBalancerName)
+	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
+	d.Set("vpc_id", lb.VpcId)
+	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("setting subnets: %w", err)
@@ -1137,4 +1109,56 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 		}
 	}
 	return nil
+}
+
+func expandSubnetMapping(tfMap map[string]interface{}) *elbv2.SubnetMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &elbv2.SubnetMapping{}
+
+	if v, ok := tfMap["allocation_id"].(string); ok && v != "" {
+		apiObject.AllocationId = aws.String(v)
+	}
+
+	if v, ok := tfMap["ipv6_address"].(string); ok && v != "" {
+		apiObject.IPv6Address = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_ipv4_address"].(string); ok && v != "" {
+		apiObject.PrivateIPv4Address = aws.String(v)
+	}
+
+	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+		apiObject.SubnetId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSubnetMappings(tfList []interface{}) []*elbv2.SubnetMapping {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*elbv2.SubnetMapping
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSubnetMapping(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
