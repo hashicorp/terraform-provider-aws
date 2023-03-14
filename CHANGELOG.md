@@ -1,5 +1,10 @@
 ## 4.59.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_connect_queue: The `quick_connect_ids_associated` attribute is being deprecated in favor of `quick_connect_ids` ([#26151](https://github.com/hashicorp/terraform-provider-aws/issues/26151))
+* resource/aws_connect_routing_profile: The `queue_configs_associated` attribute is being deprecated in favor of `queue_configs` ([#26151](https://github.com/hashicorp/terraform-provider-aws/issues/26151))
+
 FEATURES:
 
 * **New Data Source:** `aws_ec2_public_ipv4_pool` ([#28245](https://github.com/hashicorp/terraform-provider-aws/issues/28245))
@@ -13,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
 * data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
 * data-source/aws_opensearch_domain: Add `dashboard_endpoint` attribute ([#29867](https://github.com/hashicorp/terraform-provider-aws/issues/29867))
+* resource/aws_amplify_domain_association: Add `enable_auto_sub_domain` argument ([#29814](https://github.com/hashicorp/terraform-provider-aws/issues/29814))
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
 * resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
 * resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
@@ -26,6 +32,7 @@ ENHANCEMENTS:
 * resource/aws_opensearch_domain: Add `dashboard_endpoint` attribute ([#29867](https://github.com/hashicorp/terraform-provider-aws/issues/29867))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
+* resource/aws_wafv2_web_acl_association: Add configurable timeout for Create ([#30002](https://github.com/hashicorp/terraform-provider-aws/issues/30002))
 
 BUG FIXES:
 
