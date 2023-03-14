@@ -247,6 +247,8 @@ func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 						"audio_selector_name": rName,
 						"name":                rName,
 						"codec_settings.0.aac_settings.0.rate_control_mode": string(types.AacRateControlModeCbr),
+						"codec_settings.0.aac_settings.0.bitrate":           "192000",
+						"codec_settings.0.aac_settings.0.sample_rate":       "48000",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						"name": "test-video-name",
@@ -997,6 +999,8 @@ resource "aws_medialive_channel" "test" {
       codec_settings {
         aac_settings {
           rate_control_mode = "CBR"
+          bitrate           = 192000
+          sample_rate       = 48000
         }
       }
     }
