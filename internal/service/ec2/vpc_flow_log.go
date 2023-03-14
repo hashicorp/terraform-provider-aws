@@ -38,6 +38,12 @@ func ResourceFlowLog() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deliver_cross_account_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"destination_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -211,6 +217,10 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("deliver_cross_account_role"); ok {
+		input.DeliverCrossAccountRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.DeliverLogsPermissionArn = aws.String(v.(string))
 	}
@@ -235,17 +245,19 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
-	output, err := conn.CreateFlowLogsWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateFlowLogsWithContext(ctx, input)
+	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
-	if err == nil && output != nil {
-		err = UnsuccessfulItemsError(output.Unsuccessful)
+	if err == nil && outputRaw != nil {
+		err = UnsuccessfulItemsError(outputRaw.(*ec2.CreateFlowLogsOutput).Unsuccessful)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Flow Log (%s): %s", resourceID, err)
 	}
 
-	d.SetId(aws.StringValue(output.FlowLogIds[0]))
+	d.SetId(aws.StringValue(outputRaw.(*ec2.CreateFlowLogsOutput).FlowLogIds[0]))
 
 	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
@@ -276,6 +288,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
