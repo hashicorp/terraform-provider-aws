@@ -20,7 +20,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 	for k, kV := range oldParametersMap {
 		keyValueUnchanged := false
 		operation := apigateway.PatchOperation{
-			Op:   aws.String("remove"),
+			Op:   aws.String(apigateway.OpRemove),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
 		}
 
@@ -32,7 +32,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 			}
 
 			if (nK == k) && (nV != kV) {
-				operation.Op = aws.String("replace")
+				operation.Op = aws.String(apigateway.OpReplace)
 				operation.Value = aws.String(strconv.FormatBool(b))
 			} else if (nK == k) && (nV == kV) {
 				keyValueUnchanged = true
@@ -58,7 +58,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				b = value
 			}
 			operation := apigateway.PatchOperation{
-				Op:    aws.String("add"),
+				Op:    aws.String(apigateway.OpAdd),
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, nK)),
 				Value: aws.String(strconv.FormatBool(b)),
 			}
@@ -78,13 +78,13 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 
 	for k := range oldModelMap {
 		operation := apigateway.PatchOperation{
-			Op:   aws.String("remove"),
+			Op:   aws.String(apigateway.OpRemove),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 		}
 
 		for nK, nV := range newModelMap {
 			if nK == k {
-				operation.Op = aws.String("replace")
+				operation.Op = aws.String(apigateway.OpReplace)
 				operation.Value = aws.String(nV.(string))
 			}
 		}
@@ -101,7 +101,7 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 		}
 		if !exists {
 			operation := apigateway.PatchOperation{
-				Op:    aws.String("add"),
+				Op:    aws.String(apigateway.OpAdd),
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(nK, "/", "~1", -1))),
 				Value: aws.String(nV.(string)),
 			}
