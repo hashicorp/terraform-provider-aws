@@ -50,6 +50,7 @@ func ResourceUserPool() *schema.Resource {
 						"recovery_mechanism": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MinItems: 1,
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
