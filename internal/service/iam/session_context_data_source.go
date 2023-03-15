@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_session_context")
 func DataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,

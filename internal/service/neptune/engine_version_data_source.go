@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_neptune_engine_version")
 func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,

@@ -2,11 +2,13 @@ package kms
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -94,6 +96,26 @@ func FindKeyByID(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadat
 	}
 
 	return keyMetadata, nil
+}
+
+func FindDefaultKey(ctx context.Context, service, region string, meta interface{}) (string, error) {
+	conn := meta.(*conns.AWSClient).KMSConn()
+
+	if aws.StringValue(conn.Config.Region) != region {
+		session, err := conns.NewSessionForRegion(&conn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
+		if err != nil {
+			return "", fmt.Errorf("finding default key, getting connection for %s: %w", region, err)
+		}
+
+		conn = kms.New(session)
+	}
+
+	k, err := FindKeyByID(ctx, conn, fmt.Sprintf("alias/aws/%s", service)) //default key
+	if err != nil {
+		return "", fmt.Errorf("finding default key: %s", err)
+	}
+
+	return aws.StringValue(k.Arn), nil
 }
 
 func FindKeyPolicyByKeyIDAndPolicyName(ctx context.Context, conn *kms.KMS, keyID, policyName string) (*string, error) {

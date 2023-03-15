@@ -33,6 +33,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_db_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -120,9 +121,10 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -293,6 +295,26 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"listener_endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hosted_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -317,14 +339,16 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 5, 10, 15, 30, 60}),
 			},
 			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -582,7 +606,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
@@ -710,7 +734,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
 			},
@@ -914,7 +938,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromS3WithContext(ctx, input)
 			},
@@ -1131,7 +1155,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 			},
@@ -1293,7 +1317,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceToPointInTimeWithContext(ctx, input)
 			},
@@ -1473,7 +1497,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstanceWithContext(ctx, input)
 			},
@@ -1643,6 +1667,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("port", v.Endpoint.Port)
 	}
 
+	if v.ListenerEndpoint != nil {
+		if err := d.Set("listener_endpoint", []interface{}{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
+		}
+	} else {
+		d.Set("listener_endpoint", nil)
+	}
+
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
 	tags, err := ListTags(ctx, conn, arn)
@@ -1667,7 +1699,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient()
-	deadline := NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -1686,7 +1718,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.remaining()); err != nil {
+			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
 			}
 		} else {
@@ -1759,14 +1791,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.remaining(), optFns...)
+					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
 					if err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
 					}
 				})
 			}()
 
-			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
+			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -1775,19 +1807,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
-			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.remaining())
+			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
 
-			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Id()))
+			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Id()))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Id())
 
-			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
+			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -1804,7 +1836,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 					DeletionProtection:   aws.Bool(false),
 				}
-				err := dbInstanceModify(ctx, conn, input, deadline.remaining())
+				err := dbInstanceModify(ctx, conn, input, deadline.Remaining())
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Id(), err)
 				}
@@ -1813,7 +1845,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 				SkipFinalSnapshot:    true,
 			}
-			_, err = tfresource.RetryWhenContext(ctx, 5*time.Minute,
+			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
 				func() (any, error) {
 					return conn.DeleteDBInstance(ctx, deleteInput)
 				},
@@ -1836,7 +1868,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.remaining(), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
@@ -1866,7 +1898,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
 			}
 
-			err := dbInstanceModify(ctx, conn, input, deadline.remaining())
+			err := dbInstanceModify(ctx, conn, input, deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -2083,7 +2115,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sdkv2.ModifyDBInstanceInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhenContext(ctx, timeout,
+	_, err := tfresource.RetryWhen(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
@@ -2137,7 +2169,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-			_, ierr := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
+			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
 					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),
@@ -2583,4 +2615,26 @@ func dbInstanceValidBlueGreenEngines() []string {
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
 	}
+}
+
+func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Address; v != nil {
+		tfMap["address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

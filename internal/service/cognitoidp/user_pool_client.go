@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_pool_client")
 func ResourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolClientCreate,
@@ -500,7 +501,7 @@ func resourceUserPoolClientUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateUserPoolClientWithContext(ctx, params)
 	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
 	if err != nil {

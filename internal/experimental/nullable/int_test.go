@@ -62,7 +62,7 @@ func TestNullableInt(t *testing.T) {
 func TestValidationInt(t *testing.T) {
 	t.Parallel()
 
-	runTestCases(t, []testCase{
+	runValidationTestCases(t, []testCase{
 		{
 			val: "1",
 			f:   ValidateTypeStringNullableInt,
@@ -83,7 +83,7 @@ func TestValidationInt(t *testing.T) {
 func TestValidationIntAtLeast(t *testing.T) {
 	t.Parallel()
 
-	runTestCases(t, []testCase{
+	runValidationTestCases(t, []testCase{
 		{
 			val: "1",
 			f:   ValidateTypeStringNullableIntAtLeast(1),

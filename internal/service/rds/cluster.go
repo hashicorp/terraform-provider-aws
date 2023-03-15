@@ -29,6 +29,7 @@ const (
 	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
+// @SDKResource("aws_rds_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -465,7 +466,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -575,7 +576,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
@@ -675,7 +676,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
 			},
@@ -933,7 +934,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBClusterWithContext(ctx, input)
 			},
@@ -1085,7 +1086,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
 			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
@@ -1223,7 +1224,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBClusterWithContext(ctx, input)
 			},
@@ -1347,14 +1348,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, clusterTimeoutDelete,
+	_, err := tfresource.RetryWhen(ctx, clusterTimeoutDelete,
 		func() (interface{}, error) {
 			return conn.DeleteDBClusterWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
 				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-					_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutDelete),
+					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
 								ApplyImmediately:    aws.Bool(true),
@@ -1472,8 +1473,16 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbCluster := output.DBClusters[0]

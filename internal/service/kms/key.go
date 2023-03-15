@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_key")
 func ResourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
@@ -116,7 +117,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
@@ -290,7 +291,7 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			return sdkdiag.AppendErrorf(diags, "updating KMS Key (%s) tags: %s", d.Id(), err)
 		}
 
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(n)); err != nil {
+		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, n)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -341,7 +342,7 @@ type kmsKey struct {
 
 func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKey
 
@@ -434,7 +435,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 	if err != nil {
 		return fmt.Errorf("%s KMS Key: %w", action, err)
 	}
@@ -470,7 +471,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.KMS, keyID string, policy st
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
 	if err != nil {
 		return fmt.Errorf("updating policy: %w", err)
 	}
@@ -505,7 +506,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.KMS, keyID string, 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 	if err != nil {
 		return fmt.Errorf("%s key rotation: %w", action, err)
 	}

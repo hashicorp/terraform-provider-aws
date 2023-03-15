@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_eip_association")
 func ResourceEIPAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPAssociationCreate,
@@ -105,7 +106,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	if output.AssociationId != nil {
 		d.SetId(aws.StringValue(output.AssociationId))
 
-		_, err = tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindEIPByAssociationID(ctx, conn, d.Id())
 			},

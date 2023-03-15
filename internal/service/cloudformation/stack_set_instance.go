@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudformation_stack_set_instance")
 func ResourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
@@ -197,7 +198,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
-	_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(resource.UniqueId())
 

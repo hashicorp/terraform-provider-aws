@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_workteam")
 func ResourceWorkteam() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkteamCreate,
@@ -135,7 +136,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
@@ -154,7 +155,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteamWithContext(ctx, input)
 	}, "ValidationException")
 

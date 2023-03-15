@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route_table_association")
 func ResourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
@@ -65,7 +66,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[DEBUG] Creating Route Table Association: %s", input)
-	output, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, RouteTableAssociationPropagationTimeout,
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, RouteTableAssociationPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateRouteTableWithContext(ctx, input)
 		},
@@ -90,7 +91,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 

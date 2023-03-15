@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_secretsmanager_secret_policy")
 func ResourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,
@@ -107,7 +108,7 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		SecretId: aws.String(d.Id()),
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return conn.GetResourcePolicyWithContext(ctx, input)
 	})
 

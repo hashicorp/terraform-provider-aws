@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudwatch_metric_alarm")
 func ResourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -112,6 +113,10 @@ func ResourceMetricAlarm() *schema.Resource {
 									"period": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ValidateFunc: validation.Any(
+											validation.IntInSlice([]int{1, 5, 10, 30}),
+											validation.IntDivisibleBy(60),
+										),
 									},
 									"stat": {
 										Type:     schema.TypeString,
@@ -136,6 +141,14 @@ func ResourceMetricAlarm() *schema.Resource {
 						"label": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"period": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.IntInSlice([]int{1, 5, 10, 30}),
+								validation.IntDivisibleBy(60),
+							),
 						},
 						"return_data": {
 							Type:     schema.TypeBool,
@@ -306,7 +319,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
 	}
-	params := getPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(ctx, d, meta)
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
 	_, err = conn.PutMetricAlarmWithContext(ctx, &params)
@@ -327,7 +340,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	log.Println("[INFO] CloudWatch Metric Alarm created")
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if params.Tags == nil && len(tags) > 0 {
@@ -456,7 +469,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
-	params := getPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(ctx, d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
 	_, err := conn.PutMetricAlarmWithContext(ctx, &params)
@@ -505,9 +518,9 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
+func getPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	params := cloudwatch.PutMetricAlarmInput{
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
@@ -610,6 +623,9 @@ func flattenMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[stri
 			metric := flattenMetricAlarmMetricsMetricStat(mq.MetricStat)
 			metricQuery["metric"] = []interface{}{metric}
 		}
+		if mq.Period != nil {
+			metricQuery["period"] = aws.Int64Value(mq.Period)
+		}
 		metricQueries = append(metricQueries, metricQuery)
 	}
 
@@ -653,6 +669,9 @@ func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
 		}
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
 			metricQuery.MetricStat = expandMetricAlarmMetricsMetric(v.([]interface{}))
+		}
+		if v, ok := metricQueryResource["period"]; ok && v.(int) != 0 {
+			metricQuery.Period = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
 			metricQuery.AccountId = aws.String(v.(string))

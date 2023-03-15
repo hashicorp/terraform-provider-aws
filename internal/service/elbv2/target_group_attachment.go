@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_alb_target_group_attachment")
+// @SDKResource("aws_lb_target_group_attachment")
 func ResourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,

@@ -34,10 +34,7 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessment)
-}
-
+// @FrameworkResource
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
 }
@@ -200,7 +197,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, plan.Tags))
 	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if len(tags) > 0 {
@@ -213,7 +210,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.RetryContext(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
 		var err error
 		out, err = conn.CreateAssessment(ctx, &in)
 		if err != nil {
@@ -508,7 +505,7 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *c
 
 	defaultTagsConfig := meta.DefaultTagsConfig
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null

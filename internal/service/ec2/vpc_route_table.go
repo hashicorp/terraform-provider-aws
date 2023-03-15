@@ -42,6 +42,7 @@ var routeTableValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
+// @SDKResource("aws_route_table")
 func ResourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
@@ -173,7 +174,7 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateRouteTableInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
@@ -249,7 +250,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"}))
+	tags := KeyValueTags(ctx, routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -517,7 +518,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 	input.RouteTableId = aws.String(routeTableID)
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.CreateRouteWithContext(ctx, input)
 		},
@@ -658,7 +659,7 @@ func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.EC2, rou
 	}
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagationWithContext(ctx, input)
 		},

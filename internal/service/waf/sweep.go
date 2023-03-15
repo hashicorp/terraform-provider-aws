@@ -160,7 +160,7 @@ func sweepByteMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in byte_match_tuples attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
@@ -235,7 +235,7 @@ func sweepGeoMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in geo_match_constraint attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Geo Match Set (%s): %w", id, err)
@@ -310,7 +310,7 @@ func sweepIPSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in ip_set_descriptors attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF IP Set (%s): %w", id, err)
@@ -385,7 +385,7 @@ func sweepRateBasedRules(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in predicates attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
@@ -460,7 +460,7 @@ func sweepRegexMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in regex_match_tuple attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Regex Match Set (%s): %w", id, err)
@@ -535,7 +535,7 @@ func sweepRegexPatternSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in regex_pattern_strings attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Regex Pattern Set (%s): %w", id, err)
@@ -610,7 +610,7 @@ func sweepRuleGroups(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in activated_rule attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rule Group (%s): %w", id, err)
@@ -689,7 +689,7 @@ func sweepRules(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in predicates attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Rule (%s): %w", id, err)
@@ -764,7 +764,7 @@ func sweepSizeConstraintSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in size_constraints attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF Size Constraint Set (%s): %w", id, err)
@@ -839,7 +839,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in sql_injection_match_tuples attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF SQL Injection Match Set (%s): %w", id, err)
@@ -918,7 +918,7 @@ func sweepWebACLs(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in rules argument
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
@@ -993,7 +993,7 @@ func sweepXSSMatchSet(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in xss_match_tuples attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error reading WAF XSS Match Set (%s): %w", id, err)

@@ -34,6 +34,7 @@ import (
 
 const objectCreationTimeout = 2 * time.Minute
 
+// @SDKResource("aws_s3_object")
 func ResourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -281,7 +282,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -430,7 +431,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 

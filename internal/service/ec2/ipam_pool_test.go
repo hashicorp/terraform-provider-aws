@@ -20,7 +20,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
@@ -41,7 +41,6 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_scope_type"),
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "create-complete"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -68,7 +67,6 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_scope_type"),
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "modify-complete"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -83,7 +81,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
@@ -106,7 +104,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
@@ -116,6 +114,36 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool ec2.IpamPool
+	resourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_ipv6Contiguous,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "byoip"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
 				),
 			},
 			{
@@ -133,7 +161,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
@@ -260,6 +288,17 @@ resource "aws_vpc_ipam_pool" "test" {
   address_family        = "ipv6"
   ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
   locale                = data.aws_region.current.name
+  publicly_advertisable = false
+}
+`)
+
+var testAccIPAMPoolConfig_ipv6Contiguous = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+resource "aws_vpc_ipam_pool" "test" {
+  address_family        = "ipv6"
+  ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
+  locale                = data.aws_region.current.name
+  public_ip_source      = "byoip"
+  aws_service           = "ec2"
   publicly_advertisable = false
 }
 `)

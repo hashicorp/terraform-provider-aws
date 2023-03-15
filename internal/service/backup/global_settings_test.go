@@ -19,7 +19,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 	resourceName := "aws_backup_global_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},

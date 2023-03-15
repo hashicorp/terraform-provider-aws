@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_backup_framework")
 func ResourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
@@ -135,13 +136,13 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
 	input := &backup.CreateFrameworkInput{
 		IdempotencyToken:  aws.String(resource.UniqueId()),
-		FrameworkControls: expandFrameworkControls(d.Get("control").(*schema.Set).List()),
+		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
 	}
 
@@ -199,7 +200,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
-	if err := d.Set("control", flattenFrameworkControls(resp.FrameworkControls)); err != nil {
+	if err := d.Set("control", flattenFrameworkControls(ctx, resp.FrameworkControls)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
@@ -228,14 +229,14 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
 			IdempotencyToken:     aws.String(resource.UniqueId()),
-			FrameworkControls:    expandFrameworkControls(d.Get("control").(*schema.Set).List()),
+			FrameworkControls:    expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 			FrameworkDescription: aws.String(d.Get("description").(string)),
 			FrameworkName:        aws.String(d.Id()),
 		}
 
 		log.Printf("[DEBUG] Updating Backup Framework: %#v", input)
 
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.UpdateFrameworkWithContext(ctx, input)
 		}, backup.ErrCodeConflictException)
 
@@ -266,7 +267,7 @@ func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkName: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFrameworkWithContext(ctx, input)
 	}, backup.ErrCodeConflictException)
 
@@ -281,7 +282,7 @@ func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandFrameworkControls(controls []interface{}) []*backup.FrameworkControl {
+func expandFrameworkControls(ctx context.Context, controls []interface{}) []*backup.FrameworkControl {
 	if len(controls) == 0 {
 		return nil
 	}
@@ -300,7 +301,7 @@ func expandFrameworkControls(controls []interface{}) []*backup.FrameworkControl 
 
 		frameworkControl := &backup.FrameworkControl{
 			ControlName:  aws.String(tfMap["name"].(string)),
-			ControlScope: expandControlScope(tfMap["scope"].([]interface{})),
+			ControlScope: expandControlScope(ctx, tfMap["scope"].([]interface{})),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
@@ -338,7 +339,7 @@ func expandInputParmaeters(inputParams []interface{}) []*backup.ControlInputPara
 	return controlInputParameters
 }
 
-func expandControlScope(scope []interface{}) *backup.ControlScope {
+func expandControlScope(ctx context.Context, scope []interface{}) *backup.ControlScope {
 	if len(scope) == 0 || scope[0] == nil {
 		return nil
 	}
@@ -361,13 +362,13 @@ func expandControlScope(scope []interface{}) *backup.ControlScope {
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		controlScope.Tags = Tags(tftags.New(v).IgnoreAWS())
+		controlScope.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	return controlScope
 }
 
-func flattenFrameworkControls(controls []*backup.FrameworkControl) []interface{} {
+func flattenFrameworkControls(ctx context.Context, controls []*backup.FrameworkControl) []interface{} {
 	if controls == nil {
 		return []interface{}{}
 	}
@@ -377,7 +378,7 @@ func flattenFrameworkControls(controls []*backup.FrameworkControl) []interface{}
 		values := map[string]interface{}{}
 		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
 		values["name"] = aws.StringValue(control.ControlName)
-		values["scope"] = flattenScope(control.ControlScope)
+		values["scope"] = flattenScope(ctx, control.ControlScope)
 		frameworkControls = append(frameworkControls, values)
 	}
 	return frameworkControls
@@ -398,7 +399,7 @@ func flattenInputParameters(inputParams []*backup.ControlInputParameter) []inter
 	return controlInputParameters
 }
 
-func flattenScope(scope *backup.ControlScope) []interface{} {
+func flattenScope(ctx context.Context, scope *backup.ControlScope) []interface{} {
 	if scope == nil {
 		return []interface{}{}
 	}
@@ -409,7 +410,7 @@ func flattenScope(scope *backup.ControlScope) []interface{} {
 	}
 
 	if v := scope.Tags; v != nil {
-		controlScope["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		controlScope["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{controlScope}

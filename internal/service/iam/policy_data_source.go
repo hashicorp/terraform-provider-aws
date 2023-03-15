@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_policy")
 func DataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
@@ -74,7 +75,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
-		raw, err := tfresource.RetryWhenNotFoundContext(ctx, propagationTimeout,
+		raw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindPolicyByName(ctx, conn, name, pathPrefix)
 			},
@@ -108,7 +109,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set("tags", KeyValueTags(policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

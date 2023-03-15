@@ -25,6 +25,10 @@ func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) 
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
@@ -44,6 +48,10 @@ func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (
 			LastError:   err,
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil || output.HostedZone == nil {
@@ -120,6 +128,10 @@ func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id s
 			LastError:   err,
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil || output.QueryLoggingConfig == nil {

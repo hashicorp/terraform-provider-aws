@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lakeformation_data_lake_settings")
 func ResourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataLakeSettingsCreate,

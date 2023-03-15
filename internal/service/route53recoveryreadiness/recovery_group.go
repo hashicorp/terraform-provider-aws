@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53recoveryreadiness_recovery_group")
 func ResourceRecoveryGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecoveryGroupCreate,
@@ -63,7 +64,7 @@ func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Get("recovery_group_name").(string)),

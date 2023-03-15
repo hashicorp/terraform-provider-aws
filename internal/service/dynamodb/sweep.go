@@ -61,7 +61,7 @@ func sweepTables(region string) error {
 			// read concurrently and gather errors
 			g.Go(func() error {
 				// Need to Read first to fill in `replica` attribute
-				err := r.Read(d, client)
+				err := sweep.ReadResource(ctx, r, d, client)
 
 				if err != nil {
 					return err
@@ -168,7 +168,7 @@ func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 	input := &dynamodb.DeleteBackupInput{
 		BackupArn: bs.arn,
 	}
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
 		_, err := bs.conn.DeleteBackupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupNotFoundException) {
 			return nil

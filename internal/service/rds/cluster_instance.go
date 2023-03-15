@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rds_cluster_instance")
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
@@ -225,7 +226,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterID := d.Get("cluster_identifier").(string)
 	var identifier string
@@ -295,7 +296,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Creating RDS Cluster Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateDBInstanceWithContext(ctx, input)
 		},
@@ -503,7 +504,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.ModifyDBInstanceWithContext(ctx, input)
 			},
@@ -538,7 +539,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteDBInstanceWithContext(ctx, input)
 		},

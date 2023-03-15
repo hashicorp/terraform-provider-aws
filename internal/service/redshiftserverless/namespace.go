@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_namespace")
 func ResourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
@@ -77,7 +78,7 @@ func ResourceNamespace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"userlog", "connectionlog", "useractivitylog"}, false),
+					ValidateFunc: validation.StringInSlice(redshiftserverless.LogExport_Values(), false),
 				},
 			},
 			"namespace_id": {
@@ -101,7 +102,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
@@ -258,7 +259,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteNamespaceWithContext(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),

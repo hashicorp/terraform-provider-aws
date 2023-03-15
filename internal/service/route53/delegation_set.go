@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53_delegation_set")
 func ResourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegationSetCreate,

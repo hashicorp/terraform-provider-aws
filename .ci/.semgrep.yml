@@ -226,8 +226,6 @@ rules:
     paths:
       include:
         - internal/
-      exclude:
-        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
@@ -273,7 +271,7 @@ rules:
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
         - internal/service/**/*.go
@@ -290,11 +288,6 @@ rules:
               tags = $TAGS
               ...
               if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-          - pattern: |
-              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
-              ...
-              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
       - pattern-not: |
           tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
           ...
@@ -302,13 +295,7 @@ rules:
           tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
       - pattern-not: |
-          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
     severity: WARNING
 
@@ -471,7 +458,7 @@ rules:
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the resource.Retry(), resource.RetryContext(), or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -501,7 +488,7 @@ rules:
                   ...
                   if isResourceTimeoutError($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -530,7 +517,7 @@ rules:
                   ...
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -833,21 +820,6 @@ rules:
       include:
         - internal/
     pattern: int(*$VALUE)
-    severity: WARNING
-
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: "Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)"
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code

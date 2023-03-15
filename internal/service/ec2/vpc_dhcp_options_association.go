@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_dhcp_options_association")
 func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsAssociationPut,
@@ -75,7 +76,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 

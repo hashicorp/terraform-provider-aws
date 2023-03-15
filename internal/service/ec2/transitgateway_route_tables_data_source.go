@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_route_tables")
 func DataSourceTransitGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTablesRead,
@@ -40,7 +41,7 @@ func dataSourceTransitGatewayRouteTablesRead(ctx context.Context, d *schema.Reso
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(

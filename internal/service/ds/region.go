@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_directory_service_region")
 func ResourceRegion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionCreate,
@@ -86,7 +87,7 @@ func ResourceRegion() *schema.Resource {
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	directoryID := d.Get("directory_id").(string)
 	regionName := d.Get("region_name").(string)

@@ -34,20 +34,24 @@ const (
 	loadBalancerTagPropagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_alb")
+// @SDKResource("aws_lb")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
 		UpdateWithoutTimeout: resourceLoadBalancerUpdate,
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		// Subnets are ForceNew for Network Load Balancers
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffNLBSubnets,
 			verify.SetTagsDiff,
 		),
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -56,16 +60,129 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_logs": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket": {
+							Type:     schema.TypeString,
+							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("access_logs.0.enabled").(bool)
+							},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("access_logs.0.enabled").(bool)
+							},
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"drop_invalid_header_fields": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("network"),
+			},
+			"enable_cross_zone_load_balancing": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumApplication),
+			},
+			"enable_deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_http2": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          true,
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+			},
+			"enable_tls_version_and_cipher_suite_headers": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+			"enable_waf_fail_open": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+			},
+			"enable_xff_client_port": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+			"idle_timeout": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          60,
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+			},
+			"internal": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.IpAddressType_Values(), false),
+			},
+			"load_balancer_type": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Default:      elbv2.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(elbv2.LoadBalancerTypeEnum_Values(), false),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -74,7 +191,6 @@ func ResourceLoadBalancer() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validName,
 			},
-
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -82,38 +198,18 @@ func ResourceLoadBalancer() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
 			},
-
-			"internal": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+			"preserve_host_header": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
-
-			"load_balancer_type": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				Default:      elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice(elbv2.LoadBalancerTypeEnum_Values(), false),
-			},
-
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Optional: true,
-				Set:      schema.HashString,
 			},
-
-			"subnets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
-			},
-
 			"subnet_mapping": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -121,9 +217,9 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
+						"allocation_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"ipv6_address": {
@@ -136,16 +232,16 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
 						"private_ipv4_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IsIPv4Address,
+						},
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -162,130 +258,33 @@ func ResourceLoadBalancer() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-
-			"access_logs": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("access_logs.0.enabled").(bool)
-							},
-						},
-						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return !d.Get("access_logs.0.enabled").(bool)
-							},
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-
-			"enable_deletion_protection": {
-				Type:     schema.TypeBool,
+			"subnets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Default:  false,
-			},
-
-			"idle_timeout": {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				Default:          60,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
-			},
-
-			"drop_invalid_header_fields": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBType("network"),
-			},
-
-			"preserve_host_header": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
-			},
-
-			"enable_cross_zone_load_balancing": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumApplication),
-			},
-
-			"enable_http2": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          true,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
-			},
-
-			"enable_waf_fail_open": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          false,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
-			},
-
-			"ip_address_type": {
-				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.IpAddressTypeIpv4,
-					elbv2.IpAddressTypeDualstack,
-				}, false),
 			},
-
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"xff_header_processing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "append",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+				ValidateFunc: validation.StringInSlice([]string{
+					"append",
+					"preserve",
+					"remove",
+				}, false),
+			},
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "defensive",
-				ValidateFunc: validation.StringInSlice([]string{
-					"monitor",
-					"defensive",
-					"strictest",
-				}, false),
-				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -306,7 +305,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -318,89 +317,61 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", name)
 
-	elbOpts := &elbv2.CreateLoadBalancerInput{
+	lbType := d.Get("load_balancer_type").(string)
+	input := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
-		Type: aws.String(d.Get("load_balancer_type").(string)),
-	}
-
-	if len(tags) > 0 {
-		elbOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if _, ok := d.GetOk("internal"); ok {
-		elbOpts.Scheme = aws.String("internal")
-	}
-
-	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("subnet_mapping"); ok {
-		rawMappings := v.(*schema.Set).List()
-		elbOpts.SubnetMappings = make([]*elbv2.SubnetMapping, len(rawMappings))
-		for i, mapping := range rawMappings {
-			subnetMap := mapping.(map[string]interface{})
-
-			elbOpts.SubnetMappings[i] = &elbv2.SubnetMapping{
-				SubnetId: aws.String(subnetMap["subnet_id"].(string)),
-			}
-
-			if subnetMap["allocation_id"].(string) != "" {
-				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
-			}
-
-			if subnetMap["private_ipv4_address"].(string) != "" {
-				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
-			}
-
-			if subnetMap["ipv6_address"].(string) != "" {
-				elbOpts.SubnetMappings[i].IPv6Address = aws.String(subnetMap["ipv6_address"].(string))
-			}
-		}
-	}
-
-	if v, ok := d.GetOk("ip_address_type"); ok {
-		elbOpts.IpAddressType = aws.String(v.(string))
+		Type: aws.String(lbType),
 	}
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
-		elbOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
+		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
+	if _, ok := d.GetOk("internal"); ok {
+		input.Scheme = aws.String(elbv2.LoadBalancerSchemeEnumInternal)
+	}
 
-	resp, err := conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		input.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_groups"); ok {
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("subnet_mapping"); ok && v.(*schema.Set).Len() > 0 {
+		input.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("subnets"); ok {
+		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	output, err := conn.CreateLoadBalancerWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
-	if elbOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
-		elbOpts.Tags = nil
-		resp, err = conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+		input.Tags = nil
+		output, err = conn.CreateLoadBalancerWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating %s Load Balancer: %s", d.Get("load_balancer_type").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 %s Load Balancer (%s): %s", lbType, name, err)
 	}
 
-	if len(resp.LoadBalancers) != 1 {
-		return sdkdiag.AppendErrorf(diags, "no load balancers returned following creation of %s", d.Get("name").(string))
-	}
+	d.SetId(aws.StringValue(output.LoadBalancers[0].LoadBalancerArn))
 
-	lb := resp.LoadBalancers[0]
-	d.SetId(aws.StringValue(lb.LoadBalancerArn))
-	log.Printf("[INFO] LB ID: %s", d.Id())
-
-	_, err = waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Load Balancer (%s) to be active: %s", d.Get("name").(string), err)
+	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) create: %s", d.Id(), err)
 	}
 
 	// Post-create tagging supported in some partitions
-	if elbOpts.Tags == nil && len(tags) > 0 {
+	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
@@ -523,6 +494,27 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.desync_mitigation_mode"),
 				Value: aws.String(d.Get("desync_mitigation_mode").(string)),
+			})
+		}
+
+		if d.HasChange("enable_tls_version_and_cipher_suite_headers") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.x_amzn_tls_version_and_cipher_suite.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_tls_version_and_cipher_suite_headers").(bool))),
+			})
+		}
+
+		if d.HasChange("enable_xff_client_port") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.xff_client_port.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("enable_xff_client_port").(bool))),
+			})
+		}
+
+		if d.HasChange("xff_header_processing_mode") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.xff_header_processing.mode"),
+				Value: aws.String(d.Get("xff_header_processing_mode").(string)),
 			})
 		}
 
@@ -869,7 +861,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 
 	errAttached := errors.New("attached")
 
-	_, err = tfresource.RetryWhenContext(ctx, loadBalancerNetworkInterfaceDetachTimeout,
+	_, err = tfresource.RetryWhen(ctx, loadBalancerNetworkInterfaceDetachTimeout,
 		func() (interface{}, error) {
 			networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
 
@@ -956,15 +948,15 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
-	d.Set("vpc_id", lb.VpcId)
-	d.Set("zone_id", lb.CanonicalHostedZoneId)
+	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
-	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
+	d.Set("name", lb.LoadBalancerName)
+	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
+	d.Set("vpc_id", lb.VpcId)
+	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("setting subnets: %w", err)
@@ -990,7 +982,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	for _, attr := range attributesResp.Attributes {
 		switch aws.StringValue(attr.Key) {
 		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = aws.StringValue(attr.Value) == "true"
+			accessLogMap["enabled"] = flex.StringToBoolValue(attr.Value)
 		case "access_logs.s3.bucket":
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
@@ -1003,33 +995,45 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] Setting ALB Timeout Seconds: %d", timeout)
 			d.Set("idle_timeout", timeout)
 		case "routing.http.drop_invalid_header_fields.enabled":
-			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
+			dropInvalidHeaderFieldsEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
 		case "routing.http.preserve_host_header.enabled":
-			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			preserveHostHeaderEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Preserve Host Header Enabled: %t", preserveHostHeaderEnabled)
 			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
-			protectionEnabled := aws.StringValue(attr.Value) == "true"
+			protectionEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
 			d.Set("enable_deletion_protection", protectionEnabled)
 		case "routing.http2.enabled":
-			http2Enabled := aws.StringValue(attr.Value) == "true"
+			http2Enabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB HTTP/2 Enabled: %t", http2Enabled)
 			d.Set("enable_http2", http2Enabled)
 		case "waf.fail_open.enabled":
-			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			wafFailOpenEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB WAF fail open Enabled: %t", wafFailOpenEnabled)
 			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
-			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
+			crossZoneLbEnabled := flex.StringToBoolValue(attr.Value)
 			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		case "routing.http.desync_mitigation_mode":
 			desyncMitigationMode := aws.StringValue(attr.Value)
 			log.Printf("[DEBUG] Setting ALB Desync Mitigation Mode: %s", desyncMitigationMode)
 			d.Set("desync_mitigation_mode", desyncMitigationMode)
+		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
+			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB TLS Version And Cipher Suite Headers Enabled: %t", tlsVersionAndCipherEnabled)
+			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
+		case "routing.http.xff_client_port.enabled":
+			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Xff Client Port Enabled: %t", xffClientPortEnabled)
+			d.Set("enable_xff_client_port", xffClientPortEnabled)
+		case "routing.http.xff_header_processing.mode":
+			xffHeaderProcMode := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Xff Header Processing Mode: %s", xffHeaderProcMode)
+			d.Set("xff_header_processing_mode", xffHeaderProcMode)
 		}
 	}
 
@@ -1105,4 +1109,56 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 		}
 	}
 	return nil
+}
+
+func expandSubnetMapping(tfMap map[string]interface{}) *elbv2.SubnetMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &elbv2.SubnetMapping{}
+
+	if v, ok := tfMap["allocation_id"].(string); ok && v != "" {
+		apiObject.AllocationId = aws.String(v)
+	}
+
+	if v, ok := tfMap["ipv6_address"].(string); ok && v != "" {
+		apiObject.IPv6Address = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_ipv4_address"].(string); ok && v != "" {
+		apiObject.PrivateIPv4Address = aws.String(v)
+	}
+
+	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+		apiObject.SubnetId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSubnetMappings(tfList []interface{}) []*elbv2.SubnetMapping {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*elbv2.SubnetMapping
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSubnetMapping(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
