@@ -13,14 +13,14 @@ import (
 // expandOperations provides a uniform approach for handling lightsail operations and errors.
 func expandOperations(ctx context.Context, conn *lightsail.Lightsail, operations []*lightsail.Operation, action string, resource string, id string) diag.Diagnostics {
 	if len(operations) == 0 {
-		return create.DiagError(names.Lightsail, action, resource, id, errors.New("No operations found for request"))
+		return create.DiagError(names.Lightsail, action, resource, id, errors.New("no operations found for request"))
 	}
 
 	op := operations[0]
 
 	err := waitOperation(ctx, conn, op.Id)
 	if err != nil {
-		return create.DiagError(names.Lightsail, action, resource, id, errors.New("Error waiting for request operation"))
+		return create.DiagError(names.Lightsail, action, resource, id, errors.New("error waiting for request operation"))
 	}
 
 	return nil
