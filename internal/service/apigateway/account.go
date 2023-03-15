@@ -68,7 +68,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		// (e.g. for referencing throttle_settings)
 		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
 	}
-	if err := d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings)); err != nil {
+	if err := d.Set("throttle_settings", flattenThrottleSettings(account.ThrottleSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
 	}
 
