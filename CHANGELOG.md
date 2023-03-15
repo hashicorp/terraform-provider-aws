@@ -12,6 +12,7 @@ FEATURES:
 * **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
 * **New Resource:** `aws_codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
 * **New Resource:** `aws_emr_block_public_access_configuration` ([#29968](https://github.com/hashicorp/terraform-provider-aws/issues/29968))
+* **New Resource:** `aws_kms_key_policy` ([#29923](https://github.com/hashicorp/terraform-provider-aws/issues/29923))
 * **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
 
 ENHANCEMENTS:
@@ -24,6 +25,8 @@ ENHANCEMENTS:
 * resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3` ([#27616](https://github.com/hashicorp/terraform-provider-aws/issues/27616))
 * resource/aws_aws_lb: Add `enable_xff_client_port`, `xff_header_processing_mode` and `enable_tls_version_and_cipher_suite_headers` arguments ([#29792](https://github.com/hashicorp/terraform-provider-aws/issues/29792))
 * resource/aws_batch_compute_environment: Allow a maximum of 2 `compute_resources.ec2_configuration`s ([#27207](https://github.com/hashicorp/terraform-provider-aws/issues/27207))
+* resource/aws_cloudwatch_metric_alarm: Add `period` parameter to `metric_query` ([#29896](https://github.com/hashicorp/terraform-provider-aws/issues/29896))
+* resource/aws_cloudwatch_metric_alarm: Add validation to `period` parameter of `metric_query.metric` ([#29896](https://github.com/hashicorp/terraform-provider-aws/issues/29896))
 * resource/aws_cognito_user_pool_domain: Add `cloudfront_distribution` and `cloudfront_distribution_zone_id` attributes ([#27790](https://github.com/hashicorp/terraform-provider-aws/issues/27790))
 * resource/aws_dynamodb_table: Add `deletion_protection_enabled` argument ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
 * resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
@@ -40,6 +43,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_opensearch_domain: Add missing `advanced_security_options.anonymous_auth_enabled` attribute ([#26746](https://github.com/hashicorp/terraform-provider-aws/issues/26746))
+* resource/aws_api_gateway_integration: Fix bug that cleared unchanged `cache_key_parameters` values on Update ([#29991](https://github.com/hashicorp/terraform-provider-aws/issues/29991))
 * resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
 * resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
