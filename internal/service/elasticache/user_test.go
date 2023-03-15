@@ -6,10 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -303,21 +301,17 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 }
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error { return testAccCheckUserDestroyWithProvider(ctx)(s, acctest.Provider) }
-}
-
-func testAccCheckUserDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user" {
 				continue
 			}
 
-			user, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
+			_, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) || tfresource.NotFound(err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -325,9 +319,7 @@ func testAccCheckUserDestroyWithProvider(ctx context.Context) acctest.TestCheckW
 				return err
 			}
 
-			if user != nil {
-				return fmt.Errorf("ElastiCache User (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("ElastiCache User (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -335,10 +327,6 @@ func testAccCheckUserDestroyWithProvider(ctx context.Context) acctest.TestCheckW
 }
 
 func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) resource.TestCheckFunc {
-	return testAccCheckUserExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckUserExistsWithProvider(ctx context.Context, n string, v *elasticache.User, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -349,21 +337,22 @@ func testAccCheckUserExistsWithProvider(ctx context.Context, n string, v *elasti
 			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
-		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
-		resp, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		output, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)
+			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccUserConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -371,11 +360,11 @@ resource "aws_elasticache_user" "test" {
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }
-`, rName))
+`, rName)
 }
 
 func testAccUserConfigWithPasswordAuthMode_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -387,11 +376,11 @@ resource "aws_elasticache_user" "test" {
     passwords = ["aaaaaaaaaaaaaaaa"]
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccUserConfigWithIamAuthMode_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = %[1]q
@@ -402,11 +391,11 @@ resource "aws_elasticache_user" "test" {
     type      = "iam"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccUserConfigWithNoPassRequiredAuthMode_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -417,11 +406,11 @@ resource "aws_elasticache_user" "test" {
     type      = "no-password-required"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccUserConfig_update(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -429,11 +418,11 @@ resource "aws_elasticache_user" "test" {
   engine        = "REDIS"
   passwords     = ["password234567891", "password345678912"]
 }
-`, rName))
+`, rName)
 }
 
 func testAccUserConfigWithPasswordAuthMode_twoPasswords(rName string, password1 string, password2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -445,11 +434,11 @@ resource "aws_elasticache_user" "test" {
     passwords = [%[2]q, %[3]q]
   }	
 }
-`, rName, password1, password2))
+`, rName, password1, password2)
 }
 
 func testAccUserConfigWithPasswordAuthMode_onePassword(rName string, password string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -461,11 +450,11 @@ resource "aws_elasticache_user" "test" {
     passwords = [%[2]q]
   }	
 }
-`, rName, password))
+`, rName, password)
 }
 
 func testAccUserConfig_tags(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
@@ -477,5 +466,5 @@ resource "aws_elasticache_user" "test" {
     %[2]s = %[3]q
   }
 }
-`, rName, tagKey, tagValue))
+`, rName, tagKey, tagValue)
 }
