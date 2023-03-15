@@ -102,7 +102,7 @@ func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigWithIamAuthMode_basic(rName),
+				Config: testAccUserConfigWithIAMAuthMode_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -379,7 +379,7 @@ resource "aws_elasticache_user" "test" {
 `, rName)
 }
 
-func testAccUserConfigWithIamAuthMode_basic(rName string) string {
+func testAccUserConfigWithIAMAuthMode_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
