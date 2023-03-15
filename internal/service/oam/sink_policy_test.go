@@ -225,23 +225,23 @@ resource "aws_oam_sink" "test" {
 
 resource "aws_oam_sink_policy" "test" {
   sink_identifier = aws_oam_sink.test.id
-  policy          = jsonencode({
-	Version = "2012-10-17"
-	Statement = [
-		{
-			Action = ["oam:CreateLink", "oam:UpdateLink"]
-			Effect = "Allow"
-			Resource = "*"
-			Principal = {
-				"AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" 
-			}
-			Condition = {
-				"ForAllValues:StringEquals" = {
-					"oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
-				}
-			}
-		}
-	]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["oam:CreateLink", "oam:UpdateLink"]
+        Effect   = "Allow"
+        Resource = "*"
+        Principal = {
+          "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
+          }
+        }
+      }
+    ]
   })
 }
 `, rName)
@@ -258,23 +258,23 @@ resource "aws_oam_sink" "test" {
 
 resource "aws_oam_sink_policy" "test" {
   sink_identifier = aws_oam_sink.test.id
-  policy          = jsonencode({
-	Version = "2012-10-17"
-	Statement = [
-		{
-			Action = ["oam:CreateLink", "oam:UpdateLink"]
-			Effect = "Allow"
-			Resource = "*"
-			Principal = {
-				"AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" 
-			}
-			Condition = {
-				"ForAllValues:StringEquals" = {
-					"oam:ResourceTypes" = "AWS::CloudWatch::Metric"
-				}
-			}
-		}
-	]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["oam:CreateLink", "oam:UpdateLink"]
+        Effect   = "Allow"
+        Resource = "*"
+        Principal = {
+          "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "oam:ResourceTypes" = "AWS::CloudWatch::Metric"
+          }
+        }
+      }
+    ]
   })
 }
 `, rName)

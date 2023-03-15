@@ -21,23 +21,23 @@ resource "aws_oam_sink" "example" {
 
 resource "aws_oam_sink_policy" "example" {
   sink_identifier = aws_oam_sink.example.id
-  policy          = jsonencode({
-	Version = "2012-10-17"
-	Statement = [
-		{
-			Action = ["oam:CreateLink", "oam:UpdateLink"]
-			Effect = "Allow"
-			Resource = "*"
-			Principal = {
-				"AWS" = ["1111111111111", "222222222222"]
-			}
-			Condition = {
-				"ForAllValues:StringEquals" = {
-					"oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
-				}
-			}
-		}
-	]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["oam:CreateLink", "oam:UpdateLink"]
+        Effect   = "Allow"
+        Resource = "*"
+        Principal = {
+          "AWS" = ["1111111111111", "222222222222"]
+        }
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "oam:ResourceTypes" = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
+          }
+        }
+      }
+    ]
   })
 }
 ```
@@ -50,6 +50,8 @@ The following arguments are required:
 * `policy` - (Required) JSON policy to use. If you are updating an existing policy, the entire existing policy is replaced by what you specify here.
 
 ## Attributes Reference
+
+No additional attributes are exported.
 
 ## Timeouts
 

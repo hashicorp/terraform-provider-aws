@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_oam_sink_policy")
 func ResourceSinkPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkPolicyPut,
