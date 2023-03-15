@@ -1,6 +1,7 @@
 package dms
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,31 +9,35 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_replication_task")
 func ResourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationTaskCreate,
-		Read:   resourceReplicationTaskRead,
-		Update: resourceReplicationTaskUpdate,
-		Delete: resourceReplicationTaskDelete,
+		CreateWithoutTimeout: resourceReplicationTaskCreate,
+		ReadWithoutTimeout:   resourceReplicationTaskRead,
+		UpdateWithoutTimeout: resourceReplicationTaskUpdate,
+		DeleteWithoutTimeout: resourceReplicationTaskDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"cdc_start_position": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"cdc_start_time"},
 			},
 			"cdc_start_time": {
@@ -78,6 +83,15 @@ func ResourceReplicationTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"start_replication_task": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -98,15 +112,18 @@ func ResourceReplicationTask() *schema.Resource {
 	}
 }
 
-func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
+	taskId := d.Get("replication_task_id").(string)
 
 	request := &dms.CreateReplicationTaskInput{
 		MigrationType:             aws.String(d.Get("migration_type").(string)),
 		ReplicationInstanceArn:    aws.String(d.Get("replication_instance_arn").(string)),
-		ReplicationTaskIdentifier: aws.String(d.Get("replication_task_id").(string)),
+		ReplicationTaskIdentifier: aws.String(taskId),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
 		Tags:                      Tags(tags.IgnoreAWS()),
@@ -120,7 +137,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 	if v, ok := d.GetOk("cdc_start_time"); ok {
 		seconds, err := strconv.ParseInt(v.(string), 10, 64)
 		if err != nil {
-			return fmt.Errorf("DMS create replication task. Invalid CDC Unix timestamp: %s", err)
+			return sdkdiag.AppendErrorf(diags, "DMS create replication task. Invalid CDC Unix timestamp: %s", err)
 		}
 		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 	}
@@ -131,189 +148,47 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Println("[DEBUG] DMS create replication task:", request)
 
-	_, err := conn.CreateReplicationTask(request)
+	_, err := conn.CreateReplicationTaskWithContext(ctx, request)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Task (%s): %s", taskId, err)
 	}
 
-	taskId := d.Get("replication_task_id").(string)
 	d.SetId(taskId)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"ready"},
-		Refresh:    resourceReplicationTaskStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+	if err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) to become available: %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if d.Get("start_replication_task").(bool) {
+		if err := startReplicationTask(ctx, d.Id(), conn); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
-	return resourceReplicationTaskRead(d, meta)
+	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
 }
 
-func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	response, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-task-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
-	})
-	if err != nil {
-		if dmserr, ok := err.(awserr.Error); ok && dmserr.Code() == "ResourceNotFoundFault" {
-			log.Printf("[DEBUG] DMS Replication Task %q Not Found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
+	task, err := FindReplicationTaskByID(ctx, conn, d.Id())
 
-	err = resourceReplicationTaskSetState(d, response.ReplicationTasks[0])
-	if err != nil {
-		return err
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Replication Task (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-
-	tags, err := ListTags(conn, d.Get("replication_task_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Task (%s): %s", d.Get("replication_task_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if task == nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): empty output", d.Id())
 	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-
-	request := &dms.ModifyReplicationTaskInput{
-		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
-	}
-	hasChanges := false
-
-	if d.HasChange("cdc_start_position") {
-		request.CdcStartPosition = aws.String(d.Get("cdc_start_position").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("cdc_start_time") {
-		seconds, err := strconv.ParseInt(d.Get("cdc_start_time").(string), 10, 64)
-		if err != nil {
-			return fmt.Errorf("DMS update replication task. Invalid CRC Unix timestamp: %s", err)
-		}
-		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
-		hasChanges = true
-	}
-
-	if d.HasChange("migration_type") {
-		request.MigrationType = aws.String(d.Get("migration_type").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("replication_task_settings") {
-		request.ReplicationTaskSettings = aws.String(d.Get("replication_task_settings").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("table_mappings") {
-		request.TableMappings = aws.String(d.Get("table_mappings").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_task_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Task (%s) tags: %s", arn, err)
-		}
-	}
-
-	if hasChanges {
-		log.Println("[DEBUG] DMS update replication task:", request)
-
-		_, err := conn.ModifyReplicationTask(request)
-		if err != nil {
-			return err
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
-			Target:     []string{"ready", "stopped", "failed"},
-			Refresh:    resourceReplicationTaskStateRefreshFunc(d, meta),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return err
-		}
-
-		return resourceReplicationTaskRead(d, meta)
-	}
-
-	return nil
-}
-
-func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-
-	request := &dms.DeleteReplicationTaskInput{
-		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] DMS delete replication task: %#v", request)
-
-	_, err := conn.DeleteReplicationTask(request)
-	if err != nil {
-		if dmserr, ok := err.(awserr.Error); ok && dmserr.Code() == "ResourceNotFoundFault" {
-			log.Printf("[DEBUG] DMS Replication Task %q Not Found", d.Id())
-			return nil
-		}
-		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceReplicationTaskStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-
-	return err
-}
-
-func resourceReplicationTaskSetState(d *schema.ResourceData, task *dms.ReplicationTask) error {
-	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
 
 	d.Set("cdc_start_position", task.CdcStartPosition)
 	d.Set("migration_type", task.MigrationType)
@@ -321,52 +196,156 @@ func resourceReplicationTaskSetState(d *schema.ResourceData, task *dms.Replicati
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
+	d.Set("status", task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
-	settings, err := dmsReplicationTaskRemoveReadOnlySettings(*task.ReplicationTaskSettings)
+	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", d.Id(), err)
 	}
+
 	d.Set("replication_task_settings", settings)
 
-	return nil
-}
+	tags, err := ListTags(ctx, conn, d.Get("replication_task_arn").(string))
 
-func resourceReplicationTaskStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).DMSConn
-
-		v, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("replication-task-id"),
-					Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-				},
-			},
-		})
-		if err != nil {
-			if dmserr, ok := err.(awserr.Error); ok && dmserr.Code() == "ResourceNotFoundFault" {
-				return nil, "", nil
-			}
-			log.Printf("Error on retrieving DMS Replication Task when waiting: %s", err)
-			return nil, "", err
-		}
-
-		if v == nil {
-			return nil, "", nil
-		}
-
-		if v.ReplicationTasks != nil {
-			log.Printf("[DEBUG] DMS Replication Task status for instance %s: %s", d.Id(), *v.ReplicationTasks[0].Status)
-		}
-
-		return v, *v.ReplicationTasks[0].Status, nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Task (%s): %s", d.Get("replication_task_arn").(string), err)
 	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	}
+
+	return diags
 }
 
-func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
+func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
+
+	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
+		input := &dms.ModifyReplicationTaskInput{
+			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
+			MigrationType:      aws.String(d.Get("migration_type").(string)),
+			TableMappings:      aws.String(d.Get("table_mappings").(string)),
+		}
+
+		if d.HasChange("cdc_start_position") {
+			input.CdcStartPosition = aws.String(d.Get("cdc_start_position").(string))
+		}
+
+		if d.HasChange("cdc_start_time") {
+			seconds, err := strconv.ParseInt(d.Get("cdc_start_time").(string), 10, 64)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "DMS update replication task. Invalid CRC Unix timestamp: %s", err)
+			}
+			input.CdcStartTime = aws.Time(time.Unix(seconds, 0))
+		}
+
+		if d.HasChange("replication_task_settings") {
+			input.ReplicationTaskSettings = aws.String(d.Get("replication_task_settings").(string))
+		}
+
+		status := d.Get("status").(string)
+		if status == replicationTaskStatusRunning {
+			log.Println("[DEBUG] stopping DMS replication task:", input)
+			if err := stopReplicationTask(ctx, d.Id(), conn); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		log.Println("[DEBUG] updating DMS replication task:", input)
+		_, err := conn.ModifyReplicationTaskWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s): %s", d.Id(), err)
+		}
+
+		if err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
+		}
+
+		if d.Get("start_replication_task").(bool) {
+			err := startReplicationTask(ctx, d.Id(), conn)
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	if d.HasChanges("start_replication_task") {
+		status := d.Get("status").(string)
+		if d.Get("start_replication_task").(bool) {
+			if status != replicationTaskStatusRunning {
+				if err := startReplicationTask(ctx, d.Id(), conn); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
+		} else {
+			if status == replicationTaskStatusRunning {
+				if err := stopReplicationTask(ctx, d.Id(), conn); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		arn := d.Get("replication_task_arn").(string)
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s) tags: %s", arn, err)
+		}
+	}
+
+	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
+}
+
+func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
+
+	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
+		if err := stopReplicationTask(ctx, d.Id(), conn); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	input := &dms.DeleteReplicationTaskInput{
+		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
+	}
+
+	log.Printf("[DEBUG] DMS delete replication task: %#v", input)
+
+	_, err := conn.DeleteReplicationTaskWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Task (%s): %s", d.Id(), err)
+	}
+
+	if err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func replicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
 	var settingsData map[string]interface{}
 	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
 		return nil, err
@@ -390,4 +369,66 @@ func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) 
 
 	cleanedSettingsString := string(cleanedSettings)
 	return &cleanedSettingsString, nil
+}
+
+func startReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
+	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
+
+	task, err := FindReplicationTaskByID(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
+	}
+
+	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
+	if aws.StringValue(task.Status) != replicationTaskStatusReady {
+		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
+	}
+
+	_, err = conn.StartReplicationTaskWithContext(ctx, &dms.StartReplicationTaskInput{
+		ReplicationTaskArn:       task.ReplicationTaskArn,
+		StartReplicationTaskType: aws.String(startReplicationTaskType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
+	}
+
+	err = waitReplicationTaskRunning(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
+	log.Printf("[DEBUG] Stopping DMS Replication Task: (%s)", id)
+
+	task, err := FindReplicationTaskByID(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
+	}
+
+	_, err = conn.StopReplicationTaskWithContext(ctx, &dms.StopReplicationTaskInput{
+		ReplicationTaskArn: task.ReplicationTaskArn,
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)
+	}
+
+	err = waitReplicationTaskStopped(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("waiting for DMS Replication Task (%s) stop: %w", id, err)
+	}
+
+	return nil
 }

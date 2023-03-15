@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_api_destination"
 description: |-
@@ -11,7 +11,6 @@ description: |-
 Provides an EventBridge event API Destination resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
-
 
 ## Example Usage
 
@@ -42,7 +41,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the event API Destination.
-
 
 ## Import
 

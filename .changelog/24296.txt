@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_shield_protection_group: When updating resource tags, use the `protection_group_arn` parameter instead of `arn`.
+```

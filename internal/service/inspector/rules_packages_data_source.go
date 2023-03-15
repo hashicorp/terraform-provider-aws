@@ -1,19 +1,21 @@
 package inspector
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 	"sort"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_inspector_rules_packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRulesPackagesRead,
+		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -25,33 +27,46 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
-	log.Printf("[DEBUG] Reading Rules Packages.")
+	output, err := findRulesPackageARNs(ctx, conn)
 
-	var arns []string
-
-	input := &inspector.ListRulesPackagesInput{}
-
-	err := conn.ListRulesPackagesPages(input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
-		for _, arn := range page.RulesPackageArns {
-			arns = append(arns, *arn)
-		}
-		return !lastPage
-	})
 	if err != nil {
-		return fmt.Errorf("Error fetching Rules Packages: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Rules Packages: %s", err)
 	}
 
-	if len(arns) == 0 {
-		return errors.New("No rules packages found.")
-	}
+	arns := aws.StringValueSlice(output)
+	sort.Strings(arns)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	sort.Strings(arns)
 	d.Set("arns", arns)
 
-	return nil
+	return diags
+}
+
+func findRulesPackageARNs(ctx context.Context, conn *inspector.Inspector) ([]*string, error) {
+	input := &inspector.ListRulesPackagesInput{}
+	var output []*string
+
+	err := conn.ListRulesPackagesPagesWithContext(ctx, input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.RulesPackageArns {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

@@ -1,24 +1,29 @@
 package lightsail
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
+// @SDKResource("aws_lightsail_key_pair")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceKeyPairCreate,
-		Read:   resourceKeyPairRead,
-		Delete: resourceKeyPairDelete,
+		CreateWithoutTimeout: resourceKeyPairCreate,
+		ReadWithoutTimeout:   resourceKeyPairRead,
+		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -77,8 +82,9 @@ func ResourceKeyPair() *schema.Resource {
 	}
 }
 
-func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -97,17 +103,17 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if pubKey == "" {
 		// creating new key
-		resp, err := conn.CreateKeyPair(&lightsail.CreateKeyPairInput{
+		resp, err := conn.CreateKeyPairWithContext(ctx, &lightsail.CreateKeyPairInput{
 			KeyPairName: aws.String(kName),
 		})
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 		}
 		if resp.Operation == nil {
-			return fmt.Errorf("No operation found for CreateKeyPair response")
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): no operation returned", kName)
 		}
 		if resp.KeyPair == nil {
-			return fmt.Errorf("No KeyPair information found for CreateKeyPair response")
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): no key information returned", kName)
 		}
 		d.SetId(kName)
 
@@ -117,14 +123,14 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_key", resp.PublicKeyBase64)
 
 		// encrypt private key if pgp_key is given
-		pgpKey, err := tfiam.RetrieveGPGKey(d.Get("pgp_key").(string))
+		pgpKey, err := retrieveGPGKey(d.Get("pgp_key").(string))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 		}
 		if pgpKey != "" {
-			fingerprint, encrypted, err := tfiam.EncryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
+			fingerprint, encrypted, err := encryptValue(pgpKey, aws.StringValue(resp.PrivateKeyBase64), "Lightsail Private Key")
 			if err != nil {
-				return err
+				return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 			}
 
 			d.Set("encrypted_fingerprint", fingerprint)
@@ -136,91 +142,101 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		op = resp.Operation
 	} else {
 		// importing key
-		resp, err := conn.ImportKeyPair(&lightsail.ImportKeyPairInput{
+		resp, err := conn.ImportKeyPairWithContext(ctx, &lightsail.ImportKeyPairInput{
 			KeyPairName:     aws.String(kName),
 			PublicKeyBase64: aws.String(pubKey),
 		})
 
 		if err != nil {
-			log.Printf("[ERR] Error importing key: %s", err)
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 		}
 		d.SetId(kName)
 
 		op = resp.Operation
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+	err := waitOperation(ctx, conn, op.Id)
 
-	_, err := stateConf.WaitForState()
 	if err != nil {
 		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
 	}
 
-	return resourceKeyPairRead(d, meta)
+	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
-	resp, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
+	resp, err := conn.GetKeyPairWithContext(ctx, &lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		log.Printf("[WARN] Error getting KeyPair (%s): %s", d.Id(), err)
-		// check for known not found error
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail KeyPair (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail KeyPair (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.KeyPair.Arn)
 	d.Set("name", resp.KeyPair.Name)
 	d.Set("fingerprint", resp.KeyPair.Fingerprint)
 
-	return nil
+	return diags
 }
 
-func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
-	resp, err := conn.DeleteKeyPair(&lightsail.DeleteKeyPairInput{
+func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	resp, err := conn.DeleteKeyPairWithContext(ctx, &lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
 	op := resp.Operation
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
 
-	_, err = stateConf.WaitForState()
+	err = waitOperation(ctx, conn, op.Id)
+
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for KeyPair (%s) to become destroyed: %s",
-			d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+// retrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries
+// the public key from the keybase service if the parameter is a keybase username
+// prefixed with the phrase "keybase:"
+func retrieveGPGKey(pgpKey string) (string, error) {
+	const keybasePrefix = "keybase:"
+
+	encryptionKey := pgpKey
+	if strings.HasPrefix(pgpKey, keybasePrefix) {
+		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
+		if err != nil {
+			return "", fmt.Errorf("retrieving Public Key (%s): %w", pgpKey, err)
+		}
+		encryptionKey = publicKeys[pgpKey]
+	}
+
+	return encryptionKey, nil
+}
+
+// encryptValue encrypts the given value with the given encryption key. Description
+// should be set such that errors return a meaningful user-facing response.
+func encryptValue(encryptionKey, value, description string) (string, string, error) {
+	fingerprints, encryptedValue, err :=
+		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
+	if err != nil {
+		return "", "", fmt.Errorf("encrypting %s: %w", description, err)
+	}
+
+	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil
 }

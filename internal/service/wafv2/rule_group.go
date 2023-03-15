@@ -1,6 +1,7 @@
 package wafv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,7 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,14 +21,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	ruleGroupCreateTimeout = 5 * time.Minute
+	ruleGroupUpdateTimeout = 5 * time.Minute
+	ruleGroupDeleteTimeout = 5 * time.Minute
+)
+
+// @SDKResource("aws_wafv2_rule_group")
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleGroupCreate,
-		Read:   resourceRuleGroupRead,
-		Update: resourceRuleGroupUpdate,
-		Delete: resourceRuleGroupDelete,
+		CreateWithoutTimeout: resourceRuleGroupCreate,
+		ReadWithoutTimeout:   resourceRuleGroupRead,
+		UpdateWithoutTimeout: resourceRuleGroupUpdate,
+		DeleteWithoutTimeout: resourceRuleGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -52,7 +62,7 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"custom_response_body": wafv2CustomResponseBodySchema(),
+			"custom_response_body": customResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -71,15 +81,6 @@ func ResourceRuleGroup() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 				),
 			},
-			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
-			},
 			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -91,9 +92,10 @@ func ResourceRuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": wafv2AllowConfigSchema(),
-									"block": wafv2BlockConfigSchema(),
-									"count": wafv2CountConfigSchema(),
+									"allow":   allowConfigSchema(),
+									"block":   blockConfigSchema(),
+									"count":   countConfigSchema(),
+									"captcha": captchaConfigSchema(),
 								},
 							},
 						},
@@ -106,223 +108,215 @@ func ResourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"rule_label":        wafv2RuleLabelsSchema(),
-						"statement":         wafv2RootStatementSchema(3),
-						"visibility_config": wafv2VisibilityConfigSchema(),
+						"rule_label":        ruleLabelsSchema(),
+						"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
+						"visibility_config": visibilityConfigSchema(),
 					},
 				},
 			},
+			"scope": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+			},
 			"tags":              tftags.TagsSchema(),
 			"tags_all":          tftags.TagsSchemaComputed(),
-			"visibility_config": wafv2VisibilityConfigSchema(),
+			"visibility_config": visibilityConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	var resp *wafv2.CreateRuleGroupOutput
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &wafv2.CreateRuleGroupInput{
-		Name:             aws.String(d.Get("name").(string)),
-		Scope:            aws.String(d.Get("scope").(string)),
+	name := d.Get("name").(string)
+	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		Name:             aws.String(name),
+		Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
+		Scope:            aws.String(d.Get("scope").(string)),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
+		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateRuleGroup(params)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateRuleGroup(params)
-	}
+	log.Printf("[INFO] Creating WAFv2 RuleGroup: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupCreateTimeout, func() (interface{}, error) {
+		return conn.CreateRuleGroupWithContext(ctx, input)
+	}, wafv2.ErrCodeWAFUnavailableEntityException)
 
 	if err != nil {
-		return fmt.Errorf("Error creating WAFv2 RuleGroup: %s", err)
+		return diag.Errorf("creating WAFv2 RuleGroup (%s): %s", name, err)
 	}
 
-	if resp == nil || resp.Summary == nil {
-		return fmt.Errorf("Error creating WAFv2 RuleGroup")
-	}
+	output := outputRaw.(*wafv2.CreateRuleGroupOutput)
 
-	d.SetId(aws.StringValue(resp.Summary.Id))
+	d.SetId(aws.StringValue(output.Summary.Id))
 
-	return resourceRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(ctx, d, meta)
 }
 
-func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &wafv2.GetRuleGroupInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
+	output, err := FindRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return diag.Errorf("reading WAFv2 RuleGroup (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.RuleGroup == nil {
-		return fmt.Errorf("Error getting WAFv2 RuleGroup")
+	ruleGroup := output.RuleGroup
+	arn := aws.StringValue(ruleGroup.ARN)
+	d.Set("arn", ruleGroup.ARN)
+	d.Set("capacity", ruleGroup.Capacity)
+	if err := d.Set("custom_response_body", flattenCustomResponseBodies(ruleGroup.CustomResponseBodies)); err != nil {
+		return diag.Errorf("setting custom_response_body: %s", err)
+	}
+	d.Set("description", ruleGroup.Description)
+	d.Set("lock_token", output.LockToken)
+	d.Set("name", ruleGroup.Name)
+	if err := d.Set("rule", flattenRules(ruleGroup.Rules)); err != nil {
+		return diag.Errorf("setting rule: %s", err)
+	}
+	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
+		return diag.Errorf("setting visibility_config: %s", err)
 	}
 
-	d.Set("name", resp.RuleGroup.Name)
-	d.Set("capacity", resp.RuleGroup.Capacity)
-	d.Set("description", resp.RuleGroup.Description)
-	d.Set("arn", resp.RuleGroup.ARN)
-	d.Set("lock_token", resp.LockToken)
+	tags, err := ListTags(ctx, conn, arn)
 
-	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
-		return fmt.Errorf("Error setting custom_response_body: %w", err)
-	}
-
-	if err := d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules)); err != nil {
-		return fmt.Errorf("Error setting rule: %s", err)
-	}
-
-	if err := d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig)); err != nil {
-		return fmt.Errorf("Error setting visibility_config: %s", err)
-	}
-
-	arn := aws.StringValue(resp.RuleGroup.ARN)
-	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
+		return diag.Errorf("listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	log.Printf("[INFO] Updating WAFv2 RuleGroup %s", d.Id())
-
-	u := &wafv2.UpdateRuleGroupInput{
-		Id:               aws.String(d.Id()),
-		Name:             aws.String(d.Get("name").(string)),
-		Scope:            aws.String(d.Get("scope").(string)),
-		LockToken:        aws.String(d.Get("lock_token").(string)),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
-	}
-
-	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
-		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		u.Description = aws.String(v.(string))
-	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.UpdateRuleGroup(u)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &wafv2.UpdateRuleGroupInput{
+			Id:               aws.String(d.Id()),
+			LockToken:        aws.String(d.Get("lock_token").(string)),
+			Name:             aws.String(d.Get("name").(string)),
+			Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
+			Scope:            aws.String(d.Get("scope").(string)),
+			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
-		return nil
-	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateRuleGroup(u)
-	}
+		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+			input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
+		}
 
-	if err != nil {
-		return fmt.Errorf("Error updating WAFv2 RuleGroup: %s", err)
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		log.Printf("[INFO] Updating WAFv2 RuleGroup: %s", input)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupUpdateTimeout, func() (interface{}, error) {
+			return conn.UpdateRuleGroupWithContext(ctx, input)
+		}, wafv2.ErrCodeWAFUnavailableEntityException)
+
+		if err != nil {
+			return diag.Errorf("updating WAFv2 RuleGroup (%s): %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("Error updating tags: %s", err)
+		arn := d.Get("arn").(string)
+
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating tags for WAFv2 RuleGroup (%s): %s", arn, err)
 		}
 	}
 
-	return resourceRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(ctx, d, meta)
 }
 
-func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	log.Printf("[INFO] Deleting WAFv2 RuleGroup %s", d.Id())
-
-	r := &wafv2.DeleteRuleGroupInput{
+	input := &wafv2.DeleteRuleGroupInput{
 		Id:        aws.String(d.Id()),
+		LockToken: aws.String(d.Get("lock_token").(string)),
 		Name:      aws.String(d.Get("name").(string)),
 		Scope:     aws.String(d.Get("scope").(string)),
-		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteRuleGroup(r)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	log.Printf("[INFO] Deleting WAFv2 RuleGroup: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
+		return conn.DeleteRuleGroupWithContext(ctx, input)
+	}, wafv2.ErrCodeWAFAssociatedItemException, wafv2.ErrCodeWAFUnavailableEntityException)
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRuleGroup(r)
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFv2 RuleGroup: %s", err)
+		return diag.Errorf("deleting WAFv2 RuleGroup (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, scope string) (*wafv2.GetRuleGroupOutput, error) {
+	input := &wafv2.GetRuleGroupInput{
+		Id:    aws.String(id),
+		Name:  aws.String(name),
+		Scope: aws.String(scope),
+	}
+
+	output, err := conn.GetRuleGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RuleGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

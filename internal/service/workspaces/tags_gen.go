@@ -2,28 +2,35 @@
 package workspaces
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/workspaces/workspacesiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *workspaces.WorkSpaces, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &workspaces.DescribeTagsInput{
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.DescribeTags(input)
+	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagList), nil
+	return KeyValueTags(ctx, output.TagList), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(), identifier)
 }
 
 // []*SERVICE.Tag handling
@@ -45,22 +52,23 @@ func Tags(tags tftags.KeyValueTags) []*workspaces.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from workspaces service tags.
-func KeyValueTags(tags []*workspaces.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*workspaces.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &workspaces.DeleteTagsInput{
@@ -68,10 +76,10 @@ func UpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTagsMap inter
 			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.DeleteTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,12 +89,16 @@ func UpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTagsMap inter
 			Tags:       Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.CreateTags(input)
+		_, err := conn.CreateTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(), identifier, oldTags, newTags)
 }

@@ -1,6 +1,7 @@
 package fsx_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -18,20 +19,21 @@ import (
 )
 
 func TestAccFSxOntapStorageVirtualMachine_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`storage-virtual-machine/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.iscsi.#", "1"),
@@ -57,20 +59,21 @@ func TestAccFSxOntapStorageVirtualMachine_basic(t *testing.T) {
 }
 
 func TestAccFSxOntapStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`storage-virtual-machine/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
@@ -94,6 +97,7 @@ func TestAccFSxOntapStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 }
 
 func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine1, storageVirtualMachine2 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -101,15 +105,15 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 	pass2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName, pass1),
+				Config: testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName, pass1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "svm_admin_password", pass1),
 				),
 			},
@@ -120,10 +124,10 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"svm_admin_password"},
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName, pass2),
+				Config: testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName, pass2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
-					testAccCheckFsxOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
 					resource.TestCheckResourceAttr(resourceName, "svm_admin_password", pass2),
 				),
 			},
@@ -132,21 +136,22 @@ func TestAccFSxOntapStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 }
 
 func TestAccFSxOntapStorageVirtualMachine_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapStorageVirtualMachine(), resourceName),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOntapStorageVirtualMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -155,21 +160,22 @@ func TestAccFSxOntapStorageVirtualMachine_disappears(t *testing.T) {
 }
 
 func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine1, storageVirtualMachine2 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -179,10 +185,10 @@ func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineBasicConfig(rName2),
+				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
-					testAccCheckFsxOntapStorageVirtualMachineRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -191,20 +197,21 @@ func TestAccFSxOntapStorageVirtualMachine_name(t *testing.T) {
 }
 
 func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine1, storageVirtualMachine2, storageVirtualMachine3 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapStorageVirtualMachineTags1Config(rName, "key1", "value1"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -215,20 +222,20 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
-					testAccCheckFsxOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
+					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccOntapStorageVirtualMachineTags1Config(rName, "key2", "value2"),
+				Config: testAccONTAPStorageVirtualMachineConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine3),
-					testAccCheckFsxOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine2, &storageVirtualMachine3),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine3),
+					testAccCheckOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine2, &storageVirtualMachine3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -238,6 +245,7 @@ func TestAccFSxOntapStorageVirtualMachine_tags(t *testing.T) {
 }
 
 func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
+	ctx := acctest.Context(t)
 	var storageVirtualMachine1 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -247,15 +255,15 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 	domainPassword1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfig(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
+				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
@@ -277,56 +285,16 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapStorageVirtualMachine_activeDirectoryDeprecatedOrganizationalUnitDistinguishedName(t *testing.T) {
-	var storageVirtualMachine1 fsx.StorageVirtualMachine
-	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	netBiosName := "tftest-" + sdkacctest.RandString(7)
-	domainNetbiosName := "tftestcorp"
-	domainName := "tftestcorp.local"
-	domainPassword1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active_directory_configuration",
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckFsxOntapStorageVirtualMachineExists(resourceName string, svm *fsx.StorageVirtualMachine) resource.TestCheckFunc {
+func testAccCheckOntapStorageVirtualMachineExists(ctx context.Context, resourceName string, svm *fsx.StorageVirtualMachine) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-		storageVirtualMachine, err := tffsx.FindStorageVirtualMachineByID(conn, rs.Primary.ID)
+		storageVirtualMachine, err := tffsx.FindStorageVirtualMachineByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -341,27 +309,29 @@ func testAccCheckFsxOntapStorageVirtualMachineExists(resourceName string, svm *f
 	}
 }
 
-func testAccCheckFsxOntapStorageVirtualMachineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+func testAccCheckOntapStorageVirtualMachineDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_storage_virtual_machine" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_storage_virtual_machine" {
+				continue
+			}
 
-		storageVirtualMachine, err := tffsx.FindStorageVirtualMachineByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
+			storageVirtualMachine, err := tffsx.FindStorageVirtualMachineByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if storageVirtualMachine != nil {
-			return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) still exists", rs.Primary.ID)
+			if storageVirtualMachine != nil {
+				return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) still exists", rs.Primary.ID)
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckFsxOntapStorageVirtualMachineNotRecreated(i, j *fsx.StorageVirtualMachine) resource.TestCheckFunc {
+func testAccCheckOntapStorageVirtualMachineNotRecreated(i, j *fsx.StorageVirtualMachine) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StorageVirtualMachineId) != aws.StringValue(j.StorageVirtualMachineId) {
 			return fmt.Errorf("FSx Storage Virtual Machine (%s) recreated", aws.StringValue(i.StorageVirtualMachineId))
@@ -371,7 +341,7 @@ func testAccCheckFsxOntapStorageVirtualMachineNotRecreated(i, j *fsx.StorageVirt
 	}
 }
 
-func testAccCheckFsxOntapStorageVirtualMachineRecreated(i, j *fsx.StorageVirtualMachine) resource.TestCheckFunc {
+func testAccCheckOntapStorageVirtualMachineRecreated(i, j *fsx.StorageVirtualMachine) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StorageVirtualMachineId) == aws.StringValue(j.StorageVirtualMachineId) {
 			return fmt.Errorf("FSx Storage Virtual Machine (%s) not recreated", aws.StringValue(i.StorageVirtualMachineId))
@@ -444,7 +414,7 @@ resource "aws_directory_service_directory" "test" {
 `, rName, domainName, domainPassword))
 }
 
-func testAccOntapStorageVirtualMachineBasicConfig(rName string) string {
+func testAccONTAPStorageVirtualMachineConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -453,7 +423,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName string) string {
+func testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id             = aws_fsx_ontap_file_system.test.id
@@ -463,7 +433,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName string, pass string) string {
+func testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName string, pass string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id     = aws_fsx_ontap_file_system.test.id
@@ -473,7 +443,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, pass))
 }
 
-func testAccOntapStorageVirtualMachineTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccONTAPStorageVirtualMachineConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -486,7 +456,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccOntapStorageVirtualMachineTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccONTAPStorageVirtualMachineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -500,7 +470,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfig(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
+func testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -515,27 +485,6 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
       password                               = %[4]q
       username                               = "Admin"
       organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
-    }
-  }
-}
-`, rName, netBiosName, domainName, domainPassword, domainNetbiosName))
-}
-
-func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
-resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-  file_system_id = aws_fsx_ontap_file_system.test.id
-  name           = %[1]q
-  depends_on     = [aws_directory_service_directory.test]
-
-  active_directory_configuration {
-    netbios_name = %[2]q
-    self_managed_active_directory_configuration {
-      dns_ips                                 = aws_directory_service_directory.test.dns_ip_addresses
-      domain_name                             = %[3]q
-      password                                = %[4]q
-      username                                = "Admin"
-      organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s"
     }
   }
 }

@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccCloudFrontFunctionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudfront_function.test"
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionBasicDataSourceConfig(rName),
+				Config: testAccFunctionDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "code", resourceName, "code"),
@@ -37,7 +38,7 @@ func TestAccCloudFrontFunctionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFunctionBasicDataSourceConfig(rName string) string {
+func testAccFunctionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
   name    = %[1]q

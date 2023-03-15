@@ -1,6 +1,7 @@
 package appconfig
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,22 +10,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appconfig_configuration_profile")
 func ResourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationProfileCreate,
-		Read:   resourceConfigurationProfileRead,
-		Update: resourceConfigurationProfileUpdate,
-		Delete: resourceConfigurationProfileDelete,
+		CreateWithoutTimeout: resourceConfigurationProfileCreate,
+		ReadWithoutTimeout:   resourceConfigurationProfileRead,
+		UpdateWithoutTimeout: resourceConfigurationProfileUpdate,
+		DeleteWithoutTimeout: resourceConfigurationProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -65,6 +69,13 @@ func ResourceConfigurationProfile() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      configurationProfileTypeFreeform,
+				ValidateFunc: validation.StringInSlice(ConfigurationProfileType_Values(), false),
+			},
 			"validator": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -94,10 +105,11 @@ func ResourceConfigurationProfile() *schema.Resource {
 	}
 }
 
-func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	appId := d.Get("application_id").(string)
 	name := d.Get("name").(string)
@@ -117,34 +129,39 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 		input.RetrievalRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
-		input.Validators = expandAppconfigValidators(v.(*schema.Set).List())
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
 	}
 
-	profile, err := conn.CreateConfigurationProfile(input)
+	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
+		input.Validators = expandValidators(v.(*schema.Set).List())
+	}
+
+	profile, err := conn.CreateConfigurationProfileWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppConfig Configuration Profile (%s) for Application (%s): %w", name, appId, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Configuration Profile (%s) for Application (%s): %s", name, appId, err)
 	}
 
 	if profile == nil {
-		return fmt.Errorf("error creating AppConfig Configuration Profile (%s) for Application (%s): empty response", name, appId)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Configuration Profile (%s) for Application (%s): empty response", name, appId)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(profile.Id), aws.StringValue(profile.ApplicationId)))
 
-	return resourceConfigurationProfileRead(d, meta)
+	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s): %s", d.Id(), err)
 	}
 
 	input := &appconfig.GetConfigurationProfileInput{
@@ -152,20 +169,20 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 		ConfigurationProfileId: aws.String(confProfID),
 	}
 
-	output, err := conn.GetConfigurationProfile(input)
+	output, err := conn.GetConfigurationProfileWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] AppConfig Configuration Profile (%s) for Application (%s) not found, removing from state", confProfID, appID)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s) for Application (%s): %s", confProfID, appID, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Configuration Profile (%s) for Application (%s): empty response", confProfID, appID)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s) for Application (%s): empty response", confProfID, appID)
 	}
 
 	d.Set("application_id", output.ApplicationId)
@@ -173,11 +190,11 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("description", output.Description)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("name", output.Name)
-
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
+	d.Set("type", output.Type)
 
 	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
-		return fmt.Errorf("error setting validator: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting validator: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -187,37 +204,37 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
-
 	d.Set("arn", arn)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Configuration Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for AppConfig Configuration Profile (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Configuration Profile (%s): %s", d.Id(), err)
 		}
 
 		updateInput := &appconfig.UpdateConfigurationProfileInput{
@@ -238,33 +255,34 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		if d.HasChange("validator") {
-			updateInput.Validators = expandAppconfigValidators(d.Get("validator").(*schema.Set).List())
+			updateInput.Validators = expandValidators(d.Get("validator").(*schema.Set).List())
 		}
 
-		_, err = conn.UpdateConfigurationProfile(updateInput)
+		_, err = conn.UpdateConfigurationProfileWithContext(ctx, updateInput)
 
 		if err != nil {
-			return fmt.Errorf("error updating AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Configuration Profile (%s) for Application (%s): %s", confProfID, appID, err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig Configuration Profile (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Configuration Profile (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceConfigurationProfileRead(d, meta)
+	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s): %s", d.Id(), err)
 	}
 
 	input := &appconfig.DeleteConfigurationProfileInput{
@@ -272,17 +290,17 @@ func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}
 		ConfigurationProfileId: aws.String(confProfID),
 	}
 
-	_, err = conn.DeleteConfigurationProfile(input)
+	_, err = conn.DeleteConfigurationProfileWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting AppConfig Configuration Profile (%s) for Application (%s): %w", confProfID, appID, err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s) for Application (%s): %s", confProfID, appID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ConfigurationProfileParseID(id string) (string, string, error) {
@@ -295,7 +313,7 @@ func ConfigurationProfileParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandAppconfigValidator(tfMap map[string]interface{}) *appconfig.Validator {
+func expandValidator(tfMap map[string]interface{}) *appconfig.Validator {
 	if tfMap == nil {
 		return nil
 	}
@@ -314,7 +332,7 @@ func expandAppconfigValidator(tfMap map[string]interface{}) *appconfig.Validator
 	return validator
 }
 
-func expandAppconfigValidators(tfList []interface{}) []*appconfig.Validator {
+func expandValidators(tfList []interface{}) []*appconfig.Validator {
 	// AppConfig API requires a 0 length slice instead of a nil value
 	// when updating from N validators to 0/nil validators
 	validators := make([]*appconfig.Validator, 0)
@@ -326,7 +344,7 @@ func expandAppconfigValidators(tfList []interface{}) []*appconfig.Validator {
 			continue
 		}
 
-		validator := expandAppconfigValidator(tfMap)
+		validator := expandValidator(tfMap)
 
 		if validator == nil {
 			continue

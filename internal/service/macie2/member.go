@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_member")
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2MemberCreate,
-		ReadWithoutTimeout:   resourceMacie2MemberRead,
-		UpdateWithoutTimeout: resourceMacie2MemberUpdate,
-		DeleteWithoutTimeout: resourceMacie2MemberDelete,
+		CreateWithoutTimeout: resourceMemberCreate,
+		ReadWithoutTimeout:   resourceMemberRead,
+		UpdateWithoutTimeout: resourceMemberUpdate,
+		DeleteWithoutTimeout: resourceMemberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -76,7 +77,7 @@ func ResourceMember() *schema.Resource {
 				Computed: true,
 			},
 			"invitation_disable_email_notification": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"invitation_message": {
@@ -91,11 +92,11 @@ func ResourceMember() *schema.Resource {
 	}
 }
 
-func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
@@ -135,7 +136,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(accountId)
 
 	if !d.Get("invite").(bool) {
-		return resourceMacie2MemberRead(ctx, d, meta)
+		return resourceMemberRead(ctx, d, meta)
 	}
 
 	// Invitation workflow
@@ -184,11 +185,11 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
 	}
 
-	return resourceMacie2MemberRead(ctx, d, meta)
+	return resourceMemberRead(ctx, d, meta)
 }
 
-func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -217,7 +218,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags", d.Id(), err))
@@ -250,8 +251,8 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	// Invitation workflow
 
@@ -328,14 +329,13 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
 		}
-
 	}
 
-	return resourceMacie2MemberRead(ctx, d, meta)
+	return resourceMemberRead(ctx, d, meta)
 }
 
-func resourceMacie2MemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),

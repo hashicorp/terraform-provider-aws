@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccAppMeshMeshDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckMeshDataSourceConfig(rName),
+				Config: testAccMeshDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -39,18 +40,19 @@ func TestAccAppMeshMeshDataSource_basic(t *testing.T) {
 }
 
 func TestAccAppMeshMeshDataSource_meshOwner(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckMeshDataSourceConfig_meshOwner(rName),
+				Config: testAccMeshDataSourceConfig_meshOwner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -67,18 +69,19 @@ func TestAccAppMeshMeshDataSource_meshOwner(t *testing.T) {
 }
 
 func TestAccAppMeshMeshDataSource_specAndTagsSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckMeshDataSourceConfig_specAndTagsSet(rName),
+				Config: testAccMeshDataSourceConfig_specAndTagsSet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -94,7 +97,7 @@ func TestAccAppMeshMeshDataSource_specAndTagsSet(t *testing.T) {
 	})
 }
 
-func testAccCheckMeshDataSourceConfig(rName string) string {
+func testAccMeshDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -106,7 +109,7 @@ data "aws_appmesh_mesh" "test" {
 `, rName)
 }
 
-func testAccCheckMeshDataSourceConfig_meshOwner(rName string) string {
+func testAccMeshDataSourceConfig_meshOwner(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -121,7 +124,7 @@ data "aws_appmesh_mesh" "test" {
 `, rName)
 }
 
-func testAccCheckMeshDataSourceConfig_specAndTagsSet(rName string) string {
+func testAccMeshDataSourceConfig_specAndTagsSet(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

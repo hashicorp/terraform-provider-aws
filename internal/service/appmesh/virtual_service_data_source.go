@@ -1,19 +1,22 @@
 package appmesh
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_appmesh_virtual_service")
 func DataSourceVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVirtualServiceRead,
+		ReadWithoutTimeout: dataSourceVirtualServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -99,8 +102,9 @@ func DataSourceVirtualService() *schema.Resource {
 	}
 }
 
-func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualServiceInput{
@@ -112,9 +116,9 @@ func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) erro
 		req.MeshOwner = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeVirtualService(req)
+	resp, err := conn.DescribeVirtualServiceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Virtual Service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: %s", err)
 	}
 
 	arn := aws.StringValue(resp.VirtualService.Metadata.Arn)
@@ -129,20 +133,20 @@ func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
 
-	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh Virtual Service (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

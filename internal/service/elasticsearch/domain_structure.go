@@ -291,3 +291,34 @@ func getUserDBEnabled(d *schema.ResourceData) bool {
 	}
 	return false
 }
+
+func expandLogPublishingOptions(m *schema.Set) map[string]*elasticsearch.LogPublishingOption {
+	options := make(map[string]*elasticsearch.LogPublishingOption)
+
+	for _, vv := range m.List() {
+		lo := vv.(map[string]interface{})
+		options[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+			CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+			Enabled:                   aws.Bool(lo["enabled"].(bool)),
+		}
+	}
+
+	return options
+}
+
+func flattenLogPublishingOptions(o map[string]*elasticsearch.LogPublishingOption) []map[string]interface{} {
+	m := make([]map[string]interface{}, 0)
+	for logType, val := range o {
+		mm := map[string]interface{}{
+			"log_type": logType,
+			"enabled":  aws.BoolValue(val.Enabled),
+		}
+
+		if val.CloudWatchLogsLogGroupArn != nil {
+			mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+		}
+
+		m = append(m, mm)
+	}
+	return m
+}

@@ -1,13 +1,13 @@
 package route53_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,20 +16,21 @@ import (
 )
 
 func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationConfig(domainName),
+				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -42,21 +43,22 @@ func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 }
 
 func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationConfig(domainName),
+				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,22 +67,23 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 }
 
 func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
 
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationConfig(domainName),
+				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,22 +92,23 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 }
 
 func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
 
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationConfig(domainName),
+				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,31 +117,27 @@ func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 }
 
 func TestAccRoute53ZoneAssociation_crossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationCrossAccountConfig(domainName),
+				Config: testAccZoneAssociationConfig_crossAccount(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config:            testAccRoute53ZoneAssociationCrossAccountConfig(domainName),
+				Config:            testAccZoneAssociationConfig_crossAccount(domainName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -147,31 +147,27 @@ func TestAccRoute53ZoneAssociation_crossAccount(t *testing.T) {
 }
 
 func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckZoneAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ZoneAssociationRegionConfig(domainName),
+				Config: testAccZoneAssociationConfig_region(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneAssociationExists(resourceName),
+					testAccCheckZoneAssociationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config:            testAccRoute53ZoneAssociationRegionConfig(domainName),
+				Config:            testAccZoneAssociationConfig_region(domainName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -180,37 +176,39 @@ func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_zone_association" {
-			continue
+func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_zone_association" {
+				continue
+			}
+
+			zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
+
+			if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if hostedZoneSummary != nil {
+				return fmt.Errorf("Route 53 Zone Association (%s) still exists", rs.Primary.ID)
+			}
 		}
-
-		zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		hostedZoneSummary, err := tfroute53.GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
-
-		if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if hostedZoneSummary != nil {
-			return fmt.Errorf("Route 53 Zone Association (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckZoneAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -227,9 +225,9 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
-		hostedZoneSummary, err := tfroute53.GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
+		hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
 
 		if err != nil {
 			return err
@@ -243,7 +241,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 	}
 }
 
-func testAccRoute53ZoneAssociationConfig(domainName string) string {
+func testAccZoneAssociationConfig_basic(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.6.0.0/16"
@@ -284,7 +282,7 @@ resource "aws_route53_zone_association" "test" {
 `, domainName)
 }
 
-func testAccRoute53ZoneAssociationCrossAccountConfig(domainName string) string {
+func testAccZoneAssociationConfig_crossAccount(domainName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -330,7 +328,7 @@ resource "aws_route53_zone_association" "test" {
 `, domainName))
 }
 
-func testAccRoute53ZoneAssociationRegionConfig(domainName string) string {
+func testAccZoneAssociationConfig_region(domainName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`

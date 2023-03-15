@@ -1,6 +1,7 @@
 package outposts_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,25 +13,26 @@ import (
 )
 
 func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_sites.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSitesDataSourceConfig(),
+				Config: testAccSitesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsSitesAttributes(dataSourceName),
+					testAccCheckSitesAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsSitesAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -45,12 +47,12 @@ func testAccCheckOutpostsSitesAttributes(dataSourceName string) resource.TestChe
 	}
 }
 
-func testAccPreCheckSites(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn
+func testAccPreCheckSites(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListSitesInput{}
 
-	output, err := conn.ListSites(input)
+	output, err := conn.ListSitesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -66,7 +68,7 @@ func testAccPreCheckSites(t *testing.T) {
 	}
 }
 
-func testAccSitesDataSourceConfig() string {
+func testAccSitesDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_sites" "test" {}
 `

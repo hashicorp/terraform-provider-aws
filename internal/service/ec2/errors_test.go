@@ -5,11 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestUnsuccessfulItemError(t *testing.T) {
+	t.Parallel()
+
 	unsuccessfulItemError := &ec2.UnsuccessfulItemError{
 		Code:    aws.String("test code"),
 		Message: aws.String("test message"),
@@ -27,6 +29,8 @@ func TestUnsuccessfulItemError(t *testing.T) {
 }
 
 func TestUnsuccessfulItemsError(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Items    []*ec2.UnsuccessfulItem
@@ -114,7 +118,10 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			err := tfec2.UnsuccessfulItemsError(testCase.Items)
 
 			got := tfawserr.ErrCodeEquals(err, "test code")

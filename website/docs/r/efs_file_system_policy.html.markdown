@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system_policy"
 description: |-
@@ -17,36 +17,35 @@ resource "aws_efs_file_system" "fs" {
   creation_token = "my-product"
 }
 
-resource "aws_efs_file_system_policy" "policy" {
-  file_system_id = aws_efs_file_system.fs.id
+data "aws_iam_policy_document" "policy" {
+  statement {
+    sid    = "ExampleStatement01"
+    effect = "Allow"
 
-  bypass_policy_lockout_safety_check = true
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
 
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Id": "ExamplePolicy01",
-    "Statement": [
-        {
-            "Sid": "ExampleStatement01",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "*"
-            },
-            "Resource": "${aws_efs_file_system.test.arn}",
-            "Action": [
-                "elasticfilesystem:ClientMount",
-                "elasticfilesystem:ClientWrite"
-            ],
-            "Condition": {
-                "Bool": {
-                    "aws:SecureTransport": "true"
-                }
-            }
-        }
+    actions = [
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:ClientWrite",
     ]
+
+    resources = [aws_efs_file_system.fs.arn]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["true"]
+    }
+  }
 }
-POLICY
+
+resource "aws_efs_file_system_policy" "policy" {
+  file_system_id                     = aws_efs_file_system.fs.id
+  bypass_policy_lockout_safety_check = true
+  policy                             = data.aws_iam_policy_document.policy.json
 }
 ```
 

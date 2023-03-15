@@ -1,7 +1,7 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
-page_title: "AWS: aws_docdb"
+page_title: "AWS: aws_docdb_global_cluster"
 description: |-
   Manages a DocDB Global Cluster
 ---
@@ -45,13 +45,11 @@ resource "aws_docdb_cluster" "primary" {
 }
 
 resource "aws_docdb_cluster_instance" "primary" {
-  provider             = aws.primary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-primary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.primary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.primary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-primary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.primary.id
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_docdb_cluster" "secondary" {
@@ -64,13 +62,11 @@ resource "aws_docdb_cluster" "secondary" {
 }
 
 resource "aws_docdb_cluster_instance" "secondary" {
-  provider             = aws.secondary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-secondary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.secondary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.secondary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-secondary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.secondary.id
+  instance_class     = "db.r5.large"
 
   depends_on = [
     aws_docdb_cluster_instance.primary
@@ -113,14 +109,6 @@ The following arguments are supported:
 * `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 5 mins) Used when creating the Global Cluster
-* `update` - (Defaults to 5 mins) Used when updating the Global Cluster members (time is per member)
-* `delete` - (Defaults to 5 mins) Used when deleting the Global Cluster members (time is per member)
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -131,6 +119,14 @@ In addition to all arguments above, the following attributes are exported:
     * `is_writer` - Whether the member is the primary DB Cluster.
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
 * `id` - DocDB Global Cluster.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

@@ -2,30 +2,34 @@ package wafv2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_wafv2_web_acl_logging_configuration")
 func ResourceWebACLLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWebACLLoggingConfigurationPut,
-		Read:   resourceWebACLLoggingConfigurationRead,
-		Update: resourceWebACLLoggingConfigurationPut,
-		Delete: resourceWebACLLoggingConfigurationDelete,
+		CreateWithoutTimeout: resourceWebACLLoggingConfigurationPut,
+		ReadWithoutTimeout:   resourceWebACLLoggingConfigurationRead,
+		UpdateWithoutTimeout: resourceWebACLLoggingConfigurationPut,
+		DeleteWithoutTimeout: resourceWebACLLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -126,10 +130,10 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 						// TODO: remove attributes marked as Deprecated
 						// as they are not supported by the WAFv2 API
 						// in the context of WebACL Logging Configurations
-						"all_query_arguments": wafv2EmptySchemaDeprecated(),
-						"body":                wafv2EmptySchemaDeprecated(),
-						"method":              wafv2EmptySchema(),
-						"query_string":        wafv2EmptySchema(),
+						"all_query_arguments": emptyDeprecatedSchema(),
+						"body":                emptyDeprecatedSchema(),
+						"method":              emptySchema(),
+						"query_string":        emptySchema(),
 						"single_header": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -170,7 +174,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 							},
 							Deprecated: "Not supported by WAFv2 API",
 						},
-						"uri_path": wafv2EmptySchema(),
+						"uri_path": emptySchema(),
 					},
 				},
 				Description:      "Parts of the request to exclude from logs",
@@ -187,8 +191,9 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -198,11 +203,11 @@ func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("logging_filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.LoggingFilter = expandWafv2LoggingFilter(v.([]interface{}))
+		config.LoggingFilter = expandLoggingFilter(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("redacted_fields"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.RedactedFields = expandWafv2RedactedFields(v.([]interface{}))
+		config.RedactedFields = expandRedactedFields(v.([]interface{}))
 	} else {
 		config.RedactedFields = []*wafv2.FieldToMatch{}
 	}
@@ -211,89 +216,91 @@ func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interfac
 		LoggingConfiguration: config,
 	}
 
-	output, err := conn.PutLoggingConfiguration(input)
+	output, err := conn.PutLoggingConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting WAFv2 Logging Configuration for resource (%s): %w", resourceArn, err)
+		return sdkdiag.AppendErrorf(diags, "putting WAFv2 Logging Configuration for resource (%s): %s", resourceArn, err)
 	}
 
 	if output == nil || output.LoggingConfiguration == nil {
-		return fmt.Errorf("error putting WAFv2 Logging Configuration for resource (%s): empty response", resourceArn)
+		return sdkdiag.AppendErrorf(diags, "putting WAFv2 Logging Configuration for resource (%s): empty response", resourceArn)
 	}
 
 	d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
 
-	return resourceWebACLLoggingConfigurationRead(d, meta)
+	return append(diags, resourceWebACLLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWebACLLoggingConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetLoggingConfiguration(input)
+	output, err := conn.GetLoggingConfigurationWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading WAFv2 Logging Configuration for resource (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 Logging Configuration for resource (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.LoggingConfiguration == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading WAFv2 Logging Configuration for resource (%s): empty response after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 Logging Configuration for resource (%s): empty response after creation", d.Id())
 		}
 		log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	loggingConfig := output.LoggingConfiguration
 
 	if err := d.Set("log_destination_configs", flex.FlattenStringList(loggingConfig.LogDestinationConfigs)); err != nil {
-		return fmt.Errorf("error setting log_destination_configs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting log_destination_configs: %s", err)
 	}
 
-	if err := d.Set("logging_filter", flattenWafv2LoggingFilter(loggingConfig.LoggingFilter)); err != nil {
-		return fmt.Errorf("error setting logging_filter: %w", err)
+	if err := d.Set("logging_filter", flattenLoggingFilter(loggingConfig.LoggingFilter)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_filter: %s", err)
 	}
 
-	if err := d.Set("redacted_fields", flattenWafv2RedactedFields(loggingConfig.RedactedFields)); err != nil {
-		return fmt.Errorf("error setting redacted_fields: %w", err)
+	if err := d.Set("redacted_fields", flattenRedactedFields(loggingConfig.RedactedFields)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting redacted_fields: %s", err)
 	}
 
 	d.Set("resource_arn", loggingConfig.ResourceArn)
 
-	return nil
+	return diags
 }
 
-func resourceWebACLLoggingConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteLoggingConfiguration(input)
+	_, err := conn.DeleteLoggingConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting WAFv2 Logging Configuration for resource (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 Logging Configuration for resource (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandWafv2LoggingFilter(l []interface{}) *wafv2.LoggingFilter {
+func expandLoggingFilter(l []interface{}) *wafv2.LoggingFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -311,13 +318,13 @@ func expandWafv2LoggingFilter(l []interface{}) *wafv2.LoggingFilter {
 	}
 
 	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
-		loggingFilter.Filters = expandWafv2Filters(v.List())
+		loggingFilter.Filters = expandFilters(v.List())
 	}
 
 	return loggingFilter
 }
 
-func expandWafv2Filters(l []interface{}) []*wafv2.Filter {
+func expandFilters(l []interface{}) []*wafv2.Filter {
 	if len(l) == 0 {
 		return nil
 	}
@@ -337,7 +344,7 @@ func expandWafv2Filters(l []interface{}) []*wafv2.Filter {
 		}
 
 		if v, ok := tfMap["condition"].(*schema.Set); ok && v.Len() > 0 {
-			filter.Conditions = expandWafv2FilterConditions(v.List())
+			filter.Conditions = expandFilterConditions(v.List())
 		}
 
 		if v, ok := tfMap["requirement"].(string); ok && v != "" {
@@ -350,7 +357,7 @@ func expandWafv2Filters(l []interface{}) []*wafv2.Filter {
 	return filters
 }
 
-func expandWafv2FilterConditions(l []interface{}) []*wafv2.Condition {
+func expandFilterConditions(l []interface{}) []*wafv2.Condition {
 	if len(l) == 0 {
 		return nil
 	}
@@ -366,11 +373,11 @@ func expandWafv2FilterConditions(l []interface{}) []*wafv2.Condition {
 		condition := &wafv2.Condition{}
 
 		if v, ok := tfMap["action_condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			condition.ActionCondition = expandWafv2ActionCondition(v)
+			condition.ActionCondition = expandActionCondition(v)
 		}
 
 		if v, ok := tfMap["label_name_condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			condition.LabelNameCondition = expandWafv2LabelNameCondition(v)
+			condition.LabelNameCondition = expandLabelNameCondition(v)
 		}
 
 		conditions = append(conditions, condition)
@@ -379,7 +386,7 @@ func expandWafv2FilterConditions(l []interface{}) []*wafv2.Condition {
 	return conditions
 }
 
-func expandWafv2ActionCondition(l []interface{}) *wafv2.ActionCondition {
+func expandActionCondition(l []interface{}) *wafv2.ActionCondition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -398,7 +405,7 @@ func expandWafv2ActionCondition(l []interface{}) *wafv2.ActionCondition {
 	return condition
 }
 
-func expandWafv2LabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
+func expandLabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -417,15 +424,15 @@ func expandWafv2LabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
 	return condition
 }
 
-func expandWafv2RedactedFields(fields []interface{}) []*wafv2.FieldToMatch {
+func expandRedactedFields(fields []interface{}) []*wafv2.FieldToMatch {
 	redactedFields := make([]*wafv2.FieldToMatch, 0, len(fields))
 	for _, field := range fields {
-		redactedFields = append(redactedFields, expandWafv2RedactedField(field))
+		redactedFields = append(redactedFields, expandRedactedField(field))
 	}
 	return redactedFields
 }
 
-func expandWafv2RedactedField(field interface{}) *wafv2.FieldToMatch {
+func expandRedactedField(field interface{}) *wafv2.FieldToMatch {
 	m := field.(map[string]interface{})
 
 	f := &wafv2.FieldToMatch{}
@@ -443,7 +450,7 @@ func expandWafv2RedactedField(field interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
-		f.SingleHeader = expandWafv2SingleHeader(m["single_header"].([]interface{}))
+		f.SingleHeader = expandSingleHeader(m["single_header"].([]interface{}))
 	}
 
 	if v, ok := m["uri_path"]; ok && len(v.([]interface{})) > 0 {
@@ -453,20 +460,20 @@ func expandWafv2RedactedField(field interface{}) *wafv2.FieldToMatch {
 	return f
 }
 
-func flattenWafv2LoggingFilter(filter *wafv2.LoggingFilter) []interface{} {
+func flattenLoggingFilter(filter *wafv2.LoggingFilter) []interface{} {
 	if filter == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"default_behavior": aws.StringValue(filter.DefaultBehavior),
-		"filter":           flattenWafv2Filters(filter.Filters),
+		"filter":           flattenFilters(filter.Filters),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenWafv2Filters(f []*wafv2.Filter) []interface{} {
+func flattenFilters(f []*wafv2.Filter) []interface{} {
 	if len(f) == 0 {
 		return []interface{}{}
 	}
@@ -480,7 +487,7 @@ func flattenWafv2Filters(f []*wafv2.Filter) []interface{} {
 
 		m := map[string]interface{}{
 			"behavior":    aws.StringValue(filter.Behavior),
-			"condition":   flattenWafv2FilterConditions(filter.Conditions),
+			"condition":   flattenFilterConditions(filter.Conditions),
 			"requirement": aws.StringValue(filter.Requirement),
 		}
 
@@ -490,7 +497,7 @@ func flattenWafv2Filters(f []*wafv2.Filter) []interface{} {
 	return filters
 }
 
-func flattenWafv2FilterConditions(c []*wafv2.Condition) []interface{} {
+func flattenFilterConditions(c []*wafv2.Condition) []interface{} {
 	if len(c) == 0 {
 		return []interface{}{}
 	}
@@ -503,8 +510,8 @@ func flattenWafv2FilterConditions(c []*wafv2.Condition) []interface{} {
 		}
 
 		m := map[string]interface{}{
-			"action_condition":     flattenWafv2ActionCondition(condition.ActionCondition),
-			"label_name_condition": flattenWafv2LabelNameCondition(condition.LabelNameCondition),
+			"action_condition":     flattenActionCondition(condition.ActionCondition),
+			"label_name_condition": flattenLabelNameCondition(condition.LabelNameCondition),
 		}
 
 		conditions = append(conditions, m)
@@ -513,7 +520,7 @@ func flattenWafv2FilterConditions(c []*wafv2.Condition) []interface{} {
 	return conditions
 }
 
-func flattenWafv2ActionCondition(a *wafv2.ActionCondition) []interface{} {
+func flattenActionCondition(a *wafv2.ActionCondition) []interface{} {
 	if a == nil {
 		return []interface{}{}
 	}
@@ -525,7 +532,7 @@ func flattenWafv2ActionCondition(a *wafv2.ActionCondition) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2LabelNameCondition(l *wafv2.LabelNameCondition) []interface{} {
+func flattenLabelNameCondition(l *wafv2.LabelNameCondition) []interface{} {
 	if l == nil {
 		return []interface{}{}
 	}
@@ -537,15 +544,15 @@ func flattenWafv2LabelNameCondition(l *wafv2.LabelNameCondition) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2RedactedFields(fields []*wafv2.FieldToMatch) []interface{} {
+func flattenRedactedFields(fields []*wafv2.FieldToMatch) []interface{} {
 	redactedFields := make([]interface{}, 0, len(fields))
 	for _, field := range fields {
-		redactedFields = append(redactedFields, flattenWafv2RedactedField(field))
+		redactedFields = append(redactedFields, flattenRedactedField(field))
 	}
 	return redactedFields
 }
 
-func flattenWafv2RedactedField(f *wafv2.FieldToMatch) map[string]interface{} {
+func flattenRedactedField(f *wafv2.FieldToMatch) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if f == nil {
@@ -564,7 +571,7 @@ func flattenWafv2RedactedField(f *wafv2.FieldToMatch) map[string]interface{} {
 	}
 
 	if f.SingleHeader != nil {
-		m["single_header"] = flattenWafv2SingleHeader(f.SingleHeader)
+		m["single_header"] = flattenSingleHeader(f.SingleHeader)
 	}
 
 	if f.UriPath != nil {

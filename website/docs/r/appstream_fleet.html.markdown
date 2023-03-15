@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_fleet"
 description: |-
@@ -59,7 +59,7 @@ The following arguments are optional:
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
-* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays.
+* `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
 * `max_user_duration_in_seconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
@@ -78,7 +78,6 @@ The following arguments are optional:
 * `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
 * `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -94,7 +93,6 @@ In addition to all arguments above, the following attributes are exported:
 * `available` - Number of currently available instances that can be used to stream sessions.
 * `in_use` - Number of instances in use for streaming.
 * `running` - Total number of simultaneous streaming instances that are running.
-
 
 ## Import
 

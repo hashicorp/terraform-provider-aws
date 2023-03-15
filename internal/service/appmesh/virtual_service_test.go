@@ -1,20 +1,23 @@
 package appmesh_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func testAccVirtualService_virtualNode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,15 +26,15 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
+				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -46,9 +49,9 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.bar"),
+				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.bar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -69,6 +72,7 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 }
 
 func testAccVirtualService_virtualRouter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -77,15 +81,15 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.foo"),
+				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -99,9 +103,9 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
 			},
 			{
-				Config: testAccAppmeshVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.bar"),
+				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.bar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -116,6 +120,7 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 }
 
 func testAccVirtualService_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vs appmesh.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,15 +129,15 @@ func testAccVirtualService_tags(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo", "foo", "bar", "good", "bad"),
+				Config: testAccVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo", "foo", "bar", "good", "bad"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
@@ -142,9 +147,9 @@ func testAccVirtualService_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo", "foo2", "bar", "good", "bad2"),
+				Config: testAccVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo", "foo2", "bar", "good", "bad2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
@@ -154,9 +159,9 @@ func testAccVirtualService_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
+				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "0"),
 				),
@@ -171,33 +176,62 @@ func testAccVirtualService_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppmeshVirtualServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+func testAccVirtualService_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vs appmesh.VirtualServiceData
+	resourceName := "aws_appmesh_virtual_service.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vnName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vnName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appmesh_virtual_service" {
-			continue
-		}
-
-		_, err := conn.DescribeVirtualService(&appmesh.DescribeVirtualServiceInput{
-			MeshName:           aws.String(rs.Primary.Attributes["mesh_name"]),
-			VirtualServiceName: aws.String(rs.Primary.Attributes["name"]),
-		})
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("still exist.")
-	}
-
-	return nil
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualService(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckAppmeshVirtualServiceExists(name string, v *appmesh.VirtualServiceData) resource.TestCheckFunc {
+func testAccCheckVirtualServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appmesh_virtual_service" {
+				continue
+			}
+
+			_, err := conn.DescribeVirtualServiceWithContext(ctx, &appmesh.DescribeVirtualServiceInput{
+				MeshName:           aws.String(rs.Primary.Attributes["mesh_name"]),
+				VirtualServiceName: aws.String(rs.Primary.Attributes["name"]),
+			})
+			if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("still exist.")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVirtualServiceExists(ctx context.Context, name string, v *appmesh.VirtualServiceData) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -207,7 +241,7 @@ func testAccCheckAppmeshVirtualServiceExists(name string, v *appmesh.VirtualServ
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualService(&appmesh.DescribeVirtualServiceInput{
+		resp, err := conn.DescribeVirtualServiceWithContext(ctx, &appmesh.DescribeVirtualServiceInput{
 			MeshName:           aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualServiceName: aws.String(rs.Primary.Attributes["name"]),
 		})
@@ -221,7 +255,7 @@ func testAccCheckAppmeshVirtualServiceExists(name string, v *appmesh.VirtualServ
 	}
 }
 
-func testAccAppmeshVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, rName string) string {
+func testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -256,7 +290,7 @@ resource "aws_appmesh_virtual_service" "test" {
 `, meshName, vnName1, vnName2, vsName, rName)
 }
 
-func testAccAppmeshVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, rName string) string {
+func testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -305,7 +339,7 @@ resource "aws_appmesh_virtual_service" "test" {
 `, meshName, vrName1, vrName2, vsName, rName)
 }
 
-func testAccAppmeshVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVirtualServiceConfig_tags(meshName, vnName1, vnName2, vsName, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q

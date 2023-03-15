@@ -2,7 +2,9 @@ package sns
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,363 +13,399 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var (
+	subscriptionSchema = map[string]*schema.Schema{
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"confirmation_timeout_in_minutes": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  1,
+		},
+		"confirmation_was_authenticated": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"delivery_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
+		},
+		"endpoint": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"endpoint_auto_confirms": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"filter_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"filter_policy_scope": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true, // When filter_policy is set, this defaults to MessageAttributes.
+			ValidateFunc: validation.StringInSlice(SubscriptionFilterPolicyScope_Values(), false),
+		},
+		"owner_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"pending_confirmation": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"protocol": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringInSlice(SubscriptionProtocol_Values(), false),
+		},
+		"raw_message_delivery": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"redrive_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+		},
+		"subscription_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"topic_arn": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+	}
+
+	subscriptionAttributeMap = attrmap.New(map[string]string{
+		"arn":                            SubscriptionAttributeNameSubscriptionARN,
+		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
+		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
+		"endpoint":                       SubscriptionAttributeNameEndpoint,
+		"filter_policy":                  SubscriptionAttributeNameFilterPolicy,
+		"filter_policy_scope":            SubscriptionAttributeNameFilterPolicyScope,
+		"owner_id":                       SubscriptionAttributeNameOwner,
+		"pending_confirmation":           SubscriptionAttributeNamePendingConfirmation,
+		"protocol":                       SubscriptionAttributeNameProtocol,
+		"raw_message_delivery":           SubscriptionAttributeNameRawMessageDelivery,
+		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
+		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
+		"topic_arn":                      SubscriptionAttributeNameTopicARN,
+	}, subscriptionSchema).WithMissingSetToNil("*")
+)
+
+// @SDKResource("aws_sns_topic_subscription")
 func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicSubscriptionCreate,
-		Read:   resourceTopicSubscriptionRead,
-		Update: resourceTopicSubscriptionUpdate,
-		Delete: resourceTopicSubscriptionDelete,
+		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
+		ReadWithoutTimeout:   resourceTopicSubscriptionRead,
+		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"confirmation_timeout_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-			},
-			"confirmation_was_authenticated": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"delivery_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"endpoint_auto_confirms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"filter_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pending_confirmation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"protocol": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"application",
-					"email-json",
-					"email",
-					"firehose",
-					"http",
-					"https",
-					"lambda",
-					"sms",
-					"sqs",
-				}, false),
-			},
-			"raw_message_delivery": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"redrive_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"subscription_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"topic_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-		},
+		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
+
+		Schema: subscriptionSchema,
 	}
 }
 
-func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Endpoint, Protocol and TopicArn are not passed in Attributes.
+	delete(attributes, SubscriptionAttributeNameEndpoint)
+	delete(attributes, SubscriptionAttributeNameProtocol)
+	delete(attributes, SubscriptionAttributeNameTopicARN)
+
+	protocol := d.Get("protocol").(string)
 	input := &sns.SubscribeInput{
-		Attributes:            expandSNSSubscriptionAttributes(d),
+		Attributes:            aws.StringMap(attributes),
 		Endpoint:              aws.String(d.Get("endpoint").(string)),
-		Protocol:              aws.String(d.Get("protocol").(string)),
+		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: aws.Bool(true), // even if not confirmed, will get ARN
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),
 	}
 
-	output, err := conn.Subscribe(input)
+	output, err := conn.SubscribeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SNS topic subscription: %w", err)
-	}
-
-	if output == nil || output.SubscriptionArn == nil || aws.StringValue(output.SubscriptionArn) == "" {
-		return fmt.Errorf("error creating SNS topic subscription: empty response")
+		return diag.Errorf("creating SNS Topic Subscription: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.SubscriptionArn))
 
 	waitForConfirmation := true
 
-	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(d.Get("protocol").(string), "http") {
+	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(protocol, "http") {
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(d.Get("protocol").(string), "email") {
+	if strings.Contains(protocol, "email") {
 		waitForConfirmation = false
-	}
-
-	timeout := subscriptionPendingConfirmationTimeout
-	if strings.Contains(d.Get("protocol").(string), "http") {
-		timeout = time.Duration(d.Get("confirmation_timeout_in_minutes").(int)) * time.Minute
 	}
 
 	if waitForConfirmation {
-		if _, err := waitSubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
-			return fmt.Errorf("waiting for SNS topic subscription (%s) confirmation: %w", d.Id(), err)
+		timeout := subscriptionPendingConfirmationTimeout
+		if strings.Contains(protocol, "http") {
+			timeout = time.Duration(int64(d.Get("confirmation_timeout_in_minutes").(int)) * int64(time.Minute))
+		}
+
+		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
+			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(ctx, d, meta)
 }
 
-func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
-	var output *sns.GetSubscriptionAttributesOutput
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(subscriptionCreateTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = FindSubscriptionByARN(conn, d.Id())
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && output == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("SNS Topic Subscription Attributes (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = FindSubscriptionByARN(conn, d.Id())
-	}
-
-	if err != nil {
-		return fmt.Errorf("error getting SNS Topic Subscription Attributes (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error getting SNS Topic Subscription Attributes (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] SNS Topic Subscription Attributes (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	attributes := output.Attributes
-
-	d.Set("arn", attributes["SubscriptionArn"])
-	d.Set("delivery_policy", attributes["DeliveryPolicy"])
-	d.Set("endpoint", attributes["Endpoint"])
-	d.Set("filter_policy", attributes["FilterPolicy"])
-	d.Set("owner_id", attributes["Owner"])
-	d.Set("protocol", attributes["Protocol"])
-	d.Set("redrive_policy", attributes["RedrivePolicy"])
-	d.Set("subscription_role_arn", attributes["SubscriptionRoleArn"])
-	d.Set("topic_arn", attributes["TopicArn"])
-
-	d.Set("confirmation_was_authenticated", false)
-	if v, ok := attributes["ConfirmationWasAuthenticated"]; ok && aws.StringValue(v) == "true" {
-		d.Set("confirmation_was_authenticated", true)
+	if err != nil {
+		return diag.Errorf("reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("pending_confirmation", false)
-	if v, ok := attributes["PendingConfirmation"]; ok && aws.StringValue(v) == "true" {
-		d.Set("pending_confirmation", true)
-	}
+	attributes := outputRaw.(map[string]string)
 
-	d.Set("raw_message_delivery", false)
-	if v, ok := attributes["RawMessageDelivery"]; ok && aws.StringValue(v) == "true" {
-		d.Set("raw_message_delivery", true)
-	}
-
-	return nil
+	return diag.FromErr(subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
-func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
-	if d.HasChange("raw_message_delivery") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RawMessageDelivery", fmt.Sprintf("%t", d.Get("raw_message_delivery").(bool))); err != nil {
-			return err
-		}
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if d.HasChange("filter_policy") {
-		filterPolicy := d.Get("filter_policy").(string)
+	err = putSubscriptionAttributes(ctx, conn, d.Id(), attributes)
 
-		// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
-		if filterPolicy == "" {
-			filterPolicy = "{}"
-		}
-
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "FilterPolicy", filterPolicy); err != nil {
-			return err
-		}
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if d.HasChange("delivery_policy") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "DeliveryPolicy", d.Get("delivery_policy").(string)); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("subscription_role_arn") {
-		protocol := d.Get("protocol").(string)
-		subscriptionRoleARN := d.Get("subscription_role_arn").(string)
-		if strings.Contains(protocol, "firehose") && subscriptionRoleARN == "" {
-			return fmt.Errorf("protocol firehose must contain subscription_role_arn!")
-		}
-		if !strings.Contains(protocol, "firehose") && subscriptionRoleARN != "" {
-			return fmt.Errorf("only protocol firehose supports subscription_role_arn!")
-		}
-
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscriptionRoleARN); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("redrive_policy") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
-			return err
-		}
-	}
-
-	return resourceTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(ctx, d, meta)
 }
 
-func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
-	log.Printf("[DEBUG] SNS delete topic subscription: %s", d.Id())
-	_, err := conn.Unsubscribe(&sns.UnsubscribeInput{
+	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
+	_, err := conn.UnsubscribeWithContext(ctx, &sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "Cannot unsubscribe a subscription that is pending confirmation") {
-		log.Printf("[WARN] Removing unconfirmed SNS topic subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
-		d.SetId("")
 		return nil
 	}
 
-	if _, err := waitSubscriptionDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-			return nil
+	if err != nil {
+		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id(), subscriptionDeleteTimeout); err != nil {
+		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func putSubscriptionAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+	// Filter policy order matters
+	filterPolicyScope, ok := attributes[SubscriptionAttributeNameFilterPolicyScope]
+
+	if ok {
+		delete(attributes, SubscriptionAttributeNameFilterPolicyScope)
+	}
+
+	// MessageBody is backwards-compatible so it should always be applied first
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageBody {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("error waiting for SNS topic subscription (%s) deletion: %w", d.Id(), err)
 	}
 
-	return err
+	for name, value := range attributes {
+		err := putSubscriptionAttribute(ctx, conn, arn, name, value)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// MessageAttributes isn't compatible with nested policies, so it should always be last
+	// in case the update also includes a change from a nested policy to a flat policy
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageAttributes {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// Assembles supplied attributes into a single map - empty/default values are excluded from the map
-func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]*string) {
-	deliveryPolicy := d.Get("delivery_policy").(string)
-	filterPolicy := d.Get("filter_policy").(string)
-	rawMessageDelivery := d.Get("raw_message_delivery").(bool)
-	redrivePolicy := d.Get("redrive_policy").(string)
-	subscriptionRoleARN := d.Get("subscription_role_arn").(string)
-
-	// Collect attributes if available
-	attributes := map[string]*string{}
-
-	if deliveryPolicy != "" {
-		attributes["DeliveryPolicy"] = aws.String(deliveryPolicy)
+func putSubscriptionAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
+	// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
+	if name == SubscriptionAttributeNameFilterPolicy && value == "" {
+		value = "{}"
 	}
 
-	if filterPolicy != "" {
-		attributes["FilterPolicy"] = aws.String(filterPolicy)
-	}
-
-	if rawMessageDelivery {
-		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", rawMessageDelivery))
-	}
-
-	if subscriptionRoleARN != "" {
-		attributes["SubscriptionRoleArn"] = aws.String(subscriptionRoleARN)
-	}
-
-	if redrivePolicy != "" {
-		attributes["RedrivePolicy"] = aws.String(redrivePolicy)
-	}
-
-	return attributes
-}
-
-func snsSubscriptionAttributeUpdate(conn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {
-	req := &sns.SetSubscriptionAttributesInput{
-		SubscriptionArn: aws.String(subscriptionArn),
-		AttributeName:   aws.String(attributeName),
-		AttributeValue:  aws.String(attributeValue),
+	input := &sns.SetSubscriptionAttributesInput{
+		AttributeName:   aws.String(name),
+		AttributeValue:  aws.String(value),
+		SubscriptionArn: aws.String(arn),
 	}
 
 	// The AWS API requires a non-empty string value or nil for the RedrivePolicy attribute,
-	// else throws an InvalidParameter error
-	if attributeName == "RedrivePolicy" && attributeValue == "" {
-		req.AttributeValue = nil
+	// else throws an InvalidParameter error.
+	if name == SubscriptionAttributeNameRedrivePolicy && value == "" {
+		input.AttributeValue = nil
 	}
 
-	_, err := conn.SetSubscriptionAttributes(req)
+	_, err := conn.SetSubscriptionAttributesWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error setting subscription (%s) attribute (%s): %s", subscriptionArn, attributeName, err)
+		return fmt.Errorf("setting SNS Topic Subscription (%s) attribute (%s): %w", arn, name, err)
 	}
+
 	return nil
+}
+
+func FindSubscriptionAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (map[string]string, error) {
+	input := &sns.GetSubscriptionAttributesInput{
+		SubscriptionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetSubscriptionAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValueMap(output.Attributes), nil
+}
+
+func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.SNS, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubscriptionAttributesByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, output[SubscriptionAttributeNamePendingConfirmation], nil
+	}
+}
+
+const (
+	subscriptionCreateTimeout              = 2 * time.Minute
+	subscriptionPendingConfirmationTimeout = 2 * time.Minute
+	subscriptionDeleteTimeout              = 2 * time.Minute
+)
+
+func waitSubscriptionConfirmed(ctx context.Context, conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"true"},
+		Target:  []string{"false"},
+		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]string); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubscriptionDeleted(ctx context.Context, conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"false", "true"},
+		Target:  []string{},
+		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]string); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type TopicSubscriptionDeliveryPolicy struct {
@@ -438,13 +476,13 @@ type TopicSubscriptionRedrivePolicy struct {
 }
 
 func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
-	ob, err := normalizeSnsTopicSubscriptionDeliveryPolicy(old)
+	ob, err := normalizeTopicSubscriptionDeliveryPolicy(old)
 	if err != nil {
 		log.Print(err)
 		return false
 	}
 
-	nb, err := normalizeSnsTopicSubscriptionDeliveryPolicy(new)
+	nb, err := normalizeTopicSubscriptionDeliveryPolicy(new)
 	if err != nil {
 		log.Print(err)
 		return false
@@ -453,7 +491,7 @@ func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *sc
 	return verify.JSONBytesEqual(ob, nb)
 }
 
-func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
+func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
@@ -472,4 +510,37 @@ func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) 
 	}
 
 	return b.Bytes(), nil
+}
+
+func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+	hasPolicy := diff.Get("filter_policy").(string) != ""
+	hasScope := !diff.GetRawConfig().GetAttr("filter_policy_scope").IsNull()
+	hadScope := diff.Get("filter_policy_scope").(string) != ""
+
+	if hasPolicy && !hasScope {
+		if !hadScope {
+			// When the filter_policy_scope hasn't been read back from the API,
+			// don't attempt to set a value. Either the default will be computed
+			// on the next read, or this is a partition that doesn't support it.
+			return nil
+		}
+
+		// When the scope is removed from configuration, the API will
+		// continue reading back the last value so long as the policy
+		// itself still exists. The expected result would be to revert
+		// to the default value of the attribute (MessageAttributes).
+		return diff.SetNew("filter_policy_scope", SubscriptionFilterPolicyScopeMessageAttributes)
+	}
+
+	if !hasPolicy && !hasScope {
+		// When the policy is not set, the API silently drops the scope.
+		return diff.Clear("filter_policy_scope")
+	}
+
+	if !hasPolicy && hasScope {
+		// Make it explicit that the scope doesn't exist without a policy.
+		return errors.New("filter_policy is required when filter_policy_scope is set")
+	}
+
+	return nil
 }

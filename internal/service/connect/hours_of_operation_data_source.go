@@ -14,10 +14,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_hours_of_operation")
 func DataSourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceHoursOfOperationRead,
+		ReadWithoutTimeout: dataSourceHoursOfOperationRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"config": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -75,8 +80,9 @@ func DataSourceHoursOfOperation() *schema.Resource {
 				Computed: true,
 			},
 			"hours_of_operation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'arn' attribute instead",
 			},
 			"hours_of_operation_id": {
 				Type:         schema.TypeString,
@@ -104,7 +110,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 }
 
 func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -117,7 +123,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		input.HoursOfOperationId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		hoursOfOperationSummary, err := dataSourceGetConnectHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
+		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): %w", name, err))
@@ -130,7 +136,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		input.HoursOfOperationId = hoursOfOperationSummary.Id
 	}
 
-	resp, err := conn.DescribeHoursOfOperation(input)
+	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))
@@ -142,7 +148,8 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	hoursOfOperation := resp.HoursOfOperation
 
-	d.Set("hours_of_operation_arn", hoursOfOperation.HoursOfOperationArn)
+	d.Set("arn", hoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_arn", hoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", hoursOfOperation.Description)
@@ -153,7 +160,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error setting config: %s", err))
 	}
 
-	if err := d.Set("tags", KeyValueTags(hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 
@@ -162,7 +169,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func dataSourceGetConnectHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {
+func dataSourceGetHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {
 	var result *connect.HoursOfOperationSummary
 
 	input := &connect.ListHoursOfOperationsInput{

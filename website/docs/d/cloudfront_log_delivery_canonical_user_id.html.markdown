@@ -18,11 +18,19 @@ data "aws_cloudfront_log_delivery_canonical_user_id" "example" {}
 
 resource "aws_s3_bucket" "example" {
   bucket = "example"
+}
 
-  grant {
-    id          = data.aws_cloudfront_log_delivery_canonical_user_id.example.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL"]
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_cloudfront_log_delivery_canonical_user_id.example.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
   }
 }
 ```
@@ -31,10 +39,10 @@ resource "aws_s3_bucket" "example" {
 
 The following arguments are supported:
 
-* `region` - (Optional) The region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The canonical user ID for the AWS `awslogsdelivery` account in the region.
+* `id` - Canonical user ID for the AWS `awslogsdelivery` account in the region.

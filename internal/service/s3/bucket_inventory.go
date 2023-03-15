@@ -1,30 +1,34 @@
 package s3
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_inventory")
 func ResourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketInventoryPut,
-		Read:   resourceBucketInventoryRead,
-		Update: resourceBucketInventoryPut,
-		Delete: resourceBucketInventoryDelete,
+		CreateWithoutTimeout: resourceBucketInventoryPut,
+		ReadWithoutTimeout:   resourceBucketInventoryRead,
+		UpdateWithoutTimeout: resourceBucketInventoryPut,
+		DeleteWithoutTimeout: resourceBucketInventoryDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -174,8 +178,9 @@ func ResourceBucketInventory() *schema.Resource {
 	}
 }
 
-func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -203,7 +208,7 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		filterList := v.([]interface{})
 		filterMap := filterList[0].(map[string]interface{})
-		inventoryConfiguration.Filter = expandS3InventoryFilter(filterMap)
+		inventoryConfiguration.Filter = expandInventoryFilter(filterMap)
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -213,7 +218,7 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 		bucketMap := bucketList[0].(map[string]interface{})
 
 		inventoryConfiguration.Destination = &s3.InventoryDestination{
-			S3BucketDestination: expandS3InventoryS3BucketDestination(bucketMap),
+			S3BucketDestination: expandInventoryBucketDestination(bucketMap),
 		}
 	}
 
@@ -224,8 +229,8 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutBucketInventoryConfiguration(input)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutBucketInventoryConfigurationWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -239,24 +244,25 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketInventoryConfiguration(input)
+		_, err = conn.PutBucketInventoryConfigurationWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting S3 Bucket Inventory Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "putting S3 Bucket Inventory Configuration: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-	return resourceBucketInventoryRead(d, meta)
+	return append(diags, resourceBucketInventoryRead(ctx, d, meta)...)
 }
 
-func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Inventory Configuration (%s): %s", d.Id(), err)
 	}
 
 	input := &s3.DeleteBucketInventoryConfigurationInput{
@@ -265,29 +271,30 @@ func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Deleting S3 bucket inventory configuration: %s", input)
-	_, err = conn.DeleteBucketInventoryConfiguration(input)
+	_, err = conn.DeleteBucketInventoryConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Inventory Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Inventory Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -300,9 +307,9 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.GetBucketInventoryConfiguration(input)
+		output, err = conn.GetBucketInventoryConfigurationWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -320,58 +327,58 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.GetBucketInventoryConfiguration(input)
+		output, err = conn.GetBucketInventoryConfigurationWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket Inventory Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Inventory Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Inventory Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.InventoryConfiguration == nil {
-		return fmt.Errorf("error getting S3 Bucket Inventory Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Inventory Configuration (%s): empty response", d.Id())
 	}
 
 	d.Set("enabled", output.InventoryConfiguration.IsEnabled)
 	d.Set("included_object_versions", output.InventoryConfiguration.IncludedObjectVersions)
 
 	if err := d.Set("optional_fields", flex.FlattenStringList(output.InventoryConfiguration.OptionalFields)); err != nil {
-		return fmt.Errorf("error setting optional_fields: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting optional_fields: %s", err)
 	}
 
-	if err := d.Set("filter", flattenS3InventoryFilter(output.InventoryConfiguration.Filter)); err != nil {
-		return fmt.Errorf("error setting filter: %s", err)
+	if err := d.Set("filter", flattenInventoryFilter(output.InventoryConfiguration.Filter)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
-	if err := d.Set("schedule", flattenS3InventorySchedule(output.InventoryConfiguration.Schedule)); err != nil {
-		return fmt.Errorf("error setting schedule: %s", err)
+	if err := d.Set("schedule", flattenInventorySchedule(output.InventoryConfiguration.Schedule)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 
 	if output.InventoryConfiguration.Destination != nil {
 		destination := map[string]interface{}{
-			"bucket": flattenS3InventoryS3BucketDestination(output.InventoryConfiguration.Destination.S3BucketDestination),
+			"bucket": flattenInventoryBucketDestination(output.InventoryConfiguration.Destination.S3BucketDestination),
 		}
 
 		if err := d.Set("destination", []map[string]interface{}{destination}); err != nil {
-			return fmt.Errorf("error setting destination: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func expandS3InventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
+func expandInventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
 	v, ok := m["prefix"]
 	if !ok {
 		return nil
@@ -381,7 +388,7 @@ func expandS3InventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
 	}
 }
 
-func flattenS3InventoryFilter(filter *s3.InventoryFilter) []map[string]interface{} {
+func flattenInventoryFilter(filter *s3.InventoryFilter) []map[string]interface{} {
 	if filter == nil {
 		return nil
 	}
@@ -398,7 +405,7 @@ func flattenS3InventoryFilter(filter *s3.InventoryFilter) []map[string]interface
 	return result
 }
 
-func flattenS3InventorySchedule(schedule *s3.InventorySchedule) []map[string]interface{} {
+func flattenInventorySchedule(schedule *s3.InventorySchedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := make(map[string]interface{}, 1)
@@ -409,7 +416,7 @@ func flattenS3InventorySchedule(schedule *s3.InventorySchedule) []map[string]int
 	return result
 }
 
-func expandS3InventoryS3BucketDestination(m map[string]interface{}) *s3.InventoryS3BucketDestination {
+func expandInventoryBucketDestination(m map[string]interface{}) *s3.InventoryS3BucketDestination {
 	destination := &s3.InventoryS3BucketDestination{
 		Format: aws.String(m["format"].(string)),
 		Bucket: aws.String(m["bucket_arn"].(string)),
@@ -452,7 +459,7 @@ func expandS3InventoryS3BucketDestination(m map[string]interface{}) *s3.Inventor
 	return destination
 }
 
-func flattenS3InventoryS3BucketDestination(destination *s3.InventoryS3BucketDestination) []map[string]interface{} {
+func flattenInventoryBucketDestination(destination *s3.InventoryS3BucketDestination) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := map[string]interface{}{

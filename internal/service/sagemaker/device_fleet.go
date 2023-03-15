@@ -1,29 +1,33 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_device_fleet")
 func ResourceDeviceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeviceFleetCreate,
-		Read:   resourceDeviceFleetRead,
-		Update: resourceDeviceFleetUpdate,
-		Delete: resourceDeviceFleetDelete,
+		CreateWithoutTimeout: resourceDeviceFleetCreate,
+		ReadWithoutTimeout:   resourceDeviceFleetRead,
+		UpdateWithoutTimeout: resourceDeviceFleetUpdate,
+		DeleteWithoutTimeout: resourceDeviceFleetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,15 +88,16 @@ func ResourceDeviceFleet() *schema.Resource {
 	}
 }
 
-func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.CreateDeviceFleetInput{
 		DeviceFleetName:    aws.String(name),
-		OutputConfig:       expandSagemakerFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
 		EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
 	}
 
@@ -108,32 +113,33 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
-		return conn.CreateDeviceFleet(input)
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateDeviceFleetWithContext(ctx, input)
+	}, "ValidationException")
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Device Fleet %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Device Fleet %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceDeviceFleetRead(d, meta)
+	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	deviceFleet, err := FindDeviceFleetByName(conn, d.Id())
+	deviceFleet, err := FindDeviceFleetByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(deviceFleet.DeviceFleetArn)
@@ -146,38 +152,39 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iot_role_alias", iotAlias)
 	d.Set("enable_iot_role_alias", len(iotAlias) > 0)
 
-	if err := d.Set("output_config", flattenSagemakerFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
-		return fmt.Errorf("error setting output_config for Sagemaker Device Fleet (%s): %w", d.Id(), err)
+	if err := d.Set("output_config", flattenFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting output_config for SageMaker Device Fleet (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Device Fleet (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
-			OutputConfig:       expandSagemakerFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
 			RoleArn:            aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -186,41 +193,42 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %s", input.String())
-		_, err := conn.UpdateDeviceFleet(input)
+		_, err := conn.UpdateDeviceFleetWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Device Fleet: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Device Fleet: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Device Fleet (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Device Fleet (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDeviceFleetRead(d, meta)
+	return append(diags, resourceDeviceFleetRead(ctx, d, meta)...)
 }
 
-func resourceDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteDeviceFleetInput{
 		DeviceFleetName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteDeviceFleet(input); err != nil {
+	if _, err := conn.DeleteDeviceFleetWithContext(ctx, input); err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "DeviceFleet with name") {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device Fleet (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandSagemakerFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutputConfig {
+func expandFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutputConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -238,7 +246,7 @@ func expandSagemakerFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.E
 	return config
 }
 
-func flattenSagemakerFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) []map[string]interface{} {
+func flattenFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

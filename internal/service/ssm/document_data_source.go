@@ -1,20 +1,25 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_document")
 func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataDocumentRead,
+		ReadWithoutTimeout: dataDocumentRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -25,13 +30,10 @@ func DataSourceDocument() *schema.Resource {
 				Computed: true,
 			},
 			"document_format": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.DocumentFormatJson,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentFormatJson,
-					ssm.DocumentFormatYaml,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
 			},
 			"document_type": {
 				Type:     schema.TypeString,
@@ -49,13 +51,12 @@ func DataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-
-	name := d.Get("name").(string)
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	docInput := &ssm.GetDocumentInput{
-		Name:           aws.String(name),
+		Name:           aws.String(d.Get("name").(string)),
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 	}
 
@@ -64,28 +65,34 @@ func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", docInput)
-	resp, err := conn.GetDocument(docInput)
+	resp, err := conn.GetDocumentWithContext(ctx, docInput)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM Document: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Name))
+	name := aws.StringValue(resp.Name)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("document/%s", aws.StringValue(resp.Name)),
-	}.String()
+	d.SetId(name)
 
-	d.Set("arn", arn)
-	d.Set("name", resp.Name)
+	if !strings.HasPrefix(name, "AWS-") {
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   "ssm",
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  fmt.Sprintf("document/%s", name),
+		}.String()
+		d.Set("arn", arn)
+	} else {
+		d.Set("arn", name)
+	}
+
+	d.Set("name", name)
 	d.Set("content", resp.Content)
 	d.Set("document_version", resp.DocumentVersion)
 	d.Set("document_format", resp.DocumentFormat)
 	d.Set("document_type", resp.DocumentType)
 
-	return nil
+	return diags
 }

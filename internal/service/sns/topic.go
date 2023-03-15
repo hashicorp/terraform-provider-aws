@@ -5,668 +5,420 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var (
+	topicSchema = map[string]*schema.Schema{
+		"application_failure_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"application_success_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"application_success_feedback_sample_rate": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(0, 100),
+		},
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"content_based_deduplication": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"delivery_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"display_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"fifo_topic": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			ForceNew: true,
+		},
+		"firehose_failure_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"firehose_success_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"firehose_success_feedback_sample_rate": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(0, 100),
+		},
+		"http_failure_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"http_success_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"http_success_feedback_sample_rate": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(0, 100),
+		},
+		"kms_master_key_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"lambda_failure_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"lambda_success_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"lambda_success_feedback_sample_rate": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(0, 100),
+		},
+		"name": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Computed:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"name_prefix"},
+		},
+		"name_prefix": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Computed:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"name"},
+		},
+		"owner": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"policy": {
+			Type:                  schema.TypeString,
+			Optional:              true,
+			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+		},
+		"sqs_failure_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"sqs_success_feedback_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"sqs_success_feedback_sample_rate": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(0, 100),
+		},
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
+		"tracing_config": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+		},
+	}
+
+	topicAttributeMap = attrmap.New(map[string]string{
+		"application_failure_feedback_role_arn":    TopicAttributeNameApplicationFailureFeedbackRoleARN,
+		"application_success_feedback_role_arn":    TopicAttributeNameApplicationSuccessFeedbackRoleARN,
+		"application_success_feedback_sample_rate": TopicAttributeNameApplicationSuccessFeedbackSampleRate,
+		"arn":                                   TopicAttributeNameTopicARN,
+		"content_based_deduplication":           TopicAttributeNameContentBasedDeduplication,
+		"delivery_policy":                       TopicAttributeNameDeliveryPolicy,
+		"display_name":                          TopicAttributeNameDisplayName,
+		"fifo_topic":                            TopicAttributeNameFIFOTopic,
+		"firehose_failure_feedback_role_arn":    TopicAttributeNameFirehoseFailureFeedbackRoleARN,
+		"firehose_success_feedback_role_arn":    TopicAttributeNameFirehoseSuccessFeedbackRoleARN,
+		"firehose_success_feedback_sample_rate": TopicAttributeNameFirehoseSuccessFeedbackSampleRate,
+		"http_failure_feedback_role_arn":        TopicAttributeNameHTTPFailureFeedbackRoleARN,
+		"http_success_feedback_role_arn":        TopicAttributeNameHTTPSuccessFeedbackRoleARN,
+		"http_success_feedback_sample_rate":     TopicAttributeNameHTTPSuccessFeedbackSampleRate,
+		"kms_master_key_id":                     TopicAttributeNameKMSMasterKeyId,
+		"lambda_failure_feedback_role_arn":      TopicAttributeNameLambdaFailureFeedbackRoleARN,
+		"lambda_success_feedback_role_arn":      TopicAttributeNameLambdaSuccessFeedbackRoleARN,
+		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"owner":                                 TopicAttributeNameOwner,
+		"policy":                                TopicAttributeNamePolicy,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
+		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
+		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
+		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        TopicAttributeNameTracingConfig,
+	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
+)
+
+// @SDKResource("aws_sns_topic")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicCreate,
-		Read:   resourceTopicRead,
-		Update: resourceTopicUpdate,
-		Delete: resourceTopicDelete,
+		CreateWithoutTimeout: resourceTopicCreate,
+		ReadWithoutTimeout:   resourceTopicRead,
+		UpdateWithoutTimeout: resourceTopicUpdate,
+		DeleteWithoutTimeout: resourceTopicDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			resourceTopicCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-			},
-			"display_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"delivery_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         false,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"application_success_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"application_success_feedback_sample_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			"application_failure_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"http_success_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"http_success_feedback_sample_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			"http_failure_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_master_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"fifo_topic": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"content_based_deduplication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"firehose_success_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"firehose_success_feedback_sample_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			"firehose_failure_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"lambda_success_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"lambda_success_feedback_sample_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			"lambda_failure_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"sqs_success_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"sqs_success_feedback_sample_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-			},
-			"sqs_failure_feedback_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-		},
+		Schema: topicSchema,
 	}
 }
 
-func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
-
 	if fifoTopic {
 		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOTopicNameSuffix)
 	} else {
 		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
 
-	attributes := make(map[string]*string)
-	// If FifoTopic is true, then the attribute must be passed into the call to CreateTopic
-	if fifoTopic {
-		attributes["FifoTopic"] = aws.String(strconv.FormatBool(fifoTopic))
-	}
-
-	log.Printf("[DEBUG] SNS create topic: %s", name)
-
-	req := &sns.CreateTopicInput{
+	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
-		Tags: Tags(tags.IgnoreAWS()),
 	}
 
-	if len(attributes) > 0 {
-		req.Attributes = attributes
-	}
+	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
-	output, err := conn.CreateTopic(req)
 	if err != nil {
-		return fmt.Errorf("error creating SNS Topic (%s): %w", name, err)
+		return diag.FromErr(err)
+	}
+
+	// The FifoTopic attribute must be passed in the call to CreateTopic.
+	if v, ok := attributes[TopicAttributeNameFIFOTopic]; ok {
+		input.Attributes = aws.StringMap(map[string]string{
+			TopicAttributeNameFIFOTopic: v,
+		})
+
+		delete(attributes, TopicAttributeNameFIFOTopic)
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	output, err := conn.CreateTopicWithContext(ctx, input)
+
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating SNS Topic (%s) with tags: %s. Trying create without tags.", name, err)
+		input.Tags = nil
+		output, err = conn.CreateTopicWithContext(ctx, input)
+	}
+
+	if err != nil {
+		return diag.Errorf("creating SNS Topic (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
 
-	// update mutable attributes
-	if d.HasChange("application_failure_feedback_role_arn") {
-		_, v := d.GetChange("application_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_role_arn") {
-		_, v := d.GetChange("application_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("arn") {
-		_, v := d.GetChange("arn")
-		if err := updateTopicAttribute(d.Id(), "TopicArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("delivery_policy") {
-		_, v := d.GetChange("delivery_policy")
-		if err := updateTopicAttribute(d.Id(), "DeliveryPolicy", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("display_name") {
-		_, v := d.GetChange("display_name")
-		if err := updateTopicAttribute(d.Id(), "DisplayName", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_failure_feedback_role_arn") {
-		_, v := d.GetChange("http_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_role_arn") {
-		_, v := d.GetChange("http_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("kms_master_key_id") {
-		_, v := d.GetChange("kms_master_key_id")
-		if err := updateTopicAttribute(d.Id(), "KmsMasterKeyId", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("content_based_deduplication") {
-		_, v := d.GetChange("content_based_deduplication")
-		if err := updateTopicAttribute(d.Id(), "ContentBasedDeduplication", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_failure_feedback_role_arn") {
-		_, v := d.GetChange("lambda_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_role_arn") {
-		_, v := d.GetChange("lambda_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("policy") {
-		_, v := d.GetChange("policy")
+	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 
-		policy, err := structure.NormalizeJsonString(v.(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+			log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			return resourceTopicRead(ctx, d, meta)
+		}
 
 		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
-		}
-
-		if err := updateTopicAttribute(d.Id(), "Policy", policy, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_failure_feedback_role_arn") {
-		_, v := d.GetChange("sqs_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_role_arn") {
-		_, v := d.GetChange("sqs_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_sample_rate") {
-		_, v := d.GetChange("application_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_sample_rate") {
-		_, v := d.GetChange("http_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_sample_rate") {
-		_, v := d.GetChange("lambda_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_sample_rate") {
-		_, v := d.GetChange("sqs_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_failure_feedback_role_arn") {
-		_, v := d.GetChange("firehose_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_role_arn") {
-		_, v := d.GetChange("firehose_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_sample_rate") {
-		_, v := d.GetChange("firehose_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
+			return diag.Errorf("adding tags after create for SNS Topic (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicRead(d, meta)
+	return resourceTopicRead(ctx, d, meta)
 }
 
-func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
-
-	// update mutable attributes
-	if d.HasChange("application_failure_feedback_role_arn") {
-		_, v := d.GetChange("application_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_role_arn") {
-		_, v := d.GetChange("application_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("arn") {
-		_, v := d.GetChange("arn")
-		if err := updateTopicAttribute(d.Id(), "TopicArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("delivery_policy") {
-		_, v := d.GetChange("delivery_policy")
-		if err := updateTopicAttribute(d.Id(), "DeliveryPolicy", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("display_name") {
-		_, v := d.GetChange("display_name")
-		if err := updateTopicAttribute(d.Id(), "DisplayName", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_failure_feedback_role_arn") {
-		_, v := d.GetChange("http_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_role_arn") {
-		_, v := d.GetChange("http_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("kms_master_key_id") {
-		_, v := d.GetChange("kms_master_key_id")
-		if err := updateTopicAttribute(d.Id(), "KmsMasterKeyId", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("content_based_deduplication") {
-		_, v := d.GetChange("content_based_deduplication")
-		if err := updateTopicAttribute(d.Id(), "ContentBasedDeduplication", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_failure_feedback_role_arn") {
-		_, v := d.GetChange("lambda_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_role_arn") {
-		_, v := d.GetChange("lambda_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("policy") {
-		o, n := d.GetChange("policy")
-
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-			policy, err := structure.NormalizeJsonString(n.(string))
-
-			if err != nil {
-				return fmt.Errorf("policy contains an invalid JSON: %s", err)
-			}
-
-			if err := updateTopicAttribute(d.Id(), "Policy", policy, conn); err != nil {
-				return err
-			}
-		}
-	}
-
-	if d.HasChange("sqs_failure_feedback_role_arn") {
-		_, v := d.GetChange("sqs_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_role_arn") {
-		_, v := d.GetChange("sqs_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_sample_rate") {
-		_, v := d.GetChange("application_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_sample_rate") {
-		_, v := d.GetChange("http_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_sample_rate") {
-		_, v := d.GetChange("lambda_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_sample_rate") {
-		_, v := d.GetChange("sqs_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_failure_feedback_role_arn") {
-		_, v := d.GetChange("firehose_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_role_arn") {
-		_, v := d.GetChange("firehose_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_sample_rate") {
-		_, v := d.GetChange("firehose_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceTopicRead(d, meta)
-}
-
-func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading SNS Topic Attributes for %s", d.Id())
-	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
-		TopicArn: aws.String(d.Id()),
-	})
+	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
+	}
+
+	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
 
 	if err != nil {
-		return fmt.Errorf("error reading SNS Topic (%s): %w", d.Id(), err)
+		return diag.FromErr(err)
 	}
-
-	fifoTopic := false
-
-	// set the mutable attributes
-	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
-		// set the string values
-		d.Set("application_failure_feedback_role_arn", attributeOutput.Attributes["ApplicationFailureFeedbackRoleArn"])
-		d.Set("application_success_feedback_role_arn", attributeOutput.Attributes["ApplicationSuccessFeedbackRoleArn"])
-		d.Set("arn", attributeOutput.Attributes["TopicArn"])
-		d.Set("delivery_policy", attributeOutput.Attributes["DeliveryPolicy"])
-		d.Set("display_name", attributeOutput.Attributes["DisplayName"])
-		d.Set("http_failure_feedback_role_arn", attributeOutput.Attributes["HTTPFailureFeedbackRoleArn"])
-		d.Set("http_success_feedback_role_arn", attributeOutput.Attributes["HTTPSuccessFeedbackRoleArn"])
-		d.Set("kms_master_key_id", attributeOutput.Attributes["KmsMasterKeyId"])
-		d.Set("lambda_failure_feedback_role_arn", attributeOutput.Attributes["LambdaFailureFeedbackRoleArn"])
-		d.Set("lambda_success_feedback_role_arn", attributeOutput.Attributes["LambdaSuccessFeedbackRoleArn"])
-		d.Set("sqs_failure_feedback_role_arn", attributeOutput.Attributes["SQSFailureFeedbackRoleArn"])
-		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
-		d.Set("firehose_success_feedback_role_arn", attributeOutput.Attributes["FirehoseSuccessFeedbackRoleArn"])
-		d.Set("firehose_failure_feedback_role_arn", attributeOutput.Attributes["FirehoseFailureFeedbackRoleArn"])
-		d.Set("owner", attributeOutput.Attributes["Owner"])
-
-		policyToSet, policyErr := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(attributeOutput.Attributes["Policy"]))
-
-		if policyErr != nil {
-			return err
-		}
-
-		d.Set("policy", policyToSet)
-
-		// set the boolean values
-		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {
-			fifoTopic = true
-		}
-		d.Set("content_based_deduplication", false)
-		if v, ok := attributeOutput.Attributes["ContentBasedDeduplication"]; ok && aws.StringValue(v) == "true" {
-			d.Set("content_based_deduplication", true)
-		}
-
-		// set the number values
-		var vStr string
-		var v int64
-		var err error
-
-		vStr = aws.StringValue(attributeOutput.Attributes["ApplicationSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'ApplicationSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("application_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["HTTPSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'HTTPSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("http_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["LambdaSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'LambdaSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("lambda_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["SQSSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'SQSSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("sqs_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["FirehoseSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'FirehoseSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("firehose_success_feedback_sample_rate", v)
-		}
-	}
-
-	d.Set("fifo_topic", fifoTopic)
 
 	arn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+		return diag.FromErr(err)
 	}
 
 	name := arn.Resource
 	d.Set("name", name)
-	if fifoTopic {
+	if d.Get("fifo_topic").(bool) {
 		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
+
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		// ISO partitions may not support tagging, giving error
+		log.Printf("[WARN] failed listing tags for SNS Topic (%s): %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceTopicDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
-	log.Printf("[DEBUG] SNS Delete Topic: %s", d.Id())
-	_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
+	if d.HasChangesExcept("tags", "tags_all") {
+		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = putTopicAttributes(ctx, conn, d.Id(), attributes)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(ctx, conn, d.Id(), o, n)
+
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			// ISO partitions may not support tagging, giving error
+			log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
+			return resourceTopicRead(ctx, d, meta)
+		}
+
+		if err != nil {
+			return diag.Errorf("updating tags for SNS Topic (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceTopicRead(ctx, d, meta)
+}
+
+func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
+
+	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
+	_, err := conn.DeleteTopicWithContext(ctx, &sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting SNS Topic (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -698,7 +450,6 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid topic name: %s", name)
 		}
-
 	}
 
 	if !fifoTopic && contentBasedDeduplication {
@@ -708,29 +459,39 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func updateTopicAttribute(topicArn, name string, value interface{}, conn *sns.SNS) error {
-	// Ignore an empty policy
-	if name == "Policy" && value == "" {
-		return nil
-	}
-	log.Printf("[DEBUG] Updating SNS Topic Attribute: %s", name)
+func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+	for name, value := range attributes {
+		// Ignore an empty policy.
+		if name == TopicAttributeNamePolicy && value == "" {
+			continue
+		}
 
-	// Make API call to update attributes
-	req := sns.SetTopicAttributesInput{
-		TopicArn:       aws.String(topicArn),
+		err := putTopicAttribute(ctx, conn, arn, name, value)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
+	const (
+		topicPutAttributeTimeout = 2 * time.Minute
+	)
+	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
-		AttributeValue: aws.String(fmt.Sprintf("%v", value)),
+		AttributeValue: aws.String(value),
+		TopicArn:       aws.String(arn),
 	}
 
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	_, err := verify.RetryOnAWSCode(sns.ErrCodeInvalidParameterException, func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
+		return conn.SetTopicAttributesWithContext(ctx, input)
+	}, sns.ErrCodeInvalidParameterException)
 
 	if err != nil {
-		return fmt.Errorf("error setting SNS Topic (%s) attributes: %w", topicArn, err)
+		return fmt.Errorf("setting SNS Topic (%s) attribute (%s): %w", arn, name, err)
 	}
 
 	return nil

@@ -1,24 +1,31 @@
 package s3
 
+// WARNING: This code is DEPRECATED and will be removed in a future release!!
+// DO NOT apply fixes or enhancements to the data source in this file.
+// INSTEAD, apply fixes and enhancements to the data source in "object_data_source.go".
+
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_s3_bucket_object")
 func DataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBucketObjectRead,
+		ReadWithoutTimeout: dataSourceBucketObjectRead,
 
 		Schema: map[string]*schema.Schema{
 			"body": {
@@ -26,8 +33,9 @@ func DataSourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
+				Deprecated: "Use the aws_s3_object data source instead",
+				Type:       schema.TypeString,
+				Required:   true,
 			},
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
@@ -125,8 +133,9 @@ func DataSourceBucketObject() *schema.Resource {
 	}
 }
 
-func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
@@ -150,13 +159,13 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 		uniqueId += "@" + v.(string)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object: %s", input)
-	out, err := conn.HeadObject(&input)
+	log.Printf("[DEBUG] Reading S3 Object: %s", input)
+	out, err := conn.HeadObjectWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 	if aws.BoolValue(out.DeleteMarker) {
-		return fmt.Errorf("Requested S3 object %q%s has been deleted", bucket+key, versionText)
+		return sdkdiag.AppendErrorf(diags, "Requested S3 object %q%s has been deleted", bucket+key, versionText)
 	}
 
 	log.Printf("[DEBUG] Received S3 object: %s", out)
@@ -182,7 +191,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("metadata", flex.PointersMapToStringList(out.Metadata))
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(out.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenObjectDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)
@@ -191,7 +200,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.StorageClassStandard)
-	if out.StorageClass != nil {
+	if out.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("storage_class", out.StorageClass)
 	}
 
@@ -206,15 +215,15 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 		if out.VersionId != nil {
 			input.VersionId = out.VersionId
 		}
-		out, err := conn.GetObject(&input)
+		out, err := conn.GetObjectWithContext(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("Failed getting S3 object: %w", err)
+			return sdkdiag.AppendErrorf(diags, "Failed getting S3 object: %s", err)
 		}
 
 		buf := new(bytes.Buffer)
 		bytesRead, err := buf.ReadFrom(out.Body)
 		if err != nil {
-			return fmt.Errorf("Failed reading content of S3 object (%s): %w", uniqueId, err)
+			return sdkdiag.AppendErrorf(diags, "Failed reading content of S3 object (%s): %s", uniqueId, err)
 		}
 		log.Printf("[INFO] Saving %d bytes from S3 object %s", bytesRead, uniqueId)
 		d.Set("body", buf.String())
@@ -229,37 +238,15 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
 	}
 
-	tags, err := ObjectListTags(conn, bucket, key)
+	tags, err := ObjectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
-}
-
-// This is to prevent potential issues w/ binary files
-// and generally unprintable characters
-// See https://github.com/hashicorp/terraform/pull/3858#issuecomment-156856738
-func isContentTypeAllowed(contentType *string) bool {
-	if contentType == nil {
-		return false
-	}
-
-	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile("^text/.+"),
-		regexp.MustCompile("^application/json$"),
-	}
-
-	for _, r := range allowedContentTypes {
-		if r.MatchString(*contentType) {
-			return true
-		}
-	}
-
-	return false
+	return diags
 }

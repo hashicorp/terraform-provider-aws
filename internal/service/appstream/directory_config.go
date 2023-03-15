@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_appstream_directory_config")
 func ResourceDirectoryConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryConfigCreate,
@@ -67,7 +68,7 @@ func ResourceDirectoryConfig() *schema.Resource {
 }
 
 func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	directoryName := d.Get("directory_name").(string)
 	input := &appstream.CreateDirectoryConfigInput{
@@ -91,7 +92,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(d.Id())}})
 
@@ -127,7 +128,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.UpdateDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	}
@@ -149,18 +150,21 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
+	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
 	_, err := conn.DeleteDirectoryConfigWithContext(ctx, &appstream.DeleteDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error deleting AppStream Directory Config (%s): %w", d.Id(), err))
 	}
+
 	return nil
 }
 

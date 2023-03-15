@@ -2,32 +2,35 @@ package elasticache
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticache_parameter_group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterGroupCreate,
-		Read:   resourceParameterGroupRead,
-		Update: resourceParameterGroupUpdate,
-		Delete: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -77,71 +80,58 @@ func ResourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	createOpts := elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   aws.String(d.Get("name").(string)),
 		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:               aws.String(d.Get("description").(string)),
-		Tags:                      Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Create ElastiCache Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateCacheParameterGroup(&createOpts)
+	resp, err := conn.CreateCacheParameterGroupWithContext(ctx, &createOpts)
+
+	if createOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating ElastiCache Parameter Group with tags: %s. Trying create without tags.", err)
+
+		createOpts.Tags = nil
+		resp, err = conn.CreateCacheParameterGroupWithContext(ctx, &createOpts)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Parameter Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Parameter Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.CacheParameterGroup.CacheParameterGroupName))
 	d.Set("arn", resp.CacheParameterGroup.ARN)
 	log.Printf("[INFO] ElastiCache Parameter Group ID: %s", d.Id())
 
-	return resourceParameterGroupUpdate(d, meta)
+	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := elasticache.DescribeCacheParameterGroupsInput{
-		CacheParameterGroupName: aws.String(d.Id()),
-	}
-
-	describeResp, err := conn.DescribeCacheParameterGroups(&describeOpts)
+	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "unable to find ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	if len(describeResp.CacheParameterGroups) != 1 ||
-		aws.StringValue(describeResp.CacheParameterGroups[0].CacheParameterGroupName) != d.Id() {
-		return fmt.Errorf("unable to find Parameter Group: %#v", describeResp.CacheParameterGroups)
-	}
-
-	d.Set("name", describeResp.CacheParameterGroups[0].CacheParameterGroupName)
-	d.Set("family", describeResp.CacheParameterGroups[0].CacheParameterGroupFamily)
-	d.Set("description", describeResp.CacheParameterGroups[0].Description)
-	d.Set("arn", describeResp.CacheParameterGroups[0].ARN)
-
-	tags, err := ListTags(conn, aws.StringValue(describeResp.CacheParameterGroups[0].ARN))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for ElastiCache Parameter Group (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
+	d.Set("name", parameterGroup.CacheParameterGroupName)
+	d.Set("family", parameterGroup.CacheParameterGroupFamily)
+	d.Set("description", parameterGroup.Description)
+	d.Set("arn", parameterGroup.ARN)
 
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := elasticache.DescribeCacheParametersInput{
@@ -149,26 +139,42 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		Source:                  aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeCacheParameters(&describeParametersOpts)
+	describeParametersResp, err := conn.DescribeCacheParametersWithContext(ctx, &describeParametersOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
 
-	return nil
-}
+	tags, err := ListTags(ctx, conn, aws.StringValue(parameterGroup.ARN))
 
-func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Parameter Group (%s): %s", d.Id(), err)
+	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if err != nil {
+		log.Printf("[WARN] failed listing tags for ElastiCache Parameter Group (%s): %s", d.Id(), err)
+	}
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ElastiCache Parameter Group (%s) tags: %w", d.Get("arn").(string), err)
+	if tags != nil {
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	}
+
+	return diags
+}
+
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -189,7 +195,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
 			}
 
-			err := resourceResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
+			err := resourceResetParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
 
 			// When attempting to reset the reserved-memory parameter, the API
 			// can return two types of error.
@@ -245,13 +251,13 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 							ParameterValue: aws.String("0"),
 						},
 					}
-					err = resourceModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
+					err = resourceModifyParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percent: %s", err)
 						break
 					}
 
-					err = resourceResetParameterGroup(conn, d.Get("name").(string), workaroundParams)
+					err = resourceResetParameterGroup(ctx, conn, d.Get("name").(string), workaroundParams)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percent: %s", err)
 					}
@@ -261,12 +267,12 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				// Retry any remaining parameter resets with reserved-memory potentially removed
 				if len(paramsToModify) > 0 {
-					err = resourceResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
+					err = resourceResetParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
 				}
 			}
 
 			if err != nil {
-				return fmt.Errorf("error resetting ElastiCache Parameter Group: %w", err)
+				return sdkdiag.AppendErrorf(diags, "resetting ElastiCache Parameter Group: %s", err)
 			}
 		}
 
@@ -278,30 +284,56 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
 			}
 
-			err := resourceModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
+			err := resourceModifyParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
 			if err != nil {
-				return fmt.Errorf("error modifying ElastiCache Parameter Group: %w", err)
+				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Parameter Group: %s", err)
 			}
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+			}
+
+			log.Printf("[WARN] failed updating tags for ElastiCache Parameter Group (%s): %s", d.Get("arn").(string), err)
+		}
+	}
+
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
-	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
-		CacheParameterGroupName: aws.String(d.Id()),
+	err := deleteParameterGroup(ctx, conn, d.Id())
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+		return diags
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Parameter Group (%s): %s", d.Id(), err)
+	}
+	return diags
+}
+
+func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, name string) error {
+	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
+		CacheParameterGroupName: aws.String(name),
+	}
+	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "CacheParameterGroupNotFoundFault" {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 				return nil
 			}
-			if ok && awsErr.Code() == "InvalidCacheParameterGroupState" {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -309,17 +341,10 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
-	}
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
-		return nil
+		_, err = conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
 	}
 
-	if err != nil {
-		return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
-	}
-
-	return nil
+	return err
 }
 
 func ParameterHash(v interface{}) int {
@@ -345,12 +370,12 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.Para
 	om := make(map[string]*elasticache.ParameterNameValue, os.Len())
 	for _, raw := range os.List() {
 		param := raw.(map[string]interface{})
-		om[param["name"].(string)] = expandElastiCacheParameter(param)
+		om[param["name"].(string)] = expandParameter(param)
 	}
 	nm := make(map[string]*elasticache.ParameterNameValue, len(addOrUpdate))
 	for _, raw := range ns.List() {
 		param := raw.(map[string]interface{})
-		nm[param["name"].(string)] = expandElastiCacheParameter(param)
+		nm[param["name"].(string)] = expandParameter(param)
 	}
 
 	// Remove: key is in old, but not in new
@@ -373,13 +398,13 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.Para
 	return remove, addOrUpdate
 }
 
-func resourceResetParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+func resourceResetParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
 	input := elasticache.ResetCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
 	}
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
-		_, err := conn.ResetCacheParameterGroup(&input)
+	return resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+		_, err := conn.ResetCacheParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault, " has pending changes") {
 				return resource.RetryableError(err)
@@ -390,12 +415,12 @@ func resourceResetParameterGroup(conn *elasticache.ElastiCache, name string, par
 	})
 }
 
-func resourceModifyParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+func resourceModifyParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
 	input := elasticache.ModifyCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
 	}
-	_, err := conn.ModifyCacheParameterGroup(&input)
+	_, err := conn.ModifyCacheParameterGroupWithContext(ctx, &input)
 	return err
 }
 
@@ -421,13 +446,13 @@ func ExpandParameters(configured []interface{}) []*elasticache.ParameterNameValu
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
 	for i, pRaw := range configured {
-		parameters[i] = expandElastiCacheParameter(pRaw.(map[string]interface{}))
+		parameters[i] = expandParameter(pRaw.(map[string]interface{}))
 	}
 
 	return parameters
 }
 
-func expandElastiCacheParameter(param map[string]interface{}) *elasticache.ParameterNameValue {
+func expandParameter(param map[string]interface{}) *elasticache.ParameterNameValue {
 	return &elasticache.ParameterNameValue{
 		ParameterName:  aws.String(param["name"].(string)),
 		ParameterValue: aws.String(param["value"].(string)),

@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,18 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_connect_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInstanceCreate,
-		ReadContext:   resourceInstanceRead,
-		UpdateContext: resourceInstanceUpdate,
-		DeleteContext: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectInstanceCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectInstanceDeletedTimeout),
+			Create: schema.DefaultTimeout(instanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(instanceDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -84,9 +85,14 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric hyphen and underscore characters"),
+					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric or hyphen characters"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
+			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false, //verified default result from ListInstanceAttributes()
 			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
@@ -111,7 +117,7 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(resource.UniqueId()),
@@ -136,21 +142,18 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := waitInstanceCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %w", d.Id(), err))
 	}
 
 	for att := range InstanceAttributeMapping() {
 		rKey := InstanceAttributeMapping()[att]
-
-		if v, ok := d.GetOk(rKey); ok {
-			err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
-			//Pre-release attribute, user/account/instance now allow-listed
-			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
-				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
-			} else if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
-			}
+		err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(d.Get(rKey).(bool)))
+		//Pre-release attribute, user/account/instance now allow-listed
+		if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
+			log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
+		} else if err != nil {
+			return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
 		}
 	}
 
@@ -158,7 +161,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	for att := range InstanceAttributeMapping() {
 		rKey := InstanceAttributeMapping()[att]
@@ -177,7 +180,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := connect.DescribeInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -186,7 +189,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Reading Connect Instance %s", d.Id())
 	output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -220,7 +223,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := &connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -228,9 +231,9 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Deleting Connect Instance %s", d.Id())
 
-	_, err := conn.DeleteInstance(input)
+	_, err := conn.DeleteInstanceWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -238,7 +241,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}
 
-	if _, err := waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceDeleted(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect Instance deletion (%s): %s", d.Id(), err))
 	}
 	return nil
@@ -252,10 +255,8 @@ func resourceInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect,
 	}
 
 	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {

@@ -1,28 +1,31 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_app_image_config")
 func ResourceAppImageConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAppImageConfigCreate,
-		Read:   resourceAppImageConfigRead,
-		Update: resourceAppImageConfigUpdate,
-		Delete: resourceAppImageConfigDelete,
+		CreateWithoutTimeout: resourceAppImageConfigCreate,
+		ReadWithoutTimeout:   resourceAppImageConfigRead,
+		UpdateWithoutTimeout: resourceAppImageConfigUpdate,
+		DeleteWithoutTimeout: resourceAppImageConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -104,10 +107,11 @@ func ResourceAppImageConfig() *schema.Resource {
 	}
 }
 
-func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
@@ -119,113 +123,113 @@ func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.KernelGatewayImageConfig = expandSagemakerAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+		input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
 	}
 
-	_, err := conn.CreateAppImageConfig(input)
+	_, err := conn.CreateAppImageConfigWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker App Image Config %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker App Image Config %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceAppImageConfigRead(d, meta)
+	return append(diags, resourceAppImageConfigRead(ctx, d, meta)...)
 }
 
-func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	image, err := FindAppImageConfigByName(conn, d.Id())
+	image, err := FindAppImageConfigByName(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading SageMaker App Image Config (%s): %w", d.Id(), err)
-
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker App Image Config (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(image.AppImageConfigArn)
 	d.Set("app_image_config_name", image.AppImageConfigName)
 	d.Set("arn", arn)
 
-	if err := d.Set("kernel_gateway_image_config", flattenSagemakerAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
-		return fmt.Errorf("error setting kernel_gateway_image_config: %w", err)
+	if err := d.Set("kernel_gateway_image_config", flattenAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kernel_gateway_image_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker App Image Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker App Image Config (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker App Image Config (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker App Image Config (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("kernel_gateway_image_config") {
-
 		input := &sagemaker.UpdateAppImageConfigInput{
 			AppImageConfigName: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-			input.KernelGatewayImageConfig = expandSagemakerAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+			input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Sagemaker App Image Config update config: %#v", *input)
-		_, err := conn.UpdateAppImageConfig(input)
+		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
+		_, err := conn.UpdateAppImageConfigWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker App Image Config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker App Image Config: %s", err)
 		}
-
 	}
 
-	return resourceAppImageConfigRead(d, meta)
+	return append(diags, resourceAppImageConfigRead(ctx, d, meta)...)
 }
 
-func resourceAppImageConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteAppImageConfigInput{
 		AppImageConfigName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteAppImageConfig(input); err != nil {
+	if _, err := conn.DeleteAppImageConfigWithContext(ctx, input); err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker App Image Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
+func expandAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -235,17 +239,17 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sag
 	config := &sagemaker.KernelGatewayImageConfig{}
 
 	if v, ok := m["kernel_spec"].([]interface{}); ok && len(v) > 0 {
-		config.KernelSpecs = expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
+		config.KernelSpecs = expandAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
 	}
 
 	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
-		config.FileSystemConfig = expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(v)
+		config.FileSystemConfig = expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
+func expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -261,7 +265,7 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []i
 	return config
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
+func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -283,17 +287,13 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []i
 			kernelSpec.DisplayName = aws.String(v)
 		}
 
-		if kernelSpec == nil {
-			continue
-		}
-
 		kernelSpecs = append(kernelSpecs, kernelSpec)
 	}
 
 	return kernelSpecs
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -301,17 +301,17 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.Ke
 	m := map[string]interface{}{}
 
 	if config.KernelSpecs != nil {
-		m["kernel_spec"] = flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
+		m["kernel_spec"] = flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
 	}
 
 	if config.FileSystemConfig != nil {
-		m["file_system_config"] = flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(config.FileSystemConfig)
+		m["file_system_config"] = flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config.FileSystemConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -325,7 +325,7 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(conf
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0, len(kernelSpecs))
 
 	for _, raw := range kernelSpecs {

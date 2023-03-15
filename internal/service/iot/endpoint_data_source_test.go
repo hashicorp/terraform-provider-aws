@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccIoTEndpointDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig,
+				Config: testAccEndpointDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+(-ats)?.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -29,15 +30,16 @@ func TestAccIoTEndpointDataSource_basic(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotCredentialProvider(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointEndpointTypeConfig("iot:CredentialProvider"),
+				Config: testAccEndpointDataSourceConfig_type("iot:CredentialProvider"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+.credentials.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -47,15 +49,16 @@ func TestAccIoTEndpointDataSource_EndpointType_iotCredentialProvider(t *testing.
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotData(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointEndpointTypeConfig("iot:Data"),
+				Config: testAccEndpointDataSourceConfig_type("iot:Data"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -65,15 +68,16 @@ func TestAccIoTEndpointDataSource_EndpointType_iotData(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotDataATS(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointEndpointTypeConfig("iot:Data-ATS"),
+				Config: testAccEndpointDataSourceConfig_type("iot:Data-ATS"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+-ats.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -83,15 +87,16 @@ func TestAccIoTEndpointDataSource_EndpointType_iotDataATS(t *testing.T) {
 }
 
 func TestAccIoTEndpointDataSource_EndpointType_iotJobs(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointEndpointTypeConfig("iot:Jobs"),
+				Config: testAccEndpointDataSourceConfig_type("iot:Jobs"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "endpoint_address", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]+.jobs.iot.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -100,11 +105,11 @@ func TestAccIoTEndpointDataSource_EndpointType_iotJobs(t *testing.T) {
 	})
 }
 
-const testAccEndpointConfig = `
+const testAccEndpointDataSourceConfig_basic = `
 data "aws_iot_endpoint" "test" {}
 `
 
-func testAccEndpointEndpointTypeConfig(endpointType string) string {
+func testAccEndpointDataSourceConfig_type(endpointType string) string {
 	return fmt.Sprintf(`
 data "aws_iot_endpoint" "test" {
   endpoint_type = %q

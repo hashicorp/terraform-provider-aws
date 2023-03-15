@@ -11,19 +11,20 @@ import (
 )
 
 func TestAccAppMeshVirtualServiceDataSource_virtualNode(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
+				Config: testAccVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -41,19 +42,20 @@ func TestAccAppMeshVirtualServiceDataSource_virtualNode(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
+				Config: testAccVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -70,7 +72,7 @@ func TestAccAppMeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualServiceDataSourceConfig_virtualNode(rName, vsName string) string {
+func testAccVirtualServiceDataSourceConfig_virtualNode(rName, vsName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -108,7 +110,7 @@ data "aws_appmesh_virtual_service" "test" {
 `, rName, vsName)
 }
 
-func testAccCheckVirtualServiceDataSourceConfig_virtualRouter(rName, vsName string) string {
+func testAccVirtualServiceDataSourceConfig_virtualRouter(rName, vsName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

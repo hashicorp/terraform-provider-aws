@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_chime_voice_connector_streaming")
 func ResourceVoiceConnectorStreaming() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorStreamingCreate,
@@ -55,7 +56,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorStreamingConfigurationInput{
@@ -83,14 +84,14 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorStreamingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) streaming not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -116,7 +117,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -137,11 +138,6 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 		input.StreamingConfiguration = config
 
 		if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
-			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
-				log.Printf("[WARN] error getting Chime Voice Connector (%s) streaming configuration", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return diag.Errorf("error updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 		}
 	}
@@ -150,7 +146,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -158,7 +154,7 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 
 	_, err := conn.DeleteVoiceConnectorStreamingConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

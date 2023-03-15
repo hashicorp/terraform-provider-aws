@@ -1,17 +1,19 @@
 package batch
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
+func FindComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
 	input := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: aws.StringSlice([]string{name}),
 	}
 
-	computeEnvironmentDetail, err := FindComputeEnvironmentDetail(conn, input)
+	computeEnvironmentDetail, err := FindComputeEnvironmentDetail(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -27,8 +29,8 @@ func FindComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.
 	return computeEnvironmentDetail, nil
 }
 
-func FindComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
-	output, err := conn.DescribeComputeEnvironments(input)
+func FindComputeEnvironmentDetail(ctx context.Context, conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
+	output, err := conn.DescribeComputeEnvironmentsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -46,12 +48,12 @@ func FindComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComput
 	return output.ComputeEnvironments[0], nil
 }
 
-func FindJobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
+func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
 
-	jobDefinition, err := FindJobDefinition(conn, input)
+	jobDefinition, err := FindJobDefinition(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -67,8 +69,8 @@ func FindJobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition
 	return jobDefinition, nil
 }
 
-func FindJobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
-	output, err := conn.DescribeJobDefinitions(input)
+func FindJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

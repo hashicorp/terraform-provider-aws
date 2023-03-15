@@ -1,24 +1,29 @@
 package elastictranscoder
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_elastictranscoder_preset")
 func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePresetCreate,
-		Read:   resourcePresetRead,
-		Delete: resourcePresetDelete,
+		CreateWithoutTimeout: resourcePresetCreate,
+		ReadWithoutTimeout:   resourcePresetRead,
+		DeleteWithoutTimeout: resourcePresetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,26 +44,54 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"SingleTrack",
+								"OneChannelPerTrack",
+								"OneChannelPerTrackWithMosTo8Tracks",
+							}, false),
 						},
 						"bit_rate": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 						"channels": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"0",
+								"1",
+								"2",
+							}, false),
 						},
 						"codec": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"AAC",
+								"flac",
+								"mp2",
+								"mp3",
+								"pcm",
+								"vorbis",
+							}, false),
 						},
 						"sample_rate": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"22050",
+								"32000",
+								"44100",
+								"48000",
+								"96000",
+							}, false),
 						},
 					},
 				},
@@ -67,28 +100,52 @@ func ResourcePreset() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bit_depth": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"8",
+								"16",
+								"24",
+								"32",
+							}, false),
 						},
 						"bit_order": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"LittleEndian",
+							}, false),
 						},
 						"profile": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"AAC-LC",
+								"HE-AAC",
+								"HE-AACv2",
+							}, false),
 						},
 						"signed": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Signed",
+								"Unsigned",
+							}, false),
 						},
 					},
 				},
@@ -98,6 +155,22 @@ func ResourcePreset() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"flac",
+					"flv",
+					"fmp4",
+					"gif",
+					"mp2",
+					"mp3",
+					"mp4",
+					"mpg",
+					"mxf",
+					"oga",
+					"ogg",
+					"ts",
+					"wav",
+					"webm",
+				}, false),
 			},
 
 			"description": {
@@ -125,11 +198,22 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"1:1",
+								"4:3",
+								"3:2",
+								"16:9",
+							}, false),
 						},
 						"format": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"jpg",
+								"png",
+							}, false),
 						},
 						"interval": {
 							Type:     schema.TypeString,
@@ -150,6 +234,10 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Pad",
+								"NoPad",
+							}, false),
 						},
 						"resolution": {
 							Type:     schema.TypeString,
@@ -160,6 +248,14 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Fit",
+								"Fill",
+								"Stretch",
+								"Keep",
+								"ShrinkToFit",
+								"ShrinkToFill",
+							}, false),
 						},
 					},
 				},
@@ -169,6 +265,10 @@ func ResourcePreset() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"Custom",
+					"System",
+				}, false),
 			},
 
 			"video": {
@@ -183,31 +283,69 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"1:1",
+								"4:3",
+								"3:2",
+								"16:9",
+							}, false),
 						},
 						"bit_rate": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 						"codec": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"gif",
+								"H.264",
+								"mpeg2",
+								"vp8",
+								"vp9",
+							}, false),
 						},
 						"display_aspect_ratio": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"1:1",
+								"4:3",
+								"3:2",
+								"16:9",
+							}, false),
 						},
 						"fixed_gop": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"true",
+								"false",
+							}, false),
 						},
 						"frame_rate": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"10",
+								"15",
+								"23.97",
+								"24",
+								"25",
+								"29.97",
+								"30",
+								"50",
+								"60",
+							}, false),
 						},
 						"keyframes_max_dist": {
 							Type:     schema.TypeString,
@@ -219,6 +357,17 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"10",
+								"15",
+								"23.97",
+								"24",
+								"25",
+								"29.97",
+								"30",
+								"50",
+								"60",
+							}, false),
 						},
 						"max_height": {
 							Type:     schema.TypeString,
@@ -234,6 +383,10 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Pad",
+								"NoPad",
+							}, false),
 						},
 						"resolution": {
 							Type:     schema.TypeString,
@@ -245,6 +398,14 @@ func ResourcePreset() *schema.Resource {
 							Default:  "Fit",
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Fit",
+								"Fill",
+								"Stretch",
+								"Keep",
+								"ShrinkToFit",
+								"ShrinkToFill",
+							}, false),
 						},
 					},
 				},
@@ -261,6 +422,11 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Left",
+								"Right",
+								"Center",
+							}, false),
 						},
 						"horizontal_offset": {
 							Type:     schema.TypeString,
@@ -268,9 +434,10 @@ func ResourcePreset() *schema.Resource {
 							ForceNew: true,
 						},
 						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 40),
 						},
 						"max_height": {
 							Type:     schema.TypeString,
@@ -291,16 +458,30 @@ func ResourcePreset() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Fit",
+								"Stretch",
+								"ShrinkToFit",
+							}, false),
 						},
 						"target": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Content",
+								"Frame",
+							}, false),
 						},
 						"vertical_align": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Top",
+								"Bottom",
+								"Center",
+							}, false),
 						},
 						"vertical_offset": {
 							Type:     schema.TypeString,
@@ -321,8 +502,9 @@ func ResourcePreset() *schema.Resource {
 	}
 }
 
-func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
@@ -341,9 +523,9 @@ func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Elastic Transcoder Preset create opts: %s", req)
-	resp, err := conn.CreatePreset(req)
+	resp, err := conn.CreatePresetWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error creating Elastic Transcoder Preset: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Elastic Transcoder Preset: %s", err)
 	}
 
 	if aws.StringValue(resp.Warning) != "" {
@@ -351,9 +533,8 @@ func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(resp.Preset.Id))
-	d.Set("arn", resp.Preset.Arn)
 
-	return nil
+	return append(diags, resourcePresetRead(ctx, d, meta)...)
 }
 
 func expandETThumbnails(d *schema.ResourceData) *elastictranscoder.Thumbnails {
@@ -417,14 +598,19 @@ func expandETAudioParams(d *schema.ResourceData) *elastictranscoder.AudioParamet
 	}
 	audio := l[0].(map[string]interface{})
 
-	return &elastictranscoder.AudioParameters{
+	ap := &elastictranscoder.AudioParameters{
 		AudioPackingMode: aws.String(audio["audio_packing_mode"].(string)),
-		BitRate:          aws.String(audio["bit_rate"].(string)),
 		Channels:         aws.String(audio["channels"].(string)),
 		Codec:            aws.String(audio["codec"].(string)),
 		CodecOptions:     expandETAudioCodecOptions(d),
 		SampleRate:       aws.String(audio["sample_rate"].(string)),
 	}
+
+	if v, ok := audio["bit_rate"]; ok && v.(string) != "" {
+		ap.BitRate = aws.String(v.(string))
+	}
+
+	return ap
 }
 
 func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioCodecOptions {
@@ -467,13 +653,10 @@ func expandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParamet
 		Watermarks: expandETVideoWatermarks(d),
 	}
 
-	if v, ok := d.GetOk("video_codec_options"); ok {
-		codecOpts := make(map[string]string)
-		for k, va := range v.(map[string]interface{}) {
-			codecOpts[k] = va.(string)
-		}
-
-		etVideoParams.CodecOptions = aws.StringMap(codecOpts)
+	if v, ok := d.GetOk("video_codec_options"); ok && len(v.(map[string]interface{})) > 0 {
+		etVideoParams.CodecOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+	} else {
+		etVideoParams.CodecOptions = aws.StringMap(make(map[string]string))
 	}
 
 	if v, ok := p["aspect_ratio"]; ok && v.(string) != "" {
@@ -566,34 +749,35 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 	return watermarks
 }
 
-func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
-	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
+	resp, err := conn.ReadPresetWithContext(ctx, &elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
+			log.Printf("[WARN] Elastic Transcoder Preset (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elastic Transcoder Preset Read response: %#v", resp)
 
 	preset := resp.Preset
 	d.Set("arn", preset.Arn)
 
 	if preset.Audio != nil {
-		err := d.Set("audio", flattenETAudioParameters(preset.Audio))
-		if err != nil {
-			return err
+		if err := d.Set("audio", flattenETAudioParameters(preset.Audio)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting audio: %s", d.Id(), err)
 		}
 
 		if preset.Audio.CodecOptions != nil {
-			d.Set("audio_codec_options", flattenETAudioCodecOptions(preset.Audio.CodecOptions))
+			if err := d.Set("audio_codec_options", flattenETAudioCodecOptions(preset.Audio.CodecOptions)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting audio_codec_options: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -604,7 +788,7 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	if preset.Thumbnails != nil {
 		err := d.Set("thumbnails", flattenETThumbnails(preset.Thumbnails))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting thumbnails: %s", d.Id(), err)
 		}
 	}
 
@@ -613,19 +797,23 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	if preset.Video != nil {
 		err := d.Set("video", flattenETVideoParams(preset.Video))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video: %s", d.Id(), err)
 		}
 
 		if preset.Video.CodecOptions != nil {
-			d.Set("video_codec_options", aws.StringValueMap(preset.Video.CodecOptions))
+			if err := d.Set("video_codec_options", aws.StringValueMap(preset.Video.CodecOptions)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video_codec_options: %s", d.Id(), err)
+			}
 		}
 
 		if preset.Video.Watermarks != nil {
-			d.Set("video_watermarks", flattenETWatermarks(preset.Video.Watermarks))
+			if err := d.Set("video_watermarks", flattenETWatermarks(preset.Video.Watermarks)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video_watermarks: %s", d.Id(), err)
+			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func flattenETAudioParameters(audio *elastictranscoder.AudioParameters) []map[string]interface{} {
@@ -635,10 +823,13 @@ func flattenETAudioParameters(audio *elastictranscoder.AudioParameters) []map[st
 
 	result := map[string]interface{}{
 		"audio_packing_mode": aws.StringValue(audio.AudioPackingMode),
-		"bit_rate":           aws.StringValue(audio.BitRate),
 		"channels":           aws.StringValue(audio.Channels),
 		"codec":              aws.StringValue(audio.Codec),
 		"sample_rate":        aws.StringValue(audio.SampleRate),
+	}
+
+	if audio.BitRate != nil {
+		result["bit_rate"] = aws.StringValue(audio.BitRate)
 	}
 
 	return []map[string]interface{}{result}
@@ -725,17 +916,18 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 	return watermarkSet
 }
 
-func resourcePresetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePresetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
-	_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
+	_, err := conn.DeletePresetWithContext(ctx, &elastictranscoder.DeletePresetInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Elastic Transcoder Preset: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Transcoder Preset: %s", err)
 	}
 
-	return nil
+	return diags
 }

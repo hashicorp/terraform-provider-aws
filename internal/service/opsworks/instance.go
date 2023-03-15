@@ -2,29 +2,33 @@ package opsworks
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_opsworks_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceCreate,
-		Read:   resourceInstanceRead,
-		Update: resourceInstanceUpdate,
-		Delete: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceInstanceImport,
+			StateContext: resourceInstanceImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -141,7 +145,6 @@ func ResourceInstance() *schema.Resource {
 
 			"last_service_error_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -160,61 +163,51 @@ func ResourceInstance() *schema.Resource {
 
 			"platform": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"private_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"private_ip": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"public_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"public_ip": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"registered_by": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_agent_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_family": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_name": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -228,7 +221,6 @@ func ResourceInstance() *schema.Resource {
 
 			"root_device_volume_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -241,13 +233,11 @@ func ResourceInstance() *schema.Resource {
 
 			"ssh_host_dsa_key_fingerprint": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"ssh_host_rsa_key_fingerprint": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -464,8 +454,9 @@ func resourceInstanceValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -475,29 +466,28 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading OpsWorks instance: %s", d.Id())
 
-	resp, err := client.DescribeInstances(req)
+	resp, err := conn.DescribeInstancesWithContext(ctx, req)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	// If nothing was found, then return no state
-	if len(resp.Instances) == 0 {
+	if len(resp.Instances) == 0 || resp.Instances[0] == nil || resp.Instances[0].InstanceId == nil {
+		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	instance := resp.Instances[0]
 
-	if instance.InstanceId == nil {
-		d.SetId("")
-		return nil
-	}
-	instanceId := *instance.InstanceId
-
-	d.SetId(instanceId)
+	d.SetId(aws.StringValue(instance.InstanceId))
 	d.Set("agent_version", instance.AgentVersion)
 	d.Set("ami_id", instance.AmiId)
 	d.Set("architecture", instance.Architecture)
@@ -520,10 +510,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	layerIds, err = sortListBasedonTFFile(layerIds, d)
 	if err != nil {
-		return fmt.Errorf("Error sorting layer_ids attribute: %#v", err)
+		return sdkdiag.AppendErrorf(diags, "sorting layer_ids attribute: %#v", err)
 	}
 	if err := d.Set("layer_ids", layerIds); err != nil {
-		return fmt.Errorf("Error setting layer_ids attribute: %#v, error: %#v", layerIds, err)
+		return sdkdiag.AppendErrorf(diags, "setting layer_ids attribute: %#v, error: %#v", layerIds, err)
 	}
 	d.Set("os", instance.Os)
 	d.Set("platform", instance.Platform)
@@ -548,17 +538,17 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("virtualization_type", instance.VirtualizationType)
 
 	// Read BlockDeviceMapping
-	ibds := readOpsworksBlockDevices(instance)
+	ibds := readBlockDevices(instance)
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting ebs_block_device: %s", d.Id(), err)
 	}
 	if err := d.Set("ephemeral_block_device", ibds["ephemeral"]); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting ephemeral_block_device: %s", d.Id(), err)
 	}
 	if ibds["root"] != nil {
 		if err := d.Set("root_block_device", []interface{}{ibds["root"]}); err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting root_block_device: %s", d.Id(), err)
 		}
 	} else {
 		d.Set("root_block_device", []interface{}{})
@@ -569,16 +559,19 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	for _, sg := range instance.SecurityGroupIds {
 		sgs = append(sgs, *sg)
 	}
-	err1 := d.Set("security_group_ids", sgs)
-	return err1
+	if err := d.Set("security_group_ids", sgs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
+	}
+	return diags
 }
 
-func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance: %s", err)
 	}
 
 	req := &opsworks.CreateInstanceInput{
@@ -679,7 +672,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("root_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		if len(vL) > 1 {
-			return fmt.Errorf("Cannot specify more than one root_block_device.")
+			return sdkdiag.AppendErrorf(diags, "Cannot specify more than one root_block_device.")
 		}
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
@@ -714,34 +707,35 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *opsworks.CreateInstanceOutput
 
-	resp, err = client.CreateInstance(req)
+	resp, err = conn.CreateInstanceWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
 	}
 
 	if resp.InstanceId == nil {
-		return fmt.Errorf("Error launching instance: no instance returned in response")
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: no instance returned")
 	}
 
 	instanceId := aws.StringValue(resp.InstanceId)
 	d.SetId(instanceId)
 
-	if v, ok := d.GetOk("state"); ok && v.(string) == "running" {
-		err := startOpsworksInstance(d, meta, true, d.Timeout(schema.TimeoutCreate))
+	if v, ok := d.GetOk("state"); ok && v.(string) == instanceStatusRunning {
+		err := startInstance(ctx, d, meta, true, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
 		}
 	}
 
-	return resourceInstanceRead(d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	req := &opsworks.UpdateInstanceInput{
@@ -782,9 +776,9 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks instance: %s", d.Id())
 
-	_, err = client.UpdateInstance(req)
+	_, err = conn.UpdateInstanceWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	var status string
@@ -797,33 +791,34 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("state"); ok {
 		state := v.(string)
-		if state == "running" {
-			if status == "stopped" || status == "stopping" || status == "shutting_down" {
-				err := startOpsworksInstance(d, meta, false, d.Timeout(schema.TimeoutUpdate))
+		if state == instanceStatusRunning {
+			if status == instanceStatusStopped || status == instanceStatusStopping || status == instanceStatusShuttingDown {
+				err := startInstance(ctx, d, meta, false, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 				}
 			}
 		} else {
-			if status != "stopped" && status != "stopping" && status != "shutting_down" {
-				err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutUpdate))
+			if status != instanceStatusStopped && status != instanceStatusStopping && status != instanceStatusShuttingDown {
+				err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceInstanceRead(d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != "stopped" {
-		err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutDelete))
+	if v, ok := d.GetOk("status"); ok && v.(string) != instanceStatusStopped {
+		err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutDelete))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -835,12 +830,24 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting OpsWorks instance: %s", d.Id())
 
-	_, err := client.DeleteInstance(req)
-	return err
+	_, err := conn.DeleteInstanceWithContext(ctx, req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): %s", d.Id(), err)
+	}
+
+	if err := waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): waiting for completion: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceInstanceImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither delete_eip nor delete_ebs can be fetched
 	// from any API call, so we need to default to the values
 	// we set in the schema by default
@@ -849,82 +856,122 @@ func resourceInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	instanceId := d.Id()
+func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.StartInstanceInput{
-		InstanceId: aws.String(instanceId),
+		InstanceId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Starting OpsWorks instance: %s", instanceId)
+	log.Printf("[DEBUG] Starting OpsWorks instance: %s", d.Id())
 
-	_, err := client.StartInstance(req)
+	_, err := conn.StartInstanceWithContext(ctx, req)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("starting instance: %w", err)
 	}
 
 	if wait {
-		log.Printf("[DEBUG] Waiting for instance (%s) to become running", instanceId)
+		log.Printf("[DEBUG] Waiting for OpsWorks instance (%s) to start", d.Id())
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"requested", "pending", "booting", "running_setup"},
-			Target:     []string{"online"},
-			Refresh:    OpsworksInstanceStateRefreshFunc(client, instanceId),
-			Timeout:    timeout,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("Error waiting for instance (%s) to become stopped: %s",
-				instanceId, err)
+		if err := waitInstanceStarted(ctx, conn, d.Id(), timeout); err != nil {
+			return fmt.Errorf("starting instance: waiting for completion: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	instanceId := d.Id()
+func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.StopInstanceInput{
-		InstanceId: aws.String(instanceId),
+		InstanceId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Stopping OpsWorks instance: %s", instanceId)
+	log.Printf("[DEBUG] Stopping OpsWorks instance: %s", d.Id())
 
-	_, err := client.StopInstance(req)
+	_, err := conn.StopInstanceWithContext(ctx, req)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("stopping instance: %w", err)
 	}
 
-	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", instanceId)
+	log.Printf("[DEBUG] Waiting for OpsWorks instance (%s) to become stopped", d.Id())
 
+	if err := waitInstanceStopped(ctx, conn, d.Id(), timeout); err != nil {
+		return fmt.Errorf("stopping instance: waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
+func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"stopping", "terminating", "shutting_down", "terminated"},
-		Target:     []string{"stopped"},
-		Refresh:    OpsworksInstanceStateRefreshFunc(client, instanceId),
+		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
+		Target:     []string{},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    2 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
+		Target:     []string{instanceStatusOnline},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for instance (%s) to become stopped: %s",
-			instanceId, err)
-	}
-
-	return nil
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
 
-func readOpsworksBlockDevices(instance *opsworks.Instance) map[string]interface{} {
+func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
+		Target:     []string{instanceStatusStopped},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
 
+func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
+			InstanceIds: []*string{aws.String(instanceID)},
+		})
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if resp == nil || len(resp.Instances) == 0 || resp.Instances[0] == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		i := resp.Instances[0]
+		return i, aws.StringValue(i.Status), nil
+	}
+}
+
+func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)
@@ -966,29 +1013,4 @@ func readOpsworksBlockDevices(instance *opsworks.Instance) map[string]interface{
 		}
 	}
 	return blockDevices
-}
-
-func OpsworksInstanceStateRefreshFunc(conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInstances(&opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(instanceID)},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-				resp = nil
-			} else {
-				log.Printf("Error on OpsworksInstanceStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil || len(resp.Instances) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		i := resp.Instances[0]
-		return i, aws.StringValue(i.Status), nil
-	}
 }

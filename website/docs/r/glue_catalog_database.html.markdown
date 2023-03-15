@@ -18,11 +18,28 @@ resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
 }
 ```
 
+### Create Table Default Permissions
+
+```terraform
+resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
+  name = "MyCatalogDatabase"
+
+  create_table_default_permission {
+    permissions = ["SELECT"]
+
+    principal {
+      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
+* `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
 * `description` - (Optional) Description of the database.
 * `location_uri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
@@ -33,6 +50,15 @@ The following arguments are supported:
 
 * `catalog_id` - (Required) ID of the Data Catalog in which the database resides.
 * `database_name` - (Required) Name of the catalog database.
+
+### create_table_default_permission
+
+* `permissions` - (Optional) The permissions that are granted to the principal.
+* `principal` - (Optional) The principal who is granted permissions.. See [`principal`](#principal) below.
+
+#### principal
+
+* `data_lake_principal_identifier` - (Optional) An identifier for the Lake Formation principal.
 
 ## Attributes Reference
 

@@ -15,13 +15,14 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
@@ -33,17 +34,37 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentConfig_SingleConditionValue,
+				Config: testAccPolicyDocumentDataSourceConfig_singleConditionValue,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentConfig_conditionWithBoolValue,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentConditionWithBoolValueExpectedJSON(),
+					),
 				),
 			},
 		},
@@ -54,13 +75,14 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentSourceConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_deprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", "json",
 						testAccPolicyDocumentSourceExpectedJSON(),
@@ -68,7 +90,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyDocumentSourceBlankConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_blankDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", "json",
 						testAccPolicyDocumentSourceBlankExpectedJSON,
@@ -80,13 +102,14 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentSourceListConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_list,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_list", "json",
 						testAccPolicyDocumentSourceListExpectedJSON,
@@ -98,13 +121,14 @@ func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentSourceConflictingConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_conflictingDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", "json",
 						testAccPolicyDocumentSourceConflictingExpectedJSON,
@@ -116,13 +140,14 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDocumentSourceListConflictingConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_listConflicting,
 				ExpectError: regexp.MustCompile(`duplicate Sid (.*?)`),
 			},
 		},
@@ -130,13 +155,14 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentOverrideConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_overrideDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", "json",
 						testAccPolicyDocumentOverrideExpectedJSON,
@@ -148,13 +174,14 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentOverrideListConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_overrideList,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override_list", "json",
 						testAccPolicyDocumentOverrideListExpectedJSON,
@@ -166,13 +193,14 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentNoStatementMergeConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_noStatementMergeDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
 						testAccPolicyDocumentNoStatementMergeExpectedJSON,
@@ -184,13 +212,14 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentNoStatementOverrideConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_noStatementOverrideDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
 						testAccPolicyDocumentNoStatementOverrideExpectedJSON,
@@ -202,17 +231,18 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDocumentDuplicateSidConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_duplicateSid,
 				ExpectError: regexp.MustCompile(`duplicate Sid`),
 			},
 			{
-				Config: testAccPolicyDocumentDuplicateBlankSidConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_duplicateBlankSid,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
 						testAccPolicyDocumentDuplicateBlankSidExpectedJSON,
@@ -223,17 +253,110 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_invalidJSON,
+				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON,
+				ExpectError: regexp.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON,
+				ExpectError: regexp.MustCompile(`"override_json" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON,
+				ExpectError: regexp.MustCompile(`"source_json" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentStatementPrincipalIdentifiersStringAndSliceConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersStringAndSlice,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice()),
 				),
@@ -244,15 +367,16 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndS
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsPartitionID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersMultiplePrincipals,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals()),
 				),
@@ -262,15 +386,16 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsUsGovPartitionID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersMultiplePrincipals,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov()),
 				),
@@ -280,33 +405,34 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDocumentVersion20081017ConversionConditionDataSourceConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionCondition,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccPolicyDocumentVersion20081017ConversionNotPrincipalsDataSourceConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotPrincipals,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccPolicyDocumentVersion20081017ConversionNotResourcesDataSourceConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotRe,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccPolicyDocumentVersion20081017ConversionPrincipalDataSourceConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionPrincipal,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config:      testAccPolicyDocumentVersion20081017ConversionResourcesDataSourceConfig,
+				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionRe,
 				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
-				Config: testAccPolicyDocumentVersion20081017DataSourceConfig,
+				Config: testAccPolicyDocumentDataSourceConfig_version20081017,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig),
 				),
@@ -315,7 +441,7 @@ func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 	})
 }
 
-var testAccPolicyDocumentConfig = `
+var testAccPolicyDocumentDataSourceConfig_basic = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -471,7 +597,7 @@ func testAccPolicyDocumentExpectedJSON() string {
 }`, acctest.Partition())
 }
 
-const testAccPolicyDocumentConfig_SingleConditionValue = `
+const testAccPolicyDocumentDataSourceConfig_singleConditionValue = `
 data "aws_iam_policy_document" "test" {
   statement {
     effect = "Deny"
@@ -514,7 +640,7 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceConfig = `
+var testAccPolicyDocumentDataSourceConfig_deprecated = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -690,7 +816,7 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
 }`, acctest.Partition())
 }
 
-var testAccPolicyDocumentSourceListConfig = `
+var testAccPolicyDocumentDataSourceConfig_list = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -757,7 +883,7 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceBlankConfig = `
+var testAccPolicyDocumentDataSourceConfig_blankDeprecated = `
 data "aws_iam_policy_document" "test_source_blank" {
   source_json = ""
 
@@ -781,7 +907,7 @@ var testAccPolicyDocumentSourceBlankExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceConflictingConfig = `
+var testAccPolicyDocumentDataSourceConfig_conflictingDeprecated = `
 data "aws_iam_policy_document" "test_source" {
   statement {
     sid       = "SourceJSONTestConflicting"
@@ -813,7 +939,7 @@ var testAccPolicyDocumentSourceConflictingExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceListConflictingConfig = `
+var testAccPolicyDocumentDataSourceConfig_listConflicting = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -855,7 +981,7 @@ data "aws_iam_policy_document" "test_source_list_conflicting" {
 }
 `
 
-var testAccPolicyDocumentOverrideConfig = `
+var testAccPolicyDocumentDataSourceConfig_overrideDeprecated = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "override" {
@@ -906,7 +1032,7 @@ var testAccPolicyDocumentOverrideExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentOverrideListConfig = `
+var testAccPolicyDocumentDataSourceConfig_overrideList = `
 data "aws_iam_policy_document" "policy_a" {
   statement {
     sid     = ""
@@ -969,7 +1095,7 @@ var testAccPolicyDocumentOverrideListExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentNoStatementMergeConfig = `
+var testAccPolicyDocumentDataSourceConfig_noStatementMergeDeprecated = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = ""
@@ -1010,7 +1136,7 @@ var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentNoStatementOverrideConfig = `
+var testAccPolicyDocumentDataSourceConfig_noStatementOverrideDeprecated = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = "OverridePlaceholder"
@@ -1045,7 +1171,7 @@ var testAccPolicyDocumentNoStatementOverrideExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentDuplicateSidConfig = `
+var testAccPolicyDocumentDataSourceConfig_duplicateSid = `
 data "aws_iam_policy_document" "test" {
   statement {
     sid       = "1"
@@ -1063,7 +1189,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccPolicyDocumentDuplicateBlankSidConfig = `
+var testAccPolicyDocumentDataSourceConfig_duplicateBlankSid = `
 data "aws_iam_policy_document" "test" {
   statement {
     sid       = ""
@@ -1099,7 +1225,7 @@ var testAccPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   ]
 }`
 
-const testAccPolicyDocumentVersion20081017DataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017 = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1122,7 +1248,7 @@ const testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig = `{
   ]
 }`
 
-const testAccPolicyDocumentVersion20081017ConversionConditionDataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017ConversionCondition = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1142,7 +1268,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccPolicyDocumentVersion20081017ConversionNotPrincipalsDataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotPrincipals = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1158,7 +1284,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccPolicyDocumentVersion20081017ConversionNotResourcesDataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotRe = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1171,7 +1297,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccPolicyDocumentVersion20081017ConversionPrincipalDataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017ConversionPrincipal = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
@@ -1187,7 +1313,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccPolicyDocumentVersion20081017ConversionResourcesDataSourceConfig = `
+const testAccPolicyDocumentDataSourceConfig_version20081017ConversionRe = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1200,7 +1326,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccPolicyDocumentStatementPrincipalIdentifiersStringAndSliceConfig = `
+var testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersStringAndSlice = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1221,6 +1347,71 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `
+
+const testAccPolicyDocumentConfig_conditionWithBoolValue = `
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [<<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:${data.aws_partition.current.partition}:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": false
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": "arn:${data.aws_partition.current.partition}:iam::*:role/AWSAFTExecution"
+                }
+            }
+        }
+    ]
+}
+EOF
+  ]
+}
+`
+
+func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
+	return fmt.Sprintf(`{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:%[1]s:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": "false"
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": [
+						"arn:%[1]s:iam::*:role/AWSAFTExecution"
+					]
+                }
+            }
+        }
+    ]
+  }`, acctest.Partition())
+}
 
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice() string {
 	return fmt.Sprintf(`{
@@ -1243,7 +1434,7 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlic
 }`, acctest.Partition())
 }
 
-var testAccPolicyDocumentStatementPrincipalIdentifiersMultiplePrincipalsConfig = `
+var testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersMultiplePrincipals = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -1276,6 +1467,22 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `
+
+var testAccPolicyDocumentDataSourceConfig_emptyString = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentExpectedJSONNoStatement = `{
+  "Version": "2012-10-17"
+}`
 
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals() string {
 	return fmt.Sprintf(`{
@@ -1320,3 +1527,39 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrinc
   ]
 }`, acctest.Partition())
 }
+
+var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString = `
+data "aws_iam_policy_document" "test" {
+  override_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  override_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString = `
+data "aws_iam_policy_document" "test" {
+  override_json = ""
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  override_json = "{"
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString = `
+data "aws_iam_policy_document" "test" {
+  source_json = ""
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  source_json = "{"
+}
+`

@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_code_repository"
 description: |-
-  Provides a Sagemaker Code Repository resource.
+  Provides a SageMaker Code Repository resource.
 ---
 
 # Resource: aws_sagemaker_code_repository
 
-Provides a Sagemaker Code Repository resource.
+Provides a SageMaker Code Repository resource.
 
 ## Example Usage
 
@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `code_repository_name` - (Required) The name of the Code Repository (must be unique).
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Git Config
 
@@ -68,11 +68,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the Code Repository.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Code Repository.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Sagemaker Code Repositories can be imported using the `name`, e.g.,
+SageMaker Code Repositories can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo

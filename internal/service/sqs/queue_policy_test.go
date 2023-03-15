@@ -12,21 +12,22 @@ import (
 )
 
 func TestAccSQSQueuePolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -36,7 +37,7 @@ func TestAccSQSQueuePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccQueuePolicyConfig(rName),
+				Config:   testAccQueuePolicyConfig_basic(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "policy", queueResourceName, "policy"),
@@ -47,22 +48,23 @@ func TestAccSQSQueuePolicy_basic(t *testing.T) {
 }
 
 func TestAccSQSQueuePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
+					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,21 +73,22 @@ func TestAccSQSQueuePolicy_disappears(t *testing.T) {
 }
 
 func TestAccSQSQueuePolicy_Disappears_queue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var queueAttributes map[string]string
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
+					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,21 +97,22 @@ func TestAccSQSQueuePolicy_Disappears_queue(t *testing.T) {
 }
 
 func TestAccSQSQueuePolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQueueDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueuePolicyConfig(rName),
+				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -118,7 +122,7 @@ func TestAccSQSQueuePolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPolicyUpdatedConfig(rName),
+				Config: testAccQueuePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -127,7 +131,7 @@ func TestAccSQSQueuePolicy_update(t *testing.T) {
 	})
 }
 
-func testAccQueuePolicyConfig(rName string) string {
+func testAccQueuePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
@@ -156,7 +160,7 @@ POLICY
 `, rName)
 }
 
-func testAccPolicyUpdatedConfig(rName string) string {
+func testAccQueuePolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q

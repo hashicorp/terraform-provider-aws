@@ -1,6 +1,7 @@
 package guardduty
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,23 +11,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_guardduty_filter")
 func ResourceFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFilterCreate,
-		Read:   resourceFilterRead,
-		Update: resourceFilterUpdate,
-		Delete: resourceFilterDelete,
+		CreateWithoutTimeout: resourceFilterCreate,
+		ReadWithoutTimeout:   resourceFilterRead,
+		UpdateWithoutTimeout: resourceFilterUpdate,
+		DeleteWithoutTimeout: resourceFilterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -123,10 +127,11 @@ func ResourceFilter() *schema.Resource {
 	}
 }
 
-func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateFilterInput{
 		Action:      aws.String(d.Get("action").(string)),
@@ -139,7 +144,7 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
 	if len(tags) > 0 {
@@ -147,18 +152,19 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
-	output, err := conn.CreateFilter(&input)
+	output, err := conn.CreateFilterWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
-	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(filterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
-	return resourceFilterRead(d, meta)
+	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -169,7 +175,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 		// If there is no "detector_id" passed, then it's an import.
 		detectorID, name, err = FilterParseID(d.Id())
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading GuardDuty Filter (%s): %s", name, err)
 		}
 	} else {
 		detectorID = d.Get("detector_id").(string)
@@ -182,15 +188,15 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading GuardDuty Filter: %s", input)
-	filter, err := conn.GetFilter(&input)
+	filter, err := conn.GetFilterWithContext(ctx, &input)
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading GuardDuty Filter '%s': %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Filter (%s): %s", name, err)
 	}
 
 	arn := arn.ARN{
@@ -204,7 +210,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
 	if err != nil {
-		return fmt.Errorf("Setting GuardDuty Filter FindingCriteria failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Setting GuardDuty Filter FindingCriteria failed: %s", err)
 	}
 
 	d.Set("action", filter.Action)
@@ -213,23 +219,24 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
-	tags := KeyValueTags(filter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, filter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
-	d.SetId(guardDutyFilterCreateID(detectorID, name))
+	d.SetId(filterCreateID(detectorID, name))
 
-	return nil
+	return diags
 }
 
-func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
@@ -243,30 +250,29 @@ func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
-
-		_, err = conn.UpdateFilter(&input)
+		_, err = conn.UpdateFilterWithContext(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Filter (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceFilterRead(d, meta)
+	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("detector_id").(string)
 	name := d.Get("name").(string)
@@ -278,24 +284,24 @@ func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete GuardDuty Filter: %s", input)
 
-	_, err := conn.DeleteFilter(&input)
+	_, err := conn.DeleteFilterWithContext(ctx, &input)
 	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting GuardDuty Filter %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Filter %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
-const guardDutyFilterIDSeparator = ":"
+const filterIDSeparator = ":"
 
-func guardDutyFilterCreateID(detectorID, filterName string) string {
-	return detectorID + guardDutyFilterIDSeparator + filterName
+func filterCreateID(detectorID, filterName string) string {
+	return detectorID + filterIDSeparator + filterName
 }
 
 func FilterParseID(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
+	parts := strings.Split(importedId, filterIDSeparator)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
 	}
@@ -336,7 +342,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "greater_than", field, err)
 				}
 				condition.GreaterThan = aws.Int64(i)
 			}
@@ -345,7 +351,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than_or_equal", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "greater_than_or_equal", field, err)
 				}
 				condition.GreaterThanOrEqual = aws.Int64(i)
 			}
@@ -354,7 +360,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "less_than", field, err)
 				}
 				condition.LessThan = aws.Int64(i)
 			}
@@ -363,7 +369,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 			if v, ok := x.(string); ok && v != "" {
 				i, err := expandConditionIntField(field, v)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than_or_equal", field, err)
+					return nil, fmt.Errorf("parsing condition %q for field %q: %w", "less_than_or_equal", field, err)
 				}
 				condition.LessThanOrEqual = aws.Int64(i)
 			}

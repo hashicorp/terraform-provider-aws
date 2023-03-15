@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group_rule"
 description: |-
@@ -11,12 +11,10 @@ description: |-
 Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently
-provides both a standalone Security Group Rule resource (a single `ingress` or
-`egress` rule), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
-defined in-line. At this time you cannot use a Security Group with in-line rules
-in conjunction with any Security Group Rule resources. Doing so will cause
-a conflict of rule settings and will overwrite rules.
+~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a [Security Group resource](security_group.html) with `ingress` and `egress` rules defined in-line and a Security Group Rule resource which manages one or more `ingress` or
+`egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID.
+The [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules.
+You should not use the `aws_vpc_security_group_egress_rule` and `aws_vpc_security_group_ingress_rule` resources in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
 
 ~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
 
@@ -62,7 +60,31 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 }
 ```
 
-You can also find a specific Prefix List using the `aws_prefix_list` data source.
+You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/prefix_list.html)
+or [`ec2_managed_prefix_list`](/docs/providers/aws/d/ec2_managed_prefix_list.html) data sources:
+
+```terraform
+data "aws_region" "current" {}
+
+data "aws_prefix_list" "s3" {
+  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+resource "aws_security_group_rule" "s3_gateway_egress" {
+  # S3 Gateway interfaces are implemented at the routing level which means we
+  # can avoid the metered billing of a VPC endpoint interface by allowing
+  # outbound traffic to the public IP ranges, which will be routed through
+  # the Gateway interface:
+  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
+  description       = "S3 Gateway Egress"
+  type              = "egress"
+  security_group_id = "sg-123456"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [data.aws_prefix_list.s3.id]
+}
+```
 
 ## Argument Reference
 
@@ -89,6 +111,13 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
+* `security_group_rule_id` - If the `aws_security_group_rule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
 
 ## Import
 

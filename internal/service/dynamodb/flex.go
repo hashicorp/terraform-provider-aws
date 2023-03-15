@@ -21,7 +21,7 @@ func ExpandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValu
 	return attributes, nil
 }
 
-func flattenDynamoDBTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (string, error) {
+func flattenTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (string, error) {
 	buf := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buf)
 	err := encoder.Encode(attrs)

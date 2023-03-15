@@ -14,8 +14,8 @@ Provides a resource to manage an [AWS Organizations Delegated Administrator](htt
 
 ```terraform
 resource "aws_organizations_delegated_administrator" "example" {
-  account_id        = "AWS ACCOUNT ID"
-  service_principal = "Service principal"
+  account_id        = "123456789012"
+  service_principal = "principal"
 }
 ```
 

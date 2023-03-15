@@ -12,9 +12,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_contact_flow")
 func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceContactFlowRead,
+		ReadWithoutTimeout: dataSourceContactFlowRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -54,7 +55,7 @@ func DataSourceContactFlow() *schema.Resource {
 }
 
 func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -67,7 +68,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		contactFlowSummary, err := dataSourceGetConnectContactFlowSummaryByName(ctx, conn, instanceID, name)
+		contactFlowSummary, err := dataSourceGetContactFlowSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Summary by name (%s): %w", name, err))
@@ -80,7 +81,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = contactFlowSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlow(input)
+	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow: %w", err))
@@ -100,7 +101,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("content", contactFlow.Content)
 	d.Set("type", contactFlow.Type)
 
-	if err := d.Set("tags", KeyValueTags(contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 
@@ -109,7 +110,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func dataSourceGetConnectContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
+func dataSourceGetContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
 	var result *connect.ContactFlowSummary
 
 	input := &connect.ListContactFlowsInput{

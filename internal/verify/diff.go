@@ -3,6 +3,8 @@ package verify
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,11 +20,11 @@ import (
 // to those configured at the provider-level to avoid non-empty plans
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
-func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
+	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
 	if defaultTagsConfig.TagsEqual(resourceTags) {
 		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
@@ -53,23 +55,30 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 	return nil
 }
 
-// SuppressEquivalentTypeStringBoolean provides custom difference suppression for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified), but
-// confusing behavior exists when converting bare true/false values with state.
-func SuppressEquivalentTypeStringBoolean(k, old, new string, d *schema.ResourceData) bool {
-	if old == "false" && new == "0" {
-		return true
+// SuppressEquivalentStringCaseInsensitive provides custom difference suppression
+// for strings that are equal under case-insensitivity.
+func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
+	return strings.EqualFold(old, new)
+}
+
+// SuppressEquivalentRoundedTime returns a difference suppression function that compares
+// two time value with the specified layout rounded to the specified duration.
+func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, _ *schema.ResourceData) bool {
+		if old, err := time.Parse(layout, old); err == nil {
+			if new, err := time.Parse(layout, new); err == nil {
+				return old.Round(d).Equal(new.Round(d))
+			}
+		}
+
+		return false
 	}
-	if old == "true" && new == "1" {
-		return true
-	}
-	return false
 }
 
 // SuppressMissingOptionalConfigurationBlock handles configuration block attributes in the following scenario:
-//  * The resource schema includes an optional configuration block with defaults
-//  * The API response includes those defaults to refresh into the Terraform state
-//  * The operator's configuration omits the optional configuration block
+//   - The resource schema includes an optional configuration block with defaults
+//   - The API response includes those defaults to refresh into the Terraform state
+//   - The operator's configuration omits the optional configuration block
 func SuppressMissingOptionalConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
 	return old == "1" && new == "0"
 }

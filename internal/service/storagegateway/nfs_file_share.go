@@ -1,7 +1,7 @@
 package storagegateway
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"strconv"
@@ -9,26 +9,30 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_nfs_file_share")
 func ResourceNFSFileShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNFSFileShareCreate,
-		Read:   resourceNFSFileShareRead,
-		Update: resourceNFSFileShareUpdate,
-		Delete: resourceNFSFileShareDelete,
+		CreateWithoutTimeout: resourceNFSFileShareCreate,
+		ReadWithoutTimeout:   resourceNFSFileShareRead,
+		UpdateWithoutTimeout: resourceNFSFileShareUpdate,
+		DeleteWithoutTimeout: resourceNFSFileShareDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -36,14 +40,34 @@ func ResourceNFSFileShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"audit_destination_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"bucket_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"vpc_endpoint_dns_name"},
+			},
+			"cache_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cache_stale_timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 2592000),
+						},
+					},
+				},
 			},
 			"client_list": {
 				Type:     schema.TypeSet,
@@ -59,15 +83,16 @@ func ResourceNFSFileShare() *schema.Resource {
 				},
 			},
 			"default_storage_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "S3_STANDARD",
-				ValidateFunc: validation.StringInSlice([]string{
-					"S3_ONEZONE_IA",
-					"S3_STANDARD_IA",
-					"S3_STANDARD",
-					"S3_INTELLIGENT_TIERING",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      defaultStorageClassS3Standard,
+				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
+			},
+			"file_share_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"fileshare_id": {
 				Type:     schema.TypeString,
@@ -133,19 +158,14 @@ func ResourceNFSFileShare() *schema.Resource {
 					},
 				},
 			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
+			"notification_policy": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
-						},
-					},
-				},
+				Default:  "{}",
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringLenBetween(2, 100),
+				),
 			},
 			"object_acl": {
 				Type:         schema.TypeString,
@@ -174,46 +194,34 @@ func ResourceNFSFileShare() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"squash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "RootSquash",
-				ValidateFunc: validation.StringInSlice([]string{
-					"AllSquash",
-					"NoSquash",
-					"RootSquash",
-				}, false),
-			},
-			"file_share_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"notification_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
+				Default:      squashRootSquash,
+				ValidateFunc: validation.StringInSlice(squash_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_endpoint_dns_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway NFS File Share: %s", err)
 	}
 
 	input := &storagegateway.CreateNFSFileShareInput{
@@ -237,6 +245,18 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("bucket_region"); ok {
+		input.BucketRegion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_attributes"); ok {
+		input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("file_share_name"); ok {
+		input.FileShareName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
@@ -245,118 +265,96 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		input.NotificationPolicy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_share_name"); ok {
-		input.FileShareName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
+		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway NFS File Share: %s", input)
-	output, err := conn.CreateNFSFileShare(input)
+	output, err := conn.CreateNFSFileShareWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway NFS File Share: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway NFS File Share: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
+	if _, err = waitNFSFileShareCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway NFS File Share (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceNFSFileShareRead(d, meta)
+	return append(diags, resourceNFSFileShareRead(ctx, d, meta)...)
 }
 
-func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &storagegateway.DescribeNFSFileSharesInput{
-		FileShareARNList: []*string{aws.String(d.Id())},
-	}
+	fileshare, err := FindNFSFileShareByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading Storage Gateway NFS File Share: %s", input)
-	output, err := conn.DescribeNFSFileShares(input)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-			log.Printf("[WARN] Storage Gateway NFS File Share %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
-	}
-
-	if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-		log.Printf("[WARN] Storage Gateway NFS File Share %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Storage Gateway NFS File Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	fileshare := output.NFSFileShareInfoList[0]
-
-	arn := fileshare.FileShareARN
-	d.Set("arn", arn)
-
-	if err := d.Set("client_list", flex.FlattenStringSet(fileshare.ClientList)); err != nil {
-		return fmt.Errorf("error setting client_list: %w", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway NFS File Share (%s): %s", d.Id(), err)
 	}
 
+	d.Set("arn", fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
+	d.Set("bucket_region", fileshare.BucketRegion)
+	if err := d.Set("cache_attributes", flattenNFSFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
+	}
+	if err := d.Set("client_list", flex.FlattenStringSet(fileshare.ClientList)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting client_list: %s", err)
+	}
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
+	d.Set("file_share_name", fileshare.FileShareName)
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
-	d.Set("file_share_name", fileshare.FileShareName)
-
-	if err := d.Set("nfs_file_share_defaults", flattenStorageGatewayNfsFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
-		return fmt.Errorf("error setting nfs_file_share_defaults: %w", err)
+	if err := d.Set("nfs_file_share_defaults", flattenNFSFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting nfs_file_share_defaults: %s", err)
 	}
-
-	if err := d.Set("cache_attributes", flattenStorageGatewayNfsFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
-		return fmt.Errorf("error setting cache_attributes: %w", err)
-	}
-
+	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
 	d.Set("path", fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set("role_arn", fileshare.Role)
 	d.Set("squash", fileshare.Squash)
-	d.Set("notification_policy", fileshare.NotificationPolicy)
+	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	tags := KeyValueTags(fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
+func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
-		fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway NFS File Share (%s): %s", d.Id(), err)
 		}
 
 		input := &storagegateway.UpdateNFSFileShareInput{
@@ -376,6 +374,14 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.AuditDestinationARN = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("cache_attributes"); ok {
+			input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("file_share_name"); ok {
+			input.FileShareName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
 		}
@@ -384,55 +390,54 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.NotificationPolicy = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("file_share_name"); ok {
-			input.FileShareName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
-		}
-
 		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
-		_, err = conn.UpdateNFSFileShare(input)
+		_, err = conn.UpdateNFSFileShareWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway NFS File Share (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
+		if _, err = waitNFSFileShareUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway NFS File Share (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceNFSFileShareRead(d, meta)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
+		}
+	}
+
+	return append(diags, resourceNFSFileShareRead(ctx, d, meta)...)
 }
 
-func resourceNFSFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
-	input := &storagegateway.DeleteFileShareInput{
+	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", d.Id())
+	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{
 		FileShareARN: aws.String(d.Id()),
+	})
+
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", input)
-	_, err := conn.DeleteFileShare(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-			return nil
-		}
-		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway NFS File Share (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitNFSFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be deleted: %w", d.Id(), err)
+	if _, err = waitNFSFileShareDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway NFS File Share (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandStorageGatewayNfsFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDefaults, error) {
+func expandNFSFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDefaults, error) {
 	if len(l) == 0 || l[0] == nil {
 		return nil, nil
 	}
@@ -459,7 +464,7 @@ func expandStorageGatewayNfsFileShareDefaults(l []interface{}) (*storagegateway.
 	return nfsFileShareDefaults, nil
 }
 
-func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileShareDefaults) []interface{} {
+func flattenNFSFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileShareDefaults) []interface{} {
 	if nfsFileShareDefaults == nil {
 		return []interface{}{}
 	}
@@ -474,7 +479,7 @@ func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegate
 	return []interface{}{m}
 }
 
-func expandStorageGatewayNfsFileShareCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
+func expandNFSFileShareCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -488,7 +493,7 @@ func expandStorageGatewayNfsFileShareCacheAttributes(l []interface{}) *storagega
 	return ca
 }
 
-func flattenStorageGatewayNfsFileShareCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
+func flattenNFSFileShareCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
 	if ca == nil {
 		return []interface{}{}
 	}

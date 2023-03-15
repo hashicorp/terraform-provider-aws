@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_attachment"
 description: |-
@@ -33,7 +33,7 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.test.arn
+  lb_target_group_arn    = aws_lb_target_group.test.arn
 }
 ```
 
@@ -59,8 +59,9 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 The following arguments are supported:
 
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
-* `elb` - (Optional) The name of the ELB.
-* `alb_target_group_arn` - (Optional) The ARN of an ALB Target Group.
+* `elb` - (Optional) Name of the ELB.
+* `alb_target_group_arn` - (Optional, **Deprecated** use `lb_target_group_arn` instead) ARN of an ALB Target Group.
+* `lb_target_group_arn` - (Optional) ARN of a load balancer target group.
 
 ## Attributes Reference
 

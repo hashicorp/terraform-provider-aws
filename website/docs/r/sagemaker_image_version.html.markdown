@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_image_version"
 description: |-
-  Provides a Sagemaker Image Version resource.
+  Provides a SageMaker Image Version resource.
 ---
 
 # Resource: aws_sagemaker_image_version
 
-Provides a Sagemaker Image Version resource.
+Provides a SageMaker Image Version resource.
 
 ## Example Usage
 
@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Image Versions can be imported using the `name`, e.g.,
+SageMaker Image Versions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_image_version.test_image my-code-repo

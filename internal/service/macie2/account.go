@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_account")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2AccountCreate,
-		ReadWithoutTimeout:   resourceMacie2AccountRead,
-		UpdateWithoutTimeout: resourceMacie2AccountUpdate,
-		DeleteWithoutTimeout: resourceMacie2AccountDelete,
+		CreateWithoutTimeout: resourceAccountCreate,
+		ReadWithoutTimeout:   resourceAccountRead,
+		UpdateWithoutTimeout: resourceAccountUpdate,
+		DeleteWithoutTimeout: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,8 +57,8 @@ func ResourceAccount() *schema.Resource {
 	}
 }
 
-func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.EnableMacieInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -93,11 +94,11 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceMacie2AccountRead(ctx, d, meta)
+	return resourceAccountRead(ctx, d, meta)
 }
 
-func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.GetMacieSessionInput{}
 
@@ -123,8 +124,8 @@ func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -141,11 +142,11 @@ func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error updating Macie Account (%s): %w", d.Id(), err))
 	}
 
-	return resourceMacie2AccountRead(ctx, d, meta)
+	return resourceAccountRead(ctx, d, meta)
 }
 
-func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisableMacieInput{}
 

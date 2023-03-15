@@ -2,7 +2,6 @@ package elasticache
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,28 +10,32 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticache_replication_group")
 func ResourceReplicationGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceReplicationGroupCreate,
-		Read:   resourceReplicationGroupRead,
-		Update: resourceReplicationGroupUpdate,
-		Delete: resourceReplicationGroupDelete,
+		CreateWithoutTimeout: resourceReplicationGroupCreate,
+		ReadWithoutTimeout:   resourceReplicationGroupRead,
+		UpdateWithoutTimeout: resourceReplicationGroupUpdate,
+		DeleteWithoutTimeout: resourceReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,15 +55,17 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"auth_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validReplicationGroupAuthToken,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ValidateFunc:  validReplicationGroupAuthToken,
+				ConflictsWith: []string{"user_group_ids"},
 			},
 			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {
 				Type:     schema.TypeBool,
@@ -68,32 +73,39 @@ func ResourceReplicationGroup() *schema.Resource {
 				Default:  false,
 			},
 			"availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"preferred_cache_cluster_azs"},
 			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"cluster_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
+				Deprecated:    "Use num_node_groups and replicas_per_node_group instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"num_node_groups": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"number_cache_clusters", "global_replication_group_id"},
+							ConflictsWith: []string{"num_node_groups", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
+							Deprecated:    "Use root-level num_node_groups instead",
 						},
 						"replicas_per_node_group": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"replicas_per_node_group"},
+							Deprecated:    "Use root-level replicas_per_node_group instead",
 						},
 					},
 				},
@@ -108,6 +120,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -119,7 +138,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: ValidateElastiCacheRedisVersionString,
+				ValidateFunc: validRedisVersionString,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -131,7 +150,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ConflictsWith: []string{
-					"cluster_mode.0.num_node_groups", // should/will be top-level "num_node_groups"
+					"cluster_mode.0.num_node_groups",
+					"num_node_groups",
 					"parameter_group_name",
 					"engine",
 					"engine_version",
@@ -143,12 +163,40 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"log_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+						},
+						"log_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				StateFunc: func(val interface{}) string {
-					// Elasticache always changes the maintenance to lowercase
+					// ElastiCache always changes the maintenance to lowercase
 					return strings.ToLower(val.(string))
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
@@ -174,11 +222,24 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"num_cache_clusters": {
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_node_groups", "number_cache_clusters"},
+			},
+			"num_node_groups": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_mode", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
+			},
 			"number_cache_clusters": {
 				Type:          schema.TypeInt,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups"},
+				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_cache_clusters", "num_node_groups"},
+				Deprecated:    "Use num_cache_clusters instead",
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -194,11 +255,17 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
+					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
 						return true
 					}
 					return false
 				},
+			},
+			"preferred_cache_cluster_azs": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"availability_zones"},
 			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
@@ -208,9 +275,19 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replicas_per_node_group": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_mode"},
+			},
 			"replication_group_description": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
+				Deprecated:   "Use description instead",
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -280,6 +357,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"user_group_ids": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"auth_token"},
+			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -307,27 +391,39 @@ func ResourceReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateReplicationGroupAutomaticFailover,
-			CustomizeDiffElastiCacheEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
+					diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
-					diff.HasChange("cluster_mode.0.replicas_per_node_group")
+					diff.HasChange("cluster_mode.0.replicas_per_node_group") ||
+					diff.HasChange("num_node_groups") ||
+					diff.HasChange("replicas_per_node_group")
 			}),
 			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	params := &elasticache.CreateReplicationGroupInput{
-		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
-		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
-		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		ReplicationGroupId: aws.String(d.Get("replication_group_id").(string)),
+	}
+
+	if len(tags) > 0 {
+		params.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.ReplicationGroupDescription = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("replication_group_description"); ok {
+		params.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
@@ -340,7 +436,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// This cannot be handled at plan-time
 		nodeType := d.Get("node_type").(string)
 		if nodeType == "" {
-			return errors.New(`"node_type" is required unless "global_replication_group_id" is set.`)
+			return sdkdiag.AppendErrorf(diags, `"node_type" is required unless "global_replication_group_id" is set.`)
 		}
 		params.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		params.CacheNodeType = aws.String(nodeType)
@@ -351,8 +447,17 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.EngineVersion = aws.String(v.(string))
 	}
 
-	if preferredAzs := d.Get("availability_zones").(*schema.Set); preferredAzs.Len() > 0 {
-		params.PreferredCacheClusterAZs = flex.ExpandStringSet(preferredAzs)
+	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			params.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
+	}
+
+	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
+		params.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
+	}
+	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
+		params.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -377,6 +482,15 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	if snaps := d.Get("snapshot_arns").(*schema.Set); snaps.Len() > 0 {
 		params.SnapshotArns = flex.ExpandStringSet(snaps)
+	}
+
+	if v, ok := d.GetOk("log_delivery_configuration"); ok {
+		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		v := v.(*schema.Set).List()
+		for _, v := range v {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
+			params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
@@ -432,19 +546,44 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if v, ok := d.GetOk("num_node_groups"); ok && v != 0 {
+		params.NumNodeGroups = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("replicas_per_node_group"); ok {
+		params.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
+	}
+
 	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
 		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
-	resp, err := conn.CreateReplicationGroup(params)
+
+	if numCacheClusters, ok := d.GetOk("num_cache_clusters"); ok {
+		params.NumCacheClusters = aws.Int64(int64(numCacheClusters.(int)))
+	}
+
+	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
+		params.UserGroupIds = flex.ExpandStringSet(userGroupIds)
+	}
+
+	resp, err := conn.CreateReplicationGroupWithContext(ctx, params)
+
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating ElastiCache Replication Group with tags: %s. Trying create without tags.", err)
+
+		params.Tags = nil
+		resp, err = conn.CreateReplicationGroupWithContext(ctx, params)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Replication Group (%s): %s", d.Get("replication_group_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
 
-	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Replication Group (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -452,33 +591,48 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
+		if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, v.(string), globalReplicationGroupDefaultCreatedTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) to be available: %s", v, err)
 		}
 	}
 
-	return resourceReplicationGroupRead(d, meta)
+	// In some partitions, only post-create tagging supported
+	if params.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(ctx, conn, aws.StringValue(resp.ReplicationGroup.ARN), nil, tags)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache Replication Group (%s): %s", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed adding tags after create for ElastiCache Replication Group (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceReplicationGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rgp, err := FindReplicationGroupByID(conn, d.Id())
+	rgp, err := FindReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
 	if aws.StringValue(rgp.Status) == ReplicationGroupStatusDeleting {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) is currently in the `deleting` status, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
@@ -508,79 +662,106 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("kms_key_id", rgp.KmsKeyId)
+	d.Set("description", rgp.Description)
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
+	d.Set("num_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
-		return fmt.Errorf("error setting member_clusters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}
-	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
-		return fmt.Errorf("error setting cluster_mode attribute: %w", err)
+	if err := d.Set("cluster_mode", flattenNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cluster_mode attribute: %s", err)
 	}
+
+	d.Set("num_node_groups", len(rgp.NodeGroups))
+	d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
-	// Tags cannot be read when the replication group is not Available
-	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
-	}
-	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
+	d.Set("snapshot_window", rgp.SnapshotWindow)
+	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
-	}
+	if rgp.ConfigurationEndpoint != nil {
+		d.Set("port", rgp.ConfigurationEndpoint.Port)
+		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
+	} else {
+		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if rgp.NodeGroups != nil {
-		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {
-			return nil
+		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
+			log.Printf("[DEBUG] ElastiCache Replication Group (%s) Primary Endpoint is not nil", d.Id())
+			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
 		}
 
-		cacheCluster := *rgp.NodeGroups[0].NodeGroupMembers[0] // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+		if rgp.NodeGroups[0].ReaderEndpoint != nil {
+			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+		}
+	}
 
-		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
+	d.Set("user_group_ids", rgp.UserGroupIds)
+
+	// Tags cannot be read when the replication group is not Available
+	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
+
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
+	}
+
+	log.Printf("[DEBUG] Listing tags for ElastiCache Replication Group (%s)", d.Id())
+
+	tags, err := ListTags(ctx, conn, aws.StringValue(rgp.ARN))
+
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
+	}
+
+	// tags not supported in all partitions
+	if err != nil {
+		log.Printf("[WARN] failed listing tags for ElastiCache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
+	}
+
+	if tags != nil {
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+		}
+	}
+
+	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
+
+	// This section reads settings that require checking the underlying cache clusters
+	if rgp.NodeGroups != nil && rgp.NodeGroups[0] != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
+		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
+
+		res, err := conn.DescribeCacheClustersWithContext(ctx, &elasticache.DescribeCacheClustersInput{
 			CacheClusterId:    cacheCluster.CacheClusterId,
 			ShowCacheNodeInfo: aws.Bool(true),
 		})
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %s", d.Id(), aws.StringValue(cacheCluster.CacheClusterId), err)
 		}
 
 		if len(res.CacheClusters) == 0 {
-			return nil
+			return diags
 		}
 
 		c := res.CacheClusters[0]
 
-		if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
-			return err
+		if err := setFromCacheCluster(d, c); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %s", d.Id(), aws.StringValue(cacheCluster.CacheClusterId), err)
 		}
 
-		d.Set("snapshot_window", rgp.SnapshotWindow)
-		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
-
-		if rgp.ConfigurationEndpoint != nil {
-			d.Set("port", rgp.ConfigurationEndpoint.Port)
-			d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-		} else {
-			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
-		}
-
-		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
@@ -589,21 +770,33 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
-	if d.HasChanges("cluster_mode.0.num_node_groups", "cluster_mode.0.replicas_per_node_group") {
-		err := elasticacheReplicationGroupModifyShardConfiguration(conn, d)
+	if d.HasChanges(
+		"cluster_mode.0.num_node_groups",
+		"cluster_mode.0.replicas_per_node_group",
+		"num_node_groups",
+		"replicas_per_node_group",
+	) {
+		err := modifyReplicationGroupShardConfiguration(ctx, conn, d)
 		if err != nil {
-			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), err)
 		}
 	} else if d.HasChange("number_cache_clusters") {
-		err := elasticacheReplicationGroupModifyNumCacheClusters(conn, d)
+		// TODO: remove when number_cache_clusters is removed from resource schema
+		err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "number_cache_clusters")
 		if err != nil {
-			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) clusters: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) clusters: %s", d.Id(), err)
+		}
+	} else if d.HasChange("num_cache_clusters") {
+		err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "num_cache_clusters")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) clusters: %s", d.Id(), err)
 		}
 	}
 
@@ -611,6 +804,11 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	params := &elasticache.ModifyReplicationGroupInput{
 		ApplyImmediately:   aws.Bool(d.Get("apply_immediately").(bool)),
 		ReplicationGroupId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("description") {
+		params.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+		requestUpdate = true
 	}
 
 	if d.HasChange("replication_group_description") {
@@ -624,7 +822,10 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		params.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		v := d.Get("auto_minor_version_upgrade")
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			params.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 		requestUpdate = true
 	}
 
@@ -640,6 +841,30 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			params.CacheSecurityGroupNames = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
+	}
+
+	if d.HasChange("log_delivery_configuration") {
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
+
+		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		logTypesToSubmit := make(map[string]bool)
+
+		currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
+		for _, current := range currentLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+			logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] = true
+			params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
+
+		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
+		for _, previous := range previousLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+			//if something was removed, send an empty request
+			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
+				params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			}
+		}
+		requestUpdate = true
 	}
 
 	if d.HasChange("maintenance_window") {
@@ -688,10 +913,33 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		requestUpdate = true
 	}
 
+	if d.HasChange("user_group_ids") {
+		old, new := d.GetChange("user_group_ids")
+		newSet := new.(*schema.Set)
+		oldSet := old.(*schema.Set)
+		add := newSet.Difference(oldSet)
+		remove := oldSet.Difference(newSet)
+
+		if add.Len() > 0 {
+			params.UserGroupIdsToAdd = flex.ExpandStringSet(add)
+			requestUpdate = true
+		}
+
+		if remove.Len() > 0 {
+			params.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
+			requestUpdate = true
+		}
+	}
+
 	if requestUpdate {
-		_, err := conn.ModifyReplicationGroup(params)
+		_, err := conn.ModifyReplicationGroupWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("error updating ElastiCache Replication Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s): %s", d.Id(), err)
+		}
+
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -703,54 +951,78 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			AuthToken:               aws.String(d.Get("auth_token").(string)),
 		}
 
-		_, err := conn.ModifyReplicationGroup(params)
+		_, err := conn.ModifyReplicationGroupWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("error changing auth_token for Elasticache Replication Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "changing auth_token for ElastiCache Replication Group (%s): %s", d.Id(), err)
+		}
+
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) auth_token change: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s) tags: %s", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed updating tags for ElastiCache Replication Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	_, err := WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return fmt.Errorf("error waiting for modification: %w", err)
-	}
-
-	return resourceReplicationGroupRead(d, meta)
+	return append(diags, resourceReplicationGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
-	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := DisassociateReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
+	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
+	if hasGlobalReplicationGroupID {
+		globalReplicationGroupID := v.(string)
+		err := DisassociateReplicationGroup(ctx, conn, globalReplicationGroupID, d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
-			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
+			return sdkdiag.AppendErrorf(diags, "disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %s", d.Id(), globalReplicationGroupID, err)
 		}
 	}
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-	err := deleteElasticacheReplicationGroup(d.Id(), conn, finalSnapshotID, d.Timeout(schema.TimeoutDelete))
+	err := deleteReplicationGroup(ctx, d.Id(), conn, finalSnapshotID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("error deleting ElastiCache Replication Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	if hasGlobalReplicationGroupID {
+		paramGroupName := d.Get("parameter_group_name").(string)
+		if paramGroupName != "" {
+			err := deleteParameterGroup(ctx, conn, paramGroupName)
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+				return diags
+			}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Parameter Group (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	return diags
 }
 
-func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string, readyTimeout time.Duration) error {
+func DisassociateReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string, readyTimeout time.Duration) error {
 	input := &elasticache.DisassociateGlobalReplicationGroupInput{
 		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
 		ReplicationGroupId:       aws.String(id),
 		ReplicationGroupRegion:   aws.String(region),
 	}
-	err := resource.Retry(readyTimeout, func() *resource.RetryError {
-		_, err := conn.DisassociateGlobalReplicationGroup(input)
+	err := resource.RetryContext(ctx, readyTimeout, func() *resource.RetryError {
+		_, err := conn.DisassociateGlobalReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return nil
 		}
@@ -764,7 +1036,7 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DisassociateGlobalReplicationGroup(input)
+		_, err = conn.DisassociateGlobalReplicationGroupWithContext(ctx, input)
 	}
 	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "is not associated with Global Replication Group") {
 		return nil
@@ -777,16 +1049,15 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 		return err
 	}
 
-	_, err = WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = waitGlobalReplicationGroupMemberDetached(ctx, conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
 	return nil
-
 }
 
-func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {
+func deleteReplicationGroup(ctx context.Context, replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {
 	input := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
 	}
@@ -795,14 +1066,14 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteReplicationGroup(input)
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteReplicationGroupWithContext(ctx, input)
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 			return nil
 		}
 		// Cache Cluster is creating/deleting or Replication Group is snapshotting
 		// InvalidReplicationGroupState: Cache cluster tf-acc-test-uqhe-003 is not in a valid state to be deleted
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidReplicationGroupStateFault) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -811,25 +1082,22 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteReplicationGroup(input)
+		_, err = conn.DeleteReplicationGroupWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
-	if err != nil {
-		return err
-	}
+	_, err = WaitReplicationGroupDeleted(ctx, conn, replicationGroupID, timeout)
 
-	return nil
+	return err
 }
 
-func flattenElasticacheNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
+func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
 	if len(nodeGroups) == 0 {
 		return []map[string]interface{}{}
 	}
@@ -841,16 +1109,30 @@ func flattenElasticacheNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGro
 	return []map[string]interface{}{m}
 }
 
-func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
+func modifyReplicationGroupShardConfiguration(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData) error {
 	if d.HasChange("cluster_mode.0.num_node_groups") {
-		err := elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn, d)
+		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "cluster_mode.0.num_node_groups")
 		if err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("cluster_mode.0.replicas_per_node_group") {
-		err := elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn, d)
+		err := modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx, conn, d, "cluster_mode.0.replicas_per_node_group")
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("num_node_groups") {
+		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "num_node_groups")
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("replicas_per_node_group") {
+		err := modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx, conn, d, "replicas_per_node_group")
 		if err != nil {
 			return err
 		}
@@ -859,8 +1141,8 @@ func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.Elast
 	return nil
 }
 
-func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("cluster_mode.0.num_node_groups")
+func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldNumNodeGroups := o.(int)
 	newNumNodeGroups := n.(int)
 
@@ -882,12 +1164,12 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 	}
 
 	log.Printf("[DEBUG] Modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), input)
-	_, err := conn.ModifyReplicationGroupShardConfiguration(input)
+	_, err := conn.ModifyReplicationGroupShardConfigurationWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -895,8 +1177,8 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 	return nil
 }
 
-func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("cluster_mode.0.replicas_per_node_group")
+func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldReplicas := o.(int)
 	newReplicas := n.(int)
 
@@ -906,11 +1188,11 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 			NewReplicaCount:    aws.Int64(int64(newReplicas)),
 			ReplicationGroupId: aws.String(d.Id()),
 		}
-		_, err := conn.IncreaseReplicaCount(input)
+		_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
 			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -920,11 +1202,11 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 			NewReplicaCount:    aws.Int64(int64(newReplicas)),
 			ReplicationGroupId: aws.String(d.Id()),
 		}
-		_, err := conn.DecreaseReplicaCount(input)
+		_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 		if err != nil {
 			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
@@ -933,32 +1215,32 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 	return nil
 }
 
-func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("number_cache_clusters")
+func modifyReplicationGroupNumCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldNumberCacheClusters := o.(int)
 	newNumberCacheClusters := n.(int)
 
 	var err error
 	if newNumberCacheClusters > oldNumberCacheClusters {
-		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
+		err = increaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
 	} else if newNumberCacheClusters < oldNumberCacheClusters {
-		err = elasticacheReplicationGroupDecreaseNumCacheClusters(conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
+		err = decreaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
 	}
 	return err
 }
 
-func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
+func increaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
 	input := &elasticache.IncreaseReplicaCountInput{
 		ApplyImmediately:   aws.Bool(true),
 		NewReplicaCount:    aws.Int64(int64(newNumberCacheClusters - 1)),
 		ReplicationGroupId: aws.String(replicationGroupID),
 	}
-	_, err := conn.IncreaseReplicaCount(input)
+	_, err := conn.IncreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
@@ -966,18 +1248,18 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 	return nil
 }
 
-func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
+func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
 	input := &elasticache.DecreaseReplicaCountInput{
 		ApplyImmediately:   aws.Bool(true),
 		NewReplicaCount:    aws.Int64(int64(newNumberCacheClusters - 1)),
 		ReplicationGroupId: aws.String(replicationGroupID),
 	}
-	_, err := conn.DecreaseReplicaCount(input)
+	_, err := conn.DecreaseReplicaCountWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = WaitReplicationGroupMemberClustersAvailable(ctx, conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}

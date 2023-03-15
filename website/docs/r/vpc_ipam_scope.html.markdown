@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_scope"
 description: |-
@@ -35,6 +35,7 @@ The following arguments are supported:
 
 * `ipam_id` - The ID of the IPAM for which you're creating this scope.
 * `description` - (Optional) A description for the scope you're creating.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 

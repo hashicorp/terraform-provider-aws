@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_document"
 description: |-
@@ -75,6 +75,71 @@ resource "aws_iam_policy" "example" {
 }
 ```
 
+### Example Multiple Condition Keys and Values
+
+You can specify a [condition with multiple keys and values](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html) by supplying multiple `condition` blocks with the same `test` value, but differing `variable` and `values` values.
+
+```terraform
+data "aws_iam_policy_document" "example_multiple_condition_keys_and_values" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:service"
+      values   = ["pi"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:aws:pi:service"
+      values   = ["rds"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:aws:rds:db-id"
+      values   = ["db-AAAAABBBBBCCCCCDDDDDEEEEE", "db-EEEEEDDDDDCCCCCBBBBBAAAAA"]
+    }
+
+  }
+}
+```
+
+`data.aws_iam_policy_document.example_multiple_condition_keys_and_values.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "kms:EncryptionContext:aws:pi:service": "rds",
+          "kms:EncryptionContext:aws:rds:db-id": [
+            "db-AAAAABBBBBCCCCCDDDDDEEEEE",
+            "db-EEEEEDDDDDCCCCCBBBBBAAAAA"
+          ],
+          "kms:EncryptionContext:service": "pi"
+        }
+      }
+    }
+  ]
+}
+```
+
 ### Example Assume-Role Policy with Multiple Principals
 
 You can specify multiple principal blocks with different types. You can also use this data source to generate an assume-role policy.
@@ -119,8 +184,8 @@ data "aws_iam_policy_document" "source" {
   }
 }
 
-data "aws_iam_policy_document" "source_json_example" {
-  source_json = data.aws_iam_policy_document.source.json
+data "aws_iam_policy_document" "source_document_example" {
+  source_policy_documents = [data.aws_iam_policy_document.source.json]
 
   statement {
     sid = "SidToOverride"
@@ -135,7 +200,7 @@ data "aws_iam_policy_document" "source_json_example" {
 }
 ```
 
-`data.aws_iam_policy_document.source_json_example.json` will evaluate to:
+`data.aws_iam_policy_document.source_document_example.json` will evaluate to:
 
 ```json
 {
@@ -172,8 +237,8 @@ data "aws_iam_policy_document" "override" {
   }
 }
 
-data "aws_iam_policy_document" "override_json_example" {
-  override_json = data.aws_iam_policy_document.override.json
+data "aws_iam_policy_document" "override_policy_document_example" {
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 
   statement {
     actions   = ["ec2:*"]
@@ -193,7 +258,7 @@ data "aws_iam_policy_document" "override_json_example" {
 }
 ```
 
-`data.aws_iam_policy_document.override_json_example.json` will evaluate to:
+`data.aws_iam_policy_document.override_policy_document_example.json` will evaluate to:
 
 ```json
 {
@@ -217,7 +282,7 @@ data "aws_iam_policy_document" "override_json_example" {
 
 ### Example with Both Source and Override Documents
 
-You can also combine `source_json` and `override_json` in the same document.
+You can also combine `source_policy_documents` and `override_policy_documents` in the same document.
 
 ```terraform
 data "aws_iam_policy_document" "source" {
@@ -237,8 +302,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 ```
 
@@ -421,13 +486,13 @@ data "aws_iam_policy_document" "combined" {
 
 The following arguments are optional:
 
-* `override_json` (Optional) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` from documents assigned to the `source_json`, `source_policy_documents`, and `override_policy_documents` arguments. Non-overriding statements will be added to the exported document.
+* `override_json` (Optional, **Deprecated** use the `override_policy_documents` attribute instead) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` from documents assigned to the `source_json`, `source_policy_documents`, and `override_policy_documents` arguments. Non-overriding statements will be added to the exported document.
 
 ~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from documents assigned to the `source_json` or `source_policy_documents` arguments cannot be overridden by statements from documents assigned to the `override_json` or `override_policy_documents` arguments.
 
 * `override_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the same `sid` from earlier documents in the list. Statements with non-blank `sid`s will also override statements with the same `sid` from documents provided in the `source_json` and `source_policy_documents` arguments.  Non-overriding statements will be added to the exported document.
 * `policy_id` (Optional) - ID for the policy document.
-* `source_json` (Optional) - IAM policy document used as a base for the exported policy document. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
+* `source_json` (Optional, **Deprecated** use the `source_policy_documents` attribute instead) - IAM policy document used as a base for the exported policy document. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
 * `source_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `source_policy_documents` or `source_json` must have unique `sid`s. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
 * `statement` (Optional) - Configuration block for a policy statement. Detailed below.
 * `version` (Optional) - IAM policy document version. Valid values are `2008-10-17` and `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
@@ -460,7 +525,7 @@ The following arguments are required:
 
 The `principals` and `not_principals` arguments define to whom a statement applies or does not apply, respectively.
 
-~> **NOTE**: Even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html) states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent, those principal elements have different behavior in some situations, e.g., IAM Role Trust Policy. To have Terraform render JSON containing `"Principal": "*"`, use `type = "*"` and `identifiers = ["*"]`. To have Terraform render JSON containing `"Principal": {"AWS": "*"}`, use `type = "AWS"` and `identifiers = ["*"]`.
+~> **NOTE:** Even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html) states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent, those principal elements have different behavior in some situations, e.g., IAM Role Trust Policy. To have Terraform render JSON containing `"Principal": "*"`, use `type = "*"` and `identifiers = ["*"]`. To have Terraform render JSON containing `"Principal": {"AWS": "*"}`, use `type = "AWS"` and `identifiers = ["*"]`.
 
 -> For more information about AWS principals, refer to the [AWS Identity and Access Management User Guide: AWS JSON policy elements: Principal](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html).
 

@@ -1,32 +1,35 @@
 package cloudformation
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudformation_stack_set")
 func ResourceStackSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStackSetCreate,
-		Read:   resourceStackSetRead,
-		Update: resourceStackSetUpdate,
-		Delete: resourceStackSetDelete,
+		CreateWithoutTimeout: resourceStackSetCreate,
+		ReadWithoutTimeout:   resourceStackSetRead,
+		UpdateWithoutTimeout: resourceStackSetUpdate,
+		DeleteWithoutTimeout: resourceStackSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -67,6 +70,12 @@ func ResourceStackSet() *schema.Resource {
 					},
 				},
 			},
+			"call_as": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+				Default:      cloudformation.CallAsSelf,
+			},
 			"capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -95,6 +104,53 @@ func ResourceStackSet() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
+			},
+			"operation_preferences": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"failure_tolerance_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(0),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+						},
+						"failure_tolerance_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 100),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+						},
+						"max_concurrent_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(1),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+						},
+						"max_concurrent_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(1, 100),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+						},
+						"region_concurrency_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
+						},
+						"region_order": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+							},
+						},
+					},
+				},
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
@@ -132,10 +188,11 @@ func ResourceStackSet() *schema.Resource {
 	}
 }
 
-func resourceStackSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
@@ -171,6 +228,10 @@ func resourceStackSetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PermissionModel = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -184,43 +245,45 @@ func resourceStackSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet: %s", input)
-	_, err := conn.CreateStackSet(input)
+	_, err := conn.CreateStackSetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFormation StackSet (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceStackSetRead(d, meta)
+	return append(diags, resourceStackSetRead(ctx, d, meta)...)
 }
 
-func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	callAs := d.Get("call_as").(string)
 
-	stackSet, err := FindStackSetByName(conn, d.Id())
+	stackSet, err := FindStackSetByName(ctx, conn, d.Id(), callAs)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFormation StackSet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
 	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
 	d.Set("arn", stackSet.StackSetARN)
 
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
-		return fmt.Errorf("error setting auto_deployment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
 	}
 
 	if err := d.Set("capabilities", aws.StringValueSlice(stackSet.Capabilities)); err != nil {
-		return fmt.Errorf("error setting capabilities: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting capabilities: %s", err)
 	}
 
 	d.Set("description", stackSet.Description)
@@ -228,32 +291,33 @@ func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
 
-	if err := d.Set("parameters", flattenAllCloudFormationParameters(stackSet.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %s", err)
+	if err := d.Set("parameters", flattenAllParameters(stackSet.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	tags := KeyValueTags(stackSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, stackSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	d.Set("template_body", stackSet.TemplateBody)
 
-	return nil
+	return diags
 }
 
-func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &cloudformation.UpdateStackSetInput{
 		OperationId:  aws.String(resource.UniqueId()),
@@ -278,12 +342,21 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ExecutionRoleName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("permission_model"); ok {
 		input.PermissionModel = aws.String(v.(string))
+	}
+
+	callAs := d.Get("call_as").(string)
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -307,38 +380,43 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation StackSet: %s", input)
-	output, err := conn.UpdateStackSet(input)
+	output, err := conn.UpdateStackSetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFormation StackSet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %w", d.Id(), err)
+	if _, err := WaitStackSetOperationSucceeded(ctx, conn, d.Id(), aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceStackSetRead(d, meta)
+	return append(diags, resourceStackSetRead(ctx, d, meta)...)
 }
 
-func resourceStackSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
-	_, err := conn.DeleteStackSet(input)
+	_, err := conn.DeleteStackSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {

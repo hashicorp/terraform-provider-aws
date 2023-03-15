@@ -1,31 +1,33 @@
 package elasticache
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticache_user")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 
@@ -54,10 +56,13 @@ func ResourceUser() *schema.Resource {
 				Default:  false,
 			},
 			"passwords": {
-				Type:      schema.TypeSet,
-				Optional:  true,
-				MaxItems:  2,
-				Elem:      &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(16, 128),
+				},
 				Sensitive: true,
 			},
 			"tags":     tftags.TagsSchema(),
@@ -75,10 +80,11 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserInput{
 		AccessString:       aws.String(d.Get("access_string").(string)),
@@ -92,36 +98,57 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Passwords = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	// Tags are currently only supported in AWS Commercial.
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateUser(input)
+	out, err := conn.CreateUserWithContext(ctx, input)
+
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating ElastiCache User with tags: %s. Trying create without tags.", err)
+
+		input.Tags = nil
+		out, err = conn.CreateUserWithContext(ctx, input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache User: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.UserId))
 
-	return resourceUserRead(d, meta)
+	// In some partitions, only post-create tagging supported
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(ctx, conn, aws.StringValue(out.ARN), nil, tags)
 
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache User (%s): %s", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed adding tags after create for ElastiCache User (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindElastiCacheUserByID(conn, d.Id())
-	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserNotFoundFault, "")) {
+	resp, err := FindUserByID(ctx, conn, d.Id())
+	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault)) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing ElastiCache User (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing ElastiCache User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_string", resp.AccessString)
@@ -130,34 +157,36 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_name", resp.UserName)
 	d.Set("arn", resp.ARN)
 
-	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := ListTags(conn, aws.StringValue(resp.ARN))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.ARN))
 
-		if err != nil {
-			return fmt.Errorf("error listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
-		}
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache User (%s): %s", aws.StringValue(resp.ARN), err)
+	}
 
+	// tags not supported in all partitions
+	if err != nil {
+		log.Printf("[WARN] failed listing tags for ElastiCache User (%s): %s", aws.StringValue(resp.ARN), err)
+	}
+
+	if tags != nil {
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
-	} else {
-		d.Set("tags", nil)
-		d.Set("tags_all", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	hasChange := false
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -181,52 +210,59 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if hasChange {
-			_, err := conn.ModifyUser(req)
+			_, err := conn.ModifyUserWithContext(ctx, req)
 			if err != nil {
-				return fmt.Errorf("error updating ElastiCache User (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User (%s): %s", d.Id(), err)
 			}
 
-			if err := WaitUserActive(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
+			if err := WaitUserActive(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) to be modified: %s", d.Id(), err)
 			}
 		}
-
 	}
-	// Tags are currently only supported in AWS Commercial.
-	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ElastiCache User (%s) tags: %w", d.Get("arn").(string), err)
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User (%s) tags: %s", d.Get("arn").(string), err)
+			}
+
+			log.Printf("[WARN] failed updating tags for ElastiCache User (%s): %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceUserRead(d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.DeleteUserInput{
 		UserId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteUser(input)
+	_, err := conn.DeleteUserWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ElastiCache User (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache User (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitUserDeleted(conn, d.Id()); err != nil {
+	if err := WaitUserDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for ElastiCache User (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

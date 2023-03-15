@@ -11,13 +11,13 @@ func resourceDistributionMigrateState(v int, is *terraform.InstanceState, meta i
 	switch v {
 	case 0:
 		log.Println("[INFO] Found CloudFront Distribution state v0; migrating to v1")
-		return migrateCloudFrontDistributionStateV0toV1(is)
+		return migrateDistributionStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateCloudFrontDistributionStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateDistributionStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty CloudFront Distribution state; nothing to migrate.")
 		return is, nil

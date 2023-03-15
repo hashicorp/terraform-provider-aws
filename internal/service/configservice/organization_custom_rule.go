@@ -1,29 +1,34 @@
 package configservice
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_organization_custom_rule")
 func ResourceOrganizationCustomRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationCustomRuleCreate,
-		Delete: resourceOrganizationCustomRuleDelete,
-		Read:   resourceOrganizationCustomRuleRead,
-		Update: resourceOrganizationCustomRuleUpdate,
+		CreateWithoutTimeout: resourceOrganizationCustomRuleCreate,
+		DeleteWithoutTimeout: resourceOrganizationCustomRuleDelete,
+		ReadWithoutTimeout:   resourceOrganizationCustomRuleRead,
+		UpdateWithoutTimeout: resourceOrganizationCustomRuleUpdate,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -124,8 +129,9 @@ func ResourceOrganizationCustomRule() *schema.Resource {
 	}
 }
 
-func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -168,55 +174,60 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 		input.OrganizationCustomRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(input)
+	_, err := conn.PutOrganizationConfigRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Config Organization Custom Rule (%s): %s", name, err)
+		return create.DiagError(names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomRule, name, err)
 	}
 
 	d.SetId(name)
 
-	if err := waitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) creation: %s", d.Id(), err)
+	if err := waitForOrganizationRuleStatusCreateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	return resourceOrganizationCustomRuleRead(d, meta)
+	return append(diags, resourceOrganizationCustomRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationCustomRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
-	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
+	rule, err := DescribeOrganizationConfigRule(ctx, conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 		log.Printf("[WARN] Config Organization Custom Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	if rule == nil {
+	if !d.IsNewResource() && rule == nil {
 		log.Printf("[WARN] Config Organization Custom Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if d.IsNewResource() && rule == nil {
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {
-		return fmt.Errorf("expected Config Organization Custom Rule, found Config Organization Custom Rule: %s", d.Id())
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Managed Rule"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata == nil {
-		return fmt.Errorf("error describing Config Organization Custom Rule (%s): empty metadata", d.Id())
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty metadata"))
 	}
 
 	d.Set("arn", rule.OrganizationConfigRuleArn)
 	d.Set("description", rule.OrganizationCustomRuleMetadata.Description)
 
 	if err := d.Set("excluded_accounts", aws.StringValueSlice(rule.ExcludedAccounts)); err != nil {
-		return fmt.Errorf("error setting excluded_accounts: %s", err)
+		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("input_parameters", rule.OrganizationCustomRuleMetadata.InputParameters)
@@ -226,21 +237,22 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("resource_id_scope", rule.OrganizationCustomRuleMetadata.ResourceIdScope)
 
 	if err := d.Set("resource_types_scope", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.ResourceTypesScope)); err != nil {
-		return fmt.Errorf("error setting resource_types_scope: %s", err)
+		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("tag_key_scope", rule.OrganizationCustomRuleMetadata.TagKeyScope)
 	d.Set("tag_value_scope", rule.OrganizationCustomRuleMetadata.TagValueScope)
 
 	if err := d.Set("trigger_types", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.OrganizationConfigRuleTriggerTypes)); err != nil {
-		return fmt.Errorf("error setting trigger_types: %s", err)
+		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -282,35 +294,36 @@ func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface
 		input.OrganizationCustomRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(input)
+	_, err := conn.PutOrganizationConfigRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	if err := waitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) update: %s", d.Id(), err)
+	if err := waitForOrganizationRuleStatusUpdateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	return resourceOrganizationCustomRuleRead(d, meta)
+	return append(diags, resourceOrganizationCustomRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationCustomRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteOrganizationConfigRule(input)
+	_, err := conn.DeleteOrganizationConfigRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	if err := waitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) deletion: %s", d.Id(), err)
+	if err := waitForOrganizationRuleStatusDeleteSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

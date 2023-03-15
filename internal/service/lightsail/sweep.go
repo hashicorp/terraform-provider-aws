@@ -16,6 +16,11 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_lightsail_container_service", &resource.Sweeper{
+		Name: "aws_lightsail_container_service",
+		F:    sweepContainerServices,
+	})
+
 	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
 		Name: "aws_lightsail_instance",
 		F:    sweepInstances,
@@ -27,18 +32,70 @@ func init() {
 	})
 }
 
-func sweepInstances(region string) error {
+func sweepContainerServices(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailConn
+	conn := client.(*conns.AWSClient).LightsailConn()
+
+	input := &lightsail.GetContainerServicesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	output, err := conn.GetContainerServicesWithContext(ctx, input)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Container Service sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving Lightsail Container Services: %s", err)
+	}
+
+	for _, service := range output.ContainerServices {
+		if service == nil {
+			continue
+		}
+
+		r := ResourceContainerService()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(service.ContainerServiceName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Container Services sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Lightsail Container Services  for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Lightsail Container Services for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepInstances(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
-		output, err := conn.GetInstances(input)
+		output, err := conn.GetInstancesWithContext(ctx, input)
 
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lightsail Instance sweep for %s: %s", region, err)
@@ -56,7 +113,7 @@ func sweepInstances(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Lightsail Instance: %s", name)
-			_, err := conn.DeleteInstance(input)
+			_, err := conn.DeleteInstanceWithContext(ctx, input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting Lightsail Instance (%s): %s", name, err)
@@ -76,16 +133,17 @@ func sweepInstances(region string) error {
 }
 
 func sweepStaticIPs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailConn
+	conn := client.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetStaticIpsInput{}
 
 	for {
-		output, err := conn.GetStaticIps(input)
+		output, err := conn.GetStaticIpsWithContext(ctx, input)
 		if err != nil {
 			if sweep.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Lightsail Static IP sweep for %s: %s", region, err)
@@ -103,7 +161,7 @@ func sweepStaticIPs(region string) error {
 			name := aws.StringValue(staticIp.Name)
 
 			log.Printf("[INFO] Deleting Lightsail Static IP %s", name)
-			_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
+			_, err := conn.ReleaseStaticIpWithContext(ctx, &lightsail.ReleaseStaticIpInput{
 				StaticIpName: aws.String(name),
 			})
 			if err != nil {

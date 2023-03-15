@@ -1,6 +1,7 @@
 package elbv2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -8,30 +9,32 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"golang.org/x/exp/slices"
 )
 
 func TestAccELBV2Listener_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -55,20 +58,21 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 }
 
 func TestAccELBV2Listener_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerTags1Config(rName, "key1", "value1"),
+				Config: testAccListenerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -79,18 +83,18 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccListenerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccListenerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccListenerTags1Config(rName, "key2", "value2"),
+				Config: testAccListenerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,21 +104,22 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 }
 
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardWeighted(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -138,7 +143,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 			{
 				Config: testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -162,7 +167,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 			{
 				Config: testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -179,21 +184,22 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_basicUdp(t *testing.T) {
+func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_basicUdp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
@@ -216,20 +222,21 @@ func TestAccELBV2Listener_basicUdp(t *testing.T) {
 }
 
 func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_alb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerBackwardsCompatibilityConfig(rName),
+				Config: testAccListenerConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_alb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -251,23 +258,24 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_https(t *testing.T) {
+func TestAccELBV2Listener_Protocol_https(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_https(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -292,24 +300,30 @@ func TestAccELBV2Listener_https(t *testing.T) {
 }
 
 func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_LoadBalancerARN_GatewayLoadBalancer(rName),
+				Config: testAccListenerConfig_arnGateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", ""),
 					resource.TestCheckResourceAttr(resourceName, "port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -317,22 +331,27 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 }
 
 func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
+	ctx := acctest.Context(t)
 	var listener1 elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_Protocol_TLS(rName, key, certificate),
+				Config: testAccListenerConfig_protocolTLS(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &listener1),
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_acm_certificate.test", "arn"),
 				),
@@ -347,20 +366,21 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 }
 
 func TestAccELBV2Listener_redirect(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_redirect(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -389,20 +409,21 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 }
 
 func TestAccELBV2Listener_fixedResponse(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_fixedResponse(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -428,22 +449,23 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 }
 
 func TestAccELBV2Listener_cognito(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -472,22 +494,23 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 }
 
 func TestAccELBV2Listener_oidc(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &conf),
+					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -520,22 +543,23 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 }
 
 func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
+	ctx := acctest.Context(t)
 	var listener elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_DefaultAction_Order(rName, key, certificate),
+				Config: testAccListenerConfig_defaultActionOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &listener),
+					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
@@ -552,27 +576,28 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var listener elbv2.Listener
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_DefaultAction_Order(rName, key, certificate),
+				Config: testAccListenerConfig_defaultActionOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &listener),
+					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
-					testAccCheckListenerDefaultActionOrderDisappears(&listener, 1),
+					testAccCheckListenerDefaultActionOrderDisappears(ctx, &listener, 1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -580,21 +605,13 @@ func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
 	})
 }
 
-func testAccErrorCheckSkipELBV2(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"ValidationError: Type must be one of: 'application, network'",
-		"ValidationError: Protocol 'GENEVE' must be one of",
-		"ValidationError: Action type 'authenticate-cognito' must be one",
-	)
-}
-
-func testAccCheckListenerDefaultActionOrderDisappears(listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
+func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newDefaultActions []*elbv2.Action
 
 		for i, action := range listener.DefaultActions {
 			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
-				newDefaultActions = append(listener.DefaultActions[:i], listener.DefaultActions[i+1:]...)
+				newDefaultActions = slices.Delete(listener.DefaultActions, i, i+1)
 				break
 			}
 		}
@@ -603,20 +620,20 @@ func testAccCheckListenerDefaultActionOrderDisappears(listener *elbv2.Listener, 
 			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		input := &elbv2.ModifyListenerInput{
 			DefaultActions: newDefaultActions,
 			ListenerArn:    listener.ListenerArn,
 		}
 
-		_, err := conn.ModifyListener(input)
+		_, err := conn.ModifyListenerWithContext(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, n string, res *elbv2.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -627,12 +644,12 @@ func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestChec
 			return errors.New("No Listener ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
+		listener, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
 		}
 
 		if listener == nil {
@@ -644,32 +661,34 @@ func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestChec
 	}
 }
 
-func testAccCheckListenerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {
+				continue
+			}
+
+			listener, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+			}
+
+			if listener == nil {
+				continue
+			}
+
+			return fmt.Errorf("ELBv2 Listener %q still exists", rs.Primary.ID)
 		}
 
-		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
-		}
-
-		if listener == nil {
-			continue
-		}
-
-		return fmt.Errorf("ELBv2 Listener %q still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccListenerBaseConfig(rName string) string {
@@ -1070,7 +1089,7 @@ resource "aws_internet_gateway" "test" {
 `, rName))
 }
 
-func testAccListenerBackwardsCompatibilityConfig(rName string) string {
+func testAccListenerConfig_backwardsCompatibility(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
@@ -1188,7 +1207,7 @@ resource "aws_internet_gateway" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_LoadBalancerARN_GatewayLoadBalancer(rName string) string {
+func testAccListenerConfig_arnGateway(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1238,11 +1257,15 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
 
-func testAccListenerConfig_Protocol_TLS(rName, key, certificate string) string {
+func testAccListenerConfig_protocolTLS(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -1553,7 +1576,7 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
+func testAccListenerConfig_defaultActionOrder(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -1628,7 +1651,7 @@ resource "aws_lb_target_group" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccListenerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -1683,7 +1706,7 @@ resource "aws_lb_target_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccListenerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccListenerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id

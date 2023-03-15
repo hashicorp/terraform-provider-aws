@@ -11,16 +11,17 @@ import (
 )
 
 func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_vpc_link.vpc_link"
 	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLinkDataSourceConfig(rName),
+				Config: testAccVPCLinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
@@ -35,7 +36,7 @@ func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccVPCLinkDataSourceConfig(r string) string {
+func testAccVPCLinkDataSourceConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "apigateway_vpclink_test" {
   cidr_block = "10.0.0.0/16"

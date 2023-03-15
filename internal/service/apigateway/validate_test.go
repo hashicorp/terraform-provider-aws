@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidUsagePlanQuotaSettings(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Offset   int
 		Period   string

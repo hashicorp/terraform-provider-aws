@@ -1,31 +1,33 @@
 package emr
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_emr_studio")
 func ResourceStudio() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStudioCreate,
-		Read:   resourceStudioRead,
-		Update: resourceStudioUpdate,
-		Delete: resourceStudioDelete,
+		CreateWithoutTimeout: resourceStudioCreate,
+		ReadWithoutTimeout:   resourceStudioRead,
+		UpdateWithoutTimeout: resourceStudioUpdate,
+		DeleteWithoutTimeout: resourceStudioDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -109,10 +111,11 @@ func ResourceStudio() *schema.Resource {
 	}
 }
 
-func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &emr.CreateStudioInput{
 		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
@@ -146,9 +149,9 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var result *emr.CreateStudioOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		result, err = conn.CreateStudio(input)
+		result, err = conn.CreateStudioWithContext(ctx, input)
 		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "entity does not have permissions to assume role") {
 			return resource.RetryableError(err)
 		}
@@ -161,19 +164,20 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		result, err = conn.CreateStudio(input)
+		result, err = conn.CreateStudioWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating EMR Studio: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Studio: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.StudioId))
 
-	return resourceStudioRead(d, meta)
+	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -200,28 +204,29 @@ func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EMR Studio (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Studio (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceStudioRead(d, meta)
+	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	studio, err := FindStudioByID(conn, d.Id())
+	studio, err := FindStudioByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Studio (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR Studio (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Studio (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", studio.StudioArn)
@@ -239,36 +244,37 @@ func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
 	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
 
-	tags := KeyValueTags(studio.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, studio.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceStudioDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting EMR Studio: %s", d.Id())
-	_, err := conn.DeleteStudio(request)
+	_, err := conn.DeleteStudioWithContext(ctx, request)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, emr.ErrCodeInternalServerException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting EMR Studio (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

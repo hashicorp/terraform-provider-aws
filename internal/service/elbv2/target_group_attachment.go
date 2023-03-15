@@ -1,24 +1,29 @@
 package elbv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_alb_target_group_attachment")
+// @SDKResource("aws_lb_target_group_attachment")
 func ResourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAttachmentCreate,
-		Read:   resourceAttachmentRead,
-		Delete: resourceAttachmentDelete,
+		CreateWithoutTimeout: resourceAttachmentCreate,
+		ReadWithoutTimeout:   resourceAttachmentRead,
+		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
@@ -48,8 +53,9 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -71,10 +77,10 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Registering Target %s with Target Group %s", d.Get("target_id").(string),
 		d.Get("target_group_arn").(string))
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.RegisterTargets(params)
+	err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+		_, err := conn.RegisterTargetsWithContext(ctx, params)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
 		}
 
@@ -85,20 +91,21 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterTargets(params)
+		_, err = conn.RegisterTargetsWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error registering targets with target group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "registering targets with target group: %s", err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
 
-	return nil
+	return diags
 }
 
-func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -117,18 +124,19 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 		Targets:        []*elbv2.TargetDescription{target},
 	}
 
-	_, err := conn.DeregisterTargets(params)
-	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
-		return fmt.Errorf("Error deregistering Targets: %s", err)
+	_, err := conn.DeregisterTargetsWithContext(ctx, params)
+	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return sdkdiag.AppendErrorf(diags, "deregistering Targets: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 // resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -142,23 +150,23 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 		target.AvailabilityZone = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+	resp, err := conn.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException) {
 			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error reading Target Health: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Target Health: %s", err)
 	}
 
 	for _, targetDesc := range resp.TargetHealthDescriptions {
@@ -179,7 +187,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 			if reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
 				log.Printf("[WARN] Target Attachment does not exist, recreating attachment")
 				d.SetId("")
-				return nil
+				return diags
 			}
 		}
 	}
@@ -187,8 +195,8 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	if len(resp.TargetHealthDescriptions) != 1 {
 		log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }

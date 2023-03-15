@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_standards_control")
 func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceStandardsControlPut,
-		ReadContext:   resourceStandardsControlRead,
-		UpdateContext: resourceStandardsControlPut,
-		DeleteContext: resourceStandardsControlDelete,
+		CreateWithoutTimeout: resourceStandardsControlPut,
+		ReadWithoutTimeout:   resourceStandardsControlRead,
+		UpdateWithoutTimeout: resourceStandardsControlPut,
+		DeleteWithoutTimeout: resourceStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
 			"control_id": {
@@ -82,7 +83,7 @@ func ResourceStandardsControl() *schema.Resource {
 }
 
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
@@ -117,7 +118,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	d.SetId(d.Get("standards_control_arn").(string))
 
