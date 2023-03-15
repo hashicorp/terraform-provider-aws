@@ -56,8 +56,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.1 h1:PM3LPgmbOKelThQ6k/4sA
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.1/go.mod h1:jfcyde8HLCJFHGITnVbi02XyYtrLqoQI071d9KtUzgU=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.4 h1:4lnei6CLYjPH0m0Io93E0uENrIxdTQHaSKgiOtwBaOM=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.4/go.mod h1:dWtl9dlDyZsQQoyPxO6xwnXY0c1n2H6mege+iMEnSEk=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.1 h1:2CO0T8ReHjH5TFjk9RHmAafJt4vk/wMlQtn3c9bNL5Y=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.1/go.mod h1:zDr1uSSLVYc6KqXvrmqYkeqnfbmOOrbVloz4Eqsc83k=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.90.0 h1:oRl2nzkuU/qMPvudU3qQ+GUAMV5POP3V/aJTJ7Q0lT0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.90.0/go.mod h1:zDr1uSSLVYc6KqXvrmqYkeqnfbmOOrbVloz4Eqsc83k=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.5 h1:y9wcj0xCmf3i+1igp+PK9pALMQK7z72W1gHtcMQkVC0=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.5/go.mod h1:DQ++Ekb5IvuYfc+lQN8qFDpIZPjE0bqS4vpUYcdvyu4=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5 h1:9O+XnH1SGXV9J9yr2d2p9EweysA6bHI8ucmgQ2HjOUE=
