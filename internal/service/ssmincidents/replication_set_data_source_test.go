@@ -1,6 +1,7 @@
 package ssmincidents_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -15,12 +16,14 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	dataSourceName := "data.aws_ssmincidents_replication_set.test"
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),

@@ -24,13 +24,15 @@ func testReplicationSet_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
@@ -68,18 +70,20 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(context.Background(), t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,16 +156,18 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(context.Background(), t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,6 +233,8 @@ func testReplicationSet_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -247,7 +255,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
@@ -322,6 +330,8 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -329,7 +339,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
@@ -383,7 +393,7 @@ func testReplicationSet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	context := context.Background()
+	ctx := context.Background()
 
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
@@ -391,7 +401,7 @@ func testReplicationSet_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
@@ -402,7 +412,8 @@ func testReplicationSet_disappears(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
-					acctest.CheckResourceDisappears(context, acctest.Provider, tfssmincidents.ResourceReplicationSet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceReplicationSet(),
+						resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
