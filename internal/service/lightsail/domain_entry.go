@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -70,13 +69,13 @@ func ResourceDomainEntry() *schema.Resource {
 
 func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-
+	name := d.Get("name").(string)
 	req := &lightsail.CreateDomainEntryInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 
 		DomainEntry: &lightsail.DomainEntry{
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
-			Name:    aws.String(expandDomainEntryName(d.Get("name").(string), d.Get("domain_name").(string))),
+			Name:    aws.String(expandDomainEntryName(name, d.Get("domain_name").(string))),
 			Target:  aws.String(d.Get("target").(string)),
 			Type:    aws.String(d.Get("type").(string)),
 		},
@@ -85,19 +84,18 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateDomainEntryWithContext(ctx, req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, name, err)
 	}
 
-	op := resp.Operation
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeCreateDomain, ResDomainEntry, name)
 
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Create DomainEntry request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
 	vars := []string{
-		d.Get("name").(string),
+		name,
 		d.Get("domain_name").(string),
 		d.Get("type").(string),
 		d.Get("target").(string),
@@ -150,11 +148,10 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResDomainEntry, d.Id(), err)
 	}
 
-	op := resp.Operation
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeDeleteDomain, ResDomainEntry, d.Id())
 
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Delete DomainEntry request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil
