@@ -92,6 +92,12 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `5m`)
+
 ## Import
 
 WAFv2 Web ACL Association can be imported using `WEB_ACL_ARN,RESOURCE_ARN` e.g.,

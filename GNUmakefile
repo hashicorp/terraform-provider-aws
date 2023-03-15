@@ -307,16 +307,6 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
-top5services:
-	@echo "==> Rapid smoketest of top 5 services"
-	TF_ACC=1 $(GO_VER) test \
-		./internal/service/ec2/... \
-		./internal/service/iam/... \
-		./internal/service/logs/... \
-		./internal/service/meta/... \
-		./internal/service/sts/... \
-		-v -count 1 -parallel 3 -run='TestAccIAMRole_basic|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_tags|TestAccLogsGroup_basic|TestAccMetaRegionDataSource_basic'  -timeout 180m
-
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
 
@@ -380,7 +370,6 @@ yamllint:
 	testacc-lint-fix \
 	tfsdk2fw \
 	tools \
-	top5services \
 	website-link-check \
 	website-link-check-ghrc \
 	website-lint \

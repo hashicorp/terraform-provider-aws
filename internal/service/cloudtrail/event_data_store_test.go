@@ -22,7 +22,7 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
@@ -64,7 +64,7 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
@@ -95,7 +95,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
@@ -118,7 +118,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
@@ -163,7 +163,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
@@ -203,7 +203,7 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),

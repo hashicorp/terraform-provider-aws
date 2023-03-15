@@ -156,6 +156,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_network_insights_path",
 		},
 		{
+			Factory:  DataSourcePublicIPv4Pool,
+			TypeName: "aws_ec2_public_ipv4_pool",
+		},
+		{
+			Factory:  DataSourcePublicIPv4Pools,
+			TypeName: "aws_ec2_public_ipv4_pools",
+		},
+		{
 			Factory:  DataSourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 		},

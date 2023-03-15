@@ -30,7 +30,7 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -86,7 +86,7 @@ func TestAccComprehendEntityRecognizer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -120,7 +120,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -180,7 +180,7 @@ func TestAccComprehendEntityRecognizer_versionNameEmpty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -220,7 +220,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -259,7 +259,7 @@ func TestAccComprehendEntityRecognizer_versionNamePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -298,7 +298,7 @@ func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -352,7 +352,7 @@ func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -408,7 +408,7 @@ func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -462,7 +462,7 @@ func TestAccComprehendEntityRecognizer_annotations_validateNoTestDocuments(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -488,7 +488,7 @@ func TestAccComprehendEntityRecognizer_annotations_validateNoTestAnnotations(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -516,7 +516,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -558,7 +558,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -600,7 +600,7 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -670,7 +670,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -730,7 +730,7 @@ func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -793,7 +793,7 @@ func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -852,7 +852,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
 			testAccPreCheck(ctx, t)
 		},

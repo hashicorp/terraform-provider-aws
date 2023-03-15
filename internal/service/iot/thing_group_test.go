@@ -23,7 +23,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupDestroy(ctx),
@@ -60,7 +60,7 @@ func TestAccIoTThingGroup_disappears(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupDestroy(ctx),
@@ -84,7 +84,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupDestroy(ctx),
@@ -132,7 +132,7 @@ func TestAccIoTThingGroup_parentGroup(t *testing.T) {
 	grandparentResourceName := "aws_iot_thing_group.grandparent"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupDestroy(ctx),
@@ -167,7 +167,7 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupDestroy(ctx),

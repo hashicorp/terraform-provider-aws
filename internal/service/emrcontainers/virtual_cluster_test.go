@@ -29,7 +29,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
@@ -85,7 +85,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
@@ -119,7 +119,7 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
