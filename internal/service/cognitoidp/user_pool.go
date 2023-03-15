@@ -202,19 +202,19 @@ func ResourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"email_verification_subject": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validUserPoolEmailVerificationSubject,
-				ConflictsWith: []string{"verification_message_template.0.email_subject"},
-			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  validUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
+			},
+			"email_verification_subject": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 			"estimated_number_of_users": {
 				Type:     schema.TypeInt,
@@ -235,12 +235,59 @@ func ResourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"custom_email_sender": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							Computed:     true,
+							MaxItems:     1,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lambda_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomEmailSenderLambdaVersionType_Values(), false),
+									},
+								},
+							},
+						},
 						"custom_message": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"custom_sms_sender": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							Computed:     true,
+							MaxItems:     1,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lambda_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomSMSSenderLambdaVersionType_Values(), false),
+									},
+								},
+							},
+						},
 						"define_auth_challenge": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -279,53 +326,6 @@ func ResourceUserPool() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
-						},
-						"kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"custom_email_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Computed:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomEmailSenderLambdaVersionType_Values(), false),
-									},
-								},
-							},
-						},
-						"custom_sms_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Computed:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomSMSSenderLambdaVersionType_Values(), false),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -417,11 +417,11 @@ func ResourceUserPool() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_value": {
+									"max_value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"max_value": {
+									"min_value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -438,11 +438,11 @@ func ResourceUserPool() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_length": {
+									"max_length": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"max_length": {
+									"min_length": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -522,6 +522,20 @@ func ResourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
+						},
+					},
+				},
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -542,20 +556,6 @@ func ResourceUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
-						},
-					},
-				},
-			},
-			"user_pool_add_ons": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"advanced_security_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
 						},
 					},
 				},
