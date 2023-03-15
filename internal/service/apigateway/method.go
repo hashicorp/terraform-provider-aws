@@ -272,7 +272,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/operationName"),
 			Value: operation_name,
 		})
@@ -285,15 +285,15 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	// Get current cacheKeyParameters from integration before any request parameters are updated on method
+	// Get current cacheKeyParameters from integration before any request parameters are updated on method.
 	replacedRequestParameters := []string{}
 	integration, _ := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 	currentCacheKeyParameters := integration.CacheKeyParameters
 
-	for _, myKey := range operations {
-		if aws.StringValue(myKey.Op) == "replace" && strings.HasPrefix(aws.StringValue(myKey.Path), "/requestParameters") {
-			splitRes := strings.Split(aws.StringValue(myKey.Path), "/")
-			replacedRequestParameters = append(replacedRequestParameters, splitRes[2])
+	for _, operation := range operations {
+		if aws.StringValue(operation.Op) == apigateway.OpReplace && strings.HasPrefix(aws.StringValue(operation.Path), "/requestParameters") {
+			parts := strings.Split(aws.StringValue(operation.Path), "/")
+			replacedRequestParameters = append(replacedRequestParameters, parts[2])
 		}
 	}
 
@@ -303,7 +303,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
 	}
 
-	//Update integration with cacheKeyParameters for replaced request parameters
+	// Update integration with cacheKeyParameters for replaced request parameters.
 	integrationOperations := make([]*apigateway.PatchOperation, 0)
 
 	for _, replacedRequestParameter := range replacedRequestParameters {
