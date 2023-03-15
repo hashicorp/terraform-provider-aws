@@ -285,60 +285,63 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Removing cluster members from  RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last
+		globalClusterMembers := d.Get("global_cluster_members").(*schema.Set)
 		var writerARN string
-		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
-			globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
+		if globalClusterMembers.Len() > 0 {
+			for _, globalClusterMemberRaw := range globalClusterMembers.List() {
+				globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
 
-			if !ok {
-				continue
-			}
+				if !ok {
+					continue
+				}
 
-			dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
+				dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
 
-			if !ok {
-				continue
-			}
+				if !ok {
+					continue
+				}
 
-			if globalClusterMember["is_writer"].(bool) {
-				writerARN = dbClusterArn
-				continue
+				if globalClusterMember["is_writer"].(bool) {
+					writerARN = dbClusterArn
+					continue
+				}
+
+				input := &rds.RemoveFromGlobalClusterInput{
+					DbClusterIdentifier:     aws.String(dbClusterArn),
+					GlobalClusterIdentifier: aws.String(d.Id()),
+				}
+
+				_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+					continue
+				}
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
+				}
+
+				if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, deadline.Remaining()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
+				}
 			}
 
 			input := &rds.RemoveFromGlobalClusterInput{
-				DbClusterIdentifier:     aws.String(dbClusterArn),
+				DbClusterIdentifier:     aws.String(writerARN),
 				GlobalClusterIdentifier: aws.String(d.Id()),
 			}
 
 			_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-				continue
-			}
-
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
+				if !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", writerARN, d.Id(), err)
+				}
 			}
 
-			if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, deadline.Remaining()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
+			if err := waitForGlobalClusterRemoval(ctx, conn, writerARN, deadline.Remaining()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", writerARN, d.Id(), err)
 			}
-		}
-
-		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(writerARN),
-			GlobalClusterIdentifier: aws.String(d.Id()),
-		}
-
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-				return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", writerARN, d.Id(), err)
-			}
-		}
-
-		if err := waitForGlobalClusterRemoval(ctx, conn, writerARN, deadline.Remaining()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", writerARN, d.Id(), err)
 		}
 	}
 
