@@ -4038,8 +4038,8 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["etv_signal_pid"].(string); ok && v != "" {
 		s.EtvSignalPid = aws.String(v)
 	}
-	if v, ok := m["fragment_time"].(float32); ok {
-		s.FragmentTime = float64(v)
+	if v, ok := m["fragment_time"].(float64); ok {
+		s.FragmentTime = v
 	}
 	if v, ok := m["klv"].(string); ok && v != "" {
 		s.Klv = types.M2tsKlv(v)
@@ -4071,6 +4071,10 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["pmt_pid"].(string); ok && v != "" {
 		s.PmtPid = aws.String(v)
 	}
+
+	if v, ok := m["program_num"].(int); ok {
+		s.ProgramNum = int32(v)
+	}
 	if v, ok := m["rate_mode"].(string); ok && v != "" {
 		s.RateMode = types.M2tsRateMode(v)
 	}
@@ -4089,8 +4093,8 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["segmentation_style"].(string); ok && v != "" {
 		s.SegmentationStyle = types.M2tsSegmentationStyle(v)
 	}
-	if v, ok := m["segmentation_time"].(float32); ok {
-		s.SegmentationTime = float64(v)
+	if v, ok := m["segmentation_time"].(float64); ok {
+		s.SegmentationTime = v
 	}
 	if v, ok := m["timed_metadata_behavior"].(string); ok && v != "" {
 		s.TimedMetadataBehavior = types.M2tsTimedMetadataBehavior(v)
@@ -4861,7 +4865,7 @@ func flattenM2tsSettings(in *types.M2tsSettings) []interface{} {
 		"es_rate_in_pes":              string(in.EsRateInPes),
 		"etv_platform_pid":            aws.ToString(in.EtvPlatformPid),
 		"etv_signal_pid":              aws.ToString(in.EtvSignalPid),
-		"fragment_time":               float32(in.FragmentTime),
+		"fragment_time":               in.FragmentTime,
 		"klv":                         string(in.Klv),
 		"klv_data_pids":               aws.ToString(in.KlvDataPids),
 		"nielsen_id3_behavior":        string(in.NielsenId3Behavior),
@@ -4879,7 +4883,7 @@ func flattenM2tsSettings(in *types.M2tsSettings) []interface{} {
 		"scte35_pid":                  aws.ToString(in.Scte35Pid),
 		"segmentation_markers":        string(in.SegmentationMarkers),
 		"segmentation_style":          string(in.SegmentationStyle),
-		"segmentation_time":           float32(in.SegmentationTime),
+		"segmentation_time":           in.SegmentationTime,
 		"timed_metadata_behavior":     string(in.TimedMetadataBehavior),
 		"timed_metadata_pid":          aws.ToString(in.TimedMetadataPid),
 		"transport_stream_id":         int(in.TransportStreamId),
