@@ -1485,9 +1485,9 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "secret_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "secret_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
 				),
 			},
 			{

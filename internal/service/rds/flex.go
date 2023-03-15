@@ -51,7 +51,7 @@ func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]
 	if v := apiObject.SecretArn; v != nil {
 		tfMap["secret_arn"] = aws.StringValue(v)
 	}
-	if v := apiObject.SecretArn; v != nil {
+	if v := apiObject.SecretStatus; v != nil {
 		tfMap["secret_status"] = aws.StringValue(v)
 	}
 

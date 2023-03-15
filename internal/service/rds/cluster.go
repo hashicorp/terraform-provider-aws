@@ -1119,7 +1119,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		d.Set("master_user_secret", nil)
-
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
