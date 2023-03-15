@@ -489,6 +489,29 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 	})
 }
 
+func TestAccRDSGlobalCluster_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var globalCluster1 rds.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var globalCluster1 rds.GlobalCluster
@@ -749,6 +772,15 @@ resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[2]q
 }
 `, engine, rName)
+}
+
+func testAccGlobalClusterConfig_forceDestroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  force_destroy             = true
+}
+`, rName)
 }
 
 func testAccGlobalClusterConfig_primaryEngineVersion(rName, engine, engineVersion string) string {
