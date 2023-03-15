@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_medialive_input")
 func ResourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -217,14 +218,14 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// IAM propagation
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateInput(ctx, in)
 		},
@@ -334,10 +335,24 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
-		out, err := conn.UpdateInput(ctx, in)
+		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
+			func() (interface{}, error) {
+				return conn.UpdateInput(ctx, in)
+			},
+			func(err error) (bool, error) {
+				var bre *types.BadRequestException
+				if errors.As(err, &bre) {
+					return strings.Contains(bre.ErrorMessage(), "The first input attached to a channel cannot be a dynamic input"), err
+				}
+				return false, err
+			},
+		)
+
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
 		}
+
+		out := rawOutput.(*medialive.UpdateInputOutput)
 
 		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)

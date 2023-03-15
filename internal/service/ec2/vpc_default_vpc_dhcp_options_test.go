@@ -23,11 +23,12 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 }
 
 func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -35,7 +36,7 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
@@ -49,11 +50,12 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 }
 
 func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -61,7 +63,7 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_owner,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
@@ -77,11 +79,12 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/25561.
 // Don't forget to unset TF_CLI_CONFIG_FILE.
 func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -94,7 +97,7 @@ func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
 				},
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 				),
 			},
 			{

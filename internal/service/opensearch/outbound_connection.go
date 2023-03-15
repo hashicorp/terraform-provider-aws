@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_outbound_connection")
 func ResourceOutboundConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOutboundConnectionCreate,
@@ -180,7 +181,7 @@ func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchs
 		Refresh: outboundConnectionRefreshState(ctx, conn, id),
 		Timeout: timeout,
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 		return fmt.Errorf("Error waiting for Outbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
@@ -201,7 +202,7 @@ func waitForOutboundConnectionDeletion(ctx context.Context, conn *opensearchserv
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

@@ -27,10 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceControl)
-}
-
+// @FrameworkResource
 func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceControl{}, nil
 }
@@ -163,7 +160,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, plan.Tags))
 	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if len(tags) > 0 {
@@ -202,7 +199,7 @@ func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, re
 
 	out, err := FindControlByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)
@@ -451,7 +448,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, meta *conn
 
 	defaultTagsConfig := meta.DefaultTagsConfig
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null

@@ -37,19 +37,18 @@ resource "aws_cloudwatch_event_rule" "console" {
   name        = "capture-ec2-scaling-events"
   description = "Capture all EC2 scaling events"
 
-  event_pattern = <<PATTERN
-{
-  "source": [
-    "aws.autoscaling"
-  ],
-  "detail-type": [
-    "EC2 Instance Launch Successful",
-    "EC2 Instance Terminate Successful",
-    "EC2 Instance Launch Unsuccessful",
-    "EC2 Instance Terminate Unsuccessful"
-  ]
-}
-PATTERN
+  event_pattern = jsonencode({
+    source = [
+      "aws.autoscaling"
+    ]
+
+    detail-type = [
+      "EC2 Instance Launch Successful",
+      "EC2 Instance Terminate Successful",
+      "EC2 Instance Launch Unsuccessful",
+      "EC2 Instance Terminate Unsuccessful"
+    ]
+  })
 }
 
 resource "aws_kinesis_stream" "test_stream" {
@@ -111,25 +110,21 @@ resource "aws_ssm_document" "stop_instance" {
   name          = "stop_instance"
   document_type = "Command"
 
-  content = <<DOC
-  {
-    "schemaVersion": "1.2",
-    "description": "Stop an instance",
-    "parameters": {
-
-    },
-    "runtimeConfig": {
-      "aws:runShellScript": {
-        "properties": [
+  content = jsonencode({
+    schemaVersion = "1.2"
+    description   = "Stop an instance"
+    parameters    = {}
+    runtimeConfig = {
+      "aws:runShellScript" = {
+        properties = [
           {
-            "id": "0.aws:runShellScript",
-            "runCommand": ["halt"]
+            id         = "0.aws:runShellScript"
+            runCommand = ["halt"]
           }
         ]
       }
     }
-  }
-DOC
+  })
 }
 
 resource "aws_cloudwatch_event_rule" "stop_instances" {
@@ -177,47 +172,41 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ### ECS Run Task with Role and Task Override Usage
 
 ```terraform
-resource "aws_iam_role" "ecs_events" {
-  name = "ecs_events"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<DOC
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "events.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
     }
-  ]
-}
-DOC
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
+resource "aws_iam_role" "ecs_events" {
+  name               = "ecs_events"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "ecs_events_run_task_with_any_role" {
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["ecs:RunTask"]
+    resources = [replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")]
+  }
+}
 resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
-  name = "ecs_events_run_task_with_any_role"
-  role = aws_iam_role.ecs_events.id
-
-  policy = <<DOC
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "iam:PassRole",
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ecs:RunTask",
-            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")}"
-        }
-    ]
-}
-DOC
+  name   = "ecs_events_run_task_with_any_role"
+  role   = aws_iam_role.ecs_events.id
+  policy = data.aws_iam_policy_document.ecs_events_run_task_with_any_role.json
 }
 
 resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
@@ -231,16 +220,17 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
     task_definition_arn = aws_ecs_task_definition.task_name.arn
   }
 
-  input = <<DOC
-{
-  "containerOverrides": [
-    {
-      "name": "name-of-container-to-override",
-      "command": ["bin/console", "scheduled-task"]
-    }
-  ]
-}
-DOC
+  input = jsonencode({
+    containerOverrides = [
+      {
+        name = "name-of-container-to-override",
+        command = [
+          "bin/console",
+          "scheduled-task"
+        ]
+      }
+    ]
+  })
 }
 ```
 
@@ -280,22 +270,22 @@ resource "aws_api_gateway_stage" "example" {
 ### Cross-Account Event Bus target
 
 ```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
   name               = "event-bus-invoke-remote-event-bus"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
@@ -503,7 +493,7 @@ The following arguments are optional:
 ### dead_letter_config
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
-  
+
 ### ecs_target
 
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
@@ -515,7 +505,7 @@ The following arguments are optional:
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launch_type` is `FARGATE` because the awsvpc mode is required for Fargate tasks.
 * `placement_constraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
-* `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation.
+* `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. Defaults to `1`.
 * `tags` - (Optional) A map of tags to assign to ecs resources.
 

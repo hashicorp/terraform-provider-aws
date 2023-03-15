@@ -36,7 +36,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, timeout tim
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*connect.DescribeInstanceOutput); ok {
 		return v, err
@@ -56,7 +56,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, timeout tim
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*connect.DescribeInstanceOutput); ok {
 		return v, err
@@ -73,7 +73,7 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout 
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
 		if aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status) == connect.PhoneNumberWorkflowStatusFailed {
@@ -93,7 +93,7 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout 
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
 		if aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status) == connect.PhoneNumberWorkflowStatusFailed {
@@ -113,7 +113,7 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout 
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
 		return v, err
@@ -130,7 +130,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout t
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*connect.DescribeVocabularyOutput); ok {
 		return v, err
@@ -147,7 +147,7 @@ func waitVocabularyDeleted(ctx context.Context, conn *connect.Connect, timeout t
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*connect.DescribeVocabularyOutput); ok {
 		return v, err

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kendra_experience")
 func ResourceExperience() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperienceCreate,

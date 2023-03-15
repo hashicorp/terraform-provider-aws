@@ -17,20 +17,21 @@ import (
 )
 
 func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -51,20 +52,21 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 }
 
 func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -85,21 +87,22 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 }
 
 func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,20 +111,21 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 }
 
 func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -129,7 +133,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 			{
 				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
@@ -138,7 +142,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 			{
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -152,7 +156,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAttachment) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *networkmanager.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -165,7 +169,7 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-		output, err := tfnetworkmanager.FindConnectAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -177,28 +181,30 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 	}
 }
 
-func testAccCheckConnectAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_connect_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_connect_attachment" {
+				continue
+			}
+
+			_, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Connect Attachment %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfnetworkmanager.FindConnectAttachmentByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Connect Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccConnectAttachmentConfig_base(rName string) string {

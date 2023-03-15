@@ -654,8 +654,16 @@ func TestLegacyPolicyNormalize(t *testing.T) {
   "Version": "2012-10-17"
 }
 `,
-			Expected: ``,
-			Error:    true,
+			Expected: `{
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+  "Version": "2012-10-17"
+}
+`,
+			Error: true,
 		},
 		{
 			Name: "principal",

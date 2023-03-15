@@ -150,19 +150,22 @@ func PolicyToSet(exist, new string) (string, error) {
 // Version not being first is one reason for this error:
 // MalformedPolicyDocument: The policy failed legacy parsing
 func LegacyPolicyNormalize(policy interface{}) (string, error) {
-	np, err := structure.NormalizeJsonString(policy)
-	if err != nil {
-		return "", fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policy, err)
+	if policy == nil || policy.(string) == "" {
+		return "", nil
 	}
 
-	//fmt.Printf("first norm: %s\n", np)
+	np, err := structure.NormalizeJsonString(policy)
+	if err != nil {
+		return policy.(string), fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policy, err)
+	}
 
 	m := regexp.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
 
 	n := m.ReplaceAllString(np, `$1$4$5$3$2$6$7$8$9`)
+
 	_, err = structure.NormalizeJsonString(n)
 	if err != nil {
-		return "", fmt.Errorf("LegacyPolicyNormalize created a policy (%s) that is invalid JSON: %w", n, err)
+		return policy.(string), fmt.Errorf("LegacyPolicyNormalize created a policy (%s) that is invalid JSON: %w", n, err)
 	}
 
 	return n, nil

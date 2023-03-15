@@ -1,6 +1,7 @@
 package lakeformation
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/lakeformation"
@@ -17,15 +18,15 @@ const (
 	statusIAMDelay  = "IAM DELAY"
 )
 
-func waitPermissionsReady(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
+func waitPermissionsReady(ctx context.Context, conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{statusNotFound, statusIAMDelay},
 		Target:  []string{statusAvailable},
-		Refresh: statusPermissions(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
+		Refresh: statusPermissions(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
 		Timeout: permissionsReadyTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.([]*lakeformation.PrincipalResourcePermissions); ok {
 		return output, err

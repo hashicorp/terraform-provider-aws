@@ -1,6 +1,8 @@
 package secretsmanager
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	PropagationTimeout = 2 * time.Minute

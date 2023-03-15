@@ -53,6 +53,7 @@ func init() {
 }
 
 func sweepFramework(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -62,7 +63,7 @@ func sweepFramework(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFrameworksPages(input, func(page *backup.ListFrameworksOutput, lastPage bool) bool {
+	err = conn.ListFrameworksPagesWithContext(ctx, input, func(page *backup.ListFrameworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -87,7 +88,7 @@ func sweepFramework(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Frameworks for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Frameworks for %s: %w", region, err))
 	}
 
@@ -95,6 +96,7 @@ func sweepFramework(region string) error {
 }
 
 func sweepReportPlan(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -104,7 +106,7 @@ func sweepReportPlan(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListReportPlansPages(input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
+	err = conn.ListReportPlansPagesWithContext(ctx, input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -129,7 +131,7 @@ func sweepReportPlan(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Report Plans for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Report Plans for %s: %w", region, err))
 	}
 
@@ -137,6 +139,7 @@ func sweepReportPlan(region string) error {
 }
 
 func sweepVaultLockConfiguration(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -149,7 +152,7 @@ func sweepVaultLockConfiguration(region string) error {
 
 	input := &backup.ListBackupVaultsInput{}
 
-	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -173,7 +176,7 @@ func sweepVaultLockConfiguration(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Lock Configuration for %s: %w", region, err))
 	}
 
@@ -186,6 +189,7 @@ func sweepVaultLockConfiguration(region string) error {
 }
 
 func sweepVaultNotifications(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -198,7 +202,7 @@ func sweepVaultNotifications(region string) error {
 
 	input := &backup.ListBackupVaultsInput{}
 
-	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -222,7 +226,7 @@ func sweepVaultNotifications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Notifications for %s: %w", region, err))
 	}
 
@@ -235,6 +239,7 @@ func sweepVaultNotifications(region string) error {
 }
 
 func sweepVaultPolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -244,7 +249,7 @@ func sweepVaultPolicies(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -269,7 +274,7 @@ func sweepVaultPolicies(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vault Policies for %s: %w", region, err))
 	}
 
@@ -277,6 +282,7 @@ func sweepVaultPolicies(region string) error {
 }
 
 func sweepVaults(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -287,7 +293,7 @@ func sweepVaults(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -321,7 +327,7 @@ func sweepVaults(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
 	}
 

@@ -12,22 +12,23 @@ import (
 )
 
 func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInboundConnectionAccepterConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists("aws_opensearch_domain.domain_2", &domain),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
@@ -41,23 +42,24 @@ func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 }
 
 func TestAccOpenSearchInboundConnectionAccepter_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInboundConnectionAccepterConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists("aws_opensearch_domain.domain_2", &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
