@@ -121,7 +121,6 @@ func ResourceDomainName() *schema.Resource {
 						"truststore_uri": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"truststore_version": {
 							Type:     schema.TypeString,
@@ -345,6 +344,11 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					Value: aws.String(""),
 				})
 			} else {
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
+					Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string)),
+				})
 				operations = append(operations, &apigateway.PatchOperation{
 					Op:    aws.String(apigateway.OpReplace),
 					Path:  aws.String("/mutualTlsAuthentication/truststoreVersion"),
