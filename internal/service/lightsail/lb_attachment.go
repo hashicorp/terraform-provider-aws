@@ -121,7 +121,7 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName)
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName)
 
 	if diag != nil {
 		return diag
