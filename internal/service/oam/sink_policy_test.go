@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -43,7 +44,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(resourceName, &sinkPolicy),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -66,6 +67,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 					`, acctest.Partition(), acctest.AccountID()))
 						return err
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
 				),
 			},
 			{
@@ -100,7 +103,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(resourceName, &sinkPolicy),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -123,6 +126,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 					`, acctest.Partition(), acctest.AccountID()))
 						return err
 					}),
+					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
 				),
 			},
 			{

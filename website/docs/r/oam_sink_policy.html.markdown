@@ -51,7 +51,10 @@ The following arguments are required:
 
 ## Attributes Reference
 
-No additional attributes are exported.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - ARN of the Sink.
+* `sink_id` - ID string that AWS generated as part of the sink ARN.
 
 ## Timeouts
 

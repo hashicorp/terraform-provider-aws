@@ -3,6 +3,7 @@ package oam
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,10 +40,9 @@ func ResourceSinkPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"sink_identifier": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -54,6 +53,15 @@ func ResourceSinkPolicy() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+			},
+			"sink_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sink_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -105,7 +113,9 @@ func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameSinkPolicy, d.Id(), err)
 	}
 
-	d.Set("sink_identifier", out.SinkArn)
+	d.Set("arn", out.SinkArn)
+	d.Set("sink_id", out.SinkId)
+	d.Set("sink_identifier", d.Id())
 
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
