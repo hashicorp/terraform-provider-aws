@@ -243,19 +243,32 @@ func ResourceCluster() *schema.Resource {
 				ConflictsWith: []string{"master_password"},
 				AtLeastOneOf:  []string{"master_password", "manage_master_user_password"},
 			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"master_user_secret_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidKmsKeyId,
 			},
-			// //lintignore:S019
-			// "master_user_secret_arn": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: false,
-			// 	Required: false,
-			// 	Computed: true,
-			// },
 			"master_password": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -1098,12 +1111,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// manage_master_user_password
 	// master_password
 	//
-	// We could potentialy expose the MasterUserSecret structure elements?
+	// Expose the MasterUserSecret structure as a computed attribute
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if dbc.MasterUserSecret != nil {
-		d.Set("master_user_secret_kms_key_id", dbc.MasterUserSecret.KmsKeyId)
-		//Should we expose the ARN secret here on the resource, or would it be better on the data source?
-		//d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
