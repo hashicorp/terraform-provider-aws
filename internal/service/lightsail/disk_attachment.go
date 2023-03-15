@@ -61,7 +61,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachDisk, ResCertificate, d.Get("disk_name").(string))
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string))
 
 	if diag != nil {
 		return diag
