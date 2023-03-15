@@ -4071,7 +4071,6 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["pmt_pid"].(string); ok && v != "" {
 		s.PmtPid = aws.String(v)
 	}
-
 	if v, ok := m["program_num"].(int); ok {
 		s.ProgramNum = int32(v)
 	}
