@@ -263,6 +263,28 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 	})
 }
 
+func TestAccLightsailInstance_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceConfig_availabilityZone(rName),
+				ExpectError: regexp.MustCompile(`availability_zone must be within the same region as provider region.`),
+			},
+		},
+	})
+}
+
 func TestAccLightsailInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -378,6 +400,19 @@ func testAccInstanceConfig_basic(rName string) string {
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_availabilityZone(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_instance" "test" {
+  name              = "%s"
+  availability_zone = "ap-northeast-2c"
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
