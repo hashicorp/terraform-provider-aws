@@ -345,11 +345,11 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.10.2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
 				),
 			},
 			{
@@ -422,11 +422,11 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.10.2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
 				),
 			},
 		},
