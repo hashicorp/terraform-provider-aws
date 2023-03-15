@@ -25,7 +25,7 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
@@ -58,7 +58,7 @@ func TestAccLocationGeofenceCollection_disappears(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
@@ -81,7 +81,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
@@ -115,7 +115,7 @@ func TestAccLocationGeofenceCollection_kmsKeyID(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
@@ -142,7 +142,7 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),

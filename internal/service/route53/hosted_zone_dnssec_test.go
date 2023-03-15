@@ -22,11 +22,10 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),
@@ -52,11 +51,10 @@ func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),
@@ -77,11 +75,10 @@ func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),

@@ -229,7 +229,7 @@ tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]in
 /* ... creation steps ... */
 
 if len(tags) > 0 {
-  if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+  if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
     return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
@@ -282,7 +282,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags, err := ListTags(conn, arn.String())
+tags, err := ListTags(ctx, conn, arn.String())
 
 if err != nil {
   return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
@@ -306,7 +306,7 @@ In the resource `Update` operation, implement the logic to handle tagging update
 ```go
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
-  if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+  if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
     return fmt.Errorf("updating tags: %w", err)
   }
 }
@@ -323,7 +323,7 @@ if d.HasChangesExcept("tags", "tags_all") {
     SetAsDefault:   aws.Bool(true),
   }
 
-  if _, err := conn.CreatePolicyVersion(request); err != nil {
+  if _, err := conn.CreatePolicyVersionWithContext(ctx, request); err != nil {
       return fmt.Errorf("updating IAM policy (%s): %w", d.Id(), err)
   }
 }
@@ -343,7 +343,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckClusterDestroy(ctx),

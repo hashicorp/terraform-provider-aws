@@ -173,7 +173,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			{{- if .AWSGoSDKV2 }}
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
 			{{- else }}
@@ -226,7 +226,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			{{- if .AWSGoSDKV2 }}
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
 			{{- else }}
