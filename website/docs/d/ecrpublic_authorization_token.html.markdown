@@ -10,6 +10,9 @@ description: |-
 
 The Public ECR Authorization Token data source allows the authorization token, token expiration date, user name and password to be retrieved for a Public ECR repository.
 
+
+~> **NOTE:** This data source can only be used in the `us-east-1` region.
+
 ## Example Usage
 
 ```terraform
