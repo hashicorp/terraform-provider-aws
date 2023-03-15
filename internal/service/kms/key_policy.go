@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_kms_key_policy_attachment")
-func ResourceKeyPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_kms_key_policy")
+func ResourceKeyPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceKeyPolicyAttachmentCreate,
-		ReadWithoutTimeout:   resourceKeyPolicyAttachmentRead,
-		UpdateWithoutTimeout: resourceKeyPolicyAttachmentUpdate,
-		DeleteWithoutTimeout: resourceKeyPolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceKeyPolicyCreate,
+		ReadWithoutTimeout:   resourceKeyPolicyRead,
+		UpdateWithoutTimeout: resourceKeyPolicyUpdate,
+		DeleteWithoutTimeout: resourceKeyPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -53,20 +53,22 @@ func ResourceKeyPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceKeyPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 
-	if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
+	keyID := d.Get("key_id").(string)
+
+	if err := updateKeyPolicy(ctx, conn, keyID, d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", keyID, err)
 	}
 
-	d.SetId(d.Get("key_id").(string))
+	d.SetId(keyID)
 
-	return append(diags, resourceKeyPolicyAttachmentRead(ctx, d, meta)...)
+	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 
@@ -93,20 +95,20 @@ func resourceKeyPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceKeyPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if d.HasChange("policy") {
 		if err := updateKeyPolicy(ctx, conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating KMS Key (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return append(diags, resourceKeyPolicyAttachmentRead(ctx, d, meta)...)
+	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 	partition := meta.(*conns.AWSClient).Partition

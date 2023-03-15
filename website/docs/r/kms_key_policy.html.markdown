@@ -1,12 +1,12 @@
 ---
 subcategory: "KMS (Key Management)"
 layout: "aws"
-page_title: "AWS: aws_kms_key_policy_attachment"
+page_title: "AWS: aws_kms_key_policy"
 description: |-
   Attaches a policy to a KMS Key.
 ---
 
-# Resource: aws_kms_key_policy_attachment
+# Resource: aws_kms_key_policy
 
 Attaches a policy to a KMS Key.
 
@@ -17,7 +17,7 @@ resource "aws_kms_key" "example" {
   description = "example"
 }
 
-resource "aws_kms_key_policy_attachment" "example" {
+resource "aws_kms_key_policy" "example" {
   key_id = aws_kms_key.example.id
   policy = jsonencode({
     Id = "example"
@@ -57,8 +57,8 @@ No additional attributes are exported.
 
 ## Import
 
-KMS Key Attachments can be imported using the `key_id`, e.g.,
+KMS Key Policies can be imported using the `key_id`, e.g.,
 
 ```
-$ terraform import aws_kms_key_policy_attachment.a 1234abcd-12ab-34cd-56ef-1234567890ab
+$ terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
