@@ -54,7 +54,7 @@ func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 }
 
-// DefaultKMSKeyPolicy returns for the default policy for KMS keys in the configured AWS partition.
+// DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.
 func (client *AWSClient) DefaultKMSKeyPolicy() string {
 	return fmt.Sprintf(`
 {
