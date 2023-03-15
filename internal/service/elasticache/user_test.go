@@ -394,21 +394,6 @@ resource "aws_elasticache_user" "test" {
 `, rName)
 }
 
-func testAccUserConfigWithNoPassRequiredAuthMode_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
-  user_name     = "username1"
-  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
-
-  authentication_mode {
-    type = "no-password-required"
-  }
-}
-`, rName)
-}
-
 func testAccUserConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
