@@ -822,13 +822,13 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_cacheKeyUpdateParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
-	rest_api_id = aws_api_gateway_rest_api.test.id
-	parent_id   = aws_api_gateway_rest_api.test.root_resource_id
-	path_part   = "{param}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "{param}"
 }
 
 resource "aws_api_gateway_method" "test" {
@@ -843,36 +843,36 @@ resource "aws_api_gateway_method" "test" {
 
   request_parameters = {
     "method.request.path.param" = false
-	"method.request.querystring.test1" = true
+    "method.request.querystring.test1" = true
   }
 }
 
 resource "aws_api_gateway_integration" "test" {
-	rest_api_id = aws_api_gateway_rest_api.test.id
-	resource_id = aws_api_gateway_resource.test.id
-	http_method = aws_api_gateway_method.test.http_method
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   
-	request_templates = {
-	  "application/json" = ""
-	  "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
-	}
-  
-	request_parameters = {
-	  "integration.request.header.X-Authorization" = "'static'"
-	  "integration.request.header.X-Foo"           = "'Bar'"
-	  "integration.request.path.param"             = "method.request.path.param"
-	}
-  
-	cache_key_parameters = ["method.request.path.param", "method.request.querystring.test1"]
-	cache_namespace      = "foobar"
-  
-	type                    = "HTTP"
-	uri                     = "https://www.google.de"
-	integration_http_method = "GET"
-	passthrough_behavior    = "WHEN_NO_MATCH"
-	content_handling        = "CONVERT_TO_TEXT"
-	timeout_milliseconds    = 2000
+  request_templates = {
+    "application/json" = ""
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
+  
+  request_parameters = {
+    "integration.request.header.X-Authorization" = "'static'"
+    "integration.request.header.X-Foo"           = "'Bar'"
+    "integration.request.path.param"             = "method.request.path.param"
+  }
+  
+  cache_key_parameters = ["method.request.path.param", "method.request.querystring.test1"]
+  cache_namespace      = "foobar"
+  
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = "GET"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
+}
 `, rName)
 }
 
