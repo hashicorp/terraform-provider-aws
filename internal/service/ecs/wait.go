@@ -14,7 +14,7 @@ const (
 	capacityProviderUpdateTimeout = 10 * time.Minute
 
 	serviceCreateTimeout      = 2 * time.Minute
-	serviceInactiveTimeoutMin = 1 * time.Second
+	serviceInactiveMinTimeout = 1 * time.Second
 	serviceDescribeTimeout    = 2 * time.Minute
 	serviceUpdateTimeout      = 2 * time.Minute
 
@@ -103,7 +103,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 		Target:     []string{serviceStatusInactive},
 		Refresh:    statusServiceNoTags(ctx, conn, id, cluster),
 		Timeout:    timeout,
-		MinTimeout: serviceInactiveTimeoutMin,
+		MinTimeout: serviceInactiveMinTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

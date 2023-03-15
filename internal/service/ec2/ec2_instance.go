@@ -531,19 +531,16 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 						},
 					},
@@ -1808,6 +1805,34 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				if _, err := WaitInstanceCapacityReservationSpecificationUpdated(ctx, conn, d.Id(), v); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
+			}
+		}
+	}
+
+	if d.HasChange("private_dns_name_options") && !d.IsNewResource() {
+		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			input := &ec2.ModifyPrivateDnsNameOptionsInput{
+				InstanceId: aws.String(d.Id()),
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_aaaa_record") {
+				input.EnableResourceNameDnsAAAARecord = aws.Bool(tfMap["enable_resource_name_dns_aaaa_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_a_record") {
+				input.EnableResourceNameDnsARecord = aws.Bool(tfMap["enable_resource_name_dns_a_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.hostname_type") {
+				input.PrivateDnsHostnameType = aws.String(tfMap["hostname_type"].(string))
+			}
+
+			_, err := conn.ModifyPrivateDnsNameOptionsWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
 			}
 		}
 	}

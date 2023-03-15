@@ -22,7 +22,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
@@ -74,7 +74,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
@@ -119,7 +119,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
@@ -165,7 +165,7 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
