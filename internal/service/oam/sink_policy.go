@@ -45,10 +45,11 @@ func ResourceSinkPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -117,17 +118,12 @@ func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("sink_id", out.SinkId)
 	d.Set("sink_identifier", d.Id())
 
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameSinkPolicy, d.Id(), err)
+		return diag.FromErr(err)
 	}
 
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameSinkPolicy, d.Id(), err)
-	}
-
-	d.Set("policy", p)
+	d.Set("policy", policyToSet)
 
 	return nil
 }
