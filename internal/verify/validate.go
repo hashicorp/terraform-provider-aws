@@ -209,7 +209,7 @@ func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaVa
 // (per KMS API documentation and internal AWS conversations).
 // ref: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id
 // ref: https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html#KMS-Encrypt-request-KeyId
-func ValidKmsKeyId(v interface{}, k string) (ws []string, errors []error) {
+func ValidKMSKeyID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))

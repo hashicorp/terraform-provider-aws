@@ -267,7 +267,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: verify.ValidKmsKeyId,
+				ValidateFunc: verify.ValidKMSKeyID,
 			},
 			"master_password": {
 				Type:          schema.TypeString,
