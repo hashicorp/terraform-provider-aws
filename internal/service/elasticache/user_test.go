@@ -388,7 +388,7 @@ resource "aws_elasticache_user" "test" {
   engine        = "REDIS"
 
   authentication_mode {
-    type      = "iam"
+    type = "iam"
   }
 }
 `, rName)
@@ -403,7 +403,7 @@ resource "aws_elasticache_user" "test" {
   engine        = "REDIS"
 
   authentication_mode {
-    type      = "no-password-required"
+    type = "no-password-required"
   }
 }
 `, rName)
@@ -432,7 +432,7 @@ resource "aws_elasticache_user" "test" {
   authentication_mode {
     type      = "password"
     passwords = [%[2]q, %[3]q]
-  }	
+  }
 }
 `, rName, password1, password2)
 }
@@ -448,7 +448,7 @@ resource "aws_elasticache_user" "test" {
   authentication_mode {
     type      = "password"
     passwords = [%[2]q]
-  }	
+  }
 }
 `, rName, password)
 }
