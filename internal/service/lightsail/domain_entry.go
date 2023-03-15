@@ -158,11 +158,22 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func expandDomainEntry(id string) *lightsail.DomainEntry {
-	id_parts := strings.SplitN(id, "_", -1)
-	name := id_parts[0]
-	domainName := id_parts[1]
-	recordType := id_parts[2]
-	recordTarget := id_parts[3]
+	id_parts := strings.Split(id, "_")
+	idLength := len(id_parts)
+	var index int
+	var name string
+
+	if idLength == 5 {
+		index = 1
+		name = "_" + id_parts[index+0]
+	} else {
+		index = 0
+		name = id_parts[index+0]
+	}
+
+	domainName := id_parts[index+1]
+	recordType := id_parts[index+2]
+	recordTarget := id_parts[index+3]
 
 	entry := &lightsail.DomainEntry{
 		Name:   aws.String(expandDomainEntryName(name, domainName)),
@@ -174,8 +185,17 @@ func expandDomainEntry(id string) *lightsail.DomainEntry {
 }
 
 func expandDomainNameFromId(id string) string {
-	id_parts := strings.SplitN(id, "_", -1)
-	domainName := id_parts[1]
+	id_parts := strings.Split(id, "_")
+	idLength := len(id_parts)
+	var index int
+
+	if idLength == 5 {
+		index = 1
+	} else {
+		index = 0
+	}
+
+	domainName := id_parts[index+1]
 
 	return domainName
 }
