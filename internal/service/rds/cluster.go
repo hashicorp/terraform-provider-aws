@@ -1277,7 +1277,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 		if d.HasChange("master_user_secret_kms_key_id") {
-			input.MasterUserSecretKmsKeyId = aws.String(d.Get("master_user_secret_kms_key_id").(string))
+			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			}
 		}
 
 		if d.HasChange("network_type") {
