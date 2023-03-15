@@ -10,8 +10,8 @@ description: |-
 
 Manages a single-Region or multi-Region primary KMS key.
 
-~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`aws_kms_key_policy_attachment`](kms_key_policy_attachment.html)
-or with the deprecated parameter `policy` in the resource `aws_kms_key`.
+~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`aws_kms_key_policy`](kms_key_policy.html)
+or with the parameter `policy` in this resource.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 ## Example Usage
 
