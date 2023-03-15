@@ -11,6 +11,7 @@ FEATURES:
 * **New Data Source:** `aws_ec2_public_ipv4_pools` ([#28245](https://github.com/hashicorp/terraform-provider-aws/issues/28245))
 * **New Data Source:** `aws_servicecatalog_provisioning_artifacts` ([#25535](https://github.com/hashicorp/terraform-provider-aws/issues/25535))
 * **New Resource:** `aws_codegurureviewer_repository_association` ([#29656](https://github.com/hashicorp/terraform-provider-aws/issues/29656))
+* **New Resource:** `aws_emr_block_public_access_configuration` ([#29968](https://github.com/hashicorp/terraform-provider-aws/issues/29968))
 * **New Resource:** `aws_oam_sink` ([#29670](https://github.com/hashicorp/terraform-provider-aws/issues/29670))
 
 ENHANCEMENTS:
