@@ -842,7 +842,7 @@ resource "aws_api_gateway_method" "test" {
   }
 
   request_parameters = {
-    "method.request.path.param" = false
+    "method.request.path.param"        = false
     "method.request.querystring.test1" = true
   }
 }
@@ -851,21 +851,21 @@ resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
   http_method = aws_api_gateway_method.test.http_method
-  
+
   request_templates = {
     "application/json" = ""
     "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
-  
+
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
     "integration.request.header.X-Foo"           = "'Bar'"
     "integration.request.path.param"             = "method.request.path.param"
   }
-  
+
   cache_key_parameters = ["method.request.path.param", "method.request.querystring.test1"]
   cache_namespace      = "foobar"
-  
+
   type                    = "HTTP"
   uri                     = "https://www.google.de"
   integration_http_method = "GET"
