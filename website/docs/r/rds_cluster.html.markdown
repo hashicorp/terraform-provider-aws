@@ -145,7 +145,7 @@ resource "aws_rds_cluster_instance" "example" {
 }
 ```
 
-### RDS/Aurora Managed Master Passwords via Secrets Manager
+### RDS/Aurora Managed Master Passwords via Secrets Manager, default KMS Key
 
 -> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
 
@@ -153,10 +153,31 @@ You can specify the `manage_master_user_password` attribute to enable managing t
 
 ```terraform
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = "example"
-  database_name                   = "test"
-  manage_master_user_password     = true 
-  master_username                 = "test"
+  cluster_identifier          = "example"
+  database_name               = "test"
+  manage_master_user_password = true 
+  master_username             = "test"
+}
+```
+
+### RDS/Aurora Managed Master Passwords via Secrets Manager, specific KMS Key
+
+-> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
+
+You can specify the `master_user_secret_kms_key_id` attribute to specify a specific KMS Key.
+
+```terraform
+
+resource "aws_kms_key" "example" {
+  description = "Example KMS Key"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier            = "example"
+  database_name                 = "test"
+  manage_master_user_password   = true 
+  master_username               = "test"
+  master_user_secret_kms_key_id = aws_kms_key.example.key_id
 }
 ```
 
@@ -338,7 +359,7 @@ load-balanced across replicas
 * `database_name` - The database name
 * `port` - The database port
 * `master_username` - The master username for the database
-* `master_user_secret` - See below. Only available when `manage_master_user_password` is set to true.
+* `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
 * `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
@@ -350,14 +371,13 @@ load-balanced across replicas
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 [5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
 
+### `master_user_secret`
 
-### Nested Fields
-
-#### `master_user_secret`
+The `master_user_secret` configuration block supports the following attributes:
 
 * `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret.
-* `secret_status` - The status of the secret. The possible status values include the following: `creating`, `active`, `rotating`, `impaired`.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
 
