@@ -1315,9 +1315,10 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					},
 				},
 				"video_descriptions": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
+					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
@@ -2362,8 +2363,8 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
 		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
 	}
-	if v, ok := m["video_descriptions"].(*schema.Set); ok && v.Len() > 0 {
-		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v.List())
+	if v, ok := m["video_descriptions"].([]interface{}); ok && len(v) > 0 {
+		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v)
 	}
 	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
 		settings.AvailBlanking = expandChannelEncoderSettingsAvailBlanking(v)
