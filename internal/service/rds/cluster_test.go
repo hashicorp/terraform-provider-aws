@@ -58,7 +58,8 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name_actual", "default.aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-					resource.TestCheckNoResourceAttr(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version_actual"),
 					resource.TestCheckNoResourceAttr(resourceName, "global_cluster_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
@@ -104,7 +105,7 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfrds.ResourceClusterFramework, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterFramework, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2442,7 +2443,7 @@ func TestAccRDSCluster_MigrateFromPluginSDK(t *testing.T) {
 	var dbCluster rds.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		CheckDestroy: testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3244,7 +3245,7 @@ func testAccClusterConfig_port(rName string, port int) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql13"
+  db_cluster_parameter_group_name = "default.aurora-postgresql14"
   engine                          = "aurora-postgresql"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"

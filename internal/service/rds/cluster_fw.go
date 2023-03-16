@@ -46,7 +46,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// newResourceCluster instantiates a new Resource for the aws_rds_cluster resource.
+// @FrameworkResource(name="Cluster)
+// @Tags(identifierAttribute="arn")
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
 	r.SetMigratedFromPluginSDK(true)
@@ -75,7 +76,7 @@ func (r *resourceCluster) Metadata(_ context.Context, request resource.MetadataR
 // Schema returns the schema for this resource.
 func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
-		Version: 1,
+		// Version: 1,
 		Attributes: map[string]schema.Attribute{
 			"allocated_storage": schema.Int64Attribute{
 				Optional: true,
@@ -181,6 +182,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"db_cluster_parameter_group_name": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
 			"db_cluster_parameter_group_name_actual": schema.StringAttribute{
 				Computed: true,
@@ -1612,6 +1614,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 		r.DatabaseName = types.StringValue("")
 	}
 	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
+	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbClusterParameterGroupNameActual = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
 	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
