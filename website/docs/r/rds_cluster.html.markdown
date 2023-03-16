@@ -155,7 +155,7 @@ You can specify the `manage_master_user_password` attribute to enable managing t
 resource "aws_rds_cluster" "test" {
   cluster_identifier          = "example"
   database_name               = "test"
-  manage_master_user_password = true 
+  manage_master_user_password = true
   master_username             = "test"
 }
 ```
@@ -175,7 +175,7 @@ resource "aws_kms_key" "example" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier            = "example"
   database_name                 = "test"
-  manage_master_user_password   = true 
+  manage_master_user_password   = true
   master_username               = "test"
   master_user_secret_kms_key_id = aws_kms_key.example.key_id
 }
@@ -186,7 +186,7 @@ resource "aws_rds_cluster" "test" {
 For more detailed documentation about each argument, refer to
 the AWS official documentation :
 
-* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
+* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
 * [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
 The following arguments are supported:
