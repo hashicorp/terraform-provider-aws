@@ -1317,8 +1317,21 @@ func StatusIPAMPoolState(ctx context.Context, conn *ec2.EC2, id string) resource
 	}
 }
 
-func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string) resource.StateRefreshFunc {
+func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID, poolCidrId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+		if cidrBlock == "" {
+			output, err := FindIPAMPoolCIDRByPoolCIDRId(ctx, conn, poolCidrId, poolID)
+
+			if tfresource.NotFound(err) {
+				return nil, "", nil
+			}
+
+			if err != nil {
+				return nil, "", err
+			}
+			cidrBlock = aws.StringValue(output.Cidr)
+		}
+
 		output, err := FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
 		if tfresource.NotFound(err) {
@@ -1351,6 +1364,38 @@ func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.EC2, alloc
 		}
 
 		return output, IpamPoolCIDRAllocationCreateComplete, nil
+	}
+}
+
+func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMResourceDiscoveryByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
 func DataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,
@@ -139,7 +140,7 @@ func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(meta.(*conns.AWSClient).Partition)
 
-	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(taggings)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(ctx, taggings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resource tag mapping list: %s", err)
 	}
 
@@ -164,13 +165,13 @@ func expandTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilt
 	return result
 }
 
-func flattenResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
+func flattenResourcesTagMappingList(ctx context.Context, list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         KeyValueTags(i.Tags).Map(),
+			"tags":         KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {

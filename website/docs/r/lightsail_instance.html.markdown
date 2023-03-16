@@ -23,7 +23,7 @@ for more information.
 resource "aws_lightsail_instance" "gitlab_test" {
   name              = "custom_gitlab"
   availability_zone = "us-east-1b"
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
   key_pair_name     = "some_key_name"
   tags = {
@@ -38,7 +38,7 @@ resource "aws_lightsail_instance" "gitlab_test" {
 resource "aws_lightsail_instance" "test" {
   name              = "custom_instance"
   availability_zone = "us-east-1b"
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
   add_on {
     type          = "AutoSnapshot"

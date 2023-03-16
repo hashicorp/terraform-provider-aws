@@ -37,11 +37,9 @@ resource "aws_cloudwatch_event_archive" "order" {
   description      = "Archived events from order service"
   event_source_arn = aws_cloudwatch_event_bus.order.arn
   retention_days   = 7
-  event_pattern    = <<PATTERN
-{
-  "source": ["company.team.order"]
-}
-PATTERN
+  event_pattern = jsonencode({
+    source = ["company.team.order"]
+  })
 }
 ```
 

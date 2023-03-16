@@ -346,6 +346,7 @@ service/ec2:
   - 'website/**/ec2_fleet*'
   - 'website/**/ec2_host*'
   - 'website/**/ec2_instance_*'
+  - 'website/**/ec2_public_ipv4_pool*'
   - 'website/**/ec2_serial_*'
   - 'website/**/ec2_spot_*'
   - 'website/**/ec2_tag*'
@@ -733,6 +734,9 @@ service/networkmanager:
 service/nimble:
   - 'internal/service/nimble/**/*'
   - 'website/**/nimble_*'
+service/oam:
+  - 'internal/service/oam/**/*'
+  - 'website/**/oam_*'
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
@@ -841,6 +845,7 @@ service/rolesanywhere:
   - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
+  - 'website/**/route53_cidr_*'
   - 'website/**/route53_delegation_*'
   - 'website/**/route53_health_*'
   - 'website/**/route53_hosted_*'
@@ -1016,6 +1021,9 @@ service/transitgateway:
 service/translate:
   - 'internal/service/translate/**/*'
   - 'website/**/translate_*'
+service/verifiedaccess:
+  - 'internal/service/ec2/**/verifiedaccess_*'
+  - 'website/**/verifiedaccess*'
 service/voiceid:
   - 'internal/service/voiceid/**/*'
   - 'website/**/voiceid_*'
@@ -1046,6 +1054,7 @@ service/vpc:
   - 'website/**/vpc_ipv*'
   - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
+  - 'website/**/vpc_security_group_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'
 service/vpnclient:

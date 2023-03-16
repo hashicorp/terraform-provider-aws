@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_document")
 func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataDocumentRead,

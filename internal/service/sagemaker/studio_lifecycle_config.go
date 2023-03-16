@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_studio_lifecycle_config")
 func ResourceStudioLifecycleConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStudioLifecycleConfigCreate,
@@ -66,7 +67,7 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("studio_lifecycle_config_name").(string)
 	input := &sagemaker.CreateStudioLifecycleConfigInput{

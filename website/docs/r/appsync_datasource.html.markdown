@@ -25,45 +25,35 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "appsync.amazonaws.com"
-      },
-      "Effect": "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["appsync.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect    = "Allow"
+    actions   = ["dynamodb:*"]
+    resources = [aws_dynamodb_table.example.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "example"
-  role = aws_iam_role.example.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "dynamodb:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_dynamodb_table.example.arn}"
-      ]
-    }
-  ]
-}
-EOF
+  name   = "example"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_appsync_graphql_api" "example" {
@@ -89,7 +79,7 @@ The following arguments are supported:
 
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
 * `description` - (Optional) Description of the data source.
 * `service_role_arn` - (Optional) IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
@@ -97,6 +87,7 @@ The following arguments are supported:
 * `http_config` - (Optional) HTTP settings. See [below](#http_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
 * `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational_database_config)
+* `event_bridge_config` - (Optional) AWS EventBridge settings. See [below](#event_bridge_config)
 
 ### dynamodb_config
 
@@ -156,6 +147,12 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `function_arn` - (Required) ARN for the Lambda function.
+
+### event_bridge_config
+
+The following arguments are supported:
+
+* `event_bus_arn` - (Required) ARN for the EventBridge bus.
 
 ## Attributes Reference
 
