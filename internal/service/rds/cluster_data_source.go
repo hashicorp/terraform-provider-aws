@@ -101,9 +101,25 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_user_secret_arn": {
-				Type:     schema.TypeString,
+			"master_user_secret": {
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
