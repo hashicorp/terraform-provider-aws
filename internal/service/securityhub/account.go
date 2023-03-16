@@ -16,6 +16,8 @@ import (
 
 // @SDKResource("aws_securityhub_account")
 func ResourceAccount() *schema.Resource {
+	resourceV0 := &schema.Resource{Schema: map[string]*schema.Schema{}}
+
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
 		ReadWithoutTimeout:   resourceAccountRead,
@@ -23,6 +25,21 @@ func ResourceAccount() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type: resourceV0.CoreConfigSchema().ImpliedType(),
+				Upgrade: func(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+					if v, ok := rawState["enable_default_standards"]; !ok || v == nil {
+						rawState["enable_default_standards"] = "true"
+					}
+
+					return rawState, nil
+				},
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -84,6 +84,37 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 	})
 }
 
+func testAccAccount_migrateV0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.59.0",
+					},
+				},
+				Config: testAccAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "enable_default_standards"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_basic,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
