@@ -17,7 +17,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -52,7 +52,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -97,15 +97,7 @@ func testAccOrganizationConfigurationExists(ctx context.Context, n string) resou
 	}
 }
 
-func testAccOrganizationConfigurationConfig_basic(autoEnable bool) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["securityhub.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
-
+const testAccOrganizationConfigurationConfig_base = `
 resource "aws_securityhub_account" "test" {}
 
 data "aws_caller_identity" "current" {}
@@ -113,41 +105,27 @@ data "aws_caller_identity" "current" {}
 resource "aws_securityhub_organization_admin_account" "test" {
   admin_account_id = data.aws_caller_identity.current.account_id
 
-  depends_on = [aws_organizations_organization.test, aws_securityhub_account.test]
+  depends_on = [aws_securityhub_account.test]
 }
+`
 
+func testAccOrganizationConfigurationConfig_basic(autoEnable bool) string {
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_securityhub_organization_configuration" "test" {
   auto_enable = %[1]t
 
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
-`, autoEnable)
+`, autoEnable))
 }
 
 func testAccOrganizationConfigurationConfig_autoEnableStandards(autoEnableStandards string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["securityhub.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
-
-resource "aws_securityhub_account" "test" {}
-
-data "aws_caller_identity" "current" {}
-
-resource "aws_securityhub_organization_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-
-  depends_on = [aws_organizations_organization.test, aws_securityhub_account.test]
-}
-
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_securityhub_organization_configuration" "test" {
   auto_enable           = true
-  auto_enable_standards = "%[1]s"
+  auto_enable_standards = %[1]q
 
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
-`, autoEnableStandards)
+`, autoEnableStandards))
 }
