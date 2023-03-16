@@ -6,15 +6,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
@@ -22,15 +25,17 @@ func testAccAccount_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_basic(),
+				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(ctx, "aws_securityhub_account.example"),
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_securityhub_account.example",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enable_default_standards"},
 			},
 		},
 	})
@@ -38,24 +43,20 @@ func testAccAccount_basic(t *testing.T) {
 
 func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
-
-		_, err := conn.GetEnabledStandardsWithContext(ctx, &securityhub.GetEnabledStandardsInput{})
-
-		if err != nil {
-			// Can only read enabled standards if Security Hub is enabled
-			if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-				return fmt.Errorf("Security Hub account not found")
-			}
-			return err
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Security Hub Account ID is set")
 		}
 
-		return nil
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+
+		_, err := tfsecurityhub.FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+
+		return err
 	}
 }
 
@@ -68,25 +69,23 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetEnabledStandardsWithContext(ctx, &securityhub.GetEnabledStandardsInput{})
+			_, err := tfsecurityhub.FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				// Can only read enabled standards if Security Hub is enabled
-				if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-					return nil
-				}
 				return err
 			}
 
-			return fmt.Errorf("Security Hub account still exists")
+			return fmt.Errorf("Security Hub Account %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccAccountConfig_basic() string {
-	return `
-resource "aws_securityhub_account" "example" {}
+const testAccAccountConfig_basic = `
+resource "aws_securityhub_account" "test" {}
 `
-}

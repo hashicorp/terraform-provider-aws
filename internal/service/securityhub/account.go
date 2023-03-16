@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -20,23 +20,34 @@ func ResourceAccount() *schema.Resource {
 		CreateWithoutTimeout: resourceAccountCreate,
 		ReadWithoutTimeout:   resourceAccountRead,
 		DeleteWithoutTimeout: resourceAccountDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{},
+		Schema: map[string]*schema.Schema{
+			"enable_default_standards": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
+			},
+		},
 	}
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
-	log.Print("[DEBUG] Enabling Security Hub for account")
 
-	_, err := conn.EnableSecurityHubWithContext(ctx, &securityhub.EnableSecurityHubInput{})
+	input := &securityhub.EnableSecurityHubInput{
+		EnableDefaultStandards: aws.Bool(d.Get("enable_default_standards").(bool)),
+	}
+
+	_, err := conn.EnableSecurityHubWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "enabling Security Hub for account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -48,17 +59,19 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
-	log.Printf("[DEBUG] Checking if Security Hub is enabled")
-	_, err := conn.GetEnabledStandardsWithContext(ctx, &securityhub.GetEnabledStandardsInput{})
+	_, err := FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		// Can only read enabled standards if Security Hub is enabled
-		if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "checking if Security Hub is enabled: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
+
+	d.Set("enable_default_standards", d.Get("enable_default_standards"))
 
 	return diags
 }
@@ -66,32 +79,18 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
-	log.Print("[DEBUG] Disabling Security Hub for account")
 
-	err := resource.RetryContext(ctx, adminAccountNotFoundTimeout, func() *resource.RetryError {
-		_, err := conn.DisableSecurityHubWithContext(ctx, &securityhub.DisableSecurityHubInput{})
-
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DisableSecurityHubWithContext(ctx, &securityhub.DisableSecurityHubInput{})
-	}
+	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountNotFoundTimeout, func() (interface{}, error) {
+		return conn.DisableSecurityHubWithContext(ctx, &securityhub.DisableSecurityHubInput{})
+	}, securityhub.ErrCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
 
 	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Security Hub for account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Account (%s): %s", d.Id(), err)
 	}
 
 	return diags
