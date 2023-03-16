@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_response_headers_policy")
 func ResourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponseHeadersPolicyCreate,
@@ -1114,7 +1115,7 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["sampling_rate"].(float64); ok && v != 0 {
+	if v, ok := tfMap["sampling_rate"].(float64); ok {
 		apiObject.SamplingRate = aws.Float64(v)
 	}
 

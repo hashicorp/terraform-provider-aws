@@ -12,10 +12,11 @@ import (
 )
 
 func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -39,10 +40,11 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -66,8 +68,9 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -80,12 +83,13 @@ func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccBundlePreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),

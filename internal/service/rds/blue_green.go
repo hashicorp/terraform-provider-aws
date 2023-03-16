@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc)
 
 type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
 
@@ -155,18 +155,4 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	}
 
 	return nil
-}
-
-type deadline time.Time
-
-func NewDeadline(duration time.Duration) deadline {
-	return deadline(time.Now().Add(duration))
-}
-
-func (d deadline) remaining() time.Duration {
-	if v := time.Until(time.Time(d)); v < 0 {
-		return 0
-	} else {
-		return v
-	}
 }

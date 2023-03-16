@@ -15,12 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_amplify_domain_association")
 func ResourceDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainAssociationCreate,
 		ReadWithoutTimeout:   resourceDomainAssociationRead,
 		UpdateWithoutTimeout: resourceDomainAssociationUpdate,
 		DeleteWithoutTimeout: resourceDomainAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -31,24 +33,25 @@ func ResourceDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate_verification_dns_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"domain_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
+			"enable_auto_sub_domain": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"sub_domain": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -75,7 +78,6 @@ func ResourceDomainAssociation() *schema.Resource {
 					},
 				},
 			},
-
 			"wait_for_verification": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -92,14 +94,13 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
 	id := DomainAssociationCreateResourceID(appID, domainName)
-
 	input := &amplify.CreateDomainAssociationInput{
-		AppId:             aws.String(appID),
-		DomainName:        aws.String(domainName),
-		SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+		AppId:               aws.String(appID),
+		DomainName:          aws.String(domainName),
+		EnableAutoSubDomain: aws.Bool(d.Get("enable_auto_sub_domain").(bool)),
+		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
-	log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
 	_, err := conn.CreateDomainAssociationWithContext(ctx, input)
 
 	if err != nil {
@@ -109,12 +110,12 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(id)
 
 	if _, err := waitDomainAssociationCreated(ctx, conn, appID, domainName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) create: %s", d.Id(), err)
 	}
 
 	if d.Get("wait_for_verification").(bool) {
 		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) to verify: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
 		}
 	}
 
@@ -147,6 +148,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("arn", domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
 	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
@@ -164,14 +166,20 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "parsing Amplify Domain Association ID: %s", err)
 	}
 
-	if d.HasChange("sub_domain") {
+	if d.HasChanges("enable_auto_sub_domain", "sub_domain") {
 		input := &amplify.UpdateDomainAssociationInput{
-			AppId:             aws.String(appID),
-			DomainName:        aws.String(domainName),
-			SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+			AppId:      aws.String(appID),
+			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
+		if d.HasChange("enable_auto_sub_domain") {
+			input.EnableAutoSubDomain = aws.Bool(d.Get("enable_auto_sub_domain").(bool))
+		}
+
+		if d.HasChange("sub_domain") {
+			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
+		}
+
 		_, err := conn.UpdateDomainAssociationWithContext(ctx, input)
 
 		if err != nil {
@@ -181,7 +189,7 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.Get("wait_for_verification").(bool) {
 		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) to verify: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
 		}
 	}
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_safety_rule")
 func ResourceSafetyRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSafetyRuleCreate,

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipam")
 func ResourceIPAM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMCreate,
@@ -45,6 +46,14 @@ func ResourceIPAM() *schema.Resource {
 			"cascade": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"default_resource_discovery_association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default_resource_discovery_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -104,7 +113,7 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(resource.UniqueId()),
@@ -150,13 +159,17 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("arn", ipam.IpamArn)
+	d.Set("default_resource_discovery_association_id", ipam.DefaultResourceDiscoveryAssociationId)
+	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
 	d.Set("description", ipam.Description)
-	d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions))
+	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
+	}
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
 
-	tags := KeyValueTags(ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

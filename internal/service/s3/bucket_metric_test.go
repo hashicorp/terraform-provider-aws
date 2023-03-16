@@ -24,6 +24,7 @@ import (
 func TestExpandMetricsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := []struct {
 		Config                  map[string]interface{}
 		ExpectedS3MetricsFilter *s3.MetricsFilter
@@ -117,7 +118,7 @@ func TestExpandMetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := tfs3.ExpandMetricsFilter(tc.Config)
+		value := tfs3.ExpandMetricsFilter(ctx, tc.Config)
 
 		// Sort tags by key for consistency
 		if value.And != nil && value.And.Tags != nil {
@@ -139,6 +140,7 @@ func TestExpandMetricsFilter(t *testing.T) {
 func TestFlattenMetricsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := []struct {
 		S3MetricsFilter *s3.MetricsFilter
 		ExpectedConfig  map[string]interface{}
@@ -232,7 +234,7 @@ func TestFlattenMetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := tfs3.FlattenMetricsFilter(tc.S3MetricsFilter)
+		value := tfs3.FlattenMetricsFilter(ctx, tc.S3MetricsFilter)
 
 		if !reflect.DeepEqual(value, tc.ExpectedConfig) {
 			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, value, tc.ExpectedConfig)
@@ -282,7 +284,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -317,7 +319,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -345,7 +347,7 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -393,7 +395,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -443,7 +445,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -491,7 +493,7 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
@@ -539,7 +541,7 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),

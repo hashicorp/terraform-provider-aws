@@ -2,6 +2,7 @@ package fsx
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,14 +21,17 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_fsx_openzfs_file_system")
 func ResourceOpenzfsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOepnzfsFileSystemCreate,
+		CreateWithoutTimeout: resourceOpenzfsFileSystemCreate,
 		ReadWithoutTimeout:   resourceOpenzfsFileSystemRead,
 		UpdateWithoutTimeout: resourceOpenzfsFileSystemUpdate,
 		DeleteWithoutTimeout: resourceOpenzfsFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -246,9 +251,8 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{64, 128, 256, 512, 1024, 2048, 3072, 4096}),
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -265,15 +269,38 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				var (
+					singleAZ1ThroughputCapacityValues = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
+					singleAZ2ThroughputCapacityValues = []int{160, 320, 640, 1280, 2560, 3840, 5120, 7680, 10240}
+				)
+
+				switch deploymentType, throughputCapacity := d.Get("deployment_type").(string), d.Get("throughput_capacity").(int); deploymentType {
+				case fsx.OpenZFSDeploymentTypeSingleAz1:
+					if !slices.Contains(singleAZ1ThroughputCapacityValues, throughputCapacity) {
+						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ1ThroughputCapacityValues)
+					}
+				case fsx.OpenZFSDeploymentTypeSingleAz2:
+					if !slices.Contains(singleAZ2ThroughputCapacityValues, throughputCapacity) {
+						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ2ThroughputCapacityValues)
+					}
+					// default:
+					// Allow validation to pass for unknown/new types.
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
-func resourceOepnzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -430,7 +457,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

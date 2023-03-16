@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_emr_managed_scaling_policy")
 func ResourceManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedScalingPolicyCreate,

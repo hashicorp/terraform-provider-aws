@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_replication_configuration")
 func ResourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketReplicationConfigurationCreate,
@@ -312,7 +313,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
+		Rules: ExpandReplicationRules(ctx, d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
@@ -381,7 +382,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 	d.Set("bucket", d.Id())
 	d.Set("role", r.Role)
-	if err := d.Set("rule", FlattenReplicationRules(r.Rules)); err != nil {
+	if err := d.Set("rule", FlattenReplicationRules(ctx, r.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -394,7 +395,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
+		Rules: ExpandReplicationRules(ctx, d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{

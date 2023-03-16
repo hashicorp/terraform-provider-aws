@@ -22,6 +22,7 @@ const (
 	ResNameSharedDirectory = "Shared Directory"
 )
 
+// @SDKResource("aws_directory_service_shared_directory")
 func ResourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharedDirectoryCreate,

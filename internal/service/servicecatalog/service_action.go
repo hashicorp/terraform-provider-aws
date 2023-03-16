@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_service_action")
 func ResourceServiceAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceActionCreate,

@@ -19,10 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceFramework)
-}
-
+// @FrameworkDataSource
 func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFramework{}, nil
 }
@@ -165,7 +162,7 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags

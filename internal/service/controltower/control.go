@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_controltower_control")
 func ResourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,

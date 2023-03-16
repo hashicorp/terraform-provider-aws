@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_batch_job_definition")
 func ResourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -34,11 +37,9 @@ func ResourceJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"container_properties": {
 				Type:     schema.TypeString,
@@ -55,6 +56,12 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validName,
+			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -69,6 +76,12 @@ func ResourceJobDefinition() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
+			},
+			"propagate_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
 			},
 			"retry_strategy": {
 				Type:     schema.TypeList,
@@ -133,14 +146,12 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+			"revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"propagate_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -163,14 +174,6 @@ func ResourceJobDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer}, true),
 			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -181,7 +184,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &batch.RegisterJobDefinitionInput{
@@ -194,6 +197,16 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+		}
+
+		for _, env := range props.Environment {
+			if aws.StringValue(env.Value) == "" {
+				diags = append(diags, errs.NewAttributeWarningDiagnostic(
+					cty.GetAttrPath("container_properties"),
+					"Ignoring environment variable",
+					fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
+				)
+			}
 		}
 
 		input.ContainerProperties = props
@@ -273,7 +286,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("retry_strategy", nil)
 	}
 
-	tags := KeyValueTags(jobDefinition.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, jobDefinition.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
