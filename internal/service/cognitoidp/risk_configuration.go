@@ -254,7 +254,12 @@ func ResourceRiskConfiguration() *schema.Resource {
 						"blocked_ip_range_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MinItems: 1,
 							MaxItems: 200,
+							AtLeastOneOf: []string{
+								"risk_exception_configuration.0.blocked_ip_range_list",
+								"risk_exception_configuration.0.skipped_ip_range_list",
+							},
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
@@ -265,6 +270,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 						"skipped_ip_range_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MinItems: 1,
 							MaxItems: 200,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -387,6 +393,10 @@ func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func expandRiskExceptionConfiguration(riskConfig []interface{}) *cognitoidentityprovider.RiskExceptionConfigurationType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	riskExceptionConfigurationType := &cognitoidentityprovider.RiskExceptionConfigurationType{}
@@ -421,6 +431,10 @@ func flattenRiskExceptionConfiguration(apiObject *cognitoidentityprovider.RiskEx
 }
 
 func expandCompromisedCredentialsRiskConfiguration(riskConfig []interface{}) *cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	riskExceptionConfigurationType := &cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType{}
@@ -455,6 +469,10 @@ func flattenCompromisedCredentialsRiskConfiguration(apiObject *cognitoidentitypr
 }
 
 func expandCompromisedCredentialsActions(riskConfig []interface{}) *cognitoidentityprovider.CompromisedCredentialsActionsType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	compromisedCredentialsAction := &cognitoidentityprovider.CompromisedCredentialsActionsType{}
@@ -481,6 +499,10 @@ func flattenCompromisedCredentialsActions(apiObject *cognitoidentityprovider.Com
 }
 
 func expandAccountTakeoverRiskConfiguration(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverRiskConfigurationType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	accountTakeoverRiskConfiguration := &cognitoidentityprovider.AccountTakeoverRiskConfigurationType{}
@@ -515,6 +537,10 @@ func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.
 }
 
 func expandAccountTakeoverActions(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionsType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	actions := &cognitoidentityprovider.AccountTakeoverActionsType{}
@@ -557,6 +583,10 @@ func flattenAccountTakeoverActions(apiObject *cognitoidentityprovider.AccountTak
 }
 
 func expandAccountTakeoverAction(riskConfig []interface{}) *cognitoidentityprovider.AccountTakeoverActionType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	action := &cognitoidentityprovider.AccountTakeoverActionType{}
@@ -591,6 +621,10 @@ func flattenAccountTakeoverAction(apiObject *cognitoidentityprovider.AccountTake
 }
 
 func expandNotifyConfiguration(riskConfig []interface{}) *cognitoidentityprovider.NotifyConfigurationType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	notifConfig := &cognitoidentityprovider.NotifyConfigurationType{}
@@ -657,6 +691,10 @@ func flattenNotifyConfiguration(apiObject *cognitoidentityprovider.NotifyConfigu
 }
 
 func expandNotifyEmail(riskConfig []interface{}) *cognitoidentityprovider.NotifyEmailType {
+	if len(riskConfig) == 0 || riskConfig[0] == nil {
+		return nil
+	}
+
 	config := riskConfig[0].(map[string]interface{})
 
 	notifyEmail := &cognitoidentityprovider.NotifyEmailType{}

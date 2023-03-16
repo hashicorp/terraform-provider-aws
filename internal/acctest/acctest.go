@@ -2294,5 +2294,9 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 }
 
 func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("one of[ \\n]`%s`[ \\n]must be specified", strings.Join(attrs, ",")))
+	return regexp.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
+}
+
+func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
 }

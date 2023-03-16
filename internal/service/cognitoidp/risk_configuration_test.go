@@ -140,7 +140,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_cognito_risk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
@@ -185,7 +185,7 @@ func TestAccCognitoIDPRiskConfiguration_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
@@ -197,6 +197,45 @@ func TestAccCognitoIDPRiskConfiguration_empty(t *testing.T) {
 					"compromised_credentials_risk_configuration",
 					"risk_exception_configuration",
 				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPRiskConfiguration_nullRiskException(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRiskConfigurationConfig_nullRiskException(rName),
+				ExpectError: acctest.ExpectErrorAttrAtLeastOneOf(
+					"risk_exception_configuration.0.blocked_ip_range_list",
+					"risk_exception_configuration.0.skipped_ip_range_list",
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPRiskConfiguration_emptyRiskException(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRiskConfigurationConfig_emptyRiskException(rName),
+				ExpectError: acctest.ExpectErrorAttrMinItems("risk_exception_configuration.0.blocked_ip_range_list", 1, 0),
 			},
 		},
 	})
@@ -324,6 +363,40 @@ func testAccRiskConfigurationConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_risk_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccRiskConfigurationConfig_nullRiskException(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  risk_exception_configuration {
+    blocked_ip_range_list = null
+    skipped_ip_range_list = null
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccRiskConfigurationConfig_emptyRiskException(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  risk_exception_configuration {
+    blocked_ip_range_list = []
+    skipped_ip_range_list = []
+  }
 }
 
 resource "aws_cognito_user_pool" "test" {
