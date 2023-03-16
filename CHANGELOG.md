@@ -34,6 +34,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_task_definition: Add `arn_without_revision` attribute ([#27351](https://github.com/hashicorp/terraform-provider-aws/issues/27351))
 * resource/aws_elasticache_user: Add `authentication_mode` argument ([#28928](https://github.com/hashicorp/terraform-provider-aws/issues/28928))
 * resource/aws_fms_policy: Add `description` argument ([#29926](https://github.com/hashicorp/terraform-provider-aws/issues/29926))
+* resource/aws_fsx_openzfs_file_system: Add support for `SINGLE_AZ_2` `deployment_type` ([#28583](https://github.com/hashicorp/terraform-provider-aws/issues/28583))
 * resource/aws_glue_crawler: Add `create_native_delta_table` attribute to the `delta_target` configuration block ([#29566](https://github.com/hashicorp/terraform-provider-aws/issues/29566))
 * resource/aws_inspector2_organization_configuration: Add `lambda` attribute to `auto_enable` configuration block ([#28961](https://github.com/hashicorp/terraform-provider-aws/issues/28961))
 * resource/aws_instance: Add ability to update `private_dns_name_options` in place ([#26305](https://github.com/hashicorp/terraform-provider-aws/issues/26305))
