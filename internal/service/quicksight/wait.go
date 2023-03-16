@@ -59,25 +59,3 @@ func waitUpdated(ctx context.Context, conn *quicksight.QuickSight, accountId, da
 
 	return nil, err
 }
-
-// waitDataSetCreated waits for a DataSet to ensure at least one output column is created, proving success
-func waitDataSetCreated(ctx context.Context, conn *quicksight.QuickSight, accountId, dataSetId string) (*quicksight.DataSet, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{quicksight.ResourceStatusCreationInProgress},
-		Target:  []string{quicksight.ResourceStatusCreationSuccessful},
-		Refresh: status(ctx, conn, accountId, dataSetId),
-		Timeout: dataSourceCreateTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*quicksight.DataSet); ok {
-		if len(output.OutputColumns) == 0 {
-			tfresource.SetLastError(err, fmt.Errorf("status check failed: failed to create quicksight data set"))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}

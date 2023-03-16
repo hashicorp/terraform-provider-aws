@@ -802,15 +802,10 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
 
-	if _, err := waitDataSetCreated(ctx, conn, awsAccountId, id); err != nil {
-		return diag.Errorf("error waiting from QuickSight Data Set (%s) creation: %s", d.Id(), err)
-	}
 	return resourceDataSetRead(ctx, d, meta)
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// arn.IsARN(d.Id()
-
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -968,12 +963,6 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("error updating QuickSight Data Set (%s): %s", d.Id(), err)
 		}
-
-		// dataSet doesnt have a status, don't know what to do without a status function
-
-		// if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
-		// 	return diag.Errorf("error waiting for QuickSight Data Set (%s) to update: %s", d.Id(), err)
-		// }
 	}
 
 	if d.HasChange("permissions") {
