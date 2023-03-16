@@ -241,7 +241,6 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"master_password"},
-				AtLeastOneOf:  []string{"master_password", "manage_master_user_password"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -274,7 +273,6 @@ func ResourceCluster() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"manage_master_user_password"},
-				AtLeastOneOf:  []string{"master_password", "manage_master_user_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,

@@ -1546,6 +1546,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
 					"manage_master_user_password",
+					"master_user_secret_kms_key_id",
 					"skip_final_snapshot",
 				},
 			},
