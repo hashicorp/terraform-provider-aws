@@ -2630,9 +2630,11 @@ func flattenS3Source(source *quicksight.S3Source) []interface{} {
 		tfMap["input_columns"] = flattenInputColumns(source.InputColumns)
 	}
 
-	if source.UploadSettings != nil {
-		tfMap["upload_settings"] = flattenUploadSettings(source.UploadSettings)
-	}
+	// Temporarily stop writing upload_settings to state on read to avoid
+	// inconsistent final plans when default values are returned
+	// if source.UploadSettings != nil {
+	// 	tfMap["upload_settings"] = flattenUploadSettings(source.UploadSettings)
+	// }
 
 	return []interface{}{tfMap}
 }
