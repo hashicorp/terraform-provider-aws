@@ -44,7 +44,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterDataSource_manage_password(t *testing.T) {
+func TestAccRDSClusterDataSource_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_cluster.test"
@@ -56,7 +56,7 @@ func TestAccRDSClusterDataSource_manage_password(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_manage_password(rName),
+				Config: testAccClusterDataSourceConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
@@ -69,7 +69,9 @@ func TestAccRDSClusterDataSource_manage_password(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "master_username"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret_arn", resourceName, "master_user_secret_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.kms_key_id", resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_arn", resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_status", resourceName, "master_user_secret.0.secret_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
@@ -106,7 +108,7 @@ data "aws_rds_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterDataSourceConfig_manage_password(rName string) string {
+func testAccClusterDataSourceConfig_managedMasterPassword(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
@@ -118,8 +120,8 @@ resource "aws_rds_cluster" "test" {
   database_name                   = "test"
   db_cluster_parameter_group_name = "default.aurora5.6"
   db_subnet_group_name            = aws_db_subnet_group.test.name
-  master_username                 = "tfacctest"
   manage_master_user_password     = true
+  master_username                 = "tfacctest"
   skip_final_snapshot             = true
 
   tags = {
