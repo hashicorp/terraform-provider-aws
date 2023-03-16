@@ -91,6 +91,18 @@ service "kafka" {
   vpc_lock = true
 }
 
+service "kendra" {
+  skip = true
+}
+
+service "kinesisanalytics" {
+  skip = true
+}
+
+service "kinesisanalyticsv2" {
+  skip = true
+}
+
 service "lambda" {
   vpc_lock = true
 }
