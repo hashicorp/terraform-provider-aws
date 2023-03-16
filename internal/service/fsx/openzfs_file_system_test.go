@@ -72,7 +72,7 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
 				),
 			},
 			{
