@@ -11,7 +11,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic": testAccAccount_basic,
+			"basic":                       testAccAccount_basic,
+			"disappears":                  testAccAccount_disappears,
+			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 		},
 		"Member": {
 			"basic":  testAccMember_basic,

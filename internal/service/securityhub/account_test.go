@@ -41,6 +41,49 @@ func testAccAccount_basic(t *testing.T) {
 	})
 }
 
+func testAccAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceAccount(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_enableDefaultStandardsFalse,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -88,4 +131,10 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 
 const testAccAccountConfig_basic = `
 resource "aws_securityhub_account" "test" {}
+`
+
+const testAccAccountConfig_enableDefaultStandardsFalse = `
+resource "aws_securityhub_account" "test" {
+  enable_default_standards = false
+}
 `
