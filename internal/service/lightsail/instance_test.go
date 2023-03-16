@@ -14,9 +14,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	availabilityZoneKey = "TF_AWS_LIGHTSAIL_AVAILABILITY_ZONE"
+)
+
+const (
+	envVarAvailabilityZoneKeyError = "The availability zone that is outside the providers current region."
 )
 
 func TestAccLightsailInstance_basic(t *testing.T) {
@@ -266,7 +275,8 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 func TestAccLightsailInstance_availabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
+	// This test is expecting a region to be set in an environment variable that it outside the current provider region
+	availabilityZone := envvar.SkipIfEmpty(t, availabilityZoneKey, envVarAvailabilityZoneKeyError)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -278,7 +288,7 @@ func TestAccLightsailInstance_availabilityZone(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccInstanceConfig_availabilityZone(rName),
+				Config:      testAccInstanceConfig_availabilityZone(rName, availabilityZone),
 				ExpectError: regexp.MustCompile(`availability_zone must be within the same region as provider region.`),
 			},
 		},
@@ -406,17 +416,17 @@ resource "aws_lightsail_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_availabilityZone(rName string) string {
+func testAccInstanceConfig_availabilityZone(rName string, availabilityZone string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
-  availability_zone = "ap-northeast-2c"
+  name              = %[1]q
+  availability_zone = %[2]q
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
-`, rName))
+`, rName, availabilityZone))
 }
 
 func testAccInstanceConfig_tags1(rName string) string {
