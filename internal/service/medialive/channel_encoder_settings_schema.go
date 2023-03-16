@@ -4323,8 +4323,8 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["gop_num_b_frames"].(int); ok {
 		out.GopNumBFrames = int32(v)
 	}
-	if v, ok := m["gop_size"].(float32); ok {
-		out.GopSize = float64(v)
+	if v, ok := m["gop_size"].(float64); ok {
+		out.GopSize = v
 	}
 	if v, ok := m["gop_size_units"].(string); ok && v != "" {
 		out.GopSizeUnits = types.H264GopSizeUnits(v)
@@ -5403,6 +5403,7 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
 		"adaptive_quantization":   string(in.AdaptiveQuantization),
 		"afd_signaling":           string(in.AfdSignaling),
 		"bitrate":                 int(in.Bitrate),
+		"buf_fill_pct":            int(in.BufFillPct),
 		"buf_size":                int(in.BufSize),
 		"color_metadata":          string(in.ColorMetadata),
 		"entropy_encoding":        string(in.EntropyEncoding),
@@ -5416,7 +5417,7 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
 		"gop_b_reference":         string(in.GopBReference),
 		"gop_closed_cadence":      int(in.GopClosedCadence),
 		"gop_num_b_frames":        int(in.GopNumBFrames),
-		"gop_size":                float32(in.GopSize),
+		"gop_size":                in.GopSize,
 		"gop_size_units":          string(in.GopSizeUnits),
 		"level":                   string(in.Level),
 		"look_ahead_rate_control": string(in.LookAheadRateControl),
