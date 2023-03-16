@@ -285,8 +285,8 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Removing cluster members from  RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last
-		globalClusterMembers := d.Get("global_cluster_members").(*schema.Set)
 		var writerARN string
+		globalClusterMembers := d.Get("global_cluster_members").(*schema.Set)
 		if globalClusterMembers.Len() > 0 {
 			for _, globalClusterMemberRaw := range globalClusterMembers.List() {
 				globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
