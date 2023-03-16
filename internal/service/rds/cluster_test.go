@@ -1355,6 +1355,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing
 				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckNoResourceAttr(resourceName, "global_cluster_identifier"),
 				),
 			},
 		},
@@ -2451,7 +2452,7 @@ func TestAccRDSCluster_MigrateFromPluginSDK(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "4.55.0",
+						VersionConstraint: "4.59.0",
 					},
 				},
 				Config: testAccClusterConfig_basic(rName),
