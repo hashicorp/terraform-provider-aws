@@ -43,6 +43,7 @@ ENHANCEMENTS:
 * resource/aws_opensearch_domain: Add `dashboard_endpoint` attribute ([#29867](https://github.com/hashicorp/terraform-provider-aws/issues/29867))
 * resource/aws_qldb_ledger: Add configurable timeouts ([#29635](https://github.com/hashicorp/terraform-provider-aws/issues/29635))
 * resource/aws_s3_bucket: Add error handling for `XNotImplemented` errors when reading `acceleration_status`, `request_payer`, `lifecycle_rule`, `logging`, or `replication_configuration` into terraform state. ([#29632](https://github.com/hashicorp/terraform-provider-aws/issues/29632))
+* resource/aws_securityhub_organization_configuration: Add `auto_enable_standards` attribute ([#29773](https://github.com/hashicorp/terraform-provider-aws/issues/29773))
 * resource/aws_wafv2_web_acl_association: Add configurable timeout for Create ([#30002](https://github.com/hashicorp/terraform-provider-aws/issues/30002))
 
 BUG FIXES:
@@ -52,6 +53,7 @@ BUG FIXES:
 * resource/aws_apigatewayv2_integration: Retry errors like `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` ([#29735](https://github.com/hashicorp/terraform-provider-aws/issues/29735))
 * resource/aws_cognito_user_pool: Remove [Computed](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#computed) from `lambda_config.custom_email_sender` and `lambda_config.custom_sms_sender` allowing their values to be removed ([#29047](https://github.com/hashicorp/terraform-provider-aws/issues/29047))
 * resource/aws_cognito_user_pool: `account_recovery_setting.recovery_mechanism` is Optional+Computed ([#22302](https://github.com/hashicorp/terraform-provider-aws/issues/22302))
+* resource/aws_ecr_repository: Fix unhandled errors and nil output on read ([#30067](https://github.com/hashicorp/terraform-provider-aws/issues/30067))
 * resource/aws_elasticache_user: Change `user_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#28928](https://github.com/hashicorp/terraform-provider-aws/issues/28928))
 * resource/aws_elasticsearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
 * resource/aws_lambda_function: Fix empty environment variable update ([#29839](https://github.com/hashicorp/terraform-provider-aws/issues/29839))
