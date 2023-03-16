@@ -19,23 +19,24 @@ import (
 )
 
 func TestAccIdentityStoreGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group identitystore.DescribeGroupOutput
 	resourceName := "aws_identitystore_group.test"
 	displayName := "Acceptance Test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(displayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
@@ -51,26 +52,27 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group identitystore.DescribeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,32 +80,32 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
-	ctx := context.Background()
+func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_identitystore_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_identitystore_group" {
+				continue
+			}
+
+			_, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IdentityStore Group %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IdentityStore Group %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupExists(n string, v *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, v *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,7 +117,6 @@ func testAccCheckGroupExists(n string, v *identitystore.DescribeGroupOutput) res
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
-		ctx := context.Background()
 
 		output, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
 

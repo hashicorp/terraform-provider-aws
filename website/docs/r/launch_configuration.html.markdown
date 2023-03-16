@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
+!> **WARNING:** The use of launch configurations is discouraged in favour of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
+
 -> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
 
 ## Example Usage
@@ -154,7 +156,8 @@ The following arguments are optional:
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.* `security_groups` - (Optional) A list of associated security group IDS.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `security_groups` - (Optional) A list of associated security group IDS.
 * `placement_tenancy` - (Optional) The tenancy of the instance. Valid values are `default` or `dedicated`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html) for more details.
 * `root_block_device` - (Optional) Customize details about the root block device of the instance. See [Block Devices](#block-devices) below for details.
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.

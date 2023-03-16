@@ -1,28 +1,31 @@
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshiftserverless_endpoint_access")
 func ResourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointAccessCreate,
-		Read:   resourceEndpointAccessRead,
-		Update: resourceEndpointAccessUpdate,
-		Delete: resourceEndpointAccessDelete,
+		CreateWithoutTimeout: resourceEndpointAccessCreate,
+		ReadWithoutTimeout:   resourceEndpointAccessRead,
+		UpdateWithoutTimeout: resourceEndpointAccessUpdate,
+		DeleteWithoutTimeout: resourceEndpointAccessDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -109,7 +112,8 @@ func ResourceEndpointAccess() *schema.Resource {
 	}
 }
 
-func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := redshiftserverless.CreateEndpointAccessInput{
@@ -125,33 +129,34 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	out, err := conn.CreateEndpointAccess(&input)
+	out, err := conn.CreateEndpointAccessWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Serverless Endpoint Access: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Endpoint Access: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Endpoint.EndpointName))
 
-	if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Endpoint Access (%s) to be created: %w", d.Id(), err)
+	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceEndpointAccessRead(d, meta)
+	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
-	out, err := FindEndpointAccessByName(conn, d.Id())
+	out, err := FindEndpointAccessByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless EndpointAccess (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Serverless Endpoint Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
 	d.Set("address", out.Address)
@@ -169,13 +174,14 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(result))
 
 	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(out.VpcEndpoint)}); err != nil {
-		return fmt.Errorf("setting vpc_endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := &redshiftserverless.UpdateEndpointAccessInput{
@@ -186,19 +192,20 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	_, err := conn.UpdateEndpointAccess(input)
+	_, err := conn.UpdateEndpointAccessWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating Redshift Serverless Endpoint Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Endpoint Access (%s) to be updated: %w", d.Id(), err)
+	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) to be updated: %s", d.Id(), err)
 	}
 
-	return resourceEndpointAccessRead(d, meta)
+	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	deleteInput := redshiftserverless.DeleteEndpointAccessInput{
@@ -206,18 +213,18 @@ func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless EndpointAccess: %s", d.Id())
-	_, err := conn.DeleteEndpointAccess(&deleteInput)
+	_, err := conn.DeleteEndpointAccessWithContext(ctx, &deleteInput)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting Redshift Serverless Endpoint Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEndpointAccessDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("deleting Redshift Serverless Endpoint Access (%s): waiting for completion: %w", d.Id(), err)
+	if _, err := waitEndpointAccessDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Endpoint Access (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

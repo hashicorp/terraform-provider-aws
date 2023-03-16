@@ -1,6 +1,7 @@
 package cur
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,20 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_cur_report_definition")
 func ResourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReportDefinitionCreate,
-		Read:   resourceReportDefinitionRead,
-		Update: resourceReportDefinitionUpdate,
-		Delete: resourceReportDefinitionDelete,
+		CreateWithoutTimeout: resourceReportDefinitionCreate,
+		ReadWithoutTimeout:   resourceReportDefinitionRead,
+		UpdateWithoutTimeout: resourceReportDefinitionUpdate,
+		DeleteWithoutTimeout: resourceReportDefinitionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -100,7 +104,8 @@ func ResourceReportDefinition() *schema.Resource {
 	}
 }
 
-func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn()
 
 	reportName := d.Get("report_name").(string)
@@ -124,7 +129,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 	)
 
 	if err != nil {
-		return fmt.Errorf("creating Cost And Usage Report Definition (%s): %w", reportName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
 	}
 
 	reportDefinition := &cur.ReportDefinition{
@@ -145,33 +150,34 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 		ReportDefinition: reportDefinition,
 	}
 
-	_, err = conn.PutReportDefinition(reportDefinitionInput)
+	_, err = conn.PutReportDefinitionWithContext(ctx, reportDefinitionInput)
 
 	if err != nil {
-		return fmt.Errorf("creating Cost And Usage Report Definition (%s): %w", reportName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
 	}
 
 	d.SetId(reportName)
 
-	return resourceReportDefinitionRead(d, meta)
+	return append(diags, resourceReportDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn()
 
-	reportDefinition, err := FindReportDefinitionByName(conn, d.Id())
+	reportDefinition, err := FindReportDefinitionByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Cost And Usage Report Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cost And Usage Report Definition (%s): %s", d.Id(), err)
 	}
 
 	if reportDefinition == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Cost And Usage Report Definition (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Cost And Usage Report Definition (%s): not found after creation", d.Id())
 		}
 		log.Printf("[WARN] Cost And Usage Report Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	reportName := aws.StringValue(reportDefinition.ReportName)
@@ -198,10 +204,11 @@ func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
 
-	return nil
+	return diags
 }
 
-func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn()
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
@@ -224,7 +231,7 @@ func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) er
 	)
 
 	if err != nil {
-		return fmt.Errorf("updating Cost And Usage Report Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
 	}
 
 	reportName := d.Get("report_name").(string)
@@ -248,28 +255,29 @@ func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) er
 		ReportName:       aws.String(reportName),
 	}
 
-	_, err = conn.ModifyReportDefinition(reportDefinitionInput)
+	_, err = conn.ModifyReportDefinitionWithContext(ctx, reportDefinitionInput)
 
 	if err != nil {
-		return fmt.Errorf("updating Cost And Usage Report Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
 	}
 
-	return resourceReportDefinitionRead(d, meta)
+	return append(diags, resourceReportDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn()
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
-	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
+	_, err := conn.DeleteReportDefinitionWithContext(ctx, &cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cost And Usage Report Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cost And Usage Report Definition (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func CheckReportDefinitionPropertyCombination(additionalArtifacts []string, compression string, format string, prefix string, reportVersioning string) error {

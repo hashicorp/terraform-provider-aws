@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_anomaly_subscription")
 func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
@@ -101,7 +102,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -172,7 +173,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return create.DiagError(names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(subscription.SubscriptionArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(subscription.SubscriptionArn))
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
@@ -229,7 +230,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
@@ -237,7 +238,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}

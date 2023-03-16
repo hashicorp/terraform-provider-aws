@@ -4,7 +4,6 @@
 package scheduler
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -32,6 +31,7 @@ func init() {
 }
 
 func sweepScheduleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func sweepScheduleGroups(region string) error {
 	paginator := scheduler.NewListScheduleGroupsPaginator(conn, &scheduler.ListScheduleGroupsInput{})
 
 	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
+		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Schedule Groups for %s: %w", region, err))
@@ -68,7 +68,7 @@ func sweepScheduleGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule Group for %s: %w", region, err))
 	}
 
@@ -81,6 +81,7 @@ func sweepScheduleGroups(region string) error {
 }
 
 func sweepSchedules(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -94,7 +95,7 @@ func sweepSchedules(region string) error {
 	paginator := scheduler.NewListSchedulesPaginator(conn, &scheduler.ListSchedulesInput{})
 
 	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
+		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Schedules for %s: %w", region, err))
@@ -113,7 +114,7 @@ func sweepSchedules(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule for %s: %w", region, err))
 	}
 

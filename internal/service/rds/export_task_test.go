@@ -20,23 +20,24 @@ import (
 )
 
 func TestAccRDSExportTask_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var exportTask types.ExportTask
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_export_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(rdsv1.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy,
+		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportTaskExists(resourceName, &exportTask),
+					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
@@ -55,6 +56,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 }
 
 func TestAccRDSExportTask_optional(t *testing.T) {
+	ctx := acctest.Context(t)
 	var exportTask types.ExportTask
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_export_task.test"
@@ -62,17 +64,17 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(rdsv1.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy,
+		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_optional(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportTaskExists(resourceName, &exportTask),
+					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
@@ -93,32 +95,33 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 	})
 }
 
-func testAccCheckExportTaskDestroy(s *terraform.State) error {
-	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_export_task" {
-			continue
-		}
-
-		out, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			var nfe *resource.NotFoundError
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_export_task" {
+				continue
 			}
-			return err
-		}
-		if !isInDestroyedStatus(aws.ToString(out.Status)) {
-			return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameExportTask, rs.Primary.ID, errors.New("not destroyed"))
-		}
-	}
 
-	return nil
+			out, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
+			if err != nil {
+				var nfe *resource.NotFoundError
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+			if !isInDestroyedStatus(aws.ToString(out.Status)) {
+				return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameExportTask, rs.Primary.ID, errors.New("not destroyed"))
+			}
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckExportTaskExists(name string, exportTask *types.ExportTask) resource.TestCheckFunc {
+func testAccCheckExportTaskExists(ctx context.Context, name string, exportTask *types.ExportTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -129,7 +132,6 @@ func testAccCheckExportTaskExists(name string, exportTask *types.ExportTask) res
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not set"))
 		}
 
-		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
 		resp, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

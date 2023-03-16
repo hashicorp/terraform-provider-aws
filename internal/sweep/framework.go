@@ -1,6 +1,3 @@
-//go:build sweep
-// +build sweep
-
 package sweep
 
 import (
@@ -20,23 +17,35 @@ import (
 
 // Terraform Plugin Framework variants of sweeper helpers.
 
-type SweepFrameworkResource struct {
-	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
-	id      string // TODO Currently we can only delete a resource if "id" is the only attribute used.
-	meta    interface{}
+type FrameworkSupplementalAttribute struct {
+	Path  string
+	Value string
 }
 
-func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) *SweepFrameworkResource {
+type SweepFrameworkResource struct {
+	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
+	id      string
+	meta    interface{}
+
+	// supplementalAttributes stores additional attributes to set in state.
+	//
+	// This can be used in situations where the Delete method requires multiple attributes
+	// to destroy the underlying resource.
+	supplementalAttributes []FrameworkSupplementalAttribute
+}
+
+func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes ...FrameworkSupplementalAttribute) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
-		factory: factory,
-		id:      id,
-		meta:    meta,
+		factory:                factory,
+		id:                     id,
+		meta:                   meta,
+		supplementalAttributes: supplementalAttributes,
 	}
 }
 
 func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
-		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
+		err := deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
@@ -51,15 +60,13 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Durat
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
+		err = deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 	}
 
 	return err
 }
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) error {
-	ctx := context.Background()
-
+func deleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes []FrameworkSupplementalAttribute) error {
 	resource, err := factory(ctx)
 
 	if err != nil {
@@ -77,12 +84,17 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 		Schema: schemaResp.Schema,
 	}
 	state.SetAttribute(ctx, path.Root("id"), id)
+
+	// Set supplemental attibutes, if provided
+	for _, attr := range supplementalAttributes {
+		d := state.SetAttribute(ctx, path.Root(attr.Path), attr.Value)
+		if d.HasError() {
+			return fwdiag.DiagnosticsError(d)
+		}
+	}
+
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
-	if response.Diagnostics.HasError() {
-		return fwdiag.DiagnosticsError(response.Diagnostics)
-	}
-
-	return nil
+	return fwdiag.DiagnosticsError(response.Diagnostics)
 }

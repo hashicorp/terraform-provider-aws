@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,6 +29,7 @@ const (
 	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
+// @SDKResource("aws_rds_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -465,7 +466,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -575,21 +576,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk("master_password"); !ok {
-			diags = errs.AppendErrorf(diags, `"master_password": required field is not set`)
+			diags = sdkdiag.AppendErrorf(diags, `"master_password": required field is not set`)
 		}
 		if _, ok := d.GetOk("master_username"); !ok {
-			diags = errs.AppendErrorf(diags, `"master_username": required field is not set`)
+			diags = sdkdiag.AppendErrorf(diags, `"master_username": required field is not set`)
 		}
 		if diags.HasError() {
 			return diags
@@ -675,7 +676,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
 			},
@@ -699,7 +700,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		)
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
@@ -720,7 +721,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
-			return errs.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -801,7 +802,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore to point-in-time) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore to point-in-time) (%s): %s", identifier, err)
 		}
 	} else {
 		input := &rds.CreateDBClusterInput{
@@ -933,27 +934,27 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBClusterWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s): %s", identifier, err)
 		}
 	}
 
 	d.SetId(identifier)
 
 	if _, err := waitDBClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 	}
@@ -963,11 +964,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
 		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -988,7 +989,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("allocated_storage", dbc.AllocatedStorage)
@@ -1040,14 +1041,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if dbc.ScalingConfigurationInfo != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
-			return errs.AppendErrorf(diags, "setting scaling_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting scaling_configuration: %s", err)
 		}
 	} else {
 		d.Set("scaling_configuration", nil)
 	}
 	if dbc.ServerlessV2ScalingConfiguration != nil {
 		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
-			return errs.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
 		}
 	} else {
 		d.Set("serverlessv2_scaling_configuration", nil)
@@ -1060,21 +1061,21 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
+	tags, err := ListTags(ctx, conn, clusterARN)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
@@ -1085,11 +1086,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
 			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
-			return errs.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1223,7 +1224,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBClusterWithContext(ctx, input)
 			},
@@ -1241,11 +1242,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		)
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -1255,11 +1256,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		n := nRaw.(string)
 
 		if o == "" {
-			return errs.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
+			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
 		}
 
 		if n != "" {
-			return errs.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
+			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
 		}
 
 		clusterARN := d.Get("arn").(string)
@@ -1272,7 +1273,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return errs.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}
 
@@ -1289,13 +1290,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		for _, v := range ns.Difference(os).List() {
 			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 
 		for _, v := range os.Difference(ns).List() {
 			if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 	}
@@ -1303,8 +1304,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -1328,7 +1329,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return errs.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
+			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
 		}
 	}
 
@@ -1342,19 +1343,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
-			return errs.AppendErrorf(diags, "RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
+			return sdkdiag.AppendErrorf(diags, "RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, clusterTimeoutDelete,
+	_, err := tfresource.RetryWhen(ctx, clusterTimeoutDelete,
 		func() (interface{}, error) {
 			return conn.DeleteDBClusterWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
 				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-					_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutDelete),
+					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
 								ApplyImmediately:    aws.Bool(true),
@@ -1404,11 +1405,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "deleting RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDBClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1472,8 +1473,16 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbCluster := output.DBClusters[0]

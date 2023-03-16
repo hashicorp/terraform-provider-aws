@@ -13,11 +13,7 @@ import (
 	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
-func init() {
-    _sp.registerFrameworkDataSourceFactory(newDataSource{{ .Name }})
-}
-
-// newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
+// @FrameworkDataSource
 func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSource{{ .Name }}{}
 	d.SetMigratedFromPluginSDK(true)

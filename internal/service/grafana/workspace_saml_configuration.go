@@ -1,27 +1,30 @@
 package grafana
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_grafana_workspace_saml_configuration")
 func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceSAMLConfigurationUpsert,
-		Read:   resourceWorkspaceSAMLConfigurationRead,
-		Update: resourceWorkspaceSAMLConfigurationUpsert,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceWorkspaceSAMLConfigurationUpsert,
+		ReadWithoutTimeout:   resourceWorkspaceSAMLConfigurationRead,
+		UpdateWithoutTimeout: resourceWorkspaceSAMLConfigurationUpsert,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -98,14 +101,15 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceSAMLConfigurationUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	d.SetId(d.Get("workspace_id").(string))
-	workspace, err := FindWorkspaceByID(conn, d.Id())
+	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", d.Id(), err)
 	}
 
 	authenticationProviders := workspace.Authentication.Providers
@@ -203,32 +207,33 @@ func resourceWorkspaceSAMLConfigurationUpsert(d *schema.ResourceData, meta inter
 		WorkspaceId:             aws.String(d.Id()),
 	}
 
-	_, err = conn.UpdateWorkspaceAuthentication(input)
+	_, err = conn.UpdateWorkspaceAuthenticationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Saml Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Grafana Saml Configuration: %s", err)
 	}
 
-	if _, err := waitWorkspaceSAMLConfigurationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Grafana Workspace Saml Configuration (%s) create: %w", d.Id(), err)
+	if _, err := waitWorkspaceSAMLConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Grafana Workspace Saml Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceWorkspaceSAMLConfigurationRead(d, meta)
+	return append(diags, resourceWorkspaceSAMLConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceSAMLConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	saml, err := FindSamlConfigurationByID(conn, d.Id())
+	saml, err := FindSamlConfigurationByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace Saml Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace Saml Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("admin_role_values", saml.Configuration.RoleValues.Admin)
@@ -245,5 +250,5 @@ func resourceWorkspaceSAMLConfigurationRead(d *schema.ResourceData, meta interfa
 	d.Set("role_assertion", saml.Configuration.AssertionAttributes.Role)
 	d.Set("status", saml.Status)
 
-	return nil
+	return diags
 }

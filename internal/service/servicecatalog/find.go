@@ -1,6 +1,7 @@
 package servicecatalog
 
 import (
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindPortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) (*servicecatalog.PortfolioShareDetail, error) {
+func FindPortfolioShare(ctx context.Context, conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) (*servicecatalog.PortfolioShareDetail, error) {
 	input := &servicecatalog.DescribePortfolioSharesInput{
 		PortfolioId: aws.String(portfolioID),
 		Type:        aws.String(shareType),
 	}
 	var result *servicecatalog.PortfolioShareDetail
 
-	err := conn.DescribePortfolioSharesPages(input, func(page *servicecatalog.DescribePortfolioSharesOutput, lastPage bool) bool {
+	err := conn.DescribePortfolioSharesPagesWithContext(ctx, input, func(page *servicecatalog.DescribePortfolioSharesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -54,7 +55,7 @@ func FindPortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareT
 	return result, nil
 }
 
-func FindProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) (*servicecatalog.PortfolioDetail, error) {
+func FindProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) (*servicecatalog.PortfolioDetail, error) {
 	// seems odd that the sourcePortfolioID is not returned or searchable...
 	input := &servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productID),
@@ -66,7 +67,7 @@ func FindProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, accept
 
 	var result *servicecatalog.PortfolioDetail
 
-	err := conn.ListPortfoliosForProductPages(input, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
+	err := conn.ListPortfoliosForProductPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -88,14 +89,14 @@ func FindProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, accept
 	return result, err
 }
 
-func FindBudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) (*servicecatalog.BudgetDetail, error) {
+func FindBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) (*servicecatalog.BudgetDetail, error) {
 	input := &servicecatalog.ListBudgetsForResourceInput{
 		ResourceId: aws.String(resourceID),
 	}
 
 	var result *servicecatalog.BudgetDetail
 
-	err := conn.ListBudgetsForResourcePages(input, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+	err := conn.ListBudgetsForResourcePagesWithContext(ctx, input, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -117,14 +118,14 @@ func FindBudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budgetNa
 	return result, err
 }
 
-func FindTagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) (*servicecatalog.ResourceDetail, error) {
+func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) (*servicecatalog.ResourceDetail, error) {
 	input := &servicecatalog.ListResourcesForTagOptionInput{
 		TagOptionId: aws.String(tagOptionID),
 	}
 
 	var result *servicecatalog.ResourceDetail
 
-	err := conn.ListResourcesForTagOptionPages(input, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
+	err := conn.ListResourcesForTagOptionPagesWithContext(ctx, input, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -146,7 +147,7 @@ func FindTagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tagOp
 	return result, err
 }
 
-func FindPrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
+func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
 	input := &servicecatalog.ListPrincipalsForPortfolioInput{
 		PortfolioId: aws.String(portfolioID),
 	}
@@ -157,7 +158,7 @@ func FindPrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acce
 
 	var result *servicecatalog.Principal
 
-	err := conn.ListPrincipalsForPortfolioPages(input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+	err := conn.ListPrincipalsForPortfolioPagesWithContext(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

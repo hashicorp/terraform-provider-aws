@@ -466,7 +466,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
@@ -599,7 +599,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTagsWithContext(ctx, conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
 			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
@@ -705,7 +705,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("reading OpsWorks Layer (%s) load-based auto scaling configurations: %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for OpsWorks Layer (%s): %s", arn, err)
@@ -883,7 +883,7 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}

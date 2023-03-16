@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_organization_admin_account")
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
@@ -75,7 +76,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 	var err error
 
-	res, err := GetOrganizationAdminAccount(conn, d.Id())
+	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
@@ -116,10 +117,10 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func GetOrganizationAdminAccount(conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
+func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
 	var res *macie2.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

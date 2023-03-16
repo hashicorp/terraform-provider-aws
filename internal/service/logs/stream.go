@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_stream", resourceStream)
-}
-
+// @SDKResource("aws_cloudwatch_log_stream")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -68,7 +65,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 	})
 

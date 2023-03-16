@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_domain_entry")
 func ResourceDomainEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainEntryCreate,
@@ -81,7 +82,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		},
 	}
 
-	resp, err := conn.CreateDomainEntry(req)
+	resp, err := conn.CreateDomainEntryWithContext(ctx, req)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), err)
@@ -89,7 +90,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	op := resp.Operation
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Create DomainEntry request operation"))
 	}
@@ -136,7 +137,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
 
-	resp, err := conn.DeleteDomainEntry(&lightsail.DeleteDomainEntryInput{
+	resp, err := conn.DeleteDomainEntryWithContext(ctx, &lightsail.DeleteDomainEntryInput{
 		DomainName:  aws.String(expandDomainNameFromId(d.Id())),
 		DomainEntry: expandDomainEntry(d.Id()),
 	})
@@ -151,7 +152,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	op := resp.Operation
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Delete DomainEntry request operation"))
 	}

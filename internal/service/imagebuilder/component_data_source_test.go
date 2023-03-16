@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_component.test"
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentDataSourceConfig_buildVersionARN(rName),

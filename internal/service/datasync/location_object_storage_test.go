@@ -1,6 +1,7 @@
 package datasync_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -18,21 +19,22 @@ import (
 )
 
 func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationObjectStorage1 datasync.DescribeLocationObjectStorageOutput
 
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", rName),
@@ -51,22 +53,23 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 }
 
 func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationObjectStorage1 datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,20 +78,21 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 }
 
 func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationObjectStorage1, locationObjectStorage2, locationObjectStorage3 datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -101,7 +105,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 			{
 				Config: testAccLocationObjectStorageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage2),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage2),
 					testAccCheckLocationObjectStorageNotRecreated(&locationObjectStorage1, &locationObjectStorage2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -111,7 +115,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 			{
 				Config: testAccLocationObjectStorageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage3),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage3),
 					testAccCheckLocationObjectStorageNotRecreated(&locationObjectStorage2, &locationObjectStorage3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -121,31 +125,33 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationObjectStorageDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+func testAccCheckLocationObjectStorageDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_location_object_storage" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datasync_location_object_storage" {
+				continue
+			}
+
+			_, err := tfdatasync.FindLocationObjectStorageByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfdatasync.FindLocationObjectStorageByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLocationObjectStorageExists(resourceName string, locationObjectStorage *datasync.DescribeLocationObjectStorageOutput) resource.TestCheckFunc {
+func testAccCheckLocationObjectStorageExists(ctx context.Context, resourceName string, locationObjectStorage *datasync.DescribeLocationObjectStorageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -153,7 +159,7 @@ func testAccCheckLocationObjectStorageExists(resourceName string, locationObject
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
-		output, err := tfdatasync.FindLocationObjectStorageByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationObjectStorageByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

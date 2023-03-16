@@ -8,26 +8,29 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_batch_compute_environment")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceComputeEnvironmentCreate,
-		Read:   resourceComputeEnvironmentRead,
-		Update: resourceComputeEnvironmentUpdate,
-		Delete: resourceComputeEnvironmentDelete,
+		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
+		ReadWithoutTimeout:   resourceComputeEnvironmentRead,
+		UpdateWithoutTimeout: resourceComputeEnvironmentUpdate,
+		DeleteWithoutTimeout: resourceComputeEnvironmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -88,7 +91,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							MaxItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"image_id_override": {
@@ -257,10 +260,11 @@ func ResourceComputeEnvironment() *schema.Resource {
 	}
 }
 
-func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
@@ -272,7 +276,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeResources = expandComputeResource(v.([]interface{})[0].(map[string]interface{}))
+		input.ComputeResources = expandComputeResource(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -288,36 +292,37 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Creating Batch Compute Environment: %s", input)
-	output, err := conn.CreateComputeEnvironment(input)
+	output, err := conn.CreateComputeEnvironmentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Batch Compute Environment (%s): %w", computeEnvironmentName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Batch Compute Environment (%s): %s", computeEnvironmentName, err)
 	}
 
 	d.SetId(aws.StringValue(output.ComputeEnvironmentName))
 
-	if _, err := waitComputeEnvironmentCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Batch Compute Environment (%s) create: %w", d.Id(), err)
+	if _, err := waitComputeEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceComputeEnvironmentRead(d, meta)
+	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	computeEnvironment, err := FindComputeEnvironmentDetailByName(conn, d.Id())
+	computeEnvironment, err := FindComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Batch Compute Environment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Id(), err)
 	}
 
 	computeEnvironmentType := aws.StringValue(computeEnvironment.Type)
@@ -333,8 +338,8 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("type", computeEnvironmentType)
 
 	if computeEnvironment.ComputeResources != nil {
-		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(computeEnvironment.ComputeResources)}); err != nil {
-			return fmt.Errorf("error setting compute_resources: %w", err)
+		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
 		}
 	} else {
 		d.Set("compute_resources", nil)
@@ -342,27 +347,28 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 
 	if computeEnvironment.EksConfiguration != nil {
 		if err := d.Set("eks_configuration", []interface{}{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
-			return fmt.Errorf("error setting eks_configuration: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting eks_configuration: %s", err)
 		}
 	} else {
 		d.Set("eks_configuration", nil)
 	}
 
-	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -404,27 +410,28 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		log.Printf("[DEBUG] Updating Batch Compute Environment: %s", input)
-		if _, err := conn.UpdateComputeEnvironment(input); err != nil {
-			return fmt.Errorf("error updating Batch Compute Environment (%s): %w", d.Id(), err)
+		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Batch Compute Environment (%s) update: %w", d.Id(), err)
+		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceComputeEnvironmentRead(d, meta)
+	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
@@ -434,11 +441,11 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			State:              aws.String(batch.CEStateDisabled),
 		}
 
-		if _, err := conn.UpdateComputeEnvironment(input); err != nil {
-			return fmt.Errorf("error disabling Batch Compute Environment (%s): %w", d.Id(), err)
+		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitComputeEnvironmentDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			log.Printf("[WARN] error waiting for Batch Compute Environment (%s) disable: %s", d.Id(), err)
 		}
 	}
@@ -449,16 +456,16 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			ComputeEnvironment: aws.String(d.Id()),
 		}
 
-		if _, err := conn.DeleteComputeEnvironment(input); err != nil {
-			return fmt.Errorf("error deleting Batch Compute Environment (%s): %w", d.Id(), err)
+		if _, err := conn.DeleteComputeEnvironmentWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Batch Compute Environment (%s) delete: %w", d.Id(), err)
+		if _, err := waitComputeEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
@@ -494,7 +501,7 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	return nil
 }
 
-func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource {
+func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *batch.ComputeResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -566,7 +573,7 @@ func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource 
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(v).IgnoreAWS())
+		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if computeResourceType != "" {
@@ -660,7 +667,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.Laun
 	return apiObject
 }
 
-func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interface{} {
+func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -724,7 +731,7 @@ func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interfa
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.Type; v != nil {

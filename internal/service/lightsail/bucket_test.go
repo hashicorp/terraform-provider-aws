@@ -20,23 +20,24 @@ import (
 )
 
 func TestAccLightsailBucket_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Bucket/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
@@ -58,6 +59,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 }
 
 func TestAccLightsailBucket_BundleId(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket.test"
 	bundle1 := "small_1_0"
@@ -65,18 +67,18 @@ func TestAccLightsailBucket_BundleId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_bundleId(rName, bundle1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", bundle1),
 				),
 			},
@@ -88,7 +90,7 @@ func TestAccLightsailBucket_BundleId(t *testing.T) {
 			{
 				Config: testAccBucketConfig_bundleId(rName, bundle2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", bundle2),
 				),
 			},
@@ -97,24 +99,25 @@ func TestAccLightsailBucket_BundleId(t *testing.T) {
 }
 
 func TestAccLightsailBucket_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceBucket(), resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,23 +126,24 @@ func TestAccLightsailBucket_disappears(t *testing.T) {
 }
 
 func TestAccLightsailBucket_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -152,7 +156,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 			{
 				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -161,7 +165,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 			{
 				Config: testAccBucketConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -170,7 +174,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -183,7 +187,7 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		out, err := tflightsail.FindBucketById(context.Background(), conn, rs.Primary.ID)
+		out, err := tflightsail.FindBucketById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -197,28 +201,30 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBucketDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_bucket" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_bucket" {
+				continue
+			}
+
+			_, err := tflightsail.FindBucketById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResBucket, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		_, err := tflightsail.FindBucketById(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResBucket, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccBucketConfig_basic(rName string) string {

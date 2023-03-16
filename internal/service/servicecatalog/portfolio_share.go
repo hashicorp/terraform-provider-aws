@@ -1,7 +1,7 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
@@ -9,21 +9,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_portfolio_share")
 func ResourcePortfolioShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePortfolioShareCreate,
-		Read:   resourcePortfolioShareRead,
-		Update: resourcePortfolioShareUpdate,
-		Delete: resourcePortfolioShareDelete,
+		CreateWithoutTimeout: resourcePortfolioShareCreate,
+		ReadWithoutTimeout:   resourcePortfolioShareRead,
+		UpdateWithoutTimeout: resourcePortfolioShareUpdate,
+		DeleteWithoutTimeout: resourcePortfolioShareDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -93,7 +96,8 @@ func ResourcePortfolioShare() *schema.Resource {
 	}
 }
 
-func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreatePortfolioShareInput{
@@ -123,10 +127,10 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	var output *servicecatalog.CreatePortfolioShareOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
-		output, err = conn.CreatePortfolioShare(input)
+		output, err = conn.CreatePortfolioShareWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -140,15 +144,15 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreatePortfolioShare(input)
+		output, err = conn.CreatePortfolioShareWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Portfolio Share: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Service Catalog Portfolio Share: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: empty response")
 	}
 
 	d.SetId(PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
@@ -160,25 +164,26 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareCreatedWithToken(conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
+		if _, err := WaitPortfolioShareCreatedWithToken(ctx, conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
+		if _, err := WaitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	}
 
-	return resourcePortfolioShareRead(d, meta)
+	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	portfolioID, shareType, principalID, err := PortfolioShareParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
 	waitForAcceptance := false
@@ -186,16 +191,16 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 		waitForAcceptance = v.(bool)
 	}
 
-	output, err := WaitPortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
+	output, err := WaitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("readingService Catalog Portfolio Share (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "readingService Catalog Portfolio Share (%s): %s", d.Id(), err)
 	}
 
 	d.Set("accepted", output.Accepted)
@@ -206,10 +211,11 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("type", output.Type)
 	d.Set("wait_for_acceptance", waitForAcceptance)
 
-	return nil
+	return diags
 }
 
-func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdatePortfolioShareInput{
@@ -241,8 +247,8 @@ func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) erro
 		input.OrganizationNode = orgNode
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.UpdatePortfolioShare(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.UpdatePortfolioShareWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -256,17 +262,18 @@ func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdatePortfolioShare(input)
+		_, err = conn.UpdatePortfolioShareWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating Service Catalog Portfolio Share (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Portfolio Share (%s): %s", d.Id(), err)
 	}
 
-	return resourcePortfolioShareRead(d, meta)
+	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeletePortfolioShareInput{
@@ -293,26 +300,26 @@ func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) erro
 		input.OrganizationNode = orgNode
 	}
 
-	output, err := conn.DeletePortfolioShare(input)
+	output, err := conn.DeletePortfolioShareWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Catalog Portfolio Share (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Portfolio Share (%s): %s", d.Id(), err)
 	}
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareDeletedWithToken(conn, aws.StringValue(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
+		if _, err := WaitPortfolioShareDeletedWithToken(ctx, conn, aws.StringValue(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareDeleted(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
+		if _, err := WaitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }

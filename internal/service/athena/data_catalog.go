@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_athena_data_catalog")
 func ResourceDataCatalog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogCreate,
@@ -74,7 +75,7 @@ func ResourceDataCatalog() *schema.Resource {
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &athena.CreateDataCatalogInput{
@@ -155,7 +156,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("parameters", nil)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Athena Data Catalog (%s): %s", d.Id(), err)
@@ -202,7 +203,7 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Athena Data Catalog (%s) tags: %s", d.Id(), err)
 		}
 	}

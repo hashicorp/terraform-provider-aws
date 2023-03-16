@@ -1,6 +1,7 @@
 package securityhub_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,10 +13,11 @@ import (
 )
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
@@ -23,7 +25,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(resourceName),
+					testAccOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 				),
 			},
@@ -35,7 +37,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(resourceName),
+					testAccOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 				),
 			},
@@ -43,7 +45,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationConfigurationExists(n string) resource.TestCheckFunc {
+func testAccOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -52,7 +54,7 @@ func testAccOrganizationConfigurationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-		_, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})
+		_, err := conn.DescribeOrganizationConfigurationWithContext(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
 
 		return err
 	}

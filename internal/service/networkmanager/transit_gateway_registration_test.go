@@ -30,19 +30,20 @@ func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 }
 
 func testAccTransitGatewayRegistration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRegistrationExists(resourceName),
+					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -55,20 +56,21 @@ func testAccTransitGatewayRegistration_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayRegistration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRegistrationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
+					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,21 +79,22 @@ func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 }
 
 func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRegistrationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,19 +103,20 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 }
 
 func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_crossRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRegistrationExists(resourceName),
+					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -124,37 +128,39 @@ func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayRegistrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+func testAccCheckTransitGatewayRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_transit_gateway_registration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_transit_gateway_registration" {
+				continue
+			}
+
+			globalNetworkID, transitGatewayARN, err := tfnetworkmanager.TransitGatewayRegistrationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Transit Gateway Registration %s still exists", rs.Primary.ID)
 		}
 
-		globalNetworkID, transitGatewayARN, err := tfnetworkmanager.TransitGatewayRegistrationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Transit Gateway Registration %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRegistrationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,7 +179,7 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
+		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
 
 		return err
 	}

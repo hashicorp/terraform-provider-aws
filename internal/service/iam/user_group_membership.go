@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_user_group_membership")
 func ResourceUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserGroupMembershipCreate,
-		Read:   resourceUserGroupMembershipRead,
-		Update: resourceUserGroupMembershipUpdate,
-		Delete: resourceUserGroupMembershipDelete,
+		CreateWithoutTimeout: resourceUserGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceUserGroupMembershipRead,
+		UpdateWithoutTimeout: resourceUserGroupMembershipUpdate,
+		DeleteWithoutTimeout: resourceUserGroupMembershipDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserGroupMembershipImport,
+			StateContext: resourceUserGroupMembershipImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,23 +45,25 @@ func ResourceUserGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceUserGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
 	groupList := flex.ExpandStringValueSet(d.Get("groups").(*schema.Set))
 
-	if err := addUserToGroups(conn, user, groupList); err != nil {
-		return fmt.Errorf("assigning IAM User Group Membership (%s): %w", user, err)
+	if err := addUserToGroups(ctx, conn, user, groupList); err != nil {
+		return sdkdiag.AppendErrorf(diags, "assigning IAM User Group Membership (%s): %s", user, err)
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
-	return resourceUserGroupMembershipRead(d, meta)
+	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
@@ -69,8 +75,8 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 
 	var gl []string
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		err := conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := conn.ListGroupsForUserPagesWithContext(ctx, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -96,7 +102,7 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+		err = conn.ListGroupsForUserPagesWithContext(ctx, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -114,21 +120,22 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM User Group Membership (%s) not found, removing from state", user)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User Group Membership (%s): %w", user, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User Group Membership (%s): %s", user, err)
 	}
 
 	if err := d.Set("groups", gl); err != nil {
-		return fmt.Errorf("Error setting group list from IAM (%s), error: %s", user, err)
+		return sdkdiag.AppendErrorf(diags, "setting group list from IAM (%s), error: %s", user, err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("groups") {
@@ -147,49 +154,50 @@ func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{})
 		remove := flex.ExpandStringValueSet(os.Difference(ns))
 		add := flex.ExpandStringValueSet(ns.Difference(os))
 
-		if err := removeUserFromGroups(conn, user, remove); err != nil {
-			return fmt.Errorf("updating IAM User Group Membership (%s): %w", user, err)
+		if err := removeUserFromGroups(ctx, conn, user, remove); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM User Group Membership (%s): %s", user, err)
 		}
 
-		if err := addUserToGroups(conn, user, add); err != nil {
-			return fmt.Errorf("updating IAM User Group Membership (%s): %w", user, err)
+		if err := addUserToGroups(ctx, conn, user, add); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM User Group Membership (%s): %s", user, err)
 		}
 	}
 
-	return resourceUserGroupMembershipRead(d, meta)
+	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	groups := flex.ExpandStringValueSet(d.Get("groups").(*schema.Set))
 
-	if err := removeUserFromGroups(conn, user, groups); err != nil {
-		return fmt.Errorf("deleting IAM User Group Membership (%s): %w", user, err)
+	if err := removeUserFromGroups(ctx, conn, user, groups); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User Group Membership (%s): %s", user, err)
 	}
-	return nil
+	return diags
 }
 
-func removeUserFromGroups(conn *iam.IAM, user string, groups []string) error {
+func removeUserFromGroups(ctx context.Context, conn *iam.IAM, user string, groups []string) error {
 	for _, group := range groups {
-		if err := removeUserFromGroup(conn, user, group); err != nil {
+		if err := removeUserFromGroup(ctx, conn, user, group); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func addUserToGroups(conn *iam.IAM, user string, groups []string) error {
+func addUserToGroups(ctx context.Context, conn *iam.IAM, user string, groups []string) error {
 	for _, group := range groups {
-		if err := addUserToGroup(conn, user, group); err != nil {
+		if err := addUserToGroup(ctx, conn, user, group); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func addUserToGroup(conn *iam.IAM, user, group string) error {
-	_, err := conn.AddUserToGroup(&iam.AddUserToGroupInput{
+func addUserToGroup(ctx context.Context, conn *iam.IAM, user, group string) error {
+	_, err := conn.AddUserToGroupWithContext(ctx, &iam.AddUserToGroupInput{
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
@@ -199,8 +207,8 @@ func addUserToGroup(conn *iam.IAM, user, group string) error {
 	return nil
 }
 
-func removeUserFromGroup(conn *iam.IAM, user, group string) error {
-	_, err := conn.RemoveUserFromGroup(&iam.RemoveUserFromGroupInput{
+func removeUserFromGroup(ctx context.Context, conn *iam.IAM, user, group string) error {
+	_, err := conn.RemoveUserFromGroupWithContext(ctx, &iam.RemoveUserFromGroupInput{
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
@@ -213,7 +221,7 @@ func removeUserFromGroup(conn *iam.IAM, user, group string) error {
 	return nil
 }
 
-func resourceUserGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserGroupMembershipImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<group-name1>/...", d.Id())

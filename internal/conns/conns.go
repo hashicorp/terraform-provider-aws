@@ -1,14 +1,26 @@
 package conns
 
 import (
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
+
+// ServicePackage is the minimal interface exported from each AWS service package.
+// Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
+type ServicePackage interface {
+	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
+	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
+	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
+	SDKResources(context.Context) []*types.ServicePackageSDKResource
+	ServicePackageName() string
+}
 
 func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
 	session, err := session.NewSession(cfg)
