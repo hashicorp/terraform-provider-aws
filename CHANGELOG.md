@@ -18,6 +18,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* aws_cognito_user_pool_domain: Add ability to update `certificate_arn` in place ([#25275](https://github.com/hashicorp/terraform-provider-aws/issues/25275))
 * data-source/aws_aws_lb: Add `enable_xff_client_port`, `xff_header_processing_mode` and `enable_tls_version_and_cipher_suite_headers` attributes ([#29792](https://github.com/hashicorp/terraform-provider-aws/issues/29792))
 * data-source/aws_ce_cost_category: Add `default_value` attribute ([#29291](https://github.com/hashicorp/terraform-provider-aws/issues/29291))
 * data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute ([#29924](https://github.com/hashicorp/terraform-provider-aws/issues/29924))
@@ -59,6 +60,7 @@ BUG FIXES:
 * resource/aws_medialive_channel: Fix setting of `bitrate` for `eac3_settings`. ([#29809](https://github.com/hashicorp/terraform-provider-aws/issues/29809))
 * resource/aws_medialive_channel: Fix spelling for attribute `audio_only_timecode_control` and correct type for `event_id` in `ms_smooth_group_settings` ([#29917](https://github.com/hashicorp/terraform-provider-aws/issues/29917))
 * resource/aws_medialive_channel: Removed `Compute` flag from `audio_normalization_settings` and `remix_settings` in `audio_descriptions` ([#29859](https://github.com/hashicorp/terraform-provider-aws/issues/29859))
+* resource/aws_medialive_channel: Removed `Computed` flag from `aac_settings`, ´ac3_settings`, `eac3_atmos_settings`, `eac3_settings`, `mp2_settings`, `pass_through_settings` and `wav_settings` in `codec_settings`. ([#29825](https://github.com/hashicorp/terraform-provider-aws/issues/29825))
 * resource/aws_neptune_cluster: Change lower bound validation for `serverless_v2_scaling_configuration.min_capacity` to 1 Neptune Capacity Unit (NCU) ([#29999](https://github.com/hashicorp/terraform-provider-aws/issues/29999))
 * resource/aws_network_acl_association: Add retry to read step, resolving `empty result` error ([#26838](https://github.com/hashicorp/terraform-provider-aws/issues/26838))
 * resource/aws_opensearch_domain: Remove upper bound validation for `ebs_options.throughput` as the 1,000 MB/s limit can be raised ([#27598](https://github.com/hashicorp/terraform-provider-aws/issues/27598))
