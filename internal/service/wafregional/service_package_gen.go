@@ -5,47 +5,99 @@ package wafregional
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_wafregional_ipset":                 DataSourceIPSet,
-		"aws_wafregional_rate_based_rule":       DataSourceRateBasedRule,
-		"aws_wafregional_rule":                  DataSourceRule,
-		"aws_wafregional_subscribed_rule_group": DataSourceSubscribedRuleGroup,
-		"aws_wafregional_web_acl":               DataSourceWebACL,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+		},
+		{
+			Factory:  DataSourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+		},
+		{
+			Factory:  DataSourceRule,
+			TypeName: "aws_wafregional_rule",
+		},
+		{
+			Factory:  DataSourceSubscribedRuleGroup,
+			TypeName: "aws_wafregional_subscribed_rule_group",
+		},
+		{
+			Factory:  DataSourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_wafregional_byte_match_set":          ResourceByteMatchSet,
-		"aws_wafregional_geo_match_set":           ResourceGeoMatchSet,
-		"aws_wafregional_ipset":                   ResourceIPSet,
-		"aws_wafregional_rate_based_rule":         ResourceRateBasedRule,
-		"aws_wafregional_regex_match_set":         ResourceRegexMatchSet,
-		"aws_wafregional_regex_pattern_set":       ResourceRegexPatternSet,
-		"aws_wafregional_rule":                    ResourceRule,
-		"aws_wafregional_rule_group":              ResourceRuleGroup,
-		"aws_wafregional_size_constraint_set":     ResourceSizeConstraintSet,
-		"aws_wafregional_sql_injection_match_set": ResourceSQLInjectionMatchSet,
-		"aws_wafregional_web_acl":                 ResourceWebACL,
-		"aws_wafregional_web_acl_association":     ResourceWebACLAssociation,
-		"aws_wafregional_xss_match_set":           ResourceXSSMatchSet,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceByteMatchSet,
+			TypeName: "aws_wafregional_byte_match_set",
+		},
+		{
+			Factory:  ResourceGeoMatchSet,
+			TypeName: "aws_wafregional_geo_match_set",
+		},
+		{
+			Factory:  ResourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+		},
+		{
+			Factory:  ResourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+		},
+		{
+			Factory:  ResourceRegexMatchSet,
+			TypeName: "aws_wafregional_regex_match_set",
+		},
+		{
+			Factory:  ResourceRegexPatternSet,
+			TypeName: "aws_wafregional_regex_pattern_set",
+		},
+		{
+			Factory:  ResourceRule,
+			TypeName: "aws_wafregional_rule",
+		},
+		{
+			Factory:  ResourceRuleGroup,
+			TypeName: "aws_wafregional_rule_group",
+		},
+		{
+			Factory:  ResourceSizeConstraintSet,
+			TypeName: "aws_wafregional_size_constraint_set",
+		},
+		{
+			Factory:  ResourceSQLInjectionMatchSet,
+			TypeName: "aws_wafregional_sql_injection_match_set",
+		},
+		{
+			Factory:  ResourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+		},
+		{
+			Factory:  ResourceWebACLAssociation,
+			TypeName: "aws_wafregional_web_acl_association",
+		},
+		{
+			Factory:  ResourceXSSMatchSet,
+			TypeName: "aws_wafregional_xss_match_set",
+		},
 	}
 }
 

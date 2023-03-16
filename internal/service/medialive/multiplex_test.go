@@ -30,7 +30,7 @@ func testAccMultiplex_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
@@ -72,7 +72,7 @@ func testAccMultiplex_start(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
@@ -112,7 +112,7 @@ func testAccMultiplex_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
@@ -160,7 +160,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
@@ -209,7 +209,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},

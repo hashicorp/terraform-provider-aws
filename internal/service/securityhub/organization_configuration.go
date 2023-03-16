@@ -33,7 +33,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"NONE", "DEFAULT"}, false),
+				ValidateFunc: validation.StringInSlice(securityhub.AutoEnableStandards_Values(), false),
 			},
 		},
 	}
@@ -46,6 +46,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	input := &securityhub.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
 	}
+
 	if v, ok := d.GetOk("auto_enable_standards"); ok {
 		input.AutoEnableStandards = aws.String(v.(string))
 	}
@@ -56,7 +57,9 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).AccountID)
+	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }

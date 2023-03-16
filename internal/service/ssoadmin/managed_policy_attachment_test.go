@@ -23,7 +23,7 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
@@ -55,7 +55,7 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
@@ -92,7 +92,7 @@ func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
@@ -116,7 +116,7 @@ func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
@@ -141,7 +141,7 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),

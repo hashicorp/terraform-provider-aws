@@ -28,7 +28,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -66,7 +66,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -117,7 +117,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -151,7 +151,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -186,7 +186,7 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),

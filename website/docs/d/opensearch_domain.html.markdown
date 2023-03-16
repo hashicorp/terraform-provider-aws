@@ -57,7 +57,7 @@ The following attributes are exported:
     * `warm_enabled` - Warm storage is enabled.
     * `warm_count` - Number of warm nodes in the cluster.
     * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
-* `cognito_options` - Domain Amazon Cognito Authentication options for Kibana.
+* `cognito_options` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `user_pool_id` - Cognito User pool used by the domain.
     * `identity_pool_id` - Cognito Identity pool used by the domain.
@@ -76,7 +76,8 @@ The following attributes are exported:
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `kibana_endpoint` - Domain-specific endpoint used to access the Kibana application.
+* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `kibana_endpoint` - Domain-specific endpoint used to access the Kibana application. OpenSearch Dashboards do not use Kibana, so this attribute will be **DEPRECATED** in a future version.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.
     * `cloudwatch_log_group_arn` - CloudWatch Log Group where the logs are published.

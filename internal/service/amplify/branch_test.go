@@ -24,7 +24,7 @@ func testAccBranch_basic(t *testing.T) {
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
@@ -72,7 +72,7 @@ func testAccBranch_disappears(t *testing.T) {
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
@@ -96,7 +96,7 @@ func testAccBranch_Tags(t *testing.T) {
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
@@ -145,7 +145,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
@@ -191,7 +191,7 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
@@ -239,7 +239,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	backendEnvironment2ResourceName := "aws_amplify_backend_environment.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),

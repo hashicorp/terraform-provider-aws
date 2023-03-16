@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "policy" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-  policy      = data.aws_iam_policy.policy.json
+  policy      = data.aws_iam_policy_document.policy.json
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {

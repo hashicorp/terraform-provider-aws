@@ -5,67 +5,175 @@ package rds
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){
-		newResourceExportTask,
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceExportTask,
+		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_db_cluster_snapshot":            DataSourceClusterSnapshot,
-		"aws_db_event_categories":            DataSourceEventCategories,
-		"aws_db_instance":                    DataSourceInstance,
-		"aws_db_instances":                   DataSourceInstances,
-		"aws_db_proxy":                       DataSourceProxy,
-		"aws_db_snapshot":                    DataSourceSnapshot,
-		"aws_db_subnet_group":                DataSourceSubnetGroup,
-		"aws_rds_certificate":                DataSourceCertificate,
-		"aws_rds_cluster":                    DataSourceCluster,
-		"aws_rds_clusters":                   DataSourceClusters,
-		"aws_rds_engine_version":             DataSourceEngineVersion,
-		"aws_rds_orderable_db_instance":      DataSourceOrderableInstance,
-		"aws_rds_reserved_instance_offering": DataSourceReservedOffering,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceClusterSnapshot,
+			TypeName: "aws_db_cluster_snapshot",
+		},
+		{
+			Factory:  DataSourceEventCategories,
+			TypeName: "aws_db_event_categories",
+		},
+		{
+			Factory:  DataSourceInstance,
+			TypeName: "aws_db_instance",
+		},
+		{
+			Factory:  DataSourceInstances,
+			TypeName: "aws_db_instances",
+		},
+		{
+			Factory:  DataSourceProxy,
+			TypeName: "aws_db_proxy",
+		},
+		{
+			Factory:  DataSourceSnapshot,
+			TypeName: "aws_db_snapshot",
+		},
+		{
+			Factory:  DataSourceSubnetGroup,
+			TypeName: "aws_db_subnet_group",
+		},
+		{
+			Factory:  DataSourceCertificate,
+			TypeName: "aws_rds_certificate",
+		},
+		{
+			Factory:  DataSourceCluster,
+			TypeName: "aws_rds_cluster",
+		},
+		{
+			Factory:  DataSourceClusters,
+			TypeName: "aws_rds_clusters",
+		},
+		{
+			Factory:  DataSourceEngineVersion,
+			TypeName: "aws_rds_engine_version",
+		},
+		{
+			Factory:  DataSourceOrderableInstance,
+			TypeName: "aws_rds_orderable_db_instance",
+		},
+		{
+			Factory:  DataSourceReservedOffering,
+			TypeName: "aws_rds_reserved_instance_offering",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_db_cluster_snapshot":                       ResourceClusterSnapshot,
-		"aws_db_event_subscription":                     ResourceEventSubscription,
-		"aws_db_instance":                               ResourceInstance,
-		"aws_db_instance_automated_backups_replication": ResourceInstanceAutomatedBackupsReplication,
-		"aws_db_instance_role_association":              ResourceInstanceRoleAssociation,
-		"aws_db_option_group":                           ResourceOptionGroup,
-		"aws_db_parameter_group":                        ResourceParameterGroup,
-		"aws_db_proxy":                                  ResourceProxy,
-		"aws_db_proxy_default_target_group":             ResourceProxyDefaultTargetGroup,
-		"aws_db_proxy_endpoint":                         ResourceProxyEndpoint,
-		"aws_db_proxy_target":                           ResourceProxyTarget,
-		"aws_db_security_group":                         ResourceSecurityGroup,
-		"aws_db_snapshot":                               ResourceSnapshot,
-		"aws_db_snapshot_copy":                          ResourceSnapshotCopy,
-		"aws_db_subnet_group":                           ResourceSubnetGroup,
-		"aws_rds_cluster":                               ResourceCluster,
-		"aws_rds_cluster_activity_stream":               ResourceClusterActivityStream,
-		"aws_rds_cluster_endpoint":                      ResourceClusterEndpoint,
-		"aws_rds_cluster_instance":                      ResourceClusterInstance,
-		"aws_rds_cluster_parameter_group":               ResourceClusterParameterGroup,
-		"aws_rds_cluster_role_association":              ResourceClusterRoleAssociation,
-		"aws_rds_global_cluster":                        ResourceGlobalCluster,
-		"aws_rds_reserved_instance":                     ResourceReservedInstance,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceClusterSnapshot,
+			TypeName: "aws_db_cluster_snapshot",
+		},
+		{
+			Factory:  ResourceEventSubscription,
+			TypeName: "aws_db_event_subscription",
+		},
+		{
+			Factory:  ResourceInstance,
+			TypeName: "aws_db_instance",
+		},
+		{
+			Factory:  ResourceInstanceAutomatedBackupsReplication,
+			TypeName: "aws_db_instance_automated_backups_replication",
+		},
+		{
+			Factory:  ResourceInstanceRoleAssociation,
+			TypeName: "aws_db_instance_role_association",
+		},
+		{
+			Factory:  ResourceOptionGroup,
+			TypeName: "aws_db_option_group",
+		},
+		{
+			Factory:  ResourceParameterGroup,
+			TypeName: "aws_db_parameter_group",
+		},
+		{
+			Factory:  ResourceProxy,
+			TypeName: "aws_db_proxy",
+		},
+		{
+			Factory:  ResourceProxyDefaultTargetGroup,
+			TypeName: "aws_db_proxy_default_target_group",
+		},
+		{
+			Factory:  ResourceProxyEndpoint,
+			TypeName: "aws_db_proxy_endpoint",
+		},
+		{
+			Factory:  ResourceProxyTarget,
+			TypeName: "aws_db_proxy_target",
+		},
+		{
+			Factory:  ResourceSecurityGroup,
+			TypeName: "aws_db_security_group",
+		},
+		{
+			Factory:  ResourceSnapshot,
+			TypeName: "aws_db_snapshot",
+		},
+		{
+			Factory:  ResourceSnapshotCopy,
+			TypeName: "aws_db_snapshot_copy",
+		},
+		{
+			Factory:  ResourceSubnetGroup,
+			TypeName: "aws_db_subnet_group",
+		},
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_rds_cluster",
+		},
+		{
+			Factory:  ResourceClusterActivityStream,
+			TypeName: "aws_rds_cluster_activity_stream",
+		},
+		{
+			Factory:  ResourceClusterEndpoint,
+			TypeName: "aws_rds_cluster_endpoint",
+		},
+		{
+			Factory:  ResourceClusterInstance,
+			TypeName: "aws_rds_cluster_instance",
+		},
+		{
+			Factory:  ResourceClusterParameterGroup,
+			TypeName: "aws_rds_cluster_parameter_group",
+		},
+		{
+			Factory:  ResourceClusterRoleAssociation,
+			TypeName: "aws_rds_cluster_role_association",
+		},
+		{
+			Factory:  ResourceGlobalCluster,
+			TypeName: "aws_rds_global_cluster",
+		},
+		{
+			Factory:  ResourceReservedInstance,
+			TypeName: "aws_rds_reserved_instance",
+		},
 	}
 }
 

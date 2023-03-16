@@ -9,7 +9,7 @@ jobs:
     name: Validate TeamCity Configuration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: actions/setup-java@v3
         with:
           distribution: adopt

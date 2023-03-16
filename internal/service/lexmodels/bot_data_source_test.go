@@ -10,13 +10,14 @@ import (
 )
 
 func TestAccLexModelsBotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
@@ -51,6 +52,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 }
 
 func testAccBotDataSource_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
@@ -58,7 +60,7 @@ func testAccBotDataSource_withVersion(t *testing.T) {
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
