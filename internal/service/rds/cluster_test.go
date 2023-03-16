@@ -1520,7 +1520,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_managedMasterPasswordSpecificKMSKey(rName),
+				Config: testAccClusterConfig_managedMasterPasswordSpecificKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
@@ -2476,7 +2476,7 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_managedMasterPasswordSpecificKMSKey(rName string) string {
+func testAccClusterConfig_managedMasterPasswordSpecificKey(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
