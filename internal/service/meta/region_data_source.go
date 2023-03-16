@@ -12,13 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceRegion)
-}
-
-// newDataSourceRegion instantiates a new DataSource for the aws_region data source.
+// @FrameworkDataSource
 func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegion{}, nil
+	d := &dataSourceRegion{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegion struct {

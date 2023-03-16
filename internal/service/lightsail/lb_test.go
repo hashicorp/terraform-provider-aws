@@ -22,24 +22,25 @@ import (
 )
 
 func TestAccLightsailLoadBalancer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "80"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
@@ -55,6 +56,7 @@ func TestAccLightsailLoadBalancer_basic(t *testing.T) {
 }
 
 func TestAccLightsailLoadBalancer_Name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lightsailNameWithSpaces := fmt.Sprint(rName, "string with spaces")
@@ -64,13 +66,13 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerConfig_basic(lightsailNameWithSpaces),
@@ -83,7 +85,7 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
 				),
@@ -91,7 +93,7 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_basic(lightsailNameWithUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
 				),
@@ -101,24 +103,25 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 }
 
 func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_healthCheckPath(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 				),
 			},
@@ -130,7 +133,7 @@ func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_healthCheckPath(rName, "/healthcheck"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/healthcheck"),
 				),
 			},
@@ -139,24 +142,25 @@ func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
 }
 
 func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lb1, lb2, lb3 lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb1),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -169,7 +173,7 @@ func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb2),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -178,7 +182,7 @@ func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb3),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -187,7 +191,7 @@ func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLoadBalancerExists(n string, lb *lightsail.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckLoadBalancerExists(ctx context.Context, n string, lb *lightsail.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -200,7 +204,7 @@ func testAccCheckLoadBalancerExists(n string, lb *lightsail.LoadBalancer) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		resp, err := tflightsail.FindLoadBalancerByName(context.Background(), conn, rs.Primary.ID)
+		resp, err := tflightsail.FindLoadBalancerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -217,6 +221,7 @@ func testAccCheckLoadBalancerExists(n string, lb *lightsail.LoadBalancer) resour
 }
 
 func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
@@ -224,7 +229,7 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the LoadBalancer
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
-		_, err := conn.DeleteLoadBalancer(&lightsail.DeleteLoadBalancerInput{
+		_, err := conn.DeleteLoadBalancerWithContext(ctx, &lightsail.DeleteLoadBalancerInput{
 			LoadBalancerName: aws.String(rName),
 		})
 
@@ -240,18 +245,18 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &lb),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb),
 					testDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -260,28 +265,30 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_lb" {
-			continue
+func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_lb" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+
+			_, err := tflightsail.FindLoadBalancerByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResLoadBalancer, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
-
-		_, err := tflightsail.FindLoadBalancerByName(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResLoadBalancer, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccLoadBalancerConfig_basic(rName string) string {

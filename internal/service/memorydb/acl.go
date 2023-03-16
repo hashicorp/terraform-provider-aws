@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_memorydb_acl")
 func ResourceACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceACLCreate,
@@ -74,7 +75,7 @@ func ResourceACL() *schema.Resource {
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateACLInput{
@@ -160,7 +161,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB ACL (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -191,7 +192,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB ACL (%s): %s", d.Id(), err)

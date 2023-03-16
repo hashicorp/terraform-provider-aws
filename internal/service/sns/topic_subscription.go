@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -126,6 +127,7 @@ var (
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic_subscription")
 func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
@@ -134,7 +136,7 @@ func ResourceTopicSubscription() *schema.Resource {
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
@@ -157,10 +159,11 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, SubscriptionAttributeNameProtocol)
 	delete(attributes, SubscriptionAttributeNameTopicARN)
 
+	protocol := d.Get("protocol").(string)
 	input := &sns.SubscribeInput{
 		Attributes:            aws.StringMap(attributes),
 		Endpoint:              aws.String(d.Get("endpoint").(string)),
-		Protocol:              aws.String(d.Get("protocol").(string)),
+		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: aws.Bool(true), // even if not confirmed, will get ARN
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),
 	}
@@ -175,20 +178,20 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	waitForConfirmation := true
 
-	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(d.Get("protocol").(string), "http") {
+	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(protocol, "http") {
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(d.Get("protocol").(string), "email") {
+	if strings.Contains(protocol, "email") {
 		waitForConfirmation = false
-	}
-
-	timeout := subscriptionPendingConfirmationTimeout
-	if strings.Contains(d.Get("protocol").(string), "http") {
-		timeout = time.Duration(d.Get("confirmation_timeout_in_minutes").(int)) * time.Minute
 	}
 
 	if waitForConfirmation {
+		timeout := subscriptionPendingConfirmationTimeout
+		if strings.Contains(protocol, "http") {
+			timeout = time.Duration(int64(d.Get("confirmation_timeout_in_minutes").(int)) * int64(time.Minute))
+		}
+
 		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
 			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
@@ -200,7 +203,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
 		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -253,7 +256,7 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id(), subscriptionDeleteTimeout); err != nil {
 		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
 	}
 
@@ -261,8 +264,33 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func putSubscriptionAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+	// Filter policy order matters
+	filterPolicyScope, ok := attributes[SubscriptionAttributeNameFilterPolicyScope]
+
+	if ok {
+		delete(attributes, SubscriptionAttributeNameFilterPolicyScope)
+	}
+
+	// MessageBody is backwards-compatible so it should always be applied first
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageBody {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+		if err != nil {
+			return err
+		}
+	}
+
 	for name, value := range attributes {
 		err := putSubscriptionAttribute(ctx, conn, arn, name, value)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// MessageAttributes isn't compatible with nested policies, so it should always be last
+	// in case the update also includes a change from a nested policy to a flat policy
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageAttributes {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
 
 		if err != nil {
 			return err
@@ -297,6 +325,87 @@ func putSubscriptionAttribute(ctx context.Context, conn *sns.SNS, arn string, na
 	}
 
 	return nil
+}
+
+func FindSubscriptionAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (map[string]string, error) {
+	input := &sns.GetSubscriptionAttributesInput{
+		SubscriptionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetSubscriptionAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValueMap(output.Attributes), nil
+}
+
+func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.SNS, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubscriptionAttributesByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, output[SubscriptionAttributeNamePendingConfirmation], nil
+	}
+}
+
+const (
+	subscriptionCreateTimeout              = 2 * time.Minute
+	subscriptionPendingConfirmationTimeout = 2 * time.Minute
+	subscriptionDeleteTimeout              = 2 * time.Minute
+)
+
+func waitSubscriptionConfirmed(ctx context.Context, conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"true"},
+		Target:  []string{"false"},
+		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]string); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubscriptionDeleted(ctx context.Context, conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"false", "true"},
+		Target:  []string{},
+		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]string); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type TopicSubscriptionDeliveryPolicy struct {

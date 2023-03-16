@@ -8,6 +8,8 @@ import (
 )
 
 func TestInstanceMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -137,6 +139,8 @@ func TestInstanceMigrateState(t *testing.T) {
 }
 
 func TestInstanceMigrateState_empty(t *testing.T) {
+	t.Parallel()
+
 	var is *terraform.InstanceState
 	var meta interface{}
 

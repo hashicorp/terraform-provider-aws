@@ -1,6 +1,7 @@
 package servicequotas_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,12 +21,12 @@ const (
 	unsetQuotaQuotaName   = "Access Points"
 )
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.ListServicesInput{}
 
-	_, err := conn.ListServices(input)
+	_, err := conn.ListServicesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -37,7 +38,7 @@ func testAccPreCheck(t *testing.T) {
 }
 
 // nosemgrep:ci.servicequotas-in-func-name
-func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
+func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.GetServiceQuotaInput{
@@ -45,7 +46,7 @@ func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	_, err := conn.GetServiceQuota(input)
+	_, err := conn.GetServiceQuotaWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
 		t.Fatalf("The Service Quota (%s/%s) has never been set. This test can only be run with a quota that has previously been set. Please update the test to check a new quota.", serviceCode, quotaCode)
 	}
@@ -54,7 +55,7 @@ func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
 	}
 }
 
-func preCheckServiceQuotaUnset(serviceCode, quotaCode string, t *testing.T) {
+func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.GetServiceQuotaInput{
@@ -62,7 +63,7 @@ func preCheckServiceQuotaUnset(serviceCode, quotaCode string, t *testing.T) {
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	_, err := conn.GetServiceQuota(input)
+	_, err := conn.GetServiceQuotaWithContext(ctx, input)
 	if err == nil {
 		t.Fatalf("The Service Quota (%s/%s) has been set. This test can only be run with a quota that has never been set. Please update the test to check a new quota.", serviceCode, quotaCode)
 	}

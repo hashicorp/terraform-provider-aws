@@ -2,6 +2,8 @@
 package conns
 
 import (
+	"net/http"
+
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
 	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
@@ -13,7 +15,6 @@ import (
 	{{- end }}
 {{- end }}
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -26,11 +27,11 @@ type AWSClient struct {
 	Partition                 string
 	Region                    string
 	ReverseDNSPrefix          string
-	ServicePackages           []intf.ServicePackage
+	ServicePackages           []ServicePackage
 	Session                   *session.Session
 	TerraformVersion          string
 
-    s3ConnURICleaningDisabled *s3.S3
+	httpClient                *http.Client
 
 {{ range .Services }}
 	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}
@@ -44,6 +45,8 @@ type AWSClient struct {
 	{{ .ProviderPackage }}Client *{{ .GoV2Package }}.{{ .ClientTypeName }}
 	{{- end }}
 {{- end }}
+
+    s3ConnURICleaningDisabled *s3.S3
 }
 
 {{ range .Services }}

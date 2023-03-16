@@ -10,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func FindDirectoryByID(ctx context.Context, conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
 	input := &directoryservice.DescribeDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}
 	var output []*directoryservice.DirectoryDescription
 
-	err := describeDirectoriesPages(conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err := describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -61,13 +61,13 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
-func FindDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
+func FindDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
 	input := &directoryservice.DescribeDomainControllersInput{
 		DirectoryId:         aws.String(directoryID),
 		DomainControllerIds: aws.StringSlice([]string{domainControllerID}),
 	}
 
-	output, err := FindDomainControllers(conn, input)
+	output, err := FindDomainControllers(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -93,10 +93,10 @@ func FindDomainController(conn *directoryservice.DirectoryService, directoryID, 
 	return domainController, nil
 }
 
-func FindDomainControllers(conn *directoryservice.DirectoryService, input *directoryservice.DescribeDomainControllersInput) ([]*directoryservice.DomainController, error) {
+func FindDomainControllers(ctx context.Context, conn *directoryservice.DirectoryService, input *directoryservice.DescribeDomainControllersInput) ([]*directoryservice.DomainController, error) {
 	var output []*directoryservice.DomainController
 
-	err := conn.DescribeDomainControllersPages(input, func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
+	err := conn.DescribeDomainControllersPagesWithContext(ctx, input, func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -125,7 +125,7 @@ func FindDomainControllers(conn *directoryservice.DirectoryService, input *direc
 }
 
 func FindRadiusSettings(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) (*directoryservice.RadiusSettings, error) {
-	output, err := FindDirectoryByID(conn, directoryID)
+	output, err := FindDirectoryByID(ctx, conn, directoryID)
 
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	}
 	var output []*directoryservice.RegionDescription
 
-	err := describeRegionsPagesWithContext(ctx, conn, input, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
+	err := describeRegionsPages(ctx, conn, input, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

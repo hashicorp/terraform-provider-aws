@@ -1,6 +1,7 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,21 +11,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_space")
 func ResourceSpace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSpaceCreate,
-		Read:   resourceSpaceRead,
-		Update: resourceSpaceUpdate,
-		Delete: resourceSpaceDelete,
+		CreateWithoutTimeout: resourceSpaceCreate,
+		ReadWithoutTimeout:   resourceSpaceRead,
+		UpdateWithoutTimeout: resourceSpaceUpdate,
+		DeleteWithoutTimeout: resourceSpaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -194,10 +198,11 @@ func ResourceSpace() *schema.Resource {
 	}
 }
 
-func resourceSpaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	domainId := d.Get("domain_id").(string)
 	spaceName := d.Get("space_name").(string)
@@ -215,38 +220,39 @@ func resourceSpaceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
-	out, err := conn.CreateSpace(input)
+	out, err := conn.CreateSpaceWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Space: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Space: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.SpaceArn))
 
-	if _, err := WaitSpaceInService(conn, domainId, spaceName); err != nil {
-		return fmt.Errorf("waiting for SageMaker Space (%s) to create: %w", d.Id(), err)
+	if _, err := WaitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceSpaceRead(d, meta)
+	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
 	}
 
-	Space, err := FindSpaceByName(conn, domainID, name)
+	Space, err := FindSpaceByName(ctx, conn, domainID, name)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Space (%s), removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker Space (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(Space.SpaceArn)
@@ -256,30 +262,31 @@ func resourceSpaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("home_efs_file_system_uid", Space.HomeEfsFileSystemUid)
 
 	if err := d.Set("space_settings", flattenSpaceSettings(Space.SpaceSettings)); err != nil {
-		return fmt.Errorf("setting space_settings for SageMaker Space (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Space (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Space (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSpaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("space_settings") {
@@ -293,28 +300,29 @@ func resourceSpaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
-		_, err := conn.UpdateSpace(input)
+		_, err := conn.UpdateSpaceWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("updating SageMaker Space: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
 		}
 
-		if _, err := WaitSpaceInService(conn, domainID, name); err != nil {
-			return fmt.Errorf("waiting for SageMaker Space (%s) to update: %w", d.Id(), err)
+		if _, err := WaitSpaceInService(ctx, conn, domainID, name); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Space (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceSpaceRead(d, meta)
+	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("space_name").(string)
@@ -325,19 +333,19 @@ func resourceSpaceDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainId:  aws.String(domainID),
 	}
 
-	if _, err := conn.DeleteSpace(input); err != nil {
+	if _, err := conn.DeleteSpaceWithContext(ctx, input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("deleting SageMaker Space (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Space (%s): %s", d.Id(), err)
 		}
 	}
 
-	if _, err := WaitSpaceDeleted(conn, domainID, name); err != nil {
+	if _, err := WaitSpaceDeleted(ctx, conn, domainID, name); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("waiting for SageMaker Space (%s) to delete: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func decodeSpaceName(id string) (string, string, error) {

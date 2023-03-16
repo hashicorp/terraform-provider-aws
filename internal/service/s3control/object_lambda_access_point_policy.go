@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_object_lambda_access_point_policy", resourceObjectLambdaAccessPointPolicy)
-}
-
+// @SDKResource("aws_s3control_object_lambda_access_point_policy")
 func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointPolicyCreate,
@@ -74,7 +71,6 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 	resourceID := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
@@ -123,7 +119,6 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -146,7 +141,6 @@ func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}

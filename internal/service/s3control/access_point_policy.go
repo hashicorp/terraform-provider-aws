@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_access_point_policy", resourceAccessPointPolicy)
-}
-
+// @SDKResource("aws_s3control_access_point_policy")
 func resourceAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointPolicyCreate,
@@ -44,10 +41,11 @@ func resourceAccessPointPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -73,7 +71,6 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
@@ -120,7 +117,6 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -143,7 +139,6 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}

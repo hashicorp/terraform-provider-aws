@@ -41,9 +41,9 @@ func statusAddonUpdate(ctx context.Context, conn *eks.EKS, clusterName, addonNam
 	}
 }
 
-func statusFargateProfile(conn *eks.EKS, clusterName, fargateProfileName string) resource.StateRefreshFunc {
+func statusFargateProfile(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+		output, err := FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +57,9 @@ func statusFargateProfile(conn *eks.EKS, clusterName, fargateProfileName string)
 	}
 }
 
-func statusNodegroup(conn *eks.EKS, clusterName, nodeGroupName string) resource.StateRefreshFunc {
+func statusNodegroup(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		output, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -73,9 +73,9 @@ func statusNodegroup(conn *eks.EKS, clusterName, nodeGroupName string) resource.
 	}
 }
 
-func statusNodegroupUpdate(conn *eks.EKS, clusterName, nodeGroupName, id string) resource.StateRefreshFunc {
+func statusNodegroupUpdate(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn, clusterName, nodeGroupName, id)
+		output, err := FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx, conn, clusterName, nodeGroupName, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

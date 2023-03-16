@@ -1,6 +1,7 @@
 package synthetics
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,15 +18,15 @@ const (
 	canaryDeletedTimeout = 5 * time.Minute
 )
 
-func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
 		Target:  []string{synthetics.CanaryStateReady},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -38,7 +39,7 @@ func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Cana
 	return nil, err
 }
 
-func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStopping,
@@ -48,11 +49,11 @@ func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 			synthetics.CanaryStateStarting,
 		},
 		Target:  []string{synthetics.CanaryStateStopped},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryStoppedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -65,7 +66,7 @@ func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 	return nil, err
 }
 
-func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStarting,
@@ -74,11 +75,11 @@ func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 			synthetics.CanaryStateReady,
 		},
 		Target:  []string{synthetics.CanaryStateRunning},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryRunningTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -91,15 +92,15 @@ func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 	return nil, err
 }
 
-func waitCanaryDeleted(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+func waitCanaryDeleted(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateDeleting, synthetics.CanaryStateStopped},
 		Target:  []string{},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {

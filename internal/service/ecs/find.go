@@ -13,20 +13,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func FindCapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	input := &ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: aws.StringSlice([]string{arn}),
 		Include:           aws.StringSlice([]string{ecs.CapacityProviderFieldTags}),
 	}
 
-	output, err := conn.DescribeCapacityProviders(input)
+	output, err := conn.DescribeCapacityProvidersWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
 
 		input.Include = nil
-		output, err = conn.DescribeCapacityProviders(input)
+		output, err = conn.DescribeCapacityProvidersWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -136,7 +136,7 @@ func (e *expectActiveError) Error() string {
 func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	var service *ecs.Service
 	// Use the resource.Retry function instead of WaitForState() because we don't want the timeout error, if any
-	err := resource.Retry(serviceDescribeTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, serviceDescribeTimeout, func() *resource.RetryError {
 		var err error
 		service, err = FindServiceByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
@@ -160,14 +160,14 @@ func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluste
 }
 
 func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
-	output, err := conn.DescribeServices(input)
+	output, err := conn.DescribeServicesWithContext(ctx, input)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) && input.Include != nil {
 		id := aws.StringValueSlice(input.Services)[0]
 		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", id, err)
 
 		input.Include = nil
-		output, err = conn.DescribeServices(input)
+		output, err = conn.DescribeServicesWithContext(ctx, input)
 	}
 
 	// As of AWS SDK for Go v1.44.42, DescribeServices does not return the error code ecs.ErrCodeServiceNotFoundException

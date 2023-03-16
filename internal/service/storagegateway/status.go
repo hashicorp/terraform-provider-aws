@@ -1,6 +1,8 @@
 package storagegateway
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -13,13 +15,13 @@ const (
 	storediSCSIVolumeStatusNotFound = "NotFound"
 )
 
-func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGateway(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
 		}
 
-		output, err := conn.DescribeGatewayInformation(input)
+		output, err := conn.DescribeGatewayInformationWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 			return output, storagegateway.ErrorCodeGatewayNotConnected, nil
@@ -33,13 +35,13 @@ func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resou
 	}
 }
 
-func statusGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),
 		}
 
-		output, err := conn.DescribeSMBSettings(input)
+		output, err := conn.DescribeSMBSettingsWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 			return output, storagegateway.ActiveDirectoryStatusUnknownError, nil
@@ -54,13 +56,13 @@ func statusGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN str
 }
 
 // statusStorediSCSIVolume fetches the Volume and its Status
-func statusStorediSCSIVolume(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
+func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(volumeARN)},
 		}
 
-		output, err := conn.DescribeStorediSCSIVolumes(input)
+		output, err := conn.DescribeStorediSCSIVolumesWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) ||
 			tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
@@ -79,9 +81,9 @@ func statusStorediSCSIVolume(conn *storagegateway.StorageGateway, volumeARN stri
 	}
 }
 
-func statusNFSFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusNFSFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNFSFileShareByARN(conn, arn)
+		output, err := FindNFSFileShareByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -95,9 +97,9 @@ func statusNFSFileShare(conn *storagegateway.StorageGateway, arn string) resourc
 	}
 }
 
-func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusSMBFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSMBFileShareByARN(conn, arn)
+		output, err := FindSMBFileShareByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -111,9 +113,9 @@ func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resourc
 	}
 }
 
-func statusFileSystemAssociation(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFileSystemAssociationByARN(conn, arn)
+		output, err := FindFileSystemAssociationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

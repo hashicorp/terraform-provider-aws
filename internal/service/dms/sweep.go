@@ -36,6 +36,7 @@ func init() {
 }
 
 func sweepReplicationInstances(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -46,7 +47,7 @@ func sweepReplicationInstances(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeReplicationInstancesPages(&dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
+	err = conn.DescribeReplicationInstancesPagesWithContext(ctx, &dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
 		for _, instance := range page.ReplicationInstances {
 			r := ResourceReplicationInstance()
 			d := r.Data(nil)
@@ -63,7 +64,7 @@ func sweepReplicationInstances(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Instances: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Instances for %s: %w", region, err))
 	}
 
@@ -76,6 +77,7 @@ func sweepReplicationInstances(region string) error {
 }
 
 func sweepReplicationTasks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -89,7 +91,7 @@ func sweepReplicationTasks(region string) error {
 	input := &dms.DescribeReplicationTasksInput{
 		WithoutSettings: aws.Bool(true),
 	}
-	err = conn.DescribeReplicationTasksPages(input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
+	err = conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
 		for _, instance := range page.ReplicationTasks {
 			r := ResourceReplicationTask()
 			d := r.Data(nil)
@@ -106,7 +108,7 @@ func sweepReplicationTasks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Tasks: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Tasks for %s: %w", region, err))
 	}
 
@@ -119,6 +121,7 @@ func sweepReplicationTasks(region string) error {
 }
 
 func sweepEndpoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -129,7 +132,7 @@ func sweepEndpoints(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeEndpointsPages(&dms.DescribeEndpointsInput{}, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
+	err = conn.DescribeEndpointsPagesWithContext(ctx, &dms.DescribeEndpointsInput{}, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
 		for _, ep := range page.Endpoints {
 			r := ResourceEndpoint()
 			d := r.Data(nil)
@@ -146,7 +149,7 @@ func sweepEndpoints(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Endpoints: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Endpoints for %s: %w", region, err))
 	}
 

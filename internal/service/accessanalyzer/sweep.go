@@ -22,6 +22,7 @@ func init() {
 }
 
 func sweepAnalyzers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -30,7 +31,7 @@ func sweepAnalyzers(region string) error {
 	input := &accessanalyzer.ListAnalyzersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAnalyzersPages(input, func(page *accessanalyzer.ListAnalyzersOutput, lastPage bool) bool {
+	err = conn.ListAnalyzersPagesWithContext(ctx, input, func(page *accessanalyzer.ListAnalyzersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -55,7 +56,7 @@ func sweepAnalyzers(region string) error {
 		return fmt.Errorf("error listing Access Analyzer Analyzers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Access Analyzer Analyzers (%s): %w", region, err)

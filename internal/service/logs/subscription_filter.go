@@ -21,10 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_subscription_filter", resourceSubscriptionFilter)
-}
-
+// @SDKResource("aws_cloudwatch_log_subscription_filter")
 func resourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubscriptionFilterPut,
@@ -95,7 +92,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutSubscriptionFilterWithContext(ctx, input)
 		},

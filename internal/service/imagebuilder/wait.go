@@ -1,6 +1,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -8,7 +9,7 @@ import (
 )
 
 // waitImageStatusAvailable waits for an Image to return Available
-func waitImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
+func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			imagebuilder.ImageStatusBuilding,
@@ -19,11 +20,11 @@ func waitImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersion
 			imagebuilder.ImageStatusTesting,
 		},
 		Target:  []string{imagebuilder.ImageStatusAvailable},
-		Refresh: statusImage(conn, imageBuildVersionArn),
+		Refresh: statusImage(ctx, conn, imageBuildVersionArn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*imagebuilder.Image); ok {
 		return v, err

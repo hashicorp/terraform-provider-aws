@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_location_route_calculator")
 func ResourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCalculatorCreate,
@@ -85,7 +86,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -127,7 +128,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("description", out.Description)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("calculator_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("calculator_arn").(string))
 	if err != nil {
 		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
@@ -164,7 +165,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("calculator_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("calculator_arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 		}
 	}

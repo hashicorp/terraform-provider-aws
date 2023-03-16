@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidSecurityGroupRuleDescription(t *testing.T) {
+	t.Parallel()
+
 	validDescriptions := []string{
 		"testrule",
 		"testRule",
@@ -32,6 +34,8 @@ func TestValidSecurityGroupRuleDescription(t *testing.T) {
 }
 
 func TestValidAmazonSideASN(t *testing.T) {
+	t.Parallel()
+
 	validAsns := []string{
 		"7224",
 		"9059",
