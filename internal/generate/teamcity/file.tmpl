@@ -2,6 +2,9 @@
 
 val services = mapOf(
 {{- range .Services }}
-    "{{ .ProviderPackage }}" to ServiceSpec("{{ .HumanFriendly }}"{{ if .VpcLock }}, vpcLock = true{{ end }}{{ if ne .Parallelism 0 }}, parallelismOverride = {{ .Parallelism }}{{ end }}),
+    "{{ .ProviderPackage }}" to ServiceSpec("{{ .HumanFriendly }}"
+        {{- if .VpcLock }}, vpcLock = true{{ end -}}
+        {{- if ne .Parallelism 0 }}, parallelismOverride = {{ .Parallelism }}{{ end -}}
+    ),
 {{- end }}
 )
