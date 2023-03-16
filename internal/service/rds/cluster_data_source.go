@@ -214,6 +214,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if dbc.MasterUserSecret != nil {
 		d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
 	}
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
