@@ -29,6 +29,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceSink,
 			TypeName: "aws_oam_sink",
 		},
+		{
+			Factory:  ResourceSinkPolicy,
+			TypeName: "aws_oam_sink_policy",
+		},
 	}
 }
 

@@ -79,7 +79,7 @@ The following arguments are supported:
 
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
 * `description` - (Optional) Description of the data source.
 * `service_role_arn` - (Optional) IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
@@ -87,6 +87,7 @@ The following arguments are supported:
 * `http_config` - (Optional) HTTP settings. See [below](#http_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
 * `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational_database_config)
+* `event_bridge_config` - (Optional) AWS EventBridge settings. See [below](#event_bridge_config)
 
 ### dynamodb_config
 
@@ -146,6 +147,12 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `function_arn` - (Required) ARN for the Lambda function.
+
+### event_bridge_config
+
+The following arguments are supported:
+
+* `event_bus_arn` - (Required) ARN for the EventBridge bus.
 
 ## Attributes Reference
 
