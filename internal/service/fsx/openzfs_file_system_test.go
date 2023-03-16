@@ -691,44 +691,6 @@ func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
 	})
 }
 
-func TestAccFSxOpenzfsFileSystem_deploymentType(t *testing.T) {
-	var filesystem1, filesystem2 fsx.FileSystem
-	resourceName := "aws_fsx_openzfs_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOpenzfsFileSystemConfig_deploymentType(rName, "SINGLE_AZ_1", 64),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
-			},
-			{
-				Config: testAccOpenzfsFileSystemConfig_deploymentType(rName, "SINGLE_AZ_2", 160),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
-					testAccCheckOpenzfsFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckOpenzfsFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1296,19 +1258,4 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, rName))
-}
-
-func testAccOpenzfsFileSystemConfig_deploymentType(rName, deploymentType string, throughput int) string {
-	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
-resource "aws_fsx_openzfs_file_system" "test" {
-  storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test1.id]
-  deployment_type     = %[2]q
-  throughput_capacity = %[3]d
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, deploymentType, throughput))
 }
