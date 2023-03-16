@@ -239,7 +239,6 @@ func ResourceUserPool() *schema.Resource {
 						"custom_email_sender": {
 							Type:         schema.TypeList,
 							Optional:     true,
-							Computed:     true,
 							MaxItems:     1,
 							RequiredWith: []string{"lambda_config.0.kms_key_id"},
 							Elem: &schema.Resource{
@@ -265,7 +264,6 @@ func ResourceUserPool() *schema.Resource {
 						"custom_sms_sender": {
 							Type:         schema.TypeList,
 							Optional:     true,
-							Computed:     true,
 							MaxItems:     1,
 							RequiredWith: []string{"lambda_config.0.kms_key_id"},
 							Elem: &schema.Resource{

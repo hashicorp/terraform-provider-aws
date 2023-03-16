@@ -1170,6 +1170,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 			{
@@ -1184,6 +1185,15 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaEmailSenderUpdatedRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 		},
@@ -1208,6 +1218,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, nil),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
@@ -1222,9 +1233,18 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 				Config: testAccUserPoolConfig_lambdaSMSSenderUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 		},
@@ -1851,6 +1871,13 @@ resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
 
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
@@ -1864,6 +1891,13 @@ func testAccUserPoolConfig_mfaConfigurationSMSConfigurationAndSoftwareTokenMFACo
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
 
   sms_configuration {
     external_id    = "test"
@@ -1882,6 +1916,13 @@ func testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabled(
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
 
   software_token_mfa_configuration {
     enabled = %[2]t
@@ -2277,6 +2318,18 @@ resource "aws_cognito_user_pool" "test" {
 `, name))
 }
 
+func testAccUserPoolConfig_lambdaEmailSenderUpdatedRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    kms_key_id = aws_kms_key.test.arn
+  }
+}
+`, name))
+}
+
 func testAccUserPoolConfig_lambdaSMSSender(name string) string {
 	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -2314,6 +2367,18 @@ resource "aws_cognito_user_pool" "test" {
       lambda_arn     = aws_lambda_function.second.arn
       lambda_version = "V1_0"
     }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    kms_key_id = aws_kms_key.test.arn
   }
 }
 `, name))
