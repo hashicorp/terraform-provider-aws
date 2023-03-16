@@ -344,16 +344,21 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					Value: aws.String(""),
 				})
 			} else {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
-					Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string)),
-				})
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/mutualTlsAuthentication/truststoreVersion"),
-					Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
-				})
+				if d.HasChange("mutual_tls_authentication.0.truststore_uri") {
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpReplace),
+						Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
+						Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string)),
+					})
+				}
+
+				if d.HasChange("mutual_tls_authentication.0.truststore_version") {
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpReplace),
+						Path:  aws.String("/mutualTlsAuthentication/truststoreVersion"),
+						Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
+					})
+				}
 			}
 		}
 

@@ -337,6 +337,7 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
+					testAccWaitForChangeStatus(ctx, resourceName),
 				),
 			},
 		},
@@ -402,6 +403,49 @@ func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.D
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccWaitForChangeStatus(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conf := resource.StateChangeConf{
+			Pending:      []string{"UPDATING"},
+			Target:       []string{"AVAILABLE"},
+			Delay:        1 * time.Minute,
+			MinTimeout:   2 * time.Minute,
+			PollInterval: 2 * time.Minute,
+			Timeout:      15 * time.Minute,
+			Refresh: func() (result interface{}, state string, err error) {
+				log.Printf("[DEBUG] Getting API Gateway Domain Name Status: %s", n)
+				conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+				output, err := tfapigateway.FindDomainName(ctx, conn, rs.Primary.ID)
+				log.Printf("[DEBUG] Return Output: %s", output)
+
+				if err != nil {
+					return nil, "UNKNOWN", err
+				}
+
+				if output == nil {
+					return nil, "UNKNOWN", fmt.Errorf("ApiGateway CheckDomainStatus response empty")
+				}
+
+				// return true, aws.StringValue(output.ChangeInfo.Status), nil
+				return true, aws.StringValue(output.DomainNameStatus), nil
+			},
+		}
+
+		_, err := conf.WaitForStateContext(ctx)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
