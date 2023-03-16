@@ -2468,7 +2468,7 @@ func testAccClusterConfig_managedMasterPassword(rName string) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   database_name                   = "test"
-  manage_master_user_password     = true 
+  manage_master_user_password     = true
   master_username                 = "tfacctest"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
