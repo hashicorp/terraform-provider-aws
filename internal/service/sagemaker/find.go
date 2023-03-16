@@ -504,7 +504,7 @@ func FindDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Sag
 
 	output, err := conn.DescribeDataQualityJobDefinitionWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find data quality job definition") {
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

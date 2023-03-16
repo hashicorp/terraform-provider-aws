@@ -233,7 +233,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 									},
 									"local_path": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 										Default:  "/opt/ml/processing/input",
 										ForceNew: true,
 										ValidateFunc: validation.All(
@@ -249,6 +249,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 									"probability_threshold_attribute": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
+										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.FloatAtLeast(0),
 									},
@@ -256,12 +257,14 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Type:         schema.TypeString,
 										ForceNew:     true,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3DataDistributionType_Values(), false),
 									},
 									"s3_input_mode": {
 										Type:         schema.TypeString,
 										ForceNew:     true,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3InputMode_Values(), false),
 									},
 									"start_time_offset": {
@@ -302,7 +305,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 									},
 									"local_path": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 										Default:  "/opt/ml/processing/input",
 										ForceNew: true,
 										ValidateFunc: validation.All(
@@ -325,12 +328,14 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Type:         schema.TypeString,
 										ForceNew:     true,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3DataDistributionType_Values(), false),
 									},
 									"s3_input_mode": {
 										Type:         schema.TypeString,
 										ForceNew:     true,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3InputMode_Values(), false),
 									},
 									"start_time_offset": {
@@ -373,7 +378,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"local_path": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 													Default:  "/opt/ml/processing/output",
 													ForceNew: true,
 													ValidateFunc: validation.All(
@@ -385,6 +390,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													Type:         schema.TypeString,
 													ForceNew:     true,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3UploadMode_Values(), false),
 												},
 												"s3_uri": {
@@ -459,7 +465,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 			"network_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -511,12 +517,14 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_runtime_in_seconds": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 3600),
 						},
@@ -1000,16 +1008,12 @@ func flattenClusterConfig(clusterConfig *sagemaker.MonitoringClusterConfig) []ma
 	return []map[string]interface{}{spec}
 }
 
-func flattenNetworkConfig(networkConfig *sagemaker.NetworkConfig) []map[string]interface{} {
+func flattenNetworkConfig(networkConfig *sagemaker.MonitoringNetworkConfig) []map[string]interface{} {
 	if networkConfig == nil {
 		return []map[string]interface{}{}
 	}
 
 	spec := map[string]interface{}{}
-
-	if networkConfig.ClusterConfig != nil {
-		spec["cluster_config"] = flattenClusterConfig(jobResources.ClusterConfig)
-	}
 
 	if networkConfig.EnableInterContainerTrafficEncryption != nil {
 		spec["enable_inter_container_traffic_encryption"] = aws.BoolValue(networkConfig.EnableInterContainerTrafficEncryption)
@@ -1044,7 +1048,7 @@ func flattenVpcConfig(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
 	return []map[string]interface{}{spec}
 }
 
-func flattenStoppingCondition(stoppingCondition *sagemaker.StoppingCondition) []map[string]interface{} {
+func flattenStoppingCondition(stoppingCondition *sagemaker.MonitoringStoppingCondition) []map[string]interface{} {
 	if stoppingCondition == nil {
 		return []map[string]interface{}{}
 	}
@@ -1239,8 +1243,8 @@ func expandEndpointInput(configured []interface{}) *sagemaker.EndpointInput {
 		c.ProbabilityAttribute = aws.String(v)
 	}
 
-	if v, ok := m["probability_threshold_attribute"]; ok {
-		c.ProbabilityThresholdAttribute = aws.Float64(v.(float64))
+	if v, ok := m["probability_threshold_attribute"].(float64); ok && v > 0 {
+		c.ProbabilityThresholdAttribute = aws.Float64(v)
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
@@ -1295,8 +1299,8 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 		c.ProbabilityAttribute = aws.String(v)
 	}
 
-	if v, ok := m["probability_threshold_attribute"]; ok {
-		c.ProbabilityThresholdAttribute = aws.Float64(v.(float64))
+	if v, ok := m["probability_threshold_attribute"].(float64); ok && v > 0 {
+		c.ProbabilityThresholdAttribute = aws.Float64(v)
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
@@ -1517,14 +1521,14 @@ func expandVpcConfig(configured []interface{}) *sagemaker.VpcConfig {
 	return c
 }
 
-func expandStoppingCondition(configured []interface{}) *sagemaker.StoppingCondition {
+func expandStoppingCondition(configured []interface{}) *sagemaker.MonitoringStoppingCondition {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.StoppingCondition{}
+	c := &sagemaker.MonitoringStoppingCondition{}
 
 	if v, ok := m["max_runtime_in_seconds"].(int); ok && v > 0 {
 		c.MaxRuntimeInSeconds = aws.Int64(int64(v))
