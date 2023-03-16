@@ -20,7 +20,7 @@ jobs:
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: YakDriver/md-check-links@v2.0.5
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
@@ -36,7 +36,7 @@ jobs:
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: YakDriver/md-check-links@v2.0.5
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
@@ -52,7 +52,7 @@ jobs:
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: YakDriver/md-check-links@v2.0.5
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -67,7 +67,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: avto-dev/markdown-lint@v1
         with:
           args: "website/docs"
@@ -75,7 +75,7 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
           go-version-file: .ci/tools/go.mod
@@ -91,7 +91,7 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
         with:
           go-version-file: .ci/tools/go.mod
@@ -107,7 +107,7 @@ jobs:
   tflint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
         with:
           fetch-depth: 0
       - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
