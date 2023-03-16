@@ -777,8 +777,8 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("field_folders"); ok && len(v.([]interface{})) != 0 {
-		params.FieldFolders = expandDataSetFieldFolders(v.([]interface{}))
+	if v, ok := d.Get("field_folders").(*schema.Set); ok && v.Len() > 0 {
+		params.FieldFolders = expandDataSetFieldFolders(v.List())
 	}
 
 	if v, ok := d.GetOk("logical_table_map"); ok && len(v.([]interface{})) != 0 {
@@ -936,7 +936,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("field_folders") {
-			params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").([]interface{}))
+			params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").(*schema.Set).List())
 		}
 
 		if d.HasChange("import_mode") {
@@ -1983,40 +1983,51 @@ func flattenDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConf
 	return tfList
 }
 
-func flattenFieldFolders(folders map[string]*quicksight.FieldFolder) []interface{} {
+func flattenFieldFolders(folders map[string]*quicksight.FieldFolder) *schema.Set {
 	if len(folders) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
 	for key, value := range folders {
 		if value == nil {
 			continue
 		}
-
-		tfMap := flattenFieldFolder(key, value)
-		tfList = append(tfList, tfMap)
+		tfList = append(tfList, flattenFieldFolder(key, value))
 	}
 
-	return tfList
+	return schema.NewSet(fieldFoldersHash, tfList)
 }
 
-func flattenFieldFolder(fieldFolderId string, fieldFolder *quicksight.FieldFolder) map[string]interface{} {
-	if fieldFolder == nil {
+func fieldFoldersHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["field_folders_id"].(string)))
+	if v, ok := m["columns"]; ok {
+		if sl, ok := v.([]string); ok {
+			buf.WriteString(fmt.Sprintf("%s-", sl))
+		}
+	}
+	if v, ok := m["description"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	return create.StringHashcode(buf.String())
+}
+
+func flattenFieldFolder(id string, apiObject *quicksight.FieldFolder) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	tfMap["field_folder_id"] = fieldFolderId
-
-	if fieldFolder.Columns != nil {
-		tfMap["columns"] = aws.StringValueSlice(fieldFolder.Columns)
+	tfMap := map[string]interface{}{
+		"field_folders_id": id,
 	}
-
-	if fieldFolder.Description != nil {
-		tfMap["description"] = aws.StringValue(fieldFolder.Description)
+	if len(apiObject.Columns) > 0 {
+		tfMap["columns"] = flex.FlattenStringList(apiObject.Columns)
+	}
+	if apiObject.Description != nil {
+		tfMap["description"] = aws.StringValue(apiObject.Description)
 	}
 
 	return tfMap

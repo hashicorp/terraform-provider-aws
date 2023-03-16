@@ -557,7 +557,7 @@ resource "aws_quicksight_data_set" "test" {
 	import_mode = "SPICE"
 
 	physical_table_map {
-		physical_table_map_id = "unique_id"
+		physical_table_map_id = %[1]q 
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.test.arn
 			input_columns {
@@ -567,7 +567,7 @@ resource "aws_quicksight_data_set" "test" {
 		}
 	}
 	field_folders {
-		field_folders_id = "my-unique-id"
+		field_folders_id = %[1]q
 		columns = ["ColumnId-1"]
 		description = "test"
 	}
