@@ -18,9 +18,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// TODO
-// * timeouts
-
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")
 	resourceType   = flag.String("resource", "", "Resource type")

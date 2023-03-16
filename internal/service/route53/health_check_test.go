@@ -24,7 +24,7 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -63,7 +63,7 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -107,7 +107,7 @@ func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -142,7 +142,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -167,7 +167,7 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -193,7 +193,7 @@ func TestAccRoute53HealthCheck_ip(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -226,7 +226,7 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -256,7 +256,7 @@ func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -282,7 +282,7 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -323,7 +323,7 @@ func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 	resourceName := "aws_route53_health_check.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -364,7 +364,7 @@ func TestAccRoute53HealthCheck_withRoutingControlARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
@@ -390,7 +390,7 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),

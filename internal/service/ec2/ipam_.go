@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipam")
 func ResourceIPAM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMCreate,
@@ -112,7 +113,7 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(resource.UniqueId()),
@@ -168,7 +169,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
 
-	tags := KeyValueTags(ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

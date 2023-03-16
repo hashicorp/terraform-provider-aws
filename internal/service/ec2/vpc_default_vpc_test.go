@@ -78,7 +78,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
@@ -101,7 +101,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -127,7 +127,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
@@ -150,7 +150,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -176,7 +176,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
@@ -204,7 +204,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
@@ -227,7 +227,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -253,7 +253,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
@@ -276,7 +276,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -302,7 +302,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},

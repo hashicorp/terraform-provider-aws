@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rds_cluster_role_association")
 func ResourceClusterRoleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterRoleAssociationCreate,

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_lambda_provisioned_concurrency_config")
 func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedConcurrencyConfigCreate,

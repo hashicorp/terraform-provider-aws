@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_virtual_node")
 func ResourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -990,7 +991,7 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),

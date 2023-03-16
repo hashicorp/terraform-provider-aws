@@ -174,19 +174,31 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id s
 }
 
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-	id_parts := strings.SplitN(id, "_", -1)
-	domainName := id_parts[1]
-	name := expandDomainEntryName(id_parts[0], domainName)
-	recordType := id_parts[2]
-	recordTarget := id_parts[3]
+	id_parts := strings.Split(id, "_")
+	idLength := len(id_parts)
+	var index int
+	var name string
 
-	in := &lightsail.GetDomainInput{
-		DomainName: aws.String(domainName),
-	}
+	in := &lightsail.GetDomainInput{}
 
-	if len(id_parts) != 4 {
+	if idLength <= 3 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
+
+	if idLength == 5 {
+		index = 1
+		name = "_" + id_parts[index]
+	} else {
+		index = 0
+		name = id_parts[index]
+	}
+
+	domainName := id_parts[index+1]
+	entryName := expandDomainEntryName(name, domainName)
+	recordType := id_parts[index+2]
+	recordTarget := id_parts[index+3]
+
+	in.DomainName = aws.String(domainName)
 
 	out, err := conn.GetDomainWithContext(ctx, in)
 
@@ -205,7 +217,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 	entryExists := false
 
 	for _, n := range out.Domain.DomainEntries {
-		if name == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
+		if entryName == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
 			entry = n
 			entryExists = true
 			break
@@ -480,6 +492,54 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id 
 
 	for _, n := range out.AccessKeys {
 		if parts[1] == aws.StringValue(n.AccessKeyId) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.ResourceReceivingAccess, error) {
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	in := &lightsail.GetBucketsInput{
+		BucketName:                aws.String(parts[0]),
+		IncludeConnectedResources: aws.Bool(true),
+	}
+
+	out, err := conn.GetBucketsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.Buckets) == 0 || out.Buckets[0] == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	bucket := out.Buckets[0]
+	var entry *lightsail.ResourceReceivingAccess
+	entryExists := false
+
+	for _, n := range bucket.ResourcesReceivingAccess {
+		if parts[1] == aws.StringValue(n.Name) {
 			entry = n
 			entryExists = true
 			break

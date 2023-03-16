@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceOrganizationAdminAccountRegistration)
-}
-
+// @FrameworkResource
 func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceOrganizationAdminAccountRegistration{}, nil
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_imagebuilder_component")
 func ResourceComponent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComponentCreate,
@@ -127,7 +128,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateComponentInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -228,7 +229,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	tags := KeyValueTags(component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

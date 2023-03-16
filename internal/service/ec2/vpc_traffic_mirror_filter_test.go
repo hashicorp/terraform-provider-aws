@@ -23,7 +23,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -74,7 +74,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -123,7 +123,7 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),

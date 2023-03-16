@@ -26,7 +26,7 @@ func testAccPolicy_basic(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -50,9 +50,10 @@ func testAccPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -70,7 +71,7 @@ func testAccPolicy_concurrent(t *testing.T) {
 	resourceName5 := "aws_organizations_policy.test5"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -96,7 +97,7 @@ func testAccPolicy_description(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -116,9 +117,10 @@ func testAccPolicy_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -131,7 +133,7 @@ func testAccPolicy_tags(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -146,9 +148,10 @@ func testAccPolicy_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccPolicyConfig_tagB(rName),
@@ -178,6 +181,35 @@ func testAccPolicy_tags(t *testing.T) {
 	})
 }
 
+func testAccPolicy_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy organizations.Policy
+	content := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyNoDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_skipDestroy(rName, content),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
+					resource.TestCheckResourceAttr(resourceName, "content", content),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+				),
+			},
+		},
+	})
+}
+
 func testAccPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p organizations.Policy
@@ -185,7 +217,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -211,7 +243,7 @@ func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 	AiOptOutPolicyContent := `{ "services": { "rekognition": { "opt_out_policy": { "@@assign": "optOut" } }, "lex": { "opt_out_policy": { "@@assign": "optIn" } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -224,9 +256,10 @@ func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -309,7 +342,7 @@ func testAccPolicy_type_Backup(t *testing.T) {
 }`, acctest.AlternateRegion(), acctest.Region(), acctest.Partition())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -322,9 +355,10 @@ func testAccPolicy_type_Backup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -338,7 +372,7 @@ func testAccPolicy_type_SCP(t *testing.T) {
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -358,9 +392,10 @@ func testAccPolicy_type_SCP(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -374,7 +409,7 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -387,9 +422,10 @@ func testAccPolicy_type_Tag(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -402,7 +438,7 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 	resourceID := "p-FullAWSAccess"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -450,6 +486,36 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			if resp != nil && resp.Policy != nil {
 				return fmt.Errorf("Policy %q still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckPolicyNoDestroy is a variant of the CheckDestroy function to be used when
+// skip_destroy is true and the policy should still exist after destroy completes
+func testAccCheckPolicyNoDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_policy" {
+				continue
+			}
+
+			input := &organizations.DescribePolicyInput{
+				PolicyId: &rs.Primary.ID,
+			}
+
+			_, err := conn.DescribePolicyWithContext(ctx, input)
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+				// The organization was destroyed, so we can safely assume the policy
+				// skipped during destruction was as well
+				continue
+			}
+			if err != nil {
+				return err
 			}
 		}
 
@@ -731,6 +797,21 @@ resource "aws_organizations_policy" "test" {
   depends_on = [aws_organizations_organization.test]
 }
 `, strconv.Quote(content), rName, policyType)
+}
+
+func testAccPolicyConfig_skipDestroy(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content = %s
+  name    = "%s"
+
+  skip_destroy = true
+
+  depends_on = [aws_organizations_organization.test]
+}
+`, strconv.Quote(content), rName)
 }
 
 const testAccPolicyConfig_managedSetup = `

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes
+```

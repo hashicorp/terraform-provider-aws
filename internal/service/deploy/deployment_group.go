@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codedeploy_deployment_group")
 func ResourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentGroupCreate,
@@ -491,7 +492,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	// required fields
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)

@@ -2,20 +2,20 @@ package cloudhsmv2
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			cloudhsmv2.ClusterStateCreateInProgress,
-			cloudhsmv2.ClusterStateInitializeInProgress,
-		},
+		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateActive},
-		Refresh:    statusClusterState(ctx, conn, id),
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -23,8 +23,10 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -33,8 +35,8 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id stri
 func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
-		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    statusClusterState(ctx, conn, id),
+		Target:     []string{},
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -42,8 +44,10 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -51,12 +55,9 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id str
 
 func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			cloudhsmv2.ClusterStateCreateInProgress,
-			cloudhsmv2.ClusterStateInitializeInProgress,
-		},
+		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateUninitialized},
-		Refresh:    statusClusterState(ctx, conn, id),
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -64,18 +65,20 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudhsmv2.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-func waitHSMActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
+func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress},
 		Target:     []string{cloudhsmv2.HsmStateActive},
-		Refresh:    statusHSMState(ctx, conn, id),
+		Refresh:    statusHSM(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -83,8 +86,10 @@ func waitHSMActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -94,7 +99,7 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string,
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateDeleteInProgress},
 		Target:     []string{},
-		Refresh:    statusHSMState(ctx, conn, id),
+		Refresh:    statusHSM(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -102,8 +107,10 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudhsmv2.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+
+		return output, err
 	}
 
 	return nil, err

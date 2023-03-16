@@ -22,7 +22,7 @@ func TestAccIPAM_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccIPAM_disappears(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
@@ -80,7 +80,7 @@ func TestAccIPAM_description(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
@@ -114,9 +114,9 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +155,7 @@ func TestAccIPAM_cascade(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
@@ -183,7 +183,7 @@ func TestAccIPAM_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_outposts_outpost_instance_types")
 func DataSourceOutpostInstanceTypes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypesRead,

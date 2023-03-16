@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_outbound_connection")
 func ResourceOutboundConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOutboundConnectionCreate,

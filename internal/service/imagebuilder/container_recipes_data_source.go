@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_imagebuilder_container_recipes")
 func DataSourceContainerRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipesRead,

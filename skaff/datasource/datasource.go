@@ -36,6 +36,7 @@ type TemplateData struct {
 	AWSServiceName       string
 	AWSGoSDKV2           bool
 	HumanDataSourceName  string
+	ProviderResourceName string
 }
 
 func Create(dsName, snakeName string, comments, force, v2 bool) error {
@@ -87,6 +88,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		HumanDataSourceName:  resource.HumanResName(dsName),
+		ProviderResourceName: resource.ProviderResourceName(servicePackage, snakeName),
 	}
 
 	f := fmt.Sprintf("%s_data_source.go", snakeName)

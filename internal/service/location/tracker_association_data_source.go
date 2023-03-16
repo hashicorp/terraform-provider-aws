@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_location_tracker_association")
 func DataSourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrackerAssociationRead,

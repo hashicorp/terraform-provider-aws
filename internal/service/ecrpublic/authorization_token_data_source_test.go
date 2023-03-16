@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,12 +15,12 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecrpublic_authorization_token.repo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizationTokenDataSourceConfig_basic,
+				Config: testAccAuthorizationTokenDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
@@ -32,6 +33,7 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccAuthorizationTokenDataSourceConfig_basic = `
-data "aws_ecrpublic_authorization_token" "repo" {}
+func testAccAuthorizationTokenDataSourceConfig_basic() string {
+	return `data "aws_ecrpublic_authorization_token" "repo" {}
 `
+}

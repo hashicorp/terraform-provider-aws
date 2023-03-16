@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_neptune_cluster_endpoint")
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,
@@ -79,7 +80,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),

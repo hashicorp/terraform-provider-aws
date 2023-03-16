@@ -19,6 +19,7 @@ const (
 	ResExtensionAssociation = "ExtensionAssociation"
 )
 
+// @SDKResource("aws_appconfig_extension_association")
 func ResourceExtensionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionAssociationCreate,
