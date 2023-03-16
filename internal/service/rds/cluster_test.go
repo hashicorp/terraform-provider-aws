@@ -2478,6 +2478,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_managedMasterPasswordSpecificKMSKey(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   description = "Terraform acc test %[1]s"
 
@@ -2490,7 +2492,7 @@ resource "aws_kms_key" "example" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:*"
       },
       "Action": "kms:*",
       "Resource": "*"
