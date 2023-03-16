@@ -876,9 +876,6 @@ func resourceOpenZfsFileSystemCustomizeDiff(ctx context.Context, diff *schema.Re
 		valid = resourceOpenZfsFileSystemThroughputSingleAZ1()
 	} else if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz2 {
 		valid = resourceOpenZfsFileSystemThroughputSingleAZ2()
-	} else {
-		// allow validation to pass for unknown/new types
-		valid = []int{throughputCapacity}
 	}
 
 	found := false
