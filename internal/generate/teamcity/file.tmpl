@@ -5,6 +5,7 @@ val services = mapOf(
     "{{ .ProviderPackage }}" to ServiceSpec("{{ .HumanFriendly }}"
         {{- if .VpcLock }}, vpcLock = true{{ end -}}
         {{- if ne .Parallelism 0 }}, parallelismOverride = {{ .Parallelism }}{{ end -}}
+        {{- if ne .Region "" }}, regionOverride = "{{ .Region }}"{{ end -}}
     ),
 {{- end }}
 )

@@ -7,7 +7,7 @@ val orgacctServices = mapOf(
     ),
     "cloudtrail" to ServiceSpec("CloudTrail"),
     "config" to ServiceSpec("Config" /*"TestAccConfig_serial|TestAccConfigConfigurationAggregator_"*/),
-    "fms" to ServiceSpec("FMS (Firewall Manager)"),
+    "fms" to ServiceSpec("FMS (Firewall Manager)", regionOverride = "us-east-1"),
     "guardduty" to ServiceSpec("GuardDuty"),
     "licensemanager" to ServiceSpec("License Manager"),
     "macie2" to ServiceSpec("Macie"),

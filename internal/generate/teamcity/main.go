@@ -23,6 +23,7 @@ type ServiceDatum struct {
 	HumanFriendly   string
 	VpcLock         bool
 	Parallelism     int
+	Region          string
 }
 
 type TemplateData struct {
@@ -84,6 +85,7 @@ func main() {
 		if ok {
 			sd.VpcLock = serviceConfig.VpcLock
 			sd.Parallelism = serviceConfig.Parallelism
+			sd.Region = serviceConfig.Region
 		}
 
 		if serviceConfig.Skip {
@@ -121,6 +123,7 @@ type acctestServiceConfig struct {
 	VpcLock     bool   `hcl:"vpc_lock,optional"`
 	Parallelism int    `hcl:"parallelism,optional"`
 	Skip        bool   `hcl:"skip,optional"`
+	Region      string `hcl:"region,optional"`
 }
 
 func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {
