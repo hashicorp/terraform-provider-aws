@@ -203,32 +203,8 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 														},
 													},
 												},
-												"parquet": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{},
-													},
-												},
 											},
 										},
-									},
-									"end_time_offset": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-									},
-									"features_attribute": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-									},
-									"inference_attribute": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
 									},
 									"local_path": {
 										Type:     schema.TypeString,
@@ -239,18 +215,6 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 											validation.StringLenBetween(1, 1024),
 											validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 										),
-									},
-									"probability_attribute": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-									},
-									"probability_threshold_attribute": {
-										Type:         schema.TypeFloat,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.FloatAtLeast(0),
 									},
 									"s3_data_distribution_type": {
 										Type:         schema.TypeString,
@@ -265,11 +229,6 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.ProcessingS3InputMode_Values(), false),
-									},
-									"start_time_offset": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
 									},
 								},
 							},
@@ -780,36 +739,12 @@ func flattenBatchTransformInput(transformInput *sagemaker.BatchTransformInput_) 
 		fInput["dataset_format"] = flattenDatasetFormat(transformInput.DatasetFormat)
 	}
 
-	if transformInput.EndTimeOffset != nil {
-		fInput["end_time_offset"] = aws.StringValue(transformInput.EndTimeOffset)
-	}
-
-	if transformInput.FeaturesAttribute != nil {
-		fInput["features_attribute"] = aws.StringValue(transformInput.FeaturesAttribute)
-	}
-
-	if transformInput.InferenceAttribute != nil {
-		fInput["inference_attribute"] = aws.StringValue(transformInput.InferenceAttribute)
-	}
-
-	if transformInput.ProbabilityAttribute != nil {
-		fInput["probability_attribute"] = aws.StringValue(transformInput.ProbabilityAttribute)
-	}
-
-	if transformInput.ProbabilityThresholdAttribute != nil {
-		fInput["probability_threshold_attribute"] = aws.Float64Value(transformInput.ProbabilityThresholdAttribute)
-	}
-
 	if transformInput.S3DataDistributionType != nil {
 		fInput["s3_data_distribution_type"] = aws.StringValue(transformInput.S3DataDistributionType)
 	}
 
 	if transformInput.S3InputMode != nil {
 		fInput["s3_input_mode"] = aws.StringValue(transformInput.S3InputMode)
-	}
-
-	if transformInput.StartTimeOffset != nil {
-		fInput["start_time_offset"] = aws.StringValue(transformInput.StartTimeOffset)
 	}
 
 	return []map[string]interface{}{fInput}
@@ -828,10 +763,6 @@ func flattenDatasetFormat(datasetFormat *sagemaker.MonitoringDatasetFormat) []ma
 
 	if datasetFormat.Json != nil {
 		fFormat["json"] = flattenJson(datasetFormat.Json)
-	}
-
-	if datasetFormat.Parquet != nil {
-		fFormat["parquet"] = []map[string]interface{}{}
 	}
 
 	return []map[string]interface{}{fFormat}
@@ -1278,28 +1209,8 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 		c.DatasetFormat = expandDatasetFormat(v)
 	}
 
-	if v, ok := m["end_time_offset"].(string); ok && v != "" {
-		c.EndTimeOffset = aws.String(v)
-	}
-
-	if v, ok := m["features_attribute"].(string); ok && v != "" {
-		c.FeaturesAttribute = aws.String(v)
-	}
-
-	if v, ok := m["inference_attribute"].(string); ok && v != "" {
-		c.InferenceAttribute = aws.String(v)
-	}
-
 	if v, ok := m["local_path"].(string); ok && v != "" {
 		c.LocalPath = aws.String(v)
-	}
-
-	if v, ok := m["probability_attribute"].(string); ok && v != "" {
-		c.ProbabilityAttribute = aws.String(v)
-	}
-
-	if v, ok := m["probability_threshold_attribute"].(float64); ok && v > 0 {
-		c.ProbabilityThresholdAttribute = aws.Float64(v)
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
@@ -1308,10 +1219,6 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 
 	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
 		c.S3InputMode = aws.String(v)
-	}
-
-	if v, ok := m["start_time_offset"].(string); ok && v != "" {
-		c.StartTimeOffset = aws.String(v)
 	}
 
 	return c
@@ -1334,10 +1241,6 @@ func expandDatasetFormat(configured []interface{}) *sagemaker.MonitoringDatasetF
 		c.Json = expandJson(v)
 	}
 
-	if v, ok := m["parquet"].([]interface{}); ok && len(v) > 0 {
-		c.Parquet = &sagemaker.MonitoringParquetDatasetFormat{}
-	}
-
 	return c
 }
 
@@ -1346,10 +1249,13 @@ func expandJson(configured []interface{}) *sagemaker.MonitoringJsonDatasetFormat
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
-
 	c := &sagemaker.MonitoringJsonDatasetFormat{}
 
+	if configured[0] == nil {
+		return c
+	}
+
+	m := configured[0].(map[string]interface{})
 	if v, ok := m["line"]; ok {
 		c.Line = aws.Bool(v.(bool))
 	}
