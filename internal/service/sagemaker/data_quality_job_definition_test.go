@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccSageMakerDataQualityJobDefinition_basic(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -436,6 +436,59 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_optional(t *testing
 		},
 	})
 }
+
+func TestAccSageMakerDataQualityJobDefinition_endpoint_optional(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpoint_optional(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.local_path", "/opt/ml/processing/local_path"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "ShardedByS3Key"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_input_mode", "Pipe"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_uri", regexp.MustCompile("output")),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_upload_mode", "EndOfJob"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_type", "ml.t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -468,16 +521,6 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 //   baselining_job_name
 
 // TO ADD:
-// DataQualityJobInput
-//   endpoint_input (required)
-//     end_time_offset
-//     features_attribute
-//     inference_attribute
-//     local_path
-//     probability_attribute
-//     s3_data_distribution_type
-//     s3_input_mode
-//     start_time_offset
 // DataQualityJobOutputConfig optional
 //   kms_key_id
 //   monitoring_outputs (multiple)
@@ -1063,4 +1106,38 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   role_arn = aws_iam_role.test.arn
 }
 `, rName))
+}
+
+func testAccEndpoint_optional(rName string) string {
+	return testAccEndpoint_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    endpoint_input {
+      endpoint_name = aws_sagemaker_endpoint.test.name
+      local_path = "/opt/ml/processing/local_path"
+      s3_data_distribution_type = "ShardedByS3Key"
+      s3_input_mode = "Pipe"
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+}
+`, rName)
 }
