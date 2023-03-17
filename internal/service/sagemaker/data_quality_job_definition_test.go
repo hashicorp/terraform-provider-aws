@@ -177,6 +177,56 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpoint_batchTransform(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexp.MustCompile("captured")),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_uri", regexp.MustCompile("output")),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_upload_mode", "EndOfJob"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_type", "ml.t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -205,13 +255,10 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 // DataQualityAppSpecification
 //   container_arguments
 //   container_entrypoint
-
-// TO ADD:
-// DataQualityBaselineConfig required
 // DataQualityBaselineConfig optional
 //   baselining_job_name
-//   constraints_resource
-//   statistics_resource
+
+// TO ADD:
 // DataQualityJobInput
 //   batch_transform_input (required)
 //     dataset_format
@@ -294,6 +341,87 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 
 		return err
 	}
+}
+
+func testAccBatchTransform_Base(rName string) string {
+	return fmt.Sprintf(`
+
+provider "aws" {
+  region = "us-west-2"
+
+  default_tags {
+    tags = {
+      "adsk:moniker" = "AMPSDEMO-C-UW2"
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy" "boundary" {
+  arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/ADSK-Boundary"
+}
+
+data "aws_iam_policy_document" "access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "s3:GetObject",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  permissions_boundary = data.aws_iam_policy.boundary.arn
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.access.json
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
+  repository_name = "sagemaker-model-monitor-analyzer"
+  image_tag       = ""
+}
+`, rName)
 }
 
 func testAccEndpoint_Base(rName string) string {
@@ -443,7 +571,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri =  "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
@@ -479,7 +607,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri =  "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
@@ -518,7 +646,41 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri =  "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+}
+`, rName)
+}
+
+func testAccEndpoint_batchTransform(rName string) string {
+	return testAccBatchTransform_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
