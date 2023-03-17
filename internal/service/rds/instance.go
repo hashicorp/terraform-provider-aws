@@ -811,6 +811,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				requiresModifyDbInstance = true
 			}
 		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			if current, desired := aws.Int64Value(output.DBInstance.MaxAllocatedStorage), int64(v.(int)); current != desired {
@@ -844,11 +853,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
-		}
-		if !d.Get("manage_master_user_password").(bool) {
-			if _, ok := d.GetOk("password"); !ok {
-				diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-			}
 		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
@@ -1388,11 +1392,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
-		}
-		if !d.Get("manage_master_user_password").(bool) {
-			if _, ok := d.GetOk("password"); !ok {
-				diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-			}
 		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
