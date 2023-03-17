@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccMember_basic(t *testing.T) {
@@ -75,7 +74,7 @@ func testAccMember_invite(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(ctx context.Context, n string, member *securityhub.Member) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, n string, v *securityhub.Member) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -84,19 +83,13 @@ func testAccCheckMemberExists(ctx context.Context, n string, member *securityhub
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-		resp, err := conn.GetMembersWithContext(ctx, &securityhub.GetMembersInput{
-			AccountIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		output, err := tfsecurityhub.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.Members) == 0 {
-			return fmt.Errorf("Security Hub member %s not found", rs.Primary.ID)
-		}
-
-		member = resp.Members[0]
+		*v = *output
 
 		return nil
 	}
@@ -111,27 +104,17 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			resp, err := conn.GetMembersWithContext(ctx, &securityhub.GetMembersInput{
-				AccountIds: []*string{aws.String(rs.Primary.ID)},
-			})
+			_, err := tfsecurityhub.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, tfsecurityhub.ErrCodeBadRequestException) {
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Security Hub Member (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if len(resp.Members) != 0 {
-				return fmt.Errorf("Security Hub member still exists")
-			}
-
-			return nil
+			return fmt.Errorf("Security Hub Member %s still exists", rs.Primary.ID)
 		}
 
 		return nil
