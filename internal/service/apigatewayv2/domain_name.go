@@ -312,7 +312,7 @@ func statusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name
 	}
 }
 
-func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) {
+func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apigatewayv2.DomainNameStatusUpdating},
 		Target:  []string{apigatewayv2.DomainNameStatusAvailable},
