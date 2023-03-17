@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -599,7 +598,7 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 
 	jobDefinition, err := FindDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		log.Printf("[WARN] SageMaker Data Quality Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1073,7 +1072,7 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Data Quality Job Definition (%s) tags: %s", d.Id(), err)
 		}
 	}
-	return append(diags, resourceEndpointConfigurationRead(ctx, d, meta)...)
+	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1087,7 +1086,7 @@ func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.Resou
 
 	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, deleteOpts)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find data quality job definition") {
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return diags
 	}
 

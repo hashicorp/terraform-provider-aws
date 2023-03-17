@@ -62,6 +62,47 @@ func TestAccSageMakerDataQualityJobDefinition_basic(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpoint_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// TO ADD:
+// DataQualityAppSpecification optional
+//   container_arguments
+//   container_entrypoint
+//   environment
+//   post_analytics_processor_source_uri
+//   record_preprocessor_source_uri
+// DataQualityBaselineConfig required
+// DataQualityBaselineConfig optional
+// DataQualityJobInput BatchTransformInput required
+// DataQualityJobInput BatchTransformInput optional
+// DataQualityJobOutputConfig optional
+// JobResources optional
+// NetworkConfig required
+// NetworkConfig optional
+// StoppingCondition optional
+
 func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
