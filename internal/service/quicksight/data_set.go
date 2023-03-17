@@ -1211,15 +1211,15 @@ func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.L
 
 	logicalTableSource := &quicksight.LogicalTableSource{}
 
-	if v, ok := tfMap["data_set_arn"].(string); ok {
+	if v, ok := tfMap["data_set_arn"].(string); ok && v != "" {
 		logicalTableSource.DataSetArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["physical_table_id"].(string); ok {
+	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		logicalTableSource.PhysicalTableId = aws.String(v)
 	}
 
-	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok {
+	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok && len(v) > 0 {
 		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
 	}
 

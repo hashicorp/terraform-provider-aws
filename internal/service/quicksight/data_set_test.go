@@ -184,7 +184,6 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 	})
 }
 
-// ERROR: submitted a ticket to aws, they said you cannot create a ltm at this moment, instead just update an old one
 func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -203,9 +202,9 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.alias", "Group 1"),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.source.physical_table_id", "s3PhysicalTable"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
 				),
 			},
 		},
@@ -624,9 +623,9 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   logical_table_map {
-    alias = "Group 1"
+    alias = "Group1"
     source {
-      physical_table_id = "s3PhysicalTable"
+      physical_table_id = %[1]q 
     }
   }
 }
