@@ -90,8 +90,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.2.1 h1:wA503x0d2eGCyghtrLXrRGPLjR5
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.1/go.mod h1:PJ3LnWVqKqpHdDdIW7X+VO8FjWyOvMuHBkygW28C5tk=
 github.com/aws/aws-sdk-go-v2/service/rds v1.40.6 h1:6+TwyX5iCbAZE5KwzCKDKowUnFSYLbrtIcgcOXzwwzg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.40.6/go.mod h1:AJLw3mrKo1Yj6HWcFUgqNVQGR3KgCmMsKXyI2AxBVKI=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.6 h1:iqcsRMduYwhipbxkJiTqyEgcAsig208RIxd9eW47lqM=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.6/go.mod h1:Sri4U+1knElVG/n8z0oJtGBY0KWykxR/I/CW1LNaVKA=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.7 h1:7qK3tTInZjEq1jxYaPlbohcBx0ny6rusabgQ/wVYqc4=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.7/go.mod h1:Sri4U+1knElVG/n8z0oJtGBY0KWykxR/I/CW1LNaVKA=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.6 h1:Fzl9/XspAWWsgERARa8iOnKTo1dgt/KEJhVope0RvkY=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.6/go.mod h1:PO0JAnohvB5VPwedVzpiY8ZGdgamnweWsx/+yi1jZxc=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.5 h1:W3jd8OfMmkr0lhMC3MNhMf7WxpXMoFs7rQwHryjzDQg=
