@@ -493,6 +493,45 @@ func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkStringSetLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringSetLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueMapLegacy(t *testing.T) {
 	t.Parallel()
 
