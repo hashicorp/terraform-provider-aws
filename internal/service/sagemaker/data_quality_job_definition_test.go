@@ -3,6 +3,7 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -37,9 +38,13 @@ func TestAccSageMakerDataQualityJobDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_uri", regexp.MustCompile("output")),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.0.monitoring_outputs.0.s3_output.0.s3_upload_mode", "EndOfJob"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", "1"),
@@ -87,7 +92,7 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 }
 
 // TO ADD:
-// DataQualityAppSpecification optional
+// DataQualityAppSpecification
 //   container_arguments
 //   container_entrypoint
 //   environment
@@ -95,13 +100,49 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 //   record_preprocessor_source_uri
 // DataQualityBaselineConfig required
 // DataQualityBaselineConfig optional
-// DataQualityJobInput BatchTransformInput required
-// DataQualityJobInput BatchTransformInput optional
+//   baselining_job_name
+//   constraints_resource
+//   statistics_resource
+// DataQualityJobInput
+//   batch_transform_input (required)
+//     dataset_format
+//       csv
+//         header
+//       json
+//         line
+//       parquet
+//     end_time_offset
+//     features_attribute
+//     inference_attribute
+//     local_path
+//     probability_attribute
+//     s3_data_distribution_type
+//     s3_input_mode
+//     start_time_offset
+//   endpoint_input (required)
+//     end_time_offset
+//     features_attribute
+//     inference_attribute
+//     local_path
+//     probability_attribute
+//     s3_data_distribution_type
+//     s3_input_mode
+//     start_time_offset
 // DataQualityJobOutputConfig optional
-// JobResources optional
+//   kms_key_id
+//   monitoring_outputs (multiple)
+//     s3_output
+//       local_path
+//       s3_upload_mode
+// JobResources
+//   cluster_config
+//     volume_kms_key_id
 // NetworkConfig required
 // NetworkConfig optional
-// StoppingCondition optional
+//   enable_inter_container_traffic_encryption
+//   enable_network_isolation
+// StoppingCondition required
+//
 
 func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
