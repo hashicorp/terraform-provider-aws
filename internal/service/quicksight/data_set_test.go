@@ -311,7 +311,6 @@ func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
 	})
 }
 
-// data set is created, but attribute gets deleted on creation
 func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -331,10 +330,11 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.column_name", "columnname"),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.column_name", "ColumnId-1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_key", "uniquetagkey"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_multi_value_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", quicksight.StatusEnabled),
 				),
 			},
 		},
@@ -744,8 +744,9 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   row_level_permission_tag_configuration {
+	status = "ENABLED"
     tag_rules {
-      column_name = "columnname"
+      column_name = "ColumnId-1"
       tag_key = "uniquetagkey"
       match_all_value = "*"
       tag_multi_value_delimiter = ","
