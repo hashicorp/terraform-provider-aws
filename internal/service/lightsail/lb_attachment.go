@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"strings"
 
@@ -50,28 +49,22 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 
 func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-
+	lbName := d.Get("lb_name").(string)
 	req := lightsail.AttachInstancesToLoadBalancerInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+		LoadBalancerName: aws.String(lbName),
 		InstanceNames:    aws.StringSlice([]string{d.Get("instance_name").(string)}),
 	}
 
 	out, err := conn.AttachInstancesToLoadBalancerWithContext(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Attach Instances to Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Attach Instances to Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
@@ -125,19 +118,13 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 	out, err := conn.DetachInstancesFromLoadBalancerWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Detach Instances from Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Instances to Detach from the Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil

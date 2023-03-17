@@ -16,10 +16,6 @@ const (
 	ReplicationGroupStatusDeleting     = "deleting"
 	ReplicationGroupStatusCreateFailed = "create-failed"
 	ReplicationGroupStatusSnapshotting = "snapshotting"
-
-	UserStatusActive    = "active"
-	UserStatusDeleting  = "deleting"
-	UserStatusModifying = "modifying"
 )
 
 // StatusReplicationGroup fetches the Replication Group and its Status
@@ -128,22 +124,5 @@ func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.E
 		}
 
 		return member, aws.StringValue(member.Status), nil
-	}
-}
-
-// StatusUser fetches the ElastiCache user and its Status
-func StatusUser(ctx context.Context, conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		user, err := FindUserByID(ctx, conn, userId)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return user, aws.StringValue(user.Status), nil
 	}
 }
