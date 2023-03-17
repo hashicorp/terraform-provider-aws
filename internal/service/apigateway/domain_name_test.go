@@ -436,7 +436,6 @@ func testAccWaitForChangeStatus(ctx context.Context, n string) resource.TestChec
 					return nil, "UNKNOWN", fmt.Errorf("ApiGateway CheckDomainStatus response empty")
 				}
 
-				// return true, aws.StringValue(output.ChangeInfo.Status), nil
 				return true, aws.StringValue(output.DomainNameStatus), nil
 			},
 		}
