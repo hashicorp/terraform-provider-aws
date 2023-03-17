@@ -790,7 +790,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(v.(map[string]interface{}))
+		params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -946,7 +946,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
-			params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").(map[string]interface{}))
+			params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]interface{}))
 		}
 
 		if d.HasChange("row_level_permission_tag_configuration") {
@@ -1767,8 +1767,12 @@ func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermis
 	return permissions
 }
 
-func expandDataSetRowLevelPermissionDataSet(tfMap map[string]interface{}) *quicksight.RowLevelPermissionDataSet {
-	if tfMap == nil {
+func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.RowLevelPermissionDataSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 

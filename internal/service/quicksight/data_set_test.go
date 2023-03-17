@@ -288,6 +288,8 @@ func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	permissionsDataSetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	permissionsDataSetID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -296,7 +298,7 @@ func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfigRowLevelPermissionDataSet(rId, rName),
+				Config: testAccDataSetConfigRowLevelPermissionDataSet(rId, rName, permissionsDataSetID, permissionsDataSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.#", "1"),
@@ -694,10 +696,34 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-func testAccDataSetConfigRowLevelPermissionDataSet(rId, rName string) string {
+// TODO: need to determine how to add data columns to the permissions data set
+// Error: error creating QuickSight Data Set: InvalidParameterValueException: Invalid RowLevelPermissionDataSet.
+// DataSet rules contain only metadata: UserName and/or GroupName. You need to add at least one data column to the data set
+func testAccDataSetConfigRowLevelPermissionDataSet(rId, rName, permissionsDataSetID, permissionsDataSetName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "permissions_data_set" {
+  data_set_id = %[3]q
+  name        = %[4]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[3]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "UserName"
+        type = "STRING"
+      }
+      input_columns {
+        name = "GroupName"
+        type = "STRING"
+      }
+    }
+  }
+}
+
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
   name        = %[2]q
@@ -714,14 +740,14 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   row_level_permission_data_set {
-    arn = "this.arn"
+    arn = aws_quicksight_data_set.permissions_data_set.arn
     permission_policy = "GRANT_ACCESS"
     format_version = "VERSION_1"
     namespace = "namespace"
     status = "ENABLED"
   }
 }
-`, rId, rName))
+`, rId, rName, permissionsDataSetID, permissionsDataSetName))
 }
 
 func testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName string) string {
