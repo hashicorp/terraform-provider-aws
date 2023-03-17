@@ -17,7 +17,7 @@ jobs:
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         if: github.event_name == 'pull_request_target' && env.IN_MAINTAINER_LIST == 'false'
         id: filter
         with:
