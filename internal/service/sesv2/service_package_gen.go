@@ -22,6 +22,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceConfigurationSet,
+			TypeName: "aws_sesv2_configuration_set",
+		},
+		{
 			Factory:  DataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 		},

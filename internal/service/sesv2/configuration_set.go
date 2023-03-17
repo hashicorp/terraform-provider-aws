@@ -246,15 +246,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
+	d.Set("arn", configurationSetNameToARN(meta, *out.ConfigurationSetName))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -758,4 +750,14 @@ func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions 
 	}
 
 	return a
+}
+
+func configurationSetNameToARN(meta interface{}, configurationSetName string) string {
+	return arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("configuration-set/%s", configurationSetName),
+	}.String()
 }
