@@ -1,0 +1,27 @@
+```release-note:new-resource
+aws_ec2_transit_gateway_connect
+```
+
+```release-note:new-resource
+aws_ec2_transit_gateway_connect_peer
+```
+
+```release-note:new-data-source
+aws_ec2_transit_gateway_connect
+```
+
+```release-note:new-data-source
+aws_ec2_transit_gateway_connect_peer
+```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` argument
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` attribute
+```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```

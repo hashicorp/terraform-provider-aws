@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_domain"
 description: |-
@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool_domain" "main" {
-  domain          = "example-domain.example.com"
+  domain          = "example-domain"
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.example.id
 }
@@ -48,9 +48,9 @@ resource "aws_route53_record" "auth-cognito-A" {
   zone_id = data.aws_route53_zone.example.zone_id
   alias {
     evaluate_target_health = false
-    name                   = aws_cognito_user_pool_domain.main.cloudfront_distribution_arn
-    # This zone_id is fixed
-    zone_id = "Z2FDTNDATAQYW2"
+
+    name    = aws_cognito_user_pool_domain.main.cloudfront_distribution
+    zone_id = aws_cognito_user_pool_domain.main.cloudfront_distribution_zone_id
   }
 }
 ```
@@ -59,7 +59,7 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 The following arguments are supported:
 
-* `domain` - (Required) The domain string.
+* `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
 
@@ -68,14 +68,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `aws_account_id` - The AWS account ID for the user pool owner.
+* `cloudfront_distribution` - The Amazon CloudFront endpoint (e.g. `dpp0gtxikpq3y.cloudfront.net`) that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
 * `cloudfront_distribution_arn` - The URL of the CloudFront distribution. This is required to generate the ALIAS `aws_route53_record`
+* `cloudfront_distribution_zone_id` - The Route 53 hosted zone ID of the CloudFront distribution.
 * `s3_bucket` - The S3 bucket where the static files for this domain are stored.
 * `version` - The app version.
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.
+Cognito User Pool Domains can be imported using the `domain`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_domain.main <domain>
+$ terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```

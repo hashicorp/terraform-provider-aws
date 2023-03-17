@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_listener_policy"
 description: |-
@@ -9,7 +9,6 @@ description: |-
 # Resource: aws_load_balancer_listener_policy
 
 Attaches a load balancer policy to an ELB Listener.
-
 
 ## Example Usage
 
@@ -111,6 +110,7 @@ The following arguments are supported:
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `load_balancer_port` - (Required) The load balancer listener port to apply the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an update. To force an update without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 

@@ -20,7 +20,6 @@ resource "aws_pinpoint_sms_channel" "sms" {
 resource "aws_pinpoint_app" "app" {}
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -39,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Pinpoint SMS Channel can be imported using the `application-id`, e.g.
+Pinpoint SMS Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_sms_channel.sms application-id

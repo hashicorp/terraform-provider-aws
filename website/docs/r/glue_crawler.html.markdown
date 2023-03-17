@@ -55,7 +55,6 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-
 ### Catalog Target Example
 
 ```terraform
@@ -129,7 +128,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target` or `catalog_target`.
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
 The following arguments are supported:
 
@@ -145,11 +144,12 @@ The following arguments are supported:
 * `mongodb_target` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
+* `lake_formation_configuration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
 * `lineage_configuration` (Optional) Specifies data lineage configuration settings for the crawler. See [Lineage Configuration](#lineage-configuration) below.
 * `recrawl_policy` (Optional)  A policy that specifies whether to crawl the entire dataset again, or to crawl only folders that were added since the last crawler run.. See [Recrawl Policy](#recrawl-policy) below.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Dynamodb Target
 
@@ -162,22 +162,28 @@ The following arguments are supported:
 * `connection_name` - (Required) The name of the connection to use to connect to the JDBC target.
 * `path` - (Required) The path of the JDBC target.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `enable_additional_metadata` - (Optional) Specify a value of `RAWTYPES` or `COMMENTS` to enable additional metadata intable responses. `RAWTYPES` provides the native-level datatype. `COMMENTS` provides comments associated with a column or table in the database.
 
 ### S3 Target
 
 * `path` - (Required) The path to the Amazon S3 target.
 * `connection_name` - (Optional) The name of a connection which allows crawler to access data in S3 within a VPC.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `sample_size` - (Optional) Sets the number of files in each leaf folder to be crawled when crawling sample files in a dataset. If not set, all the files are crawled. A valid value is an integer between 1 and 249.
+* `event_queue_arn` - (Optional) The ARN of the SQS queue to receive S3 notifications from.
+* `dlq_event_queue_arn` - (Optional) The ARN of the dead-letter SQS queue.
 
 ### Catalog Target
 
+* `connection_name` - (Optional) The name of the connection for an Amazon S3-backed Data Catalog table to be a target of the crawl when using a Catalog connection type paired with a `NETWORK` Connection type.
 * `database_name` - (Required) The name of the Glue database to be synchronized.
 * `tables` - (Required) A list of catalog tables to be synchronized.
+* `event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
+* `dlq_event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
 
 ~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
 
 -> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
-
 
 ### MongoDB Target
 
@@ -185,10 +191,22 @@ The following arguments are supported:
 * `path` - (Required) The path of the Amazon DocumentDB or MongoDB target (database/collection).
 * `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table. Default value is `true`.
 
+### Delta Target
+
+* `connection_name` - (Optional) The name of the connection to use to connect to the Delta table target.
+* `create_native_delta_table` (Optional) Specifies whether the crawler will create native tables, to allow integration with query engines that support querying of the Delta transaction log directly.
+* `delta_tables` - (Required) A list of the Amazon S3 paths to the Delta tables.
+* `write_manifest` - (Required) Specifies whether to write the manifest files to the Delta table path.
+
 ### Schema Change Policy
 
 * `delete_behavior` - (Optional) The deletion behavior when the crawler finds a deleted object. Valid values: `LOG`, `DELETE_FROM_DATABASE`, or `DEPRECATE_IN_DATABASE`. Defaults to `DEPRECATE_IN_DATABASE`.
 * `update_behavior` - (Optional) The update behavior when the crawler finds a changed schema. Valid values: `LOG` or `UPDATE_IN_DATABASE`. Defaults to `UPDATE_IN_DATABASE`.
+
+### Lake Formation Configuration
+
+* `account_id` - (Optional) Required for cross account crawls. For same account crawls as the target data, this can omitted.
+* `use_lake_formation_credentials` - (Optional) Specifies whether to use Lake Formation credentials for the crawler instead of the IAM role credentials.
 
 ### Lineage Configuration
 
@@ -196,7 +214,7 @@ The following arguments are supported:
 
 ### Recrawl Policy
 
-* `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again or to crawl only folders that were added since the last crawler run. Valid Values are: `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
+* `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `CRAWL_EVENT_MODE`, `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
 
 ## Attributes Reference
 
@@ -204,11 +222,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Crawler name
 * `arn` - The ARN of the crawler
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Glue Crawlers can be imported using `name`, e.g.
+Glue Crawlers can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_crawler.MyJob MyJob

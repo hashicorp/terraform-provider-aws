@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_client"
 description: |-
@@ -56,45 +56,41 @@ resource "aws_pinpoint_app" "test" {
   name = "pinpoint"
 }
 
-resource "aws_iam_role" "test" {
-  name = "role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "cognito-idp.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["cognito-idp.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "test" {
+  name               = "role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "mobiletargeting:UpdateEndpoint",
+      "mobiletargeting:PutItems",
+    ]
+
+    resources = ["arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"]
+  }
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "role_policy"
-  role = aws_iam_role.test.id
-
-  policy = <<-EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "mobiletargeting:UpdateEndpoint",
-        "mobiletargeting:PutItems"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
-    }
-  ]
-}
-EOF
+  name   = "role_policy"
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_cognito_user_pool_client" "test" {
@@ -107,6 +103,24 @@ resource "aws_cognito_user_pool_client" "test" {
     role_arn         = aws_iam_role.test.arn
     user_data_shared = true
   }
+}
+```
+
+### Create a user pool client with Cognito as the identity provider
+
+```terraform
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
+}
+
+resource "aws_cognito_user_pool_client" "userpool_client" {
+  name                                 = "client"
+  user_pool_id                         = aws_cognito_user_pool.pool.id
+  callback_urls                        = ["https://example.com"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["email", "openid"]
+  supported_identity_providers         = ["COGNITO"]
 }
 ```
 
@@ -124,8 +138,11 @@ The following arguments are optional:
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
 * `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
+* `auth_session_validity` - (Optional) Amazon Cognito creates a session token for each API request in an authentication flow. AuthSessionValidity is the duration, in minutes, of that session token. Your user pool native user must respond to each authentication challenge before the session expires. Valid values between `3` and `15`. Default value is `3`.
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
+* `enable_token_revocation` - (Optional) Enables or disables token revocation.
+* `enable_propagate_additional_user_context_data` - (Optional) Activates the propagation of additional user context data.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `token_validity_units`.
@@ -133,7 +150,7 @@ The following arguments are optional:
 * `prevent_user_existence_errors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
 * `refresh_token_validity` - (Optional) Time limit in days refresh tokens are valid for.
-* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client.
+* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 
@@ -164,8 +181,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.
+Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+$ terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```

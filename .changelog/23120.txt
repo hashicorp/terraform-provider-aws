@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Correctly handle the `days` value of the `rule` `transition` configuration block when set to `0`
+```

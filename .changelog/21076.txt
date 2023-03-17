@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_api_gateway_domain_name: Add `ownership_verification_certificate_arn` argument.
+```
+
+```release-note:enhancement
+resource/aws_apigatewayv2_domain_name: Add `domain_name_configuration.ownership_verification_certificate_arn` argument.
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_versioning: Add eventual consistency handling to help ensure bucket versioning is stabilized.
+```

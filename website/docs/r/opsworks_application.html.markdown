@@ -56,7 +56,7 @@ The following arguments are supported:
 
 * `name` - (Required) A human-readable name for the application.
 * `short_name` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
-* `stack_id` - (Required) The id of the stack the application will belong to.
+* `stack_id` - (Required) ID of the stack the application will belong to.
 * `type` - (Required) Opsworks application type. One of `aws-flow-ruby`, `java`, `rails`, `php`, `nodejs`, `static` or `other`.
 * `description` - (Optional) A description of the app.
 * `environment` - (Optional) Object to define environment variables.  Object is described below.
@@ -101,7 +101,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Opsworks Application can be imported using the `id`, e.g.
+Opsworks Application can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_application.test <id>

@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_managed_scaling_policy"
 description: |-
@@ -43,7 +43,7 @@ resource "aws_emr_managed_scaling_policy" "samplepolicy" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required) The id of the EMR cluster
+* `cluster_id` - (Required) ID of the EMR cluster
 * `compute_limits` - (Required) Configuration block with compute limit settings. Described below.
 
 ### compute_limits
@@ -60,7 +60,7 @@ No additional attributes are exported.
 
 ## Import
 
-EMR Managed Scaling Policies can be imported via the EMR Cluster identifier, e.g.
+EMR Managed Scaling Policies can be imported via the EMR Cluster identifier, e.g.,
 
 ```console
 $ terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF

@@ -1,0 +1,8 @@
+```release-note:new-resource
+aws_connect_instance
+```
+
+```release-note:new-data-source
+aws_connect_instance
+```
+

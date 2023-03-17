@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "example" {
 
 resource "aws_ssoadmin_permission_set_inline_policy" "example" {
   inline_policy      = data.aws_iam_policy_document.example.json
-  instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
 ```
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSO Permission Set Inline Policies can be imported using the `permission_set_arn` and `instance_arn` separated by a comma (`,`) e.g.
+SSO Permission Set Inline Policies can be imported using the `permission_set_arn` and `instance_arn` separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_ssoadmin_permission_set_inline_policy.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72

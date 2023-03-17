@@ -36,7 +36,7 @@ The following arguments are supported:
 * `password` - (Required) The password of the user who can mount the share and has file permissions in the SMB.
 * `server_hostname` - (Required) Specifies the IP address or DNS name of the SMB server. The DataSync Agent(s) use this to mount the SMB share.
 * `subdirectory` - (Required) Subdirectory to perform actions as source or destination. Should be exported by the NFS server.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user` - (Required) The user who can mount the share and has file and folder permissions in the SMB share.
 
 ### mount_options Argument Reference
@@ -50,11 +50,11 @@ The following arguments are supported inside the `mount_options` configuration b
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_datasync_location_smb` can be imported by using the Amazon Resource Name (ARN), e.g.
+`aws_datasync_location_smb` can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567

@@ -1,0 +1,45 @@
+name: golangci-lint Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .github/workflows/golangci-lint.yml
+      - .ci/.golangci*.yml
+      - internal/**
+      - go.sum
+      - main.go
+      - names/**
+      - tools/**
+
+jobs:
+  golangci-linta:
+    name: 1 of 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
+        with:
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.51.0
+          args: --config .ci/.golangci.yml
+  golangci-lintb:
+    name: 2 of 2
+    needs: [golangci-linta]
+    runs-on: [custom, linux, large]
+    steps:
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
+        with:
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.51.0
+          args: --config .ci/.golangci2.yml

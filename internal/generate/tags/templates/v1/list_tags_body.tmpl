@@ -1,0 +1,58 @@
+// {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+{{- if not ( .ContextOnly ) }}
+func {{ .ListTagsFunc }}(conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+	return {{ .ListTagsFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+}
+
+{{ end }}
+func {{ if .ContextOnly }}{{ .ListTagsFunc }}{{ else }}{{ .ListTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
+		{{- if .ListTagsInFiltIDName }}
+		Filters: []*{{ .TagPackage  }}.Filter{
+			{
+				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+		{{- else }}
+		{{- if .ListTagsInIDNeedSlice }}
+		{{ .ListTagsInIDElem }}: aws.StringSlice([]string{identifier}),
+		{{- else }}
+		{{ .ListTagsInIDElem }}: aws.String(identifier),
+		{{- end }}
+		{{- if .TagResTypeElem }}
+		{{ .TagResTypeElem }}:         aws.String(resourceType),
+		{{- end }}
+		{{- end }}
+	}
+
+	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
+
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- end }}
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+}
+
+func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+	return  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+}

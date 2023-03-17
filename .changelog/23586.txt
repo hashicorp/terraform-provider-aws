@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string
+```
+
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests
+```

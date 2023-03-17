@@ -10,13 +10,13 @@ description: |-
 
 Manages a version of a CloudFormation Type.
 
-~> **NOTE:** The destroy operation of this resource marks the version as deprecated. If this was the only `LIVE` version, the type is marked as deprecated. It is recommended to enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/docs/configuration/resources.html#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
+~> **NOTE:** The destroy operation of this resource marks the version as deprecated. If this was the only `LIVE` version, the type is marked as deprecated. Enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
 
 ## Example Usage
 
 ```terraform
 resource "aws_cloudformation_type" "example" {
-  schema_handler_package = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  schema_handler_package = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   type                   = "RESOURCE"
   type_name              = "ExampleCompany::ExampleService::ExampleResource"
 
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.
+`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.,
 
 ```
 terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1

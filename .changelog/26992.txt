@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datasync_task: Add `security_descriptor_copy_flags` to `options` configuration block
+```

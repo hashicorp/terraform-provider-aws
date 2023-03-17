@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_capacity_provider"
 description: |-
@@ -20,7 +20,7 @@ resource "aws_autoscaling_group" "test" {
 
   tag {
     key                 = "AmazonECSManaged"
-    value               = ""
+    value               = true
     propagate_at_launch = true
   }
 }
@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `auto_scaling_group_provider`
 
@@ -70,11 +70,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN that identifies the capacity provider.
 * `id` - ARN that identifies the capacity provider.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.
+ECS Capacity Providers can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_ecs_capacity_provider.example example

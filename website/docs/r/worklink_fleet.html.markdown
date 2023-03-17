@@ -26,7 +26,7 @@ resource "aws_worklink_fleet" "example" {
 
   network {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = [aws_subnet.test.*.id]
+    subnet_ids         = [aws_subnet.test[*].id]
     security_group_ids = [aws_security_group.test.id]
   }
 }
@@ -44,7 +44,6 @@ resource "aws_worklink_fleet" "test" {
   }
 }
 ```
-
 
 ## Argument Reference
 
@@ -85,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkLink can be imported using the ARN, e.g.
+WorkLink can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example

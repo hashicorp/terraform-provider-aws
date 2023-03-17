@@ -40,3 +40,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The identifier for this version of the key group.
 * `id` - The identifier for the key group.
+
+## Import
+
+CloudFront Key Group can be imported using the `id`, e.g.,
+
+```
+$ terraform import aws_cloudfront_key_group.example 4b4f2r1c-315d-5c2e-f093-216t50jed10f
+```

@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
 description: |-
@@ -27,7 +27,6 @@ resource "aws_kms_alias" "a" {
 
 The following arguments are supported:
 
-
 * `name` - (Optional) The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 * `name_prefix` - (Optional) Creates an unique alias beginning with the specified prefix.
 The name must start with the word "alias" followed by a forward slash (alias/).  Conflicts with `name`.
@@ -42,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.
+KMS aliases can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kms_alias.a alias/my-key-alias

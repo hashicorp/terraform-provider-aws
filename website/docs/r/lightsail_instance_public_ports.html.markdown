@@ -20,7 +20,7 @@ Opens ports for a specific Amazon Lightsail instance, and specifies the IP addre
 resource "aws_lightsail_instance" "test" {
   name              = "yak_sail"
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 
@@ -53,6 +53,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cidrs` - (Optional) Set of CIDR blocks.
+* `cidr_list_aliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
 
 ## Attributes Reference
 

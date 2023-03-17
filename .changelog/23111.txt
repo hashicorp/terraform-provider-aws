@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image_pipeline: Add `container_recipe_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_image_pipeline: Add `container_recipe_arn` attribute
+```

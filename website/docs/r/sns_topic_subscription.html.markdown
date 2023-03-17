@@ -1,5 +1,5 @@
 ---
-subcategory: "SNS"
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_topic_subscription"
 description: |-
@@ -240,6 +240,7 @@ The following arguments are optional:
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
 * `endpoint_auto_confirms` - (Optional) Whether the endpoint is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) (e.g., PagerDuty). Default is `false`.
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
+* `filter_policy_scope` - (Optional) Whether the `filter_policy` applies to `MessageAttributes` (default) or `MessageBody`.
 * `raw_message_delivery` - (Optional) Whether to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property). Default is `false`.
 * `redrive_policy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
 
@@ -275,7 +276,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS Topic Subscriptions can be imported using the `subscription arn`, e.g.
+SNS Topic Subscriptions can be imported using the `subscription arn`, e.g.,
 
 ```
 $ terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f

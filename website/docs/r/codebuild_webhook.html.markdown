@@ -23,7 +23,7 @@ When working with [Bitbucket](https://bitbucket.org) and [GitHub](https://github
 ```terraform
 resource "aws_codebuild_webhook" "example" {
   project_name = aws_codebuild_project.example.name
-
+  build_type   = "BUILD"
   filter_group {
     filter {
       type    = "EVENT"
@@ -31,7 +31,7 @@ resource "aws_codebuild_webhook" "example" {
     }
 
     filter {
-      type    = "HEAD_REF"
+      type    = "BASE_REF"
       pattern = "master"
     }
   }
@@ -40,7 +40,7 @@ resource "aws_codebuild_webhook" "example" {
 
 ### GitHub Enterprise
 
-When working with [GitHub Enterprise](https://enterprise.github.com/) source CodeBuild webhooks, the GHE repository webhook must be separately managed (e.g. manually or with the `github_repository_webhook` resource).
+When working with [GitHub Enterprise](https://enterprise.github.com/) source CodeBuild webhooks, the GHE repository webhook must be separately managed (e.g., manually or with the `github_repository_webhook` resource).
 
 More information creating webhooks with GitHub Enterprise can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-enterprise.html).
 
@@ -69,7 +69,8 @@ resource "github_repository_webhook" "example" {
 The following arguments are supported:
 
 * `project_name` - (Required) The name of the build project.
-* `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. It is recommended to use `filter_group` over `branch_filter`.
+* `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 
 `filter_group` supports the following:
@@ -95,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Webhooks can be imported using the CodeBuild Project name, e.g.
+CodeBuild Webhooks can be imported using the CodeBuild Project name, e.g.,
 
 ```
 $ terraform import aws_codebuild_webhook.example MyProjectName

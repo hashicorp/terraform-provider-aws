@@ -35,10 +35,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `website_ca_id` - A unique identifier for the Certificate Authority.
 
-
 ## Import
 
-WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.
+WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.,
 
 ```
 $ terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk

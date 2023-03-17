@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Prevent failure of AWS RDS Cluster creation when it is in `rebooting` state.
+```
