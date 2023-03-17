@@ -4,15 +4,15 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.220
+	github.com/aws/aws-sdk-go v1.44.221
 	github.com/aws/aws-sdk-go-v2 v1.17.6
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.24
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.5

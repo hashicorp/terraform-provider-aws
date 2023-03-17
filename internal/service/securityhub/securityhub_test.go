@@ -45,7 +45,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic": testAccOrganizationConfiguration_basic,
+			"basic":               testAccOrganizationConfiguration_basic,
+			"AutoEnableStandards": testAccOrganizationConfiguration_autoEnableStandards,
 		},
 		"ProductSubscription": {
 			"basic": testAccProductSubscription_basic,
