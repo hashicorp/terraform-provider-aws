@@ -918,9 +918,11 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		params := &quicksight.UpdateDataSetInput{
-			AwsAccountId: aws.String(awsAccountId),
-			DataSetId:    aws.String(dataSetId),
-			Name:         aws.String(d.Get("name").(string)),
+			AwsAccountId:     aws.String(awsAccountId),
+			DataSetId:        aws.String(dataSetId),
+			ImportMode:       aws.String(d.Get("import_mode").(string)),
+			PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
+			Name:             aws.String(d.Get("name").(string)),
 		}
 
 		if d.HasChange("column_groups") {
@@ -939,16 +941,8 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").(*schema.Set).List())
 		}
 
-		if d.HasChange("import_mode") {
-			params.ImportMode = aws.String(d.Get("import_mode").(string))
-		}
-
 		if d.HasChange("logical_table_map") {
 			params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").([]interface{}))
-		}
-
-		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
