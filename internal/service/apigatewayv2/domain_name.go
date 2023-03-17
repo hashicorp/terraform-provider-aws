@@ -219,9 +219,13 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					TruststoreUri: aws.String(""),
 				}
 			} else {
-				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
-					TruststoreUri:     aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string)),
-					TruststoreVersion: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
+				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{}
+				if d.HasChange("mutual_tls_authentication.0.truststore_uri") {
+					input.MutualTlsAuthentication.TruststoreUri = aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string))
+				}
+
+				if d.HasChange("mutual_tls_authentication.0.truststore_version") {
+					input.MutualTlsAuthentication.TruststoreVersion = aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string))
 				}
 			}
 		}
