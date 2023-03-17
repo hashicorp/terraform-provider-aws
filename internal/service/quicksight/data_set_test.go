@@ -29,7 +29,7 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfig(rId, rName),
+				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
@@ -66,7 +66,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfig(rId, rName),
+				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), resourceName),
@@ -78,7 +78,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 }
 
 // REQUIRES LOGICAL_TABLE_MAP
-func TestAccQuickSightDataSet_column_groups(t *testing.T) {
+func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +106,7 @@ func TestAccQuickSightDataSet_column_groups(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSet_column_level_permission_rules(t *testing.T) {
+func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -128,7 +128,7 @@ func TestAccQuickSightDataSet_column_level_permission_rules(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSet_data_set_usage_configuration(t *testing.T) {
+func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -153,7 +153,7 @@ func TestAccQuickSightDataSet_data_set_usage_configuration(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSet_field_folders(t *testing.T) {
+func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -180,7 +180,7 @@ func TestAccQuickSightDataSet_field_folders(t *testing.T) {
 }
 
 // ERROR: submitted a ticket to aws, they said you cannot create a ltm at this moment, instead just update an old one
-func TestAccQuickSightDataSet_logical_table_map(t *testing.T) {
+func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -220,7 +220,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfigPermissions(rId, rName),
+				Config: testAccDataSetConfigPermission(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -238,7 +238,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSetConfigUpdatePermissions(rId, rName),
+				Config: testAccDataSetConfigUpdatePermission(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -259,7 +259,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSetConfig(rId, rName),
+				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
@@ -270,7 +270,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 }
 
 // data set is created, but attribute gets deleted on creation
-func TestAccQuickSightDataSet_row_level_permission_data_set(t *testing.T) {
+func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -299,7 +299,7 @@ func TestAccQuickSightDataSet_row_level_permission_data_set(t *testing.T) {
 }
 
 // data set is created, but attribute gets deleted on creation
-func TestAccQuickSightDataSet_row_level_permission_tag_configuration(t *testing.T) {
+func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -340,7 +340,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTags1DataSetConfig(rId, rName, "key1", "value1"),
+				Config: testAccDataSetConfigTags(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -419,7 +419,7 @@ func testAccCheckQuickSightDataSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBaseDataSetConfig(rId string, rName string) string {
+func testAccDataSetConfigBase(rId string, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
@@ -441,204 +441,62 @@ resource "aws_quicksight_data_source" "test" {
 `, rId, rName))
 }
 
-func testAccDataSetConfig(rId, rName string) string {
+func testAccDataSetConfigBasic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
 
-	physical_table_map {
-		physical_table_map_id = %[1]q
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
 }
 `, rId, rName))
 }
 
 func testAccDataSetConfigColumnGroups(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
 
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	column_groups {
-		geo_spatial_column_group {
-			columns = ["column1"]
-			country_code = "US"
-			name = "test"
-		}
-	}
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  column_groups {
+    geo_spatial_column_group {
+      columns = ["column1"]
+      country_code = "US"
+      name = "test"
+    }
+  }
 }
 `, rId, rName))
 }
 
 func testAccDataSetConfigColumnLevelPermissionRules(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
-
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	column_level_permission_rules {
-		column_names = ["ColumnId-1"]
-	}
-}
-`, rId, rName))
-}
-
-func testAccDataSetConfigDataSetUsageConfiguration(rId, rName string) string {
-	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
-
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	data_set_usage_configuration {
-		disable_use_as_direct_query_source = false
-		disable_use_as_imported_source = false
-	  }
-}
-`, rId, rName))
-}
-
-func testAccDataSetConfigFieldFolders(rId, rName string) string {
-	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
-
-	physical_table_map {
-		physical_table_map_id = %[1]q 
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	field_folders {
-		field_folders_id = %[1]q
-		columns = ["ColumnId-1"]
-		description = "test"
-	}
-}
-`, rId, rName))
-}
-
-func testAccDataSetConfigLogicalTableMap(rId, rName string) string {
-	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
-
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	logical_table_map {
-		alias = "Group 1"
-		source {
-			physical_table_id = "s3PhysicalTable"
-		}
-	}
-}
-`, rId, rName))
-}
-
-func testAccDataSetConfigPermissions(rId, rName string) string {
-	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
-		testAccDataSource_UserConfig(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
-
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	permissions {
-    	actions = [
-      		"quicksight:DescribeDataSet",
-      		"quicksight:DescribeDataSetPermissions",
-      		"quicksight:PassDataSet"
-   		]
-    	principal = aws_quicksight_user.test.arn
-  	}
-}
-`, rId, rName))
-}
-
-func testAccDataSetConfigUpdatePermissions(rId, rName string) string {
-	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
@@ -647,14 +505,158 @@ resource "aws_quicksight_data_set" "test" {
   import_mode = "SPICE"
 
   physical_table_map {
-	physical_table_map_id = "unique_id"
-	  s3_source {
-		  data_source_arn = aws_quicksight_data_source.test.arn
-		  input_columns {
-			  name = "ColumnId-1"
-			  type = "STRING"
-		  }
-	  }
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  column_level_permission_rules {
+    column_names = ["ColumnId-1"]
+    principals   = [aws_quicksight_user.test.arn]
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigDataSetUsageConfiguration(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  data_set_usage_configuration {
+    disable_use_as_direct_query_source = false
+    disable_use_as_imported_source = false
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigFieldFolders(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  field_folders {
+    field_folders_id = %[1]q
+    columns = ["ColumnId-1"]
+    description = "test"
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigLogicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  logical_table_map {
+    alias = "Group 1"
+    source {
+      physical_table_id = "s3PhysicalTable"
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigPermission(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		testAccDataSource_UserConfig(rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  permissions {
+    actions = [
+      "quicksight:DescribeDataSet",
+      "quicksight:DescribeDataSetPermissions",
+      "quicksight:PassDataSet"
+    ]
+    principal = aws_quicksight_user.test.arn
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigUpdatePermission(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		testAccDataSource_UserConfig(rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
   }
   permission {
     actions = [
@@ -665,7 +667,6 @@ resource "aws_quicksight_data_set" "test" {
       "quicksight:DeleteDataSet",
       "quicksight:UpdateDataSetPermissions"
     ]
-
     principal = aws_quicksight_user.test.arn
   }
 }
@@ -674,87 +675,87 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigRowLevelPermissionDataSet(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
 
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	row_level_permission_data_set {
-		arn = "this.arn"
-		permission_policy = "GRANT_ACCESS"
-		format_version = "VERSION_1"
-		namespace = "namespace"
-		status = "ENABLED"
-	  }
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  row_level_permission_data_set {
+    arn = "this.arn"
+    permission_policy = "GRANT_ACCESS"
+    format_version = "VERSION_1"
+    namespace = "namespace"
+    status = "ENABLED"
+  }
 }
 `, rId, rName))
 }
 
 func testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
 
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	row_level_permission_tag_configuration {
-		tag_rules {
-			column_name = "columnname"
-			tag_key = "uniquetagkey"
-			match_all_value = "*"
-			tag_multi_value_delimiter = ","
-		}
-	}
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  row_level_permission_tag_configuration {
+    tag_rules {
+      column_name = "columnname"
+      tag_key = "uniquetagkey"
+      match_all_value = "*"
+      tag_multi_value_delimiter = ","
+    }
+  }
 }
 `, rId, rName))
 }
 
-func testAccTags1DataSetConfig(rId, rName, key, value string) string {
+func testAccDataSetConfigTags(rId, rName, key, value string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(rId, rName),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
-	data_set_id = %[1]q
-	name        = %[2]q
-	import_mode = "SPICE"
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
 
-	physical_table_map {
-		physical_table_map_id = "unique_id"
-		s3_source {
-			data_source_arn = aws_quicksight_data_source.test.arn
-			input_columns {
-				name = "ColumnId-1"
-				type = "STRING"
-			}
-		}
-	}
-	tags = {
-		%[3]q = %[4]q
-	}
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "ColumnId-1"
+        type = "STRING"
+      }
+    }
+  }
+  tags = {
+    %[3]q = %[4]q
+  }
 }
 `, rId, rName, key, value))
 }
