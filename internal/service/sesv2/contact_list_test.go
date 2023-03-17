@@ -276,7 +276,7 @@ resource "aws_sesv2_contact_list" "test" {
 
   topic {
     default_subscription_status = "OPT_OUT"
-	description                 = "description"
+    description                 = "description"
     display_name                = "topic2"
     topic_name                  = "topic2"
   }
