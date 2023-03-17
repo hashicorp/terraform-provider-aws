@@ -206,7 +206,6 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 	})
 }
 
-// need help with this, don't know how to test
 func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
@@ -220,16 +219,18 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfigPermission(rId, rName),
+				Config: testAccDataSetConfigPermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
-					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSet"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSetPermissions"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:PassDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:PassDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeIngestion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:ListIngestions"),
 				),
 			},
 			{
@@ -238,19 +239,23 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSetConfigUpdatePermission(rId, rName),
+				Config: testAccDataSetConfigUpdatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
-					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSet"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSetPermissions"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:PassDataSet"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:UpdateDataSet"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DeleteDataSet"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:UpdateDataSetPermissions"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:PassDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeIngestion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:ListIngestions"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:UpdateDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DeleteDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:CreateIngestion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:CancelIngestion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:UpdateDataSetPermissions"),
 				),
 			},
 			{
@@ -606,7 +611,7 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-func testAccDataSetConfigPermission(rId, rName string) string {
+func testAccDataSetConfigPermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
 		testAccDataSource_UserConfig(rName),
@@ -630,7 +635,9 @@ resource "aws_quicksight_data_set" "test" {
     actions = [
       "quicksight:DescribeDataSet",
       "quicksight:DescribeDataSetPermissions",
-      "quicksight:PassDataSet"
+      "quicksight:PassDataSet",
+      "quicksight:DescribeIngestion",
+      "quicksight:ListIngestions",
     ]
     principal = aws_quicksight_user.test.arn
   }
@@ -638,7 +645,7 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-func testAccDataSetConfigUpdatePermission(rId, rName string) string {
+func testAccDataSetConfigUpdatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
 		testAccDataSource_UserConfig(rName),
@@ -658,14 +665,18 @@ resource "aws_quicksight_data_set" "test" {
       }
     }
   }
-  permission {
+  permissions {
     actions = [
       "quicksight:DescribeDataSet",
       "quicksight:DescribeDataSetPermissions",
       "quicksight:PassDataSet",
+      "quicksight:DescribeIngestion",
+      "quicksight:ListIngestions",
       "quicksight:UpdateDataSet",
       "quicksight:DeleteDataSet",
-      "quicksight:UpdateDataSetPermissions"
+      "quicksight:CreateIngestion",
+      "quicksight:CancelIngestion",
+      "quicksight:UpdateDataSetPermissions",
     ]
     principal = aws_quicksight_user.test.arn
   }

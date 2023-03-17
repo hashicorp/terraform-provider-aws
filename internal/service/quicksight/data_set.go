@@ -462,7 +462,7 @@ func ResourceDataSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"actions": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							MaxItems: 16,
@@ -972,8 +972,8 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.(*schema.Set).List()
-		n := nraw.(*schema.Set).List()
+		o := oraw.([]interface{})
+		n := nraw.([]interface{})
 
 		toGrant, toRevoke := DiffPermissions(o, n)
 
@@ -1764,7 +1764,7 @@ func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermis
 		tfMap := tfListRaw.(map[string]interface{})
 
 		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringList(tfMap["actions"].([]interface{})),
+			Actions:   flex.ExpandStringList(tfMap["actions"].(*schema.Set).List()),
 			Principal: aws.String(tfMap["principal"].(string)),
 		}
 
