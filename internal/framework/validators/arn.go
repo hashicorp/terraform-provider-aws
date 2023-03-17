@@ -23,7 +23,7 @@ func (validator arnValidator) ValidateString(ctx context.Context, request valida
 		return
 	}
 
-	if errs := verify.ValidateARN(request.ConfigValue.ValueString()); errs != nil {
+	if errs := verify.ValidateARN(request.Path.String(), request.ConfigValue.ValueString()); errs != nil {
 		for _, v := range errs {
 			response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 				request.Path,
