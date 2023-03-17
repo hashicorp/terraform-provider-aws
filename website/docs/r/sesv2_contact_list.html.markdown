@@ -48,6 +48,18 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags for the contact list. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topic` - (Optional) Configuration block(s) with topic for the contact list. Detailed below.
 
+### topic
+
+The following arguments are required:
+
+* `default_subscription_status` - (Required) The default subscription status to be applied to a contact if the contact has not noted their preference for subscribing to a topic.
+* `display_name` - (Required) The name of the topic the contact will see.
+* `topic_name` - (Required) The name of the topic.
+
+The following arguments are optional:
+
+* `description` - (Optional) A description of what the topic is about, which the contact will see.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
