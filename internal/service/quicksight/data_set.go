@@ -1099,26 +1099,24 @@ func expandDataSetColumnLevelPermissionRules(tfList []interface{}) []*quicksight
 		return nil
 	}
 
-	var columnLevelPermissionRules []*quicksight.ColumnLevelPermissionRule
-
+	var apiObject []*quicksight.ColumnLevelPermissionRule
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		var columnLevelPermissionRule *quicksight.ColumnLevelPermissionRule
-
+		rule := &quicksight.ColumnLevelPermissionRule{}
 		if v, ok := tfMap["column_names"].([]interface{}); ok {
-			columnLevelPermissionRule.ColumnNames = flex.ExpandStringList(v)
+			rule.ColumnNames = flex.ExpandStringList(v)
 		}
-
 		if v, ok := tfMap["principals"].([]interface{}); ok {
-			columnLevelPermissionRule.ColumnNames = flex.ExpandStringList(v)
+			rule.Principals = flex.ExpandStringList(v)
 		}
+		apiObject = append(apiObject, rule)
 	}
 
-	return columnLevelPermissionRules
+	return apiObject
 }
 
 func expandDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
