@@ -25,6 +25,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
 		},
+		{
+			Factory:  DataSourceResponsePlan,
+			TypeName: "aws_ssmincidents_response_plan",
+		},
 	}
 }
 
@@ -37,6 +41,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
+		},
+		{
+			Factory:  ResourceResponsePlan,
+			TypeName: "aws_ssmincidents_response_plan",
 		},
 	}
 }
