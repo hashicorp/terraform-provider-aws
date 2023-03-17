@@ -17,13 +17,14 @@ import (
 )
 
 func TestAccQuickSightDataSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -60,7 +61,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -79,13 +80,14 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 
 // REQUIRES LOGICAL_TABLE_MAP
 func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -107,13 +109,14 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 }
 
 func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -129,13 +132,14 @@ func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
 }
 
 func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -154,13 +158,14 @@ func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 }
 
 func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -181,13 +186,14 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 
 // ERROR: submitted a ticket to aws, they said you cannot create a ltm at this moment, instead just update an old one
 func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -207,13 +213,14 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 }
 
 func TestAccQuickSightDataSet_permissions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -276,13 +283,14 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 
 // data set is created, but attribute gets deleted on creation
 func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -305,13 +313,14 @@ func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
 
 // data set is created, but attribute gets deleted on creation
 func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
@@ -333,13 +342,14 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 }
 
 func TestAccQuickSightDataSet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
