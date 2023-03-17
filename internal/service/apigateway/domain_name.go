@@ -2,6 +2,7 @@ package apigateway
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -334,21 +335,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
-			mutTLSAuth := d.Get("mutual_tls_authentication").([]interface{})
+			if v, ok := d.GetOk("mutual_tls_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if len(mutTLSAuth) == 0 || mutTLSAuth[0] == nil {
-				// To disable mutual TLS for a custom domain name, remove the truststore from your custom domain name.
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
-					Value: aws.String(""),
-				})
-			} else {
 				if d.HasChange("mutual_tls_authentication.0.truststore_uri") {
 					operations = append(operations, &apigateway.PatchOperation{
 						Op:    aws.String(apigateway.OpReplace),
 						Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
-						Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_uri"].(string)),
+						Value: aws.String(tfMap["truststore_uri"].(string)),
 					})
 				}
 
@@ -356,9 +350,16 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					operations = append(operations, &apigateway.PatchOperation{
 						Op:    aws.String(apigateway.OpReplace),
 						Path:  aws.String("/mutualTlsAuthentication/truststoreVersion"),
-						Value: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
+						Value: aws.String(tfMap["truststore_version"].(string)),
 					})
 				}
+			} else {
+				// To disable mutual TLS for a custom domain name, remove the truststore from your custom domain name.
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/mutualTlsAuthentication/truststoreUri"),
+					Value: aws.String(""),
+				})
 			}
 		}
 
@@ -393,6 +394,10 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitDomainNameUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -450,6 +455,45 @@ func FindDomainName(ctx context.Context, conn *apigateway.APIGateway, domainName
 	}
 
 	return output, nil
+}
+
+func statusDomainName(ctx context.Context, conn *apigateway.APIGateway, domainName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainName(ctx, conn, domainName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DomainNameStatus), nil
+	}
+}
+
+func waitDomainNameUpdated(ctx context.Context, conn *apigateway.APIGateway, domainName string) (*apigateway.DomainName, error) {
+	const (
+		timeout = 15 * time.Minute
+	)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{apigateway.DomainNameStatusUpdating},
+		Target:     []string{apigateway.DomainNameStatusAvailable},
+		Refresh:    statusDomainName(ctx, conn, domainName),
+		Timeout:    timeout,
+		Delay:      1 * time.Minute,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*apigateway.DomainName); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.DomainNameStatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandMutualTLSAuthentication(tfList []interface{}) *apigateway.MutualTlsAuthenticationInput {
