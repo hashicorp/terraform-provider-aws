@@ -3,6 +3,7 @@ package sesv2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -151,7 +152,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(*out.ConfigurationSetName)
 
-	d.Set("arn", configurationSetNameToARN(meta, *out.ConfigurationSetName))
+	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
