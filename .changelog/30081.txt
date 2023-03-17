@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_apigateway_domain_name: Fix recreating custom domain after truststore change
+resource/aws_apigatewayv2_domain_name: Fix recreating custom domain after truststore change
+```
