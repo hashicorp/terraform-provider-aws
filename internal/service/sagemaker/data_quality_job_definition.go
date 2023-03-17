@@ -291,7 +291,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 						},
 						"monitoring_outputs": {
 							Type:     schema.TypeList,
-							MinItems: 1,
+							MaxItems: 1,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
