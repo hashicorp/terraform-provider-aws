@@ -2951,7 +2951,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_metadataOptionsNoHttpEndpoint(rName),
+				Config: testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -4104,7 +4104,7 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
-func testAccLaunchTemplateConfig_metadataOptionsNoHttpEndpoint(rName string) string {
+func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
