@@ -481,6 +481,16 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
+// TODO: Requires a logical table map with a TagColumnOperation like:
+//
+//	"TagColumnOperation": {
+//		 "ColumnName": "ColumnId-1",
+//		 "Tags": [
+//			{
+//				"ColumnGeographicRole": "LONGITUDE"
+//			}
+//		 ]
+//	}
 func testAccDataSetConfigColumnGroups(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
@@ -502,7 +512,7 @@ resource "aws_quicksight_data_set" "test" {
   }
   column_groups {
     geo_spatial_column_group {
-      columns = ["column1"]
+      columns = ["ColumnId-1"]
       country_code = "US"
       name = "test"
     }
