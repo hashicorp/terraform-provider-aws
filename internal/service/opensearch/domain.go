@@ -335,6 +335,10 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"dashboard_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_endpoint_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -848,6 +852,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		d.Set("endpoint", endpoints["vpc"])
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
@@ -855,6 +860,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", ds.Endpoint)
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
@@ -1095,6 +1101,10 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func getDashboardEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_dashboards"
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {

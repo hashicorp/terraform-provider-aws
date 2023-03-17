@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +26,7 @@ func ResourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolDomainCreate,
 		ReadWithoutTimeout:   resourceUserPoolDomainRead,
+		UpdateWithoutTimeout: resourceUserPoolDomainUpdate,
 		DeleteWithoutTimeout: resourceUserPoolDomainDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -39,7 +41,6 @@ func ResourceUserPoolDomain() *schema.Resource {
 			"certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"cloudfront_distribution": {
@@ -74,6 +75,11 @@ func ResourceUserPoolDomain() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIfChange("certificate_arn", func(_ context.Context, old, new, meta interface{}) bool {
+			// If the cert arn is being changed to a new arn, don't force new.
+			return !(old.(string) != "" && new.(string) != "")
+		}),
 	}
 }
 
@@ -140,6 +146,34 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("version", desc.Version)
 
 	return diags
+}
+
+func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+
+	input := &cognitoidentityprovider.UpdateUserPoolDomainInput{
+		CustomDomainConfig: &cognitoidentityprovider.CustomDomainConfigType{
+			CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+		},
+		Domain:     aws.String(d.Id()),
+		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	}
+
+	_, err := conn.UpdateUserPoolDomainWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool Domain (%s): %s", d.Id(), err)
+	}
+
+	const (
+		timeout = 60 * time.Minute // Update is only for cert arns on custom domains, which take more time to become active.
+	)
+	if _, err := waitUserPoolDomainUpdated(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Cognito User Pool Domain (%s) update: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceUserPoolDomainRead(ctx, d, meta)...)
 }
 
 func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -215,6 +249,23 @@ func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Cog
 func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cognitoidentityprovider.DomainStatusTypeCreating, cognitoidentityprovider.DomainStatusTypeUpdating},
+		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
+		Refresh: statusUserPoolDomain(ctx, conn, domain),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cognitoidentityprovider.DomainDescriptionType); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{cognitoidentityprovider.DomainStatusTypeUpdating},
 		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: timeout,

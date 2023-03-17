@@ -30,7 +30,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -65,7 +65,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -100,7 +100,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -136,7 +136,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -180,7 +180,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 	resourceName := "aws_codegurureviewer_repository_association.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, codegurureviewer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
