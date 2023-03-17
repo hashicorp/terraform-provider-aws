@@ -345,13 +345,3 @@ func flattenTopic(apiObject *types.Topic) map[string]interface{} {
 
 	return tfMap
 }
-
-func contactListNameToARN(meta interface{}, contactListName string) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("contact-list/%s", contactListName),
-	}.String()
-}
