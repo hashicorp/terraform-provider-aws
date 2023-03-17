@@ -1,4 +1,9 @@
 ## 4.60.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ecs_cluster: Add `tags` attribute ([#30073](https://github.com/hashicorp/terraform-provider-aws/issues/30073))
+
 ## 4.59.0 (March 16, 2023)
 
 NOTES:
