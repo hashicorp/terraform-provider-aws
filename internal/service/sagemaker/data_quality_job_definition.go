@@ -773,7 +773,7 @@ func flattenBatchTransformInput(transformInput *sagemaker.BatchTransformInput_) 
 	}
 
 	if transformInput.DataCapturedDestinationS3Uri != nil {
-		fInput["local_path"] = aws.StringValue(transformInput.DataCapturedDestinationS3Uri)
+		fInput["data_captured_destination_s3_uri"] = aws.StringValue(transformInput.DataCapturedDestinationS3Uri)
 	}
 
 	if transformInput.DatasetFormat != nil {
@@ -1362,10 +1362,13 @@ func expandCsv(configured []interface{}) *sagemaker.MonitoringCsvDatasetFormat {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
-
 	c := &sagemaker.MonitoringCsvDatasetFormat{}
 
+	if configured[0] == nil {
+		return c
+	}
+
+	m := configured[0].(map[string]interface{})
 	if v, ok := m["header"]; ok {
 		c.Header = aws.Bool(v.(bool))
 	}
