@@ -1,15 +1,22 @@
 ## 4.60.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
+
 ENHANCEMENTS:
 
 * data-source/aws_ecs_cluster: Add `tags` attribute ([#30073](https://github.com/hashicorp/terraform-provider-aws/issues/30073))
 * resource/aws_securityhub_account: Add `enable_default_standards` argument ([#13477](https://github.com/hashicorp/terraform-provider-aws/issues/13477))
+* resource/aws_securityhub_member: `email` is Optional ([#19065](https://github.com/hashicorp/terraform-provider-aws/issues/19065))
 
 BUG FIXES:
 
 * resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_cognito_risk_configuration: Adds validation to `risk_exception_configuration` and requires at least one of `account_takeover_risk_configuration`, `compromised_credentials_risk_configuration`, or `risk_exception_configuration`. ([#30074](https://github.com/hashicorp/terraform-provider-aws/issues/30074))
+* resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
 
 ## 4.59.0 (March 16, 2023)
 
