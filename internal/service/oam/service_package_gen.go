@@ -24,7 +24,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceSink,
+			TypeName: "aws_oam_sink",
+		},
+		{
+			Factory:  ResourceSinkPolicy,
+			TypeName: "aws_oam_sink_policy",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

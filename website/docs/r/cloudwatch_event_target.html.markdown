@@ -271,14 +271,16 @@ resource "aws_api_gateway_stage" "example" {
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["events.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
@@ -491,7 +493,7 @@ The following arguments are optional:
 ### dead_letter_config
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
-  
+
 ### ecs_target
 
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.

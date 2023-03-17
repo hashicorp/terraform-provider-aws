@@ -14,9 +14,6 @@ const (
 
 	// Maximum amount of time to wait for an AdminAccount to return NotFound
 	adminAccountNotFoundTimeout = 5 * time.Minute
-
-	standardsSubscriptionCreateTimeout = 3 * time.Minute
-	standardsSubscriptionDeleteTimeout = 3 * time.Minute
 )
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
@@ -49,40 +46,6 @@ func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*securityhub.AdminAccount); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusPending},
-		Target:  []string{securityhub.StandardsStatusReady, securityhub.StandardsStatusIncomplete},
-		Refresh: statusStandardsSubscription(ctx, conn, arn),
-		Timeout: standardsSubscriptionCreateTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusDeleting},
-		Target:  []string{standardsStatusNotFound, securityhub.StandardsStatusIncomplete},
-		Refresh: statusStandardsSubscription(ctx, conn, arn),
-		Timeout: standardsSubscriptionDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
 		return output, err
 	}
 
