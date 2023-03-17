@@ -3,6 +3,12 @@
 ENHANCEMENTS:
 
 * data-source/aws_ecs_cluster: Add `tags` attribute ([#30073](https://github.com/hashicorp/terraform-provider-aws/issues/30073))
+* resource/aws_securityhub_account: Add `enable_default_standards` argument ([#13477](https://github.com/hashicorp/terraform-provider-aws/issues/13477))
+
+BUG FIXES:
+
+* resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
+* resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 
 ## 4.59.0 (March 16, 2023)
 
