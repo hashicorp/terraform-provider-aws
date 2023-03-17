@@ -77,7 +77,7 @@ func DataSourceWorkgroup() *schema.Resource {
 			},
 			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"id": {
 				Type:     schema.TypeString,
