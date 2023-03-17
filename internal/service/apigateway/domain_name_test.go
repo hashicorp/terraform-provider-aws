@@ -339,6 +339,17 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
 				),
 			},
+			{
+				Config: testAccDomainNameConfig_mutualTLSAuthentication(rName, rootDomain, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
+				),
+			},
 		},
 	})
 }
