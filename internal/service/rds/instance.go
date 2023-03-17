@@ -331,21 +331,33 @@ func ResourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				Default:       false,
 				ConflictsWith: []string{"password"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"master_user_secret_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			//lintignore:S019
-			"master_user_secret_arn": {
-				Type:     schema.TypeString,
-				Optional: false,
-				Required: false,
-				Computed: true,
+				ValidateFunc: verify.ValidKMSKeyID,
 			},
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
