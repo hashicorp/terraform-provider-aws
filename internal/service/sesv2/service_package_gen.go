@@ -39,6 +39,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sesv2_configuration_set_event_destination",
 		},
 		{
+			Factory:  ResourceContactList,
+			TypeName: "aws_sesv2_contact_list",
+		},
+		{
 			Factory:  ResourceDedicatedIPAssignment,
 			TypeName: "aws_sesv2_dedicated_ip_assignment",
 		},
