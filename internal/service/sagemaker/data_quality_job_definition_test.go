@@ -431,6 +431,92 @@ func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerDataQualityJobDefinition_networkConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityJobDefinitionConfig_networkConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.vpc_config.0.subnets.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerDataQualityJobDefinition_networkConfigTrafficEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityJobDefinitionConfig_networkConfigTrafficEncryption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_inter_container_traffic_encryption", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerDataQualityJobDefinition_networkConfigEnableNetworkIsolation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityJobDefinitionConfig_networkConfigEnableNetworkIsolation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_network_isolation", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1321,4 +1407,156 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDataQualityJobDefinitionConfig_networkConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
+		fmt.Sprintf(`
+
+resource "aws_security_group" "test" {
+  count = 1
+
+  name = "%[1]s-${count.index}"
+}
+
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  network_config {
+    vpc_config {
+      subnets = aws_subnet.test[*].id
+      security_group_ids = aws_security_group.test[*].id
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccDataQualityJobDefinitionConfig_networkConfigTrafficEncryption(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
+		fmt.Sprintf(`
+
+resource "aws_security_group" "test" {
+  count = 1
+
+  name = "%[1]s-${count.index}"
+}
+
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  network_config {
+    enable_inter_container_traffic_encryption = true
+    vpc_config {
+      subnets = aws_subnet.test[*].id
+      security_group_ids = aws_security_group.test[*].id
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccDataQualityJobDefinitionConfig_networkConfigEnableNetworkIsolation(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
+		fmt.Sprintf(`
+
+resource "aws_security_group" "test" {
+  count = 1
+
+  name = "%[1]s-${count.index}"
+}
+
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  network_config {
+    enable_network_isolation = true
+    vpc_config {
+      subnets = aws_subnet.test[*].id
+      security_group_ids = aws_security_group.test[*].id
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+}
+`, rName))
 }
