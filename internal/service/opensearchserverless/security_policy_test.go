@@ -20,14 +20,15 @@ import (
 )
 
 func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var securitypolicy opensearchserverless.GetSecurityPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
@@ -53,6 +54,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 }
 
 func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -63,8 +65,8 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
@@ -75,7 +77,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(resourceName, &securitypolicy),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -145,7 +147,7 @@ func testAccSecurityPolicyImportStateIdFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["id"], rs.Primary.Attributes["type"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
 	}
 }
 

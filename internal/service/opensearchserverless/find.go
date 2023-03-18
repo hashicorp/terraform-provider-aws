@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, id string, policyType string) (*types.SecurityPolicyDetail, error) {
+func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name string, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
-		Name: aws.String(id),
+		Name: aws.String(name),
 		Type: types.SecurityPolicyType(policyType),
 	}
 	out, err := conn.GetSecurityPolicy(ctx, in)
