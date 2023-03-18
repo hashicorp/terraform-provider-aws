@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_feature_group: add table_format argument
+```
