@@ -158,6 +158,12 @@ func ResourceFeatureGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"table_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      sagemaker.TableFormatGlue,
+							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
+						},
 					},
 				},
 			},
