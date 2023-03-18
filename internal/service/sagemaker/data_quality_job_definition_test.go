@@ -28,7 +28,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpoint_basic(rName),
+				Config: testAccDataQualityJobDefinitionConfig_endpointBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -79,7 +79,7 @@ func TestAccSageMakerDataQualityJobDefinition_appSpecification_optional(t *testi
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpoint_appSpecification_optional(rName),
+				Config: testAccDataQualityJobDefinitionConfig_endpointAppSpecificationOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
@@ -111,7 +111,7 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpoint_baselineConfig(rName),
+				Config: testAccDataQualityJobDefinitionConfig_endpointBaselineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -143,7 +143,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_basic(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -174,7 +174,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_csvHeader(t *testin
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_csvHeader(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformCsvHeader(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
@@ -204,7 +204,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_json(t *testing.T) 
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_json(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformJson(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
@@ -233,7 +233,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_jsonLine(t *testing
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_jsonLine(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformJsonLine(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -265,7 +265,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_optional(t *testing
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_optional(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -296,7 +296,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint_optional(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpoint_optional(rName),
+				Config: testAccDataQualityJobDefinitionConfig_endpointOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -327,7 +327,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_ouputConfig_kmsKeyI
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_outputConfig_kmsKeyId(rName),
+				Config: testAccDataQualityJobDefinitionConfig_outputConfigKmsKeyId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
@@ -355,7 +355,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_outputConfig_option
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_outputConfig_optional(rName),
+				Config: testAccDataQualityJobDefinitionConfig_outputConfigOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
@@ -386,7 +386,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_jobResources_volume
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_jobResources_volumeKey(rName),
+				Config: testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
@@ -415,7 +415,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_stoppingCondition(t
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_stoppingCondition(rName),
+				Config: testAccDataQualityJobDefinitionConfig_stoppingCondition(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
@@ -443,7 +443,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchTransform_tags1(rName, "key1", "value1"),
+				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -456,7 +456,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBatchTransform_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataQualityJobDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -465,7 +465,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBatchTransform_tags1(rName, "key2", "value2"),
+				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -488,7 +488,7 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpoint_basic(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
@@ -513,8 +513,6 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 // NetworkConfig optional
 //   enable_inter_container_traffic_encryption
 //   enable_network_isolation
-// StoppingCondition required
-//
 
 func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -559,7 +557,7 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 	}
 }
 
-func testAccBatchTransform_Base(rName string) string {
+func testAccDataQualityJobDefinitionConfig_batchTransformBase(rName string) string {
 	return fmt.Sprintf(`
 
 provider "aws" {
@@ -640,7 +638,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
 `, rName)
 }
 
-func testAccEndpoint_Base(rName string) string {
+func testAccDataQualityJobDefinitionConfig_endpointBase(rName string) string {
 	return fmt.Sprintf(`
 
 provider "aws" {
@@ -772,8 +770,8 @@ data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
 `, rName)
 }
 
-func testAccEndpoint_basic(rName string) string {
-	return testAccEndpoint_Base(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_endpointBasic(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -803,8 +801,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccEndpoint_appSpecification_optional(rName string) string {
-	return testAccEndpoint_Base(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_endpointAppSpecificationOptional(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -839,8 +837,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccEndpoint_baselineConfig(rName string) string {
-	return testAccEndpoint_Base(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_endpointBaselineConfig(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -878,40 +876,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccBatchTransform_basicTransformTemplate(rName string, dFormat string) string {
-	return testAccBatchTransform_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
-  data_quality_app_specification {
-    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-  }
-  data_quality_job_input {
-    batch_transform_input {
-      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
-      %[2]s
-    }
-  }
-  data_quality_job_output_config {
-    monitoring_outputs {
-      s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
-      }
-    }
-  }
-  job_resources {
-    cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
-      volume_size_in_gb = 20
-    }
-  }
-  role_arn = aws_iam_role.test.arn
-}
-`, rName, dFormat)
-}
-
-func testAccBatchTransform_basic(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -944,8 +910,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_csvHeader(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_batchTransformCsvHeader(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -980,8 +946,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_json(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_batchTransformJson(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1014,8 +980,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_jsonLine(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_batchTransformJsonLine(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1050,8 +1016,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_optional(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_batchTransformOptional(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1087,8 +1053,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccEndpoint_optional(rName string) string {
-	return testAccEndpoint_Base(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_endpointOptional(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1121,8 +1087,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccBatchTransform_outputConfig_kmsKeyId(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_outputConfigKmsKeyId(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
@@ -1161,8 +1127,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_outputConfig_optional(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_outputConfigOptional(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1197,8 +1163,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_jobResources_volumeKey(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKey(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
@@ -1237,8 +1203,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_stoppingCondition(rName string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_stoppingCondition(rName string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1274,8 +1240,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccBatchTransform_tags1(rName string, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_tags1(rName string, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -1312,8 +1278,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccBatchTransform_tags2(rName string, tagKey1, tagValue1 string, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_tags2(rName string, tagKey1, tagValue1 string, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
