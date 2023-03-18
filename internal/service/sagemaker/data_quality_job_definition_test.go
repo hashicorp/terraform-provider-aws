@@ -67,7 +67,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_appSpecification_optional(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_appSpecificationOptional(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -79,7 +79,7 @@ func TestAccSageMakerDataQualityJobDefinition_appSpecification_optional(t *testi
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_endpointAppSpecificationOptional(rName),
+				Config: testAccDataQualityJobDefinitionConfig_appSpecificationOptional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
@@ -111,7 +111,7 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_endpointBaselineConfig(rName),
+				Config: testAccDataQualityJobDefinitionConfig_baselineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -162,7 +162,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_csvHeader(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformCsvHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -192,7 +192,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_csvHeader(t *testin
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_json(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformJson(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -221,7 +221,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_json(t *testing.T) 
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_jsonLine(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformJsonLine(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -253,7 +253,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_jsonLine(t *testing
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_optional(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformOptional(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -284,7 +284,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_optional(t *testing
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_endpoint_optional(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_endpointOptional(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -315,7 +315,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint_optional(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_ouputConfig_kmsKeyId(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_ouputConfigKmsKeyId(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -343,7 +343,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_ouputConfig_kmsKeyI
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_outputConfig_optional(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_outputConfigOptional(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -374,7 +374,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_outputConfig_option
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_jobResources_volumeKey(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKmsKeyId(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -403,7 +403,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_jobResources_volume
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransform_stoppingCondition(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -801,8 +801,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccDataQualityJobDefinitionConfig_endpointAppSpecificationOptional(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_appSpecificationOptional(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_batchTransformBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -814,8 +814,11 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
     post_analytics_processor_source_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/post.sh"
   }
   data_quality_job_input {
-    endpoint_input {
-      endpoint_name = aws_sagemaker_endpoint.test.name
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
     }
   }
   data_quality_job_output_config {
@@ -837,8 +840,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
-func testAccDataQualityJobDefinitionConfig_endpointBaselineConfig(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
+func testAccDataQualityJobDefinitionConfig_baselineConfig(rName string) string {
+	return testAccDataQualityJobDefinitionConfig_batchTransformBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -853,8 +856,11 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
     }
   }
   data_quality_job_input {
-    endpoint_input {
-      endpoint_name = aws_sagemaker_endpoint.test.name
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
     }
   }
   data_quality_job_output_config {
