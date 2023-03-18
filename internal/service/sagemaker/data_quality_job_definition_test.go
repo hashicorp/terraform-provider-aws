@@ -696,6 +696,51 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform_stoppingCondition(t
 	})
 }
 
+func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_data_quality_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchTransform_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBatchTransform_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccBatchTransform_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1492,4 +1537,81 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   role_arn = aws_iam_role.test.arn
 }
 `, rName))
+}
+
+func testAccBatchTransform_tags1(rName string, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccBatchTransform_tags2(rName string, tagKey1, tagValue1 string, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccBatchTransform_Base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name                 = %[1]q
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count = 1
+      instance_type = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
