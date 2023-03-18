@@ -81,7 +81,7 @@ resource "aws_kendra_data_source" "example" {
     s3_configuration {
       bucket_name = aws_s3_bucket.example.id
       documents_metadata_configuration = {
-        s3_prefix   = "example"
+        s3_prefix = "example"
       }
 
       exclusion_patterns = ["example"]
