@@ -172,7 +172,7 @@ resource "aws_security_group" "example" {
 
 ```terraform
 data "aws_security_group" "default" {
-  name   = "default"
+  name = "default"
   # ... other configuration ...
 }
 
