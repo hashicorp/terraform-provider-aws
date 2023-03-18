@@ -631,7 +631,7 @@ resource "aws_sagemaker_feature_group" "test" {
 
   offline_store_config {
     disable_glue_table_creation = true
-	table_format                = %[2]q
+    table_format                = %[2]q
 
     s3_storage_config {
       s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
