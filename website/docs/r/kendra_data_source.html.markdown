@@ -80,7 +80,9 @@ resource "aws_kendra_data_source" "example" {
   configuration {
     s3_configuration {
       bucket_name = aws_s3_bucket.example.id
-      s3_prefix   = "example"
+      documents_metadata_configuration = {
+        s3_prefix   = "example"
+      }
 
       exclusion_patterns = ["example"]
       inclusion_patterns = ["hello"]
@@ -350,14 +352,14 @@ The following arguments are optional:
 * `schedule` - (Optional) Sets the frequency for Amazon Kendra to check the documents in your Data Source repository and update the index. If you don't set a schedule Amazon Kendra will not periodically update the index. You can call the `StartDataSourceSyncJob` API to update the index.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `configuration`
+### configuration
 
 The `configuration` configuration block supports the following arguments:
 
 * `s3_configuration` - (Required if `type` is set to `S3`) A block that provides the configuration information to connect to an Amazon S3 bucket as your data source. [Detailed below](#s3_configuration).
 * `web_crawler_configuration` - (Required if `type` is set to `WEBCRAWLER`) A block that provides the configuration information required for Amazon Kendra Web Crawler. [Detailed below](#web_crawler_configuration).
 
-#### `s3_configuration`
+#### s3_configuration
 
 The `s3_configuration` configuration block supports the following arguments:
 
@@ -368,19 +370,19 @@ The `s3_configuration` configuration block supports the following arguments:
 * `inclusion_patterns` - (Optional) A list of glob patterns for documents that should be indexed. If a document that matches an inclusion pattern also matches an exclusion pattern, the document is not indexed. Refer to [Inclusion Patterns for more examples](https://docs.aws.amazon.com/kendra/latest/dg/API_S3DataSourceConfiguration.html#Kendra-Type-S3DataSourceConfiguration-InclusionPatterns).
 * `inclusion_prefixes` - (Optional) A list of S3 prefixes for the documents that should be included in the index.
 
-##### `access_control_list_configuration`
+##### access_control_list_configuration
 
 The `access_control_list_configuration` configuration block supports the following arguments:
 
 * `key_path` - (Optional) Path to the AWS S3 bucket that contains the ACL files.
 
-##### `documents_metadata_configuration`
+##### documents_metadata_configuration
 
 The `documents_metadata_configuration` configuration block supports the following arguments:
 
 * `s3_prefix` - (Optional) A prefix used to filter metadata configuration files in the AWS S3 bucket. The S3 bucket might contain multiple metadata files. Use `s3_prefix` to include only the desired metadata files.
 
-#### `web_crawler_configuration`
+#### web_crawler_configuration
 
 The `web_crawler_configuration` configuration block supports the following arguments:
 
@@ -394,11 +396,13 @@ The `web_crawler_configuration` configuration block supports the following argum
 * `url_inclusion_patterns` - (Optional) A list of regular expression patterns to include certain URLs to crawl. URLs that match the patterns are included in the index. URLs that don't match the patterns are excluded from the index. If a URL matches both an inclusion and exclusion pattern, the exclusion pattern takes precedence and the URL file isn't included in the index. Array Members: Minimum number of `0` items. Maximum number of `100` items. Length Constraints: Minimum length of `1`. Maximum length of `150`.
 * `urls` - (Required) A block that specifies the seed or starting point URLs of the websites or the sitemap URLs of the websites you want to crawl. You can include website subdomains. You can list up to `100` seed URLs and up to `3` sitemap URLs. You can only crawl websites that use the secure communication protocol, Hypertext Transfer Protocol Secure (HTTPS). If you receive an error when crawling a website, it could be that the website is blocked from crawling. When selecting websites to index, you must adhere to the [Amazon Acceptable Use Policy](https://aws.amazon.com/aup/) and all other Amazon terms. Remember that you must only use Amazon Kendra Web Crawler to index your own webpages, or webpages that you have authorization to index. [Detailed below](#urls).
 
-##### `authentication_configuration`
+##### authentication_configuration
 
 The `authentication_configuration` configuration block supports the following arguments:
 
 * `basic_authentication` - (Optional) The list of configuration information that's required to connect to and crawl a website host using basic authentication credentials. The list includes the name and port number of the website host. Detailed below.
+
+###### basic_authentication
 
 The `basic_authentication` configuration block supports the following arguments:
 
@@ -406,7 +410,7 @@ The `basic_authentication` configuration block supports the following arguments:
 * `host` - (Required) The name of the website host you want to connect to using authentication credentials. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"`.
 * `port` - (Required) The port number of the website host you want to connect to using authentication credentials. For example, the port for `https://a.example.com/page1.html` is `443`, the standard port for HTTPS.
 
-##### `proxy_configuration`
+##### proxy_configuration
 
 The `proxy_configuration` configuration block supports the following arguments:
 
@@ -414,12 +418,14 @@ The `proxy_configuration` configuration block supports the following arguments:
 * `host` - (Required) The name of the website host you want to connect to via a web proxy server. For example, the host name of `https://a.example.com/page1.html` is `"a.example.com"`.
 * `port` - (Required) The port number of the website host you want to connect to via a web proxy server. For example, the port for `https://a.example.com/page1.html` is `443`, the standard port for HTTPS.
 
-##### `urls`
+##### urls
 
 The `urls` configuration block supports the following arguments:
 
 * `seed_url_configuration` - (Optional) A block that specifies the configuration of the seed or starting point URLs of the websites you want to crawl. You can choose to crawl only the website host names, or the website host names with subdomains, or the website host names with subdomains and other domains that the webpages link to. You can list up to `100` seed URLs. Detailed below.
 * `site_maps_configuration` - (Optional) A block that specifies the configuration of the sitemap URLs of the websites you want to crawl. Only URLs belonging to the same website host names are crawled. You can list up to `3` sitemap URLs. Detailed below.
+
+###### seed_url_configuration
 
 The `seed_url_configuration` configuration block supports the following arguments:
 
@@ -429,11 +435,13 @@ The `seed_url_configuration` configuration block supports the following argument
     * `SUBDOMAINS` – crawl the website host names with subdomains. For example, if the seed URL is `"abc.example.com"`, then `"a.abc.example.com"` and `"b.abc.example.com"` are also crawled.
     * `EVERYTHING` – crawl the website host names with subdomains and other domains that the webpages link to.
 
+###### site_maps_configuration
+
 The `site_maps_configuration` configuration block supports the following arguments:
 
 * `site_maps` - (Required) The list of sitemap URLs of the websites you want to crawl. The list can include a maximum of `3` sitemap URLs.
 
-### `custom_document_enrichment_configuration`
+### custom_document_enrichment_configuration
 
 The `custom_document_enrichment_configuration` configuration block supports the following arguments:
 
@@ -442,42 +450,59 @@ The `custom_document_enrichment_configuration` configuration block supports the 
 * `pre_extraction_hook_configuration` - (Optional) Configuration information for invoking a Lambda function in AWS Lambda on the original or raw documents before extracting their metadata and text. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#hook_configuration).
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 
-#### `inline_configurations`
+#### inline_configurations
 
 The `inline_configurations` configuration block supports the following arguments:
 
-* `condition` - (Optional) Configuration of the condition used for the target document attribute or metadata field when ingesting documents into Amazon Kendra. See [Document Attribute Condition](#document-attribute-condition).
+* `condition` - (Optional) Configuration of the condition used for the target document attribute or metadata field when ingesting documents into Amazon Kendra. See [condition](#condition).
 * `document_content_deletion` - (Optional) `TRUE` to delete content if the condition used for the target attribute is met.
 * `target` - (Optional) Configuration of the target document attribute or metadata field when ingesting documents into Amazon Kendra. You can also include a value. [Detailed below](#target).
 
-##### `target`
+##### condition
+
+The `condition` configuration blocks supports the following arguments:
+
+* `condition_document_attribute_key` - (Required) The identifier of the document attribute used for the condition. For example, `_source_uri` could be an identifier for the attribute or metadata field that contains source URIs associated with the documents. Amazon Kendra currently does not support `_document_body` as an attribute key used for the condition.
+* `condition_on_value` - (Optional) The value used by the operator. For example, you can specify the value 'financial' for strings in the `_source_uri` field that partially match or contain this value. See [condition_on_value](#condition_on_value).
+* `operator` - (Required) The condition operator. For example, you can use `Contains` to partially match a string. Valid Values: `GreaterThan` | `GreaterThanOrEquals` | `LessThan` | `LessThanOrEquals` | `Equals` | `NotEquals` | `Contains` | `NotContains` | `Exists` | `NotExists` | `BeginsWith`.
+
+##### target
 
 The `target` configuration block supports the following arguments:
 
 * `target_document_attribute_key` - (Optional) The identifier of the target document attribute or metadata field. For example, 'Department' could be an identifier for the target attribute or metadata field that includes the department names associated with the documents.
 * `target_document_attribute_value` - (Optional) The target value you want to create for the target attribute. For example, 'Finance' could be the target value for the target attribute key 'Department'.
-See [Document Attribute Value](#document-attribute-value).
+See [target_document_attribute_value](#target_document_attribute_value).
 * `target_document_attribute_value_deletion` - (Optional) `TRUE` to delete the existing target value for your specified target attribute key. You cannot create a target value and set this to `TRUE`. To create a target value (`TargetDocumentAttributeValue`), set this to `FALSE`.
 
-#### `hook_configuration`
+###### target_document_attribute_value
+
+The `target_document_attribute_value` configuration blocks supports the following arguments:
+
+* `date_value` - (Optional) A date expressed as an ISO 8601 string. It is important for the time zone to be included in the ISO 8601 date-time format. As of this writing only UTC is supported. For example, `2012-03-25T12:30:10+00:00`.
+* `long_value` - (Optional) A long integer value.
+* `string_list_value` - (Optional) A list of strings.
+* `string` - (Optional) A string, such as "department".
+
+#### hook_configuration
 
 The `hook_configuration` configuration block supports the following arguments:
 
-* `invocation_condition` - (Optional) A block that specifies the condition used for when a Lambda function should be invoked. For example, you can specify a condition that if there are empty date-time values, then Amazon Kendra should invoke a function that inserts the current date-time. See [Document Attribute Condition](#document-attribute-condition).
+* `invocation_condition` - (Optional) A block that specifies the condition used for when a Lambda function should be invoked. For example, you can specify a condition that if there are empty date-time values, then Amazon Kendra should invoke a function that inserts the current date-time. See [invocation_condition](#invocation_condition).
 * `lambda_arn` - (Required) The Amazon Resource Name (ARN) of a Lambda Function that can manipulate your document metadata fields or attributes and content.
 * `s3_bucket` - (Required) Stores the original, raw documents or the structured, parsed documents before and after altering them. For more information, see [Data contracts for Lambda functions](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#cde-data-contracts-lambda).
 
-#### Document Attribute Condition
+##### invocation_condition
 
-The `condition` and `invocation_condition` configuration blocks supports the following arguments:
+The `invocation_condition` configuration blocks supports the following arguments:
 
 * `condition_document_attribute_key` - (Required) The identifier of the document attribute used for the condition. For example, `_source_uri` could be an identifier for the attribute or metadata field that contains source URIs associated with the documents. Amazon Kendra currently does not support `_document_body` as an attribute key used for the condition.
-* `condition_on_value` - (Optional) The value used by the operator. For example, you can specify the value 'financial' for strings in the `_source_uri` field that partially match or contain this value. See [Document Attribute Value](#document-attribute-value).
+* `condition_on_value` - (Optional) The value used by the operator. For example, you can specify the value 'financial' for strings in the `_source_uri` field that partially match or contain this value. See [condition_on_value](#condition_on_value).
 * `operator` - (Required) The condition operator. For example, you can use `Contains` to partially match a string. Valid Values: `GreaterThan` | `GreaterThanOrEquals` | `LessThan` | `LessThanOrEquals` | `Equals` | `NotEquals` | `Contains` | `NotContains` | `Exists` | `NotExists` | `BeginsWith`.
 
-#### Document Attribute Value
+###### condition_on_value
 
-The `condition_on_value` and `target_document_attribute_value` configuration blocks supports the following arguments:
+The `condition_on_value` configuration blocks supports the following arguments:
 
 * `date_value` - (Optional) A date expressed as an ISO 8601 string. It is important for the time zone to be included in the ISO 8601 date-time format. As of this writing only UTC is supported. For example, `2012-03-25T12:30:10+00:00`.
 * `long_value` - (Optional) A long integer value.
