@@ -246,7 +246,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
 	}
 
-	d.Set("arn", configurationSetNameToARN(meta, *out.ConfigurationSetName))
+	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
