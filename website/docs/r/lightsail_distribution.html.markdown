@@ -14,33 +14,34 @@ Terraform resource for managing an AWS Lightsail Distribution.
 
 ### Basic Usage
 
-Below is a basic example 
+Below is a basic example
+
 ```terraform
-	resource "aws_lightsail_bucket" "test" {
-		name      = "test-bucket"
-		bundle_id = "small_1_0"
-	  }
+resource "aws_lightsail_bucket" "test" {
+  name      = "test-bucket"
+  bundle_id = "small_1_0"
+}
 resource "aws_lightsail_distribution" "test" {
-  name             = "test-distribution"
+  name      = "test-distribution"
   bundle_id = "small_1_0"
   origin {
-	name = aws_lightsail_bucket.test.name
-	region_name = aws_lightsail_bucket.test.region
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
   }
   default_cache_behavior {
-	behavior = "cache"
+    behavior = "cache"
   }
   cache_behavior_settings {
-	forwarded_cookies {
-		cookies_allow_list = []
-	}
-	forwarded_headers {
-		headers_allow_list = []
-	}
-	forwarded_query_strings {
-		query_strings_allowed_list = []
-	}
-}
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
 }
 ```
 
@@ -71,7 +72,7 @@ The following arguments are optional:
 
 ### origin
 
-* `name` - (Required) The name of the origin resource. Your origin can be an instance with an attached static IP, a bucket, or a load balancer that has at least one instance attached to it. 
+* `name` - (Required) The name of the origin resource. Your origin can be an instance with an attached static IP, a bucket, or a load balancer that has at least one instance attached to it.
 * `protocol_policy` - (Optional) The protocol that your Amazon Lightsail distribution uses when establishing a connection with your origin to pull content.
 * `region_name` - (Required) The AWS Region name of the origin resource.
 * `resource_type` - (Computed) The resource type of the origin resource (e.g., Instance).
@@ -115,7 +116,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the distribution.
 * `created_at` - The timestamp when the distribution was created.
 * `domain_name` - The domain name of the distribution.
-* `location` - An object that describes the location of the distribution, such as the AWS Region and Availability Zone. [Detailed below](#location) 
+* `location` - An object that describes the location of the distribution, such as the AWS Region and Availability Zone. [Detailed below](#location)
 * `origin_public_dns` - The public DNS of the origin.
 * `resource_type` - The Lightsail resource type (e.g., Distribution).
 * `status` - The status of the distribution.
