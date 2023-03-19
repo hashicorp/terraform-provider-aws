@@ -141,31 +141,31 @@ func testAccCheckDistributionExists(ctx context.Context, name string) resource.T
 
 func testAccDistributionConfig_basic(rName, bucketName string) string {
 	return fmt.Sprintf(`
-	resource "aws_lightsail_bucket" "test" {
-		name      = %[2]q
-		bundle_id = "small_1_0"
-	  }
+resource "aws_lightsail_bucket" "test" {
+  name      = %[2]q
+  bundle_id = "small_1_0"
+}
 resource "aws_lightsail_distribution" "test" {
-  name             = %[1]q
+  name      = %[1]q
   bundle_id = "small_1_0"
   origin {
-	name = aws_lightsail_bucket.test.name
-	region_name = aws_lightsail_bucket.test.region
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
   }
   default_cache_behavior {
-	behavior = "cache"
+    behavior = "cache"
   }
   cache_behavior_settings {
-	forwarded_cookies {
-		cookies_allow_list = []
-	}
-	forwarded_headers {
-		headers_allow_list = []
-	}
-	forwarded_query_strings {
-		query_strings_allowed_list = []
-	}
-}
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
 }
 `, rName, bucketName)
 }
