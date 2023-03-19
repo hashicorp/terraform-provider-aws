@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	sdkstructure "github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -122,7 +121,7 @@ func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.Create
 	}
 
 	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.SecurityPolicyDetail)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.SecurityPolicyDetail)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -142,7 +141,7 @@ func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -175,7 +174,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 			return
 		}
-		resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.SecurityPolicyDetail)...)
+		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.SecurityPolicyDetail)...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -228,7 +227,7 @@ func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.I
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceSecurityPolicyData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.SecurityPolicyDetail) diag.Diagnostics {
+func (rd *resourceSecurityPolicyData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityPolicyDetail) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
