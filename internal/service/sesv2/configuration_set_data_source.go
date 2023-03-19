@@ -150,7 +150,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameConfigurationSet, name, err)
 	}
 
-	d.SetId(*out.ConfigurationSetName)
+	d.SetId(aws.ToString(out.ConfigurationSetName))
 
 	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
