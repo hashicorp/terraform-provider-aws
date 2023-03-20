@@ -47,6 +47,8 @@ func TestExpandResourceTypesUnitTest(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfoam.ExpandResourceTypes(testCase.Input)
 
 			if got == nil && testCase.Expected == nil {
@@ -85,6 +87,8 @@ func TestResourceTypeValuesUnitTest(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfoam.ResourceTypeValues(testCase.Input)
 
 			if len(got) == 0 && len(testCase.Expected) == 0 {
