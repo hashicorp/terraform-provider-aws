@@ -14,9 +14,16 @@ BUG FIXES:
 
 * resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
+* resource/aws_appmesh_gateway_route: Use configured `mesh_owner` when deleting shared gateway route ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_route: Use configured `mesh_owner` value when deleting shared route ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_gateway: Use configured `mesh_owner` value when deleting shared virtual gateway ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_node: Use configured `mesh_owner` value when deleting shared virtual node ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_router: Use configured `mesh_owner` value when deleting shared virtual router ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_service: Use configured `mesh_owner` value when deleting shared virtual service ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
 * resource/aws_cognito_risk_configuration: Adds validation to `risk_exception_configuration` and requires at least one of `account_takeover_risk_configuration`, `compromised_credentials_risk_configuration`, or `risk_exception_configuration`. ([#30074](https://github.com/hashicorp/terraform-provider-aws/issues/30074))
 * resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
 * resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_security_group: Improve respect for delete timeout set by user and retry of certain errors ([#30114](https://github.com/hashicorp/terraform-provider-aws/issues/30114))
 * resource/aws_transfer_server: Fix error refreshing `protocol_details.as2_transports` value ([#30115](https://github.com/hashicorp/terraform-provider-aws/issues/30115))
 
 ## 4.59.0 (March 16, 2023)
