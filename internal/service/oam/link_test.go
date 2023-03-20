@@ -22,6 +22,8 @@ import (
 )
 
 func TestExpandResourceTypesUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    []interface{}
@@ -46,6 +48,7 @@ func TestExpandResourceTypesUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -62,6 +65,8 @@ func TestExpandResourceTypesUnitTest(t *testing.T) {
 }
 
 func TestResourceTypeValuesUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    []types.ResourceType
@@ -86,6 +91,7 @@ func TestResourceTypeValuesUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
