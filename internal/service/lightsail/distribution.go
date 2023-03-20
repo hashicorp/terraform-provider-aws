@@ -240,7 +240,7 @@ func ResourceDistribution() *schema.Resource {
 						"availability_zone": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Description:  "The Availability Zone. Follows the format us-east-2a (case-sensitive).",
+							Description:  "The Availability Zone.",
 							ValidateFunc: validation.StringInSlice(lightsail.BehaviorEnum_Values(), false),
 						},
 						"region_name": {
@@ -525,7 +525,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		DistributionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) || tfawserr.ErrMessageContains(err, lightsail.ErrCodeInvalidInputException, "Requested resource not found") {
 		return nil
 	}
 
@@ -547,7 +547,7 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Lightsail, id str
 		DistributionName: aws.String(id),
 	}
 	out, err := conn.GetDistributionsWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) || tfawserr.ErrMessageContains(err, lightsail.ErrCodeInvalidInputException, "Requested resource not found") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
