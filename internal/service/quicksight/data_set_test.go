@@ -78,7 +78,6 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 	})
 }
 
-// REQUIRES LOGICAL_TABLE_MAP
 func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -99,7 +98,7 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "column1"),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "ColumnId-1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.country_code", "US"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
 				),
@@ -480,16 +479,6 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-// TODO: Requires a logical table map with a TagColumnOperation like:
-//
-//	"TagColumnOperation": {
-//		 "ColumnName": "ColumnId-1",
-//		 "Tags": [
-//			{
-//				"ColumnGeographicRole": "LONGITUDE"
-//			}
-//		 ]
-//	}
 func testAccDataSetConfigColumnGroups(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
@@ -508,6 +497,20 @@ resource "aws_quicksight_data_set" "test" {
         type = "STRING"
       }
     }
+  }
+  logical_table_map {
+    alias = "Group1"
+    source {
+      physical_table_id = %[1]q 
+    }
+	data_transforms {
+      tag_column_operation {
+		column_name = "ColumnId-1"
+		tags {
+		  column_geographic_role = "STATE"
+		}
+	  }
+	}
   }
   column_groups {
     geo_spatial_column_group {

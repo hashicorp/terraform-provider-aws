@@ -1307,53 +1307,47 @@ func expandDataSetDataTransform(tfMap map[string]interface{}) *quicksight.Transf
 	}
 
 	transformOperation := &quicksight.TransformOperation{}
-
-	if v, ok := tfMap["cast_column_type_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["cast_column_type_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.CastColumnTypeOperation = expandDataSetCastColumnTypeOperation(v)
 	}
-
-	if v, ok := tfMap["create_columns_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["create_columns_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.CreateColumnsOperation = expandDataSetCreateColumnsOperation(v)
 	}
-
-	if v, ok := tfMap["filter_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["filter_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.FilterOperation = expandDataSetFilterOperation(v)
 	}
-
-	if v, ok := tfMap["project_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["project_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.ProjectOperation = expandDataSetProjectOperation(v)
 	}
-
-	if v, ok := tfMap["rename_column_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["rename_column_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.RenameColumnOperation = expandDataSetRenameColumnOperation(v)
 	}
-
-	if v, ok := tfMap["tag_column_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["tag_column_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.TagColumnOperation = expandDataSetTagColumnOperation(v)
 	}
-
-	if v, ok := tfMap["untag_column_operation"].(map[string]interface{}); ok {
+	if v, ok := tfMap["untag_column_operation"].([]interface{}); ok && len(v) > 0 {
 		transformOperation.UntagColumnOperation = expandDataSetUntagColumnOperation(v)
 	}
 
 	return transformOperation
 }
 
-func expandDataSetCastColumnTypeOperation(tfMap map[string]interface{}) *quicksight.CastColumnTypeOperation {
-	if tfMap == nil {
+func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.CastColumnTypeOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	castColumnTypeOperation := &quicksight.CastColumnTypeOperation{}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		castColumnTypeOperation.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["new_column_type"].(string); ok {
 		castColumnTypeOperation.NewColumnType = aws.String(v)
 	}
-
 	if v, ok := tfMap["format"].(string); ok {
 		castColumnTypeOperation.Format = aws.String(v)
 	}
@@ -1361,13 +1355,16 @@ func expandDataSetCastColumnTypeOperation(tfMap map[string]interface{}) *quicksi
 	return castColumnTypeOperation
 }
 
-func expandDataSetCreateColumnsOperation(tfMap map[string]interface{}) *quicksight.CreateColumnsOperation {
-	if tfMap == nil {
+func expandDataSetCreateColumnsOperation(tfList []interface{}) *quicksight.CreateColumnsOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	createColumnsOperation := &quicksight.CreateColumnsOperation{}
-
 	if v, ok := tfMap["columns"].([]interface{}); ok {
 		createColumnsOperation.Columns = expandDataSetCalculatedColumns(v)
 	}
@@ -1422,13 +1419,16 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	return calculatedColumn
 }
 
-func expandDataSetFilterOperation(tfMap map[string]interface{}) *quicksight.FilterOperation {
-	if tfMap == nil {
+func expandDataSetFilterOperation(tfList []interface{}) *quicksight.FilterOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	filterOperation := &quicksight.FilterOperation{}
-
 	if v, ok := tfMap["condition_expression"].(string); ok {
 		filterOperation.ConditionExpression = aws.String(v)
 	}
@@ -1436,13 +1436,16 @@ func expandDataSetFilterOperation(tfMap map[string]interface{}) *quicksight.Filt
 	return filterOperation
 }
 
-func expandDataSetProjectOperation(tfMap map[string]interface{}) *quicksight.ProjectOperation {
-	if tfMap == nil {
+func expandDataSetProjectOperation(tfList []interface{}) *quicksight.ProjectOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	projectOperation := &quicksight.ProjectOperation{}
-
 	if v, ok := tfMap["projected_columns"].([]string); ok && len(v) > 0 {
 		projectOperation.ProjectedColumns = aws.StringSlice(v)
 	}
@@ -1450,17 +1453,19 @@ func expandDataSetProjectOperation(tfMap map[string]interface{}) *quicksight.Pro
 	return projectOperation
 }
 
-func expandDataSetRenameColumnOperation(tfMap map[string]interface{}) *quicksight.RenameColumnOperation {
-	if tfMap == nil {
+func expandDataSetRenameColumnOperation(tfList []interface{}) *quicksight.RenameColumnOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
 	renameColumnOperation := &quicksight.RenameColumnOperation{}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		renameColumnOperation.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["new_column_name"].(string); ok {
 		renameColumnOperation.NewColumnName = aws.String(v)
 	}
@@ -1468,8 +1473,12 @@ func expandDataSetRenameColumnOperation(tfMap map[string]interface{}) *quicksigh
 	return renameColumnOperation
 }
 
-func expandDataSetTagColumnOperation(tfMap map[string]interface{}) *quicksight.TagColumnOperation {
-	if tfMap == nil {
+func expandDataSetTagColumnOperation(tfList []interface{}) *quicksight.TagColumnOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
@@ -1543,8 +1552,12 @@ func expandDataSetColumnDescription(tfMap map[string]interface{}) *quicksight.Co
 	return columnDescription
 }
 
-func expandDataSetUntagColumnOperation(tfMap map[string]interface{}) *quicksight.UntagColumnOperation {
-	if tfMap == nil {
+func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagColumnOperation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
@@ -1874,58 +1887,44 @@ func expandDataSetTagRule(tfMap map[string]interface{}) *quicksight.RowLevelPerm
 	return tagRules
 }
 
-func flattenColumnGroups(groups []*quicksight.ColumnGroup) []interface{} {
-	if len(groups) == 0 {
+func flattenColumnGroups(apiObject []*quicksight.ColumnGroup) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, group := range groups {
+	for _, group := range apiObject {
 		if group == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenColumnGroup(group))
+		item := map[string]interface{}{}
+		if group.GeoSpatialColumnGroup != nil {
+			item["geo_spatial_column_group"] = flattenGeoSpatialColumnGroup(group.GeoSpatialColumnGroup)
+		}
+		tfList = append(tfList, item)
 	}
 
 	return tfList
 }
 
-func flattenColumnGroup(group *quicksight.ColumnGroup) map[string]interface{} {
-	if group == nil {
+func flattenGeoSpatialColumnGroup(apiObject *quicksight.GeoSpatialColumnGroup) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if group.GeoSpatialColumnGroup != nil {
-		tfMap["geo_spatial_column_group"] = flattenGeoSpatialColumnGroup(group.GeoSpatialColumnGroup)
+	if apiObject.Columns != nil {
+		tfMap["columns"] = aws.StringValueSlice(apiObject.Columns)
+	}
+	if apiObject.CountryCode != nil {
+		tfMap["country_code"] = aws.StringValue(apiObject.CountryCode)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
 
-	return tfMap
-}
-
-func flattenGeoSpatialColumnGroup(group *quicksight.GeoSpatialColumnGroup) map[string]interface{} {
-	if group == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if group.Columns != nil {
-		tfMap["columns"] = aws.StringValueSlice(group.Columns)
-	}
-
-	if group.CountryCode != nil {
-		tfMap["country_code"] = aws.StringValue(group.CountryCode)
-	}
-
-	if group.Name != nil {
-		tfMap["name"] = aws.StringValue(group.Name)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenColumnLevelPermissionRules(rules []*quicksight.ColumnLevelPermissionRule) []interface{} {
@@ -2045,297 +2044,231 @@ func flattenLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interfac
 			continue
 		}
 
-		tfMap := flattenLogicalTable(table)
+		tfMap := map[string]interface{}{}
+		if table.Alias != nil {
+			tfMap["alias"] = aws.StringValue(table.Alias)
+		}
+		if table.DataTransforms != nil {
+			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
+		}
+		if table.Source != nil {
+			tfMap["source"] = flattenLogicalTableSource(table.Source)
+		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenLogicalTable(table *quicksight.LogicalTable) map[string]interface{} {
-	if table == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if table.Alias != nil {
-		tfMap["alias"] = aws.StringValue(table.Alias)
-	}
-
-	if table.DataTransforms != nil {
-		tfMap["data_transforms"] = flattenTransformOperations(table.DataTransforms)
-	}
-
-	if table.Source != nil {
-		tfMap["source"] = flattenLogicalTableSource(table.Source)
-	}
-
-	return tfMap
-}
-
-func flattenTransformOperations(operations []*quicksight.TransformOperation) interface{} {
-	if len(operations) == 0 {
+func flattenDataTransforms(apiObject []*quicksight.TransformOperation) interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, operation := range operations {
+	for _, operation := range apiObject {
 		if operation == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenTransformOperation(operation))
+		tfMap := map[string]interface{}{}
+		if operation.CastColumnTypeOperation != nil {
+			tfMap["cast_column_type_operation"] = flattenCastColumnTypeOperation(operation.CastColumnTypeOperation)
+		}
+		if operation.CreateColumnsOperation != nil {
+			tfMap["create_columns_operation"] = flattenCreateColumnsOperation(operation.CreateColumnsOperation)
+		}
+		if operation.FilterOperation != nil {
+			tfMap["filter_operation"] = flattenFilterOperation(operation.FilterOperation)
+		}
+		if operation.ProjectOperation != nil {
+			tfMap["project_operation"] = flattenProjectOperation(operation.ProjectOperation)
+		}
+		if operation.RenameColumnOperation != nil {
+			tfMap["rename_column_operation"] = flattenRenameColumnOperation(operation.RenameColumnOperation)
+		}
+		if operation.TagColumnOperation != nil {
+			tfMap["tag_column_operation"] = flattenTagColumnOperation(operation.TagColumnOperation)
+		}
+		if operation.UntagColumnOperation != nil {
+			tfMap["untag_column_operation"] = flattenUntagColumnOperation(operation.UntagColumnOperation)
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenTransformOperation(operation *quicksight.TransformOperation) map[string]interface{} {
-	if operation == nil {
+func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if operation.CastColumnTypeOperation != nil {
-		tfMap["cast_column_type_operation"] = flattenCastColumnTypeOperation(operation.CastColumnTypeOperation)
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.Format != nil {
+		tfMap["cast_column_type_operation"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.NewColumnType != nil {
+		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
 	}
 
-	if operation.CreateColumnsOperation != nil {
-		tfMap["create_column_operation"] = flattenCreateColumnOperation(operation.CreateColumnsOperation)
-	}
-
-	if operation.FilterOperation != nil {
-		tfMap["filter_operation"] = flattenFilterOperation(operation.FilterOperation)
-	}
-
-	if operation.ProjectOperation != nil {
-		tfMap["project_operation"] = flattenProjectOperation(operation.ProjectOperation)
-	}
-
-	if operation.RenameColumnOperation != nil {
-		tfMap["rename_column_operation"] = flattenRenameColumnOperation(operation.RenameColumnOperation)
-	}
-
-	if operation.TagColumnOperation != nil {
-		tfMap["tag_column_operation"] = flattenTagColumnOperation(operation.TagColumnOperation)
-	}
-
-	if operation.UntagColumnOperation != nil {
-		tfMap["untag_column_operation"] = flattenUntagColumnOperation(operation.UntagColumnOperation)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenCastColumnTypeOperation(operation *quicksight.CastColumnTypeOperation) map[string]interface{} {
-	if operation == nil {
+func flattenCreateColumnsOperation(apiObject *quicksight.CreateColumnsOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if operation.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(operation.ColumnName)
+	if apiObject.Columns != nil {
+		tfMap["columns"] = flattenCalculatedColumns(apiObject.Columns)
 	}
 
-	if operation.Format != nil {
-		tfMap["cast_column_type_operation"] = aws.StringValue(operation.ColumnName)
-	}
-
-	if operation.NewColumnType != nil {
-		tfMap["new_column_type"] = aws.StringValue(operation.NewColumnType)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenCreateColumnOperation(operation *quicksight.CreateColumnsOperation) map[string]interface{} {
-	if operation == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if operation.Columns != nil {
-		tfMap["columns"] = flattenCalculatedColumns(operation.Columns)
-	}
-
-	return tfMap
-}
-
-func flattenCalculatedColumns(columns []*quicksight.CalculatedColumn) interface{} {
-	if len(columns) == 0 {
+func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, column := range columns {
+	for _, column := range apiObject {
 		if column == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenCalculatedColumn(column))
+		tfMap := map[string]interface{}{}
+		if column.ColumnId != nil {
+			tfMap["column_id"] = aws.StringValue(column.ColumnId)
+		}
+		if column.ColumnName != nil {
+			tfMap["column_name"] = aws.StringValue(column.ColumnName)
+		}
+		if column.Expression != nil {
+			tfMap["column_id"] = aws.StringValue(column.Expression)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenCalculatedColumn(column *quicksight.CalculatedColumn) map[string]interface{} {
-	if column == nil {
+func flattenFilterOperation(apiObject *quicksight.FilterOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if column.ColumnId != nil {
-		tfMap["column_id"] = aws.StringValue(column.ColumnId)
+	if apiObject.ConditionExpression != nil {
+		tfMap["condition_expression"] = aws.StringValue(apiObject.ConditionExpression)
 	}
 
-	if column.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(column.ColumnName)
-	}
-
-	if column.Expression != nil {
-		tfMap["column_id"] = aws.StringValue(column.Expression)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenFilterOperation(operation *quicksight.FilterOperation) map[string]interface{} {
-	if operation == nil {
+func flattenProjectOperation(apiObject *quicksight.ProjectOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if operation.ConditionExpression != nil {
-		tfMap["condition_expression"] = aws.StringValue(operation.ConditionExpression)
+	if apiObject.ProjectedColumns != nil {
+		tfMap["project_columns"] = aws.StringValueSlice(apiObject.ProjectedColumns)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenProjectOperation(operation *quicksight.ProjectOperation) map[string]interface{} {
-	if operation == nil {
+func flattenRenameColumnOperation(apiObject *quicksight.RenameColumnOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if operation.ProjectedColumns != nil {
-		tfMap["project_columns"] = aws.StringValueSlice(operation.ProjectedColumns)
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.NewColumnName != nil {
+		tfMap["new_column_name"] = aws.StringValue(apiObject.NewColumnName)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenRenameColumnOperation(operation *quicksight.RenameColumnOperation) map[string]interface{} {
-	if operation == nil {
+func flattenTagColumnOperation(apiObject *quicksight.TagColumnOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if operation.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(operation.ColumnName)
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.Tags != nil {
+		tfMap["tags"] = flattenTags(apiObject.Tags)
 	}
 
-	if operation.NewColumnName != nil {
-		tfMap["new_column_name"] = aws.StringValue(operation.NewColumnName)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenTagColumnOperation(operation *quicksight.TagColumnOperation) map[string]interface{} {
-	if operation == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if operation.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(operation.ColumnName)
-	}
-
-	if operation.Tags != nil {
-		tfMap["tags"] = flattenTags(operation.Tags)
-	}
-
-	return tfMap
-}
-
-func flattenTags(tags []*quicksight.ColumnTag) []interface{} {
-	if len(tags) == 0 {
+func flattenTags(apiObject []*quicksight.ColumnTag) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, tag := range tags {
+	for _, tag := range apiObject {
 		if tag == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenTag(tag))
+		tfMap := map[string]interface{}{}
+		if tag.ColumnDescription != nil {
+			tfMap["column_description"] = flattenColumnDescription(tag.ColumnDescription)
+		}
+		if tag.ColumnGeographicRole != nil {
+			tfMap["column_geographic_role"] = aws.StringValue(tag.ColumnGeographicRole)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenTag(tag *quicksight.ColumnTag) map[string]interface{} {
-	if tag == nil {
+func flattenColumnDescription(apiObject *quicksight.ColumnDescription) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if tag.ColumnDescription != nil {
-		tfMap["column_description"] = flattenColumnDescription(tag.ColumnDescription)
+	if apiObject.Text != nil {
+		tfMap["text"] = aws.StringValue(apiObject.Text)
 	}
 
-	if tag.ColumnGeographicRole != nil {
-		tfMap["column_geographic_role"] = aws.StringValue(tag.ColumnGeographicRole)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenColumnDescription(desc *quicksight.ColumnDescription) map[string]interface{} {
-	if desc == nil {
+func flattenUntagColumnOperation(apiObject *quicksight.UntagColumnOperation) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if desc.Text != nil {
-		tfMap["text"] = aws.StringValue(desc.Text)
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.TagNames != nil {
+		tfMap["tag_names"] = aws.StringValueSlice(apiObject.TagNames)
 	}
 
-	return tfMap
-}
-
-func flattenUntagColumnOperation(operation *quicksight.UntagColumnOperation) map[string]interface{} {
-	if operation == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if operation.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(operation.ColumnName)
-	}
-
-	if operation.TagNames != nil {
-		tfMap["tag_names"] = aws.StringValueSlice(operation.TagNames)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenLogicalTableSource(source *quicksight.LogicalTableSource) []interface{} {
