@@ -103,6 +103,11 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -125,6 +130,11 @@ func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -151,6 +161,11 @@ func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_direct_query_source", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_imported_source", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -179,6 +194,11 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.description", "test"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -205,6 +225,11 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -336,6 +361,11 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", quicksight.StatusEnabled),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -360,6 +390,11 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
