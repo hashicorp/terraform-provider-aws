@@ -914,21 +914,24 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
-	req := &appmesh.DeleteRouteInput{
+	input := &appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
+		input.MeshOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteRouteWithContext(ctx, req)
+	_, err := conn.DeleteRouteWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Route (%s): %s", d.Id(), err)
 	}
 
 	return diags

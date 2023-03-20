@@ -29,6 +29,7 @@ func ResourceGatewayRoute() *schema.Resource {
 		ReadWithoutTimeout:   resourceGatewayRouteRead,
 		UpdateWithoutTimeout: resourceGatewayRouteUpdate,
 		DeleteWithoutTimeout: resourceGatewayRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceGatewayRouteImport,
 		},
@@ -666,12 +667,13 @@ func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh Gateway Route (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Gateway Route: %s", d.Id())
 	input := &appmesh.DeleteGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
@@ -683,7 +685,7 @@ func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh gateway route (%s) : %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	return diags

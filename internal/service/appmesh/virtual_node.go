@@ -29,6 +29,7 @@ func ResourceVirtualNode() *schema.Resource {
 		ReadWithoutTimeout:   resourceVirtualNodeRead,
 		UpdateWithoutTimeout: resourceVirtualNodeUpdate,
 		DeleteWithoutTimeout: resourceVirtualNodeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVirtualNodeImport,
 		},
@@ -1148,22 +1149,23 @@ func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
-	req := &appmesh.DeleteVirtualNodeInput{
+	input := &appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
+		input.MeshOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteVirtualNodeWithContext(ctx, req)
+	_, err := conn.DeleteVirtualNodeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual node (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Node (%s): %s", d.Id(), err)
 	}
 
 	return diags

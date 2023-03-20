@@ -29,6 +29,7 @@ func ResourceVirtualGateway() *schema.Resource {
 		ReadWithoutTimeout:   resourceVirtualGatewayRead,
 		UpdateWithoutTimeout: resourceVirtualGatewayUpdate,
 		DeleteWithoutTimeout: resourceVirtualGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVirtualGatewayImport,
 		},
@@ -813,6 +814,7 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
@@ -824,7 +826,7 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Gateway (%s): %s", d.Id(), err)
 	}
 
 	return diags
