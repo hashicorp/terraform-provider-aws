@@ -1,66 +1,57 @@
 package flex
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestExpandStringList(t *testing.T) {
 	t.Parallel()
 
-	expanded := []interface{}{"us-east-1a", "us-east-1b"} //lintignore:AWSAT003
-	stringList := ExpandStringList(expanded)
-	expected := []*string{
-		aws.String("us-east-1a"), //lintignore:AWSAT003
-		aws.String("us-east-1b"), //lintignore:AWSAT003
+	configured := []interface{}{"abc", "xyz123"}
+	got := ExpandStringList(configured)
+	want := []*string{
+		aws.String("abc"),
+		aws.String("xyz123"),
 	}
 
-	if !reflect.DeepEqual(stringList, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			stringList,
-			expected)
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
 
 func TestExpandStringListEmptyItems(t *testing.T) {
 	t.Parallel()
 
-	expanded := []interface{}{"foo", "bar", "", "baz"}
-	stringList := ExpandStringList(expanded)
-	expected := []*string{
+	configured := []interface{}{"foo", "bar", "", "baz"}
+	got := ExpandStringList(configured)
+	want := []*string{
 		aws.String("foo"),
 		aws.String("bar"),
 		aws.String("baz"),
 	}
 
-	if !reflect.DeepEqual(stringList, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			stringList,
-			expected)
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
 
 func TestExpandResourceId(t *testing.T) {
 	t.Parallel()
 
-	resourceId := "foo,bar,baz"
-	expandedId, _ := ExpandResourceId(resourceId, 3)
-	expected := []string{
+	id := "foo,bar,baz"
+	got, _ := ExpandResourceId(id, 3)
+	want := []string{
 		"foo",
 		"bar",
 		"baz",
 	}
 
-	if !reflect.DeepEqual(expandedId, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			expandedId,
-			expected)
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
 
@@ -101,14 +92,11 @@ func TestFlattenResourceId(t *testing.T) {
 	t.Parallel()
 
 	idParts := []string{"foo", "bar", "baz"}
-	flattenedId, _ := FlattenResourceId(idParts, 3)
-	expected := "foo,bar,baz"
+	got, _ := FlattenResourceId(idParts, 3)
+	want := "foo,bar,baz"
 
-	if !reflect.DeepEqual(flattenedId, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			flattenedId,
-			expected)
+	if !cmp.Equal(got, want) {
+		t.Errorf("flattened = %v, want = %v", got, want)
 	}
 }
 
