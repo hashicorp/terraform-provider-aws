@@ -280,10 +280,6 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-testacc-short: fmtcheck
-	@echo "Running acceptance tests with -short flag"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
-
 testacc-lint:
 	@echo "Checking acceptance tests with terrafmt"
 	find $(SVC_DIR) -type f -name '*_test.go' \
@@ -295,6 +291,10 @@ testacc-lint-fix:
 	find $(SVC_DIR) -type f -name '*_test.go' \
 	| sort -u \
 	| xargs -I {} terrafmt fmt  --fmtcompat {}
+
+testacc-short: fmtcheck
+	@echo "Running acceptance tests with -short flag"
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 tfsdk2fw:
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
@@ -372,9 +372,9 @@ yamllint:
 	test \
 	test-compile \
 	testacc \
-	testaccs \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-short \
 	tfsdk2fw \
 	tools \
 	ts \
