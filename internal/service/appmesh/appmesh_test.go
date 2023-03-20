@@ -22,9 +22,12 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tags":               testAccGatewayRoute_Tags,
 		},
 		"Mesh": {
-			"basic":        testAccMesh_basic,
-			"egressFilter": testAccMesh_egressFilter,
-			"tags":         testAccMesh_tags,
+			"basic":                    testAccMesh_basic,
+			"egressFilter":             testAccMesh_egressFilter,
+			"tags":                     testAccMesh_tags,
+			"dataSourceBasic":          testAccMeshDataSource_basic,
+			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
+			"dataSourceSpecAndTagsSet": testAccMeshDataSource_specAndTagsSet,
 		},
 		"Route": {
 			"disappears":              testAccRoute_disappears,
@@ -84,10 +87,12 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tags":          testAccVirtualRouter_tags,
 		},
 		"VirtualService": {
-			"disappears":    testAccVirtualService_disappears,
-			"virtualNode":   testAccVirtualService_virtualNode,
-			"virtualRouter": testAccVirtualService_virtualRouter,
-			"tags":          testAccVirtualService_tags,
+			"disappears":              testAccVirtualService_disappears,
+			"virtualNode":             testAccVirtualService_virtualNode,
+			"virtualRouter":           testAccVirtualService_virtualRouter,
+			"tags":                    testAccVirtualService_tags,
+			"dataSourceVirtualNode":   testAccVirtualServiceDataSource_virtualNode,
+			"dataSourceVirtualRouter": testAccVirtualServiceDataSource_virtualRouter,
 		},
 	}
 
