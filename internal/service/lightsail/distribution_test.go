@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -34,6 +35,7 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,37 +57,37 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 	})
 }
 
-// func TestAccLightsailDistribution_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccLightsailDistribution_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
 
-// 	var distribution lightsail.DescribeDistributionResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_lightsail_distribution.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDistributionConfig_basic(rName, testAccDistributionVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckDistributionExists(resourceName, &distribution),
-// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDistribution(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_basic(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDistribution(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
