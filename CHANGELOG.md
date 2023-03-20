@@ -17,6 +17,7 @@ BUG FIXES:
 * resource/aws_cognito_risk_configuration: Adds validation to `risk_exception_configuration` and requires at least one of `account_takeover_risk_configuration`, `compromised_credentials_risk_configuration`, or `risk_exception_configuration`. ([#30074](https://github.com/hashicorp/terraform-provider-aws/issues/30074))
 * resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
 * resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_transfer_server: Fix error refreshing `protocol_details.as2_transports` value ([#30115](https://github.com/hashicorp/terraform-provider-aws/issues/30115))
 
 ## 4.59.0 (March 16, 2023)
 
