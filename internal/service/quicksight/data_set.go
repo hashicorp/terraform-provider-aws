@@ -2183,7 +2183,6 @@ func flattenLogicalTableSource(apiObject *quicksight.LogicalTableSource) []inter
 		tfMap["data_set_arn"] = aws.StringValue(apiObject.DataSetArn)
 	}
 	if apiObject.JoinInstruction != nil {
-		// TODO: needs to return an []interface{}
 		tfMap["join_instruction"] = flattenJoinInstruction(apiObject.JoinInstruction)
 	}
 	if apiObject.PhysicalTableId != nil {
@@ -2193,7 +2192,7 @@ func flattenLogicalTableSource(apiObject *quicksight.LogicalTableSource) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenJoinInstruction(apiObject *quicksight.JoinInstruction) map[string]interface{} {
+func flattenJoinInstruction(apiObject *quicksight.JoinInstruction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2218,7 +2217,7 @@ func flattenJoinInstruction(apiObject *quicksight.JoinInstruction) map[string]in
 		tfMap["type"] = aws.StringValue(apiObject.Type)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[string]interface{} {
@@ -2250,11 +2249,9 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 			"physical_table_map_id": k,
 		}
 		if v.CustomSql != nil {
-			// TODO: should return []interface{}
 			tfMap["custom_sql"] = flattenCustomSql(v.CustomSql)
 		}
 		if v.RelationalTable != nil {
-			// TODO: should return []interface{}
 			tfMap["relational_table"] = flattenRelationalTable(v.RelationalTable)
 		}
 		if v.S3Source != nil {
@@ -2349,7 +2346,7 @@ func customUploadSettingsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenCustomSql(apiObject *quicksight.CustomSql) map[string]interface{} {
+func flattenCustomSql(apiObject *quicksight.CustomSql) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2368,7 +2365,7 @@ func flattenCustomSql(apiObject *quicksight.CustomSql) map[string]interface{} {
 		tfMap["sql_query"] = aws.StringValue(apiObject.SqlQuery)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenInputColumns(apiObject []*quicksight.InputColumn) []interface{} {
@@ -2395,7 +2392,7 @@ func flattenInputColumns(apiObject []*quicksight.InputColumn) []interface{} {
 	return tfList
 }
 
-func flattenRelationalTable(apiObject *quicksight.RelationalTable) map[string]interface{} {
+func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2417,7 +2414,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) map[string]in
 		tfMap["schema"] = aws.StringValue(apiObject.Schema)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenS3Source(apiObject *quicksight.S3Source) []interface{} {
