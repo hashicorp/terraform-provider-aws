@@ -39,6 +39,30 @@ func TestExpandStringListEmptyItems(t *testing.T) {
 	}
 }
 
+func TestExpandStringValueList(t *testing.T) {
+	t.Parallel()
+
+	configured := []interface{}{"abc", "xyz123"}
+	got := ExpandStringValueList(configured)
+	want := []string{"abc", "xyz123"}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
+func TestExpandStringValueListEmptyItems(t *testing.T) {
+	t.Parallel()
+
+	configured := []interface{}{"foo", "bar", "", "baz"}
+	got := ExpandStringValueList(configured)
+	want := []string{"foo", "bar", "baz"}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
 func TestExpandResourceId(t *testing.T) {
 	t.Parallel()
 
