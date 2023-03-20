@@ -1042,7 +1042,6 @@ func expandDataSetColumnGroups(tfList []interface{}) []*quicksight.ColumnGroup {
 		}
 
 		columnGroup := expandDataSetColumnGroup(tfMap)
-
 		if columnGroup == nil {
 			continue
 		}
@@ -1072,15 +1071,12 @@ func expandDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksigh
 	}
 
 	geoSpatialColumnGroup := &quicksight.GeoSpatialColumnGroup{}
-
 	if v, ok := tfMap["columns"].([]interface{}); ok {
 		geoSpatialColumnGroup.Columns = flex.ExpandStringList(v)
 	}
-
 	if v, ok := tfMap["country_code"].(string); ok && v != "" {
 		geoSpatialColumnGroup.CountryCode = aws.String(v)
 	}
-
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		geoSpatialColumnGroup.Name = aws.String(v)
 	}
@@ -1124,11 +1120,9 @@ func expandDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUs
 	}
 
 	usageConfiguration := &quicksight.DataSetUsageConfiguration{}
-
 	if v, ok := tfMap["disable_use_as_direct_query_source"].(bool); ok {
 		usageConfiguration.DisableUseAsDirectQuerySource = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["disable_use_as_imported_source"].(bool); ok {
 		usageConfiguration.DisableUseAsImportedSource = aws.Bool(v)
 	}
@@ -1150,7 +1144,6 @@ func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.Fiel
 		}
 
 		fieldFolder := &quicksight.FieldFolder{}
-
 		if v, ok := tfMap["columns"].([]interface{}); ok {
 			var fin []string
 			for _, str := range v {
@@ -1159,7 +1152,6 @@ func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.Fiel
 
 			fieldFolder.Columns = aws.StringSlice(fin)
 		}
-
 		if v, ok := tfMap["description"].(string); ok {
 			fieldFolder.Description = aws.String(v)
 		}
@@ -1185,15 +1177,12 @@ func expandDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.L
 		}
 
 		logicalTable := &quicksight.LogicalTable{}
-
 		if v, ok := vMap["alias"].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
-
 		if v, ok := vMap["source"].([]interface{}); ok {
 			logicalTable.Source = expandDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
-
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
 			logicalTable.DataTransforms = expandDataSetDataTransforms(v)
 		}
@@ -1210,15 +1199,12 @@ func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.L
 	}
 
 	logicalTableSource := &quicksight.LogicalTableSource{}
-
 	if v, ok := tfMap["data_set_arn"].(string); ok && v != "" {
 		logicalTableSource.DataSetArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		logicalTableSource.PhysicalTableId = aws.String(v)
 	}
-
 	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok && len(v) > 0 {
 		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
 	}
@@ -1232,27 +1218,21 @@ func expandDataSetJoinInstruction(tfMap map[string]interface{}) *quicksight.Join
 	}
 
 	joinInstruction := &quicksight.JoinInstruction{}
-
 	if v, ok := tfMap["left_operand"].(string); ok {
 		joinInstruction.LeftOperand = aws.String(v)
 	}
-
 	if v, ok := tfMap["on_clause"].(string); ok {
 		joinInstruction.OnClause = aws.String(v)
 	}
-
 	if v, ok := tfMap["right_operand"].(string); ok {
 		joinInstruction.RightOperand = aws.String(v)
 	}
-
 	if v, ok := tfMap["type"].(string); ok {
 		joinInstruction.Type = aws.String(v)
 	}
-
 	if v, ok := tfMap["left_join_key_properties"].(map[string]interface{}); ok {
 		joinInstruction.LeftJoinKeyProperties = expandDataSetJoinKeyProperties(v)
 	}
-
 	if v, ok := tfMap["right_join_key_properties"].(map[string]interface{}); ok {
 		joinInstruction.RightJoinKeyProperties = expandDataSetJoinKeyProperties(v)
 	}
@@ -1266,7 +1246,6 @@ func expandDataSetJoinKeyProperties(tfMap map[string]interface{}) *quicksight.Jo
 	}
 
 	joinKeyProperties := &quicksight.JoinKeyProperties{}
-
 	if v, ok := tfMap["unique_key"].(bool); ok {
 		joinKeyProperties.UniqueKey = aws.Bool(v)
 	}
@@ -1280,22 +1259,18 @@ func expandDataSetDataTransforms(tfList []interface{}) []*quicksight.TransformOp
 	}
 
 	var transformOperations []*quicksight.TransformOperation
-
 	for _, tfMapRaw := range tfList {
-
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
 		transformOperation := expandDataSetDataTransform(tfMap)
-
 		if transformOperation == nil {
 			continue
 		}
 
 		transformOperations = append(transformOperations, transformOperation)
-
 	}
 
 	return transformOperations
@@ -1378,9 +1353,7 @@ func expandDataSetCalculatedColumns(tfList []interface{}) []*quicksight.Calculat
 	}
 
 	var calculatedColumns []*quicksight.CalculatedColumn
-
 	for _, tfMapRaw := range tfList {
-
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
@@ -1403,15 +1376,12 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	}
 
 	calculatedColumn := &quicksight.CalculatedColumn{}
-
 	if v, ok := tfMap["column_id"].(string); ok {
 		calculatedColumn.ColumnId = aws.String(v)
 	}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		calculatedColumn.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["expression"].(string); ok {
 		calculatedColumn.Expression = aws.String(v)
 	}
@@ -1483,11 +1453,9 @@ func expandDataSetTagColumnOperation(tfList []interface{}) *quicksight.TagColumn
 	}
 
 	tagColumnOperation := &quicksight.TagColumnOperation{}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		tagColumnOperation.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["tags"].([]interface{}); ok {
 		tagColumnOperation.Tags = expandDataSetTags(v)
 	}
@@ -1501,9 +1469,7 @@ func expandDataSetTags(tfList []interface{}) []*quicksight.ColumnTag {
 	}
 
 	var tags []*quicksight.ColumnTag
-
 	for _, tfMapRaw := range tfList {
-
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
@@ -1526,11 +1492,9 @@ func expandDataSetTag(tfMap map[string]interface{}) *quicksight.ColumnTag {
 	}
 
 	tag := &quicksight.ColumnTag{}
-
 	if v, ok := tfMap["column_description"].(map[string]interface{}); ok {
 		tag.ColumnDescription = expandDataSetColumnDescription(v)
 	}
-
 	if v, ok := tfMap["column_geographic_role"].(string); ok {
 		tag.ColumnGeographicRole = aws.String(v)
 	}
@@ -1544,7 +1508,6 @@ func expandDataSetColumnDescription(tfMap map[string]interface{}) *quicksight.Co
 	}
 
 	columnDescription := &quicksight.ColumnDescription{}
-
 	if v, ok := tfMap["text"].(string); ok {
 		columnDescription.Text = aws.String(v)
 	}
@@ -1562,11 +1525,9 @@ func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagCo
 	}
 
 	untagColumnOperation := &quicksight.UntagColumnOperation{}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		untagColumnOperation.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["tag_names"].([]string); ok {
 		untagColumnOperation.TagNames = aws.StringSlice(v)
 	}
@@ -1588,7 +1549,6 @@ func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.Phy
 		}
 
 		physicalTable := &quicksight.PhysicalTable{}
-
 		physicalTableMapID := vMap["physical_table_map_id"].(string)
 
 		if customSqlList, ok := vMap["custom_sql"].([]interface{}); ok {
@@ -1596,13 +1556,11 @@ func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.Phy
 				physicalTable.CustomSql = expandDataSetCustomSql(v.(map[string]interface{}))
 			}
 		}
-
 		if relationalTableList, ok := vMap["relational_table"].([]interface{}); ok {
 			for _, v := range relationalTableList {
 				physicalTable.RelationalTable = expandDataSetRelationalTable(v.(map[string]interface{}))
 			}
 		}
-
 		if s3SourceList, ok := vMap["s3_source"].([]interface{}); ok {
 			for _, v := range s3SourceList {
 				physicalTable.S3Source = expandDataSetS3Source(v.(map[string]interface{}))
@@ -1621,19 +1579,15 @@ func expandDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql 
 	}
 
 	customSql := &quicksight.CustomSql{}
-
 	if v, ok := tfMap["columns"].([]interface{}); ok {
 		customSql.Columns = expandDataSetInputColumns(v)
 	}
-
 	if v, ok := tfMap["data_source_arn"].(string); ok {
 		customSql.DataSourceArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["name"].(string); ok {
 		customSql.Name = aws.String(v)
 	}
-
 	if v, ok := tfMap["sql_query"].(string); ok {
 		customSql.SqlQuery = aws.String(v)
 	}
@@ -1647,9 +1601,7 @@ func expandDataSetInputColumns(tfList []interface{}) []*quicksight.InputColumn {
 	}
 
 	var inputColumns []*quicksight.InputColumn
-
 	for _, tfMapRaw := range tfList {
-
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
@@ -1671,7 +1623,6 @@ func expandDataSetInputColumn(tfMap map[string]interface{}) *quicksight.InputCol
 	}
 
 	inputColumn := &quicksight.InputColumn{}
-
 	if v, ok := tfMap["name"].(string); ok {
 		inputColumn.Name = aws.String(v)
 	}
@@ -1688,23 +1639,18 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	}
 
 	relationalTable := &quicksight.RelationalTable{}
-
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		relationalTable.InputColumns = expandDataSetInputColumns(v)
 	}
-
 	if v, ok := tfMap["catelog"].(string); ok {
 		relationalTable.Catalog = aws.String(v)
 	}
-
 	if v, ok := tfMap["data_source_arn"].(string); ok {
 		relationalTable.DataSourceArn = aws.String(v)
 	}
-
 	if v, ok := tfMap["name"].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-
 	if v, ok := tfMap["catelog"].(string); ok {
 		relationalTable.Catalog = aws.String(v)
 	}
@@ -1718,15 +1664,12 @@ func expandDataSetS3Source(tfMap map[string]interface{}) *quicksight.S3Source {
 	}
 
 	s3Source := &quicksight.S3Source{}
-
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		s3Source.InputColumns = expandDataSetInputColumns(v)
 	}
-
 	if v, ok := tfMap["upload_settings"].(map[string]interface{}); ok {
 		s3Source.UploadSettings = expandDataSetUploadSettings(v)
 	}
-
 	if v, ok := tfMap["data_source_arn"].(string); ok {
 		s3Source.DataSourceArn = aws.String(v)
 	}
@@ -1740,23 +1683,18 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	}
 
 	uploadSettings := &quicksight.UploadSettings{}
-
 	if v, ok := tfMap["contains_header"].(bool); ok {
 		uploadSettings.ContainsHeader = aws.Bool(v)
 	}
-
 	if v, ok := tfMap["delimiter"].(string); ok {
 		uploadSettings.Delimiter = aws.String(v)
 	}
-
 	if v, ok := tfMap["format"].(string); ok {
 		uploadSettings.Format = aws.String(v)
 	}
-
 	if v, ok := tfMap["start_from_row"].(int64); ok {
 		uploadSettings.StartFromRow = aws.Int64(v)
 	}
-
 	if v, ok := tfMap["text_qualifier"].(string); ok {
 		uploadSettings.TextQualifier = aws.String(v)
 	}
@@ -1790,23 +1728,18 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	}
 
 	rowLevelPermission := &quicksight.RowLevelPermissionDataSet{}
-
 	if v, ok := tfMap["arn"].(string); ok {
 		rowLevelPermission.Arn = aws.String(v)
 	}
-
 	if v, ok := tfMap["permission_policy"].(string); ok {
 		rowLevelPermission.PermissionPolicy = aws.String(v)
 	}
-
 	if v, ok := tfMap["format_version"].(string); ok {
 		rowLevelPermission.FormatVersion = aws.String(v)
 	}
-
 	if v, ok := tfMap["namespace"].(string); ok {
 		rowLevelPermission.Namespace = aws.String(v)
 	}
-
 	if v, ok := tfMap["status"].(string); ok {
 		rowLevelPermission.Status = aws.String(v)
 	}
@@ -1824,11 +1757,9 @@ func expandDataSetRowLevelPermissionTagConfigurations(tfList []interface{}) *qui
 	}
 
 	rowLevelPermissionTagConfiguration := &quicksight.RowLevelPermissionTagConfiguration{}
-
 	if v, ok := tfMap["tag_rules"].([]interface{}); ok {
 		rowLevelPermissionTagConfiguration.TagRules = expandDataSetTagRules(v)
 	}
-
 	if v, ok := tfMap["status"].(string); ok {
 		rowLevelPermissionTagConfiguration.Status = aws.String(v)
 	}
@@ -1850,7 +1781,6 @@ func expandDataSetTagRules(tfList []interface{}) []*quicksight.RowLevelPermissio
 		}
 
 		tagRule := expandDataSetTagRule(tfMap)
-
 		if tagRule == nil {
 			continue
 		}
@@ -1867,19 +1797,15 @@ func expandDataSetTagRule(tfMap map[string]interface{}) *quicksight.RowLevelPerm
 	}
 
 	tagRules := &quicksight.RowLevelPermissionTagRule{}
-
 	if v, ok := tfMap["column_name"].(string); ok {
 		tagRules.ColumnName = aws.String(v)
 	}
-
 	if v, ok := tfMap["tag_key"].(string); ok {
 		tagRules.TagKey = aws.String(v)
 	}
-
 	if v, ok := tfMap["match_all_value"].(string); ok {
 		tagRules.MatchAllValue = aws.String(v)
 	}
-
 	if v, ok := tfMap["tag_multi_value_delimiter"].(string); ok {
 		tagRules.TagMultiValueDelimiter = aws.String(v)
 	}
@@ -1927,72 +1853,67 @@ func flattenGeoSpatialColumnGroup(apiObject *quicksight.GeoSpatialColumnGroup) [
 	return []interface{}{tfMap}
 }
 
-func flattenColumnLevelPermissionRules(rules []*quicksight.ColumnLevelPermissionRule) []interface{} {
-	if len(rules) == 0 {
+func flattenColumnLevelPermissionRules(apiObject []*quicksight.ColumnLevelPermissionRule) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, rule := range rules {
+	for _, rule := range apiObject {
 		if rule == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenColumnLevelPermissionRule(rule))
+		tfMap := map[string]interface{}{}
+		if rule.ColumnNames != nil {
+			tfMap["column_names"] = aws.StringValueSlice(rule.ColumnNames)
+		}
+		if rule.Principals != nil {
+			tfMap["principals"] = aws.StringValueSlice(rule.Principals)
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenColumnLevelPermissionRule(rule *quicksight.ColumnLevelPermissionRule) map[string]interface{} {
-	if rule == nil {
+func flattenDataSetUsageConfiguration(apiObject *quicksight.DataSetUsageConfiguration) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if rule.ColumnNames != nil {
-		tfMap["column_names"] = aws.StringValueSlice(rule.ColumnNames)
+	if apiObject.DisableUseAsDirectQuerySource != nil {
+		tfMap["disable_use_as_direct_query_source"] = aws.BoolValue(apiObject.DisableUseAsDirectQuerySource)
+	}
+	if apiObject.DisableUseAsImportedSource != nil {
+		tfMap["disable_use_as_imported_source"] = aws.BoolValue(apiObject.DisableUseAsImportedSource)
 	}
 
-	if rule.Principals != nil {
-		tfMap["principals"] = aws.StringValueSlice(rule.Principals)
-	}
-
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConfiguration) []interface{} {
-	if configuration == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if configuration.DisableUseAsDirectQuerySource != nil {
-		tfMap["disable_use_as_direct_query_source"] = aws.BoolValue(configuration.DisableUseAsDirectQuerySource)
-	}
-
-	if configuration.DisableUseAsImportedSource != nil {
-		tfMap["disable_use_as_imported_source"] = aws.BoolValue(configuration.DisableUseAsImportedSource)
-	}
-
-	tfList := []interface{}{tfMap}
-	return tfList
-}
-
-func flattenFieldFolders(folders map[string]*quicksight.FieldFolder) *schema.Set {
-	if len(folders) == 0 {
+func flattenFieldFolders(apiObject map[string]*quicksight.FieldFolder) *schema.Set {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-	for key, value := range folders {
+	for key, value := range apiObject {
 		if value == nil {
 			continue
 		}
-		tfList = append(tfList, flattenFieldFolder(key, value))
+
+		tfMap := map[string]interface{}{
+			"field_folders_id": key,
+		}
+		if len(value.Columns) > 0 {
+			tfMap["columns"] = flex.FlattenStringList(value.Columns)
+		}
+		if value.Description != nil {
+			tfMap["description"] = aws.StringValue(value.Description)
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return schema.NewSet(fieldFoldersHash, tfList)
@@ -2014,32 +1935,13 @@ func fieldFoldersHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenFieldFolder(id string, apiObject *quicksight.FieldFolder) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{
-		"field_folders_id": id,
-	}
-	if len(apiObject.Columns) > 0 {
-		tfMap["columns"] = flex.FlattenStringList(apiObject.Columns)
-	}
-	if apiObject.Description != nil {
-		tfMap["description"] = aws.StringValue(apiObject.Description)
-	}
-
-	return tfMap
-}
-
-func flattenLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interface{} {
-	if len(maps) == 0 {
+func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, table := range maps {
+	for _, table := range apiObject {
 		if table == nil {
 			continue
 		}
@@ -2060,7 +1962,7 @@ func flattenLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interfac
 	return tfList
 }
 
-func flattenDataTransforms(apiObject []*quicksight.TransformOperation) interface{} {
+func flattenDataTransforms(apiObject []*quicksight.TransformOperation) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -2271,89 +2173,93 @@ func flattenUntagColumnOperation(apiObject *quicksight.UntagColumnOperation) []i
 	return []interface{}{tfMap}
 }
 
-func flattenLogicalTableSource(source *quicksight.LogicalTableSource) []interface{} {
-	if source == nil {
+func flattenLogicalTableSource(apiObject *quicksight.LogicalTableSource) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if source.DataSetArn != nil {
-		tfMap["data_set_arn"] = aws.StringValue(source.DataSetArn)
+	if apiObject.DataSetArn != nil {
+		tfMap["data_set_arn"] = aws.StringValue(apiObject.DataSetArn)
 	}
-
-	if source.JoinInstruction != nil {
-		tfMap["join_instruction"] = flattenJoinInstruction(source.JoinInstruction)
+	if apiObject.JoinInstruction != nil {
+		// TODO: needs to return an []interface{}
+		tfMap["join_instruction"] = flattenJoinInstruction(apiObject.JoinInstruction)
 	}
-
-	if source.PhysicalTableId != nil {
-		tfMap["physical_table_id"] = aws.StringValue(source.PhysicalTableId)
+	if apiObject.PhysicalTableId != nil {
+		tfMap["physical_table_id"] = aws.StringValue(apiObject.PhysicalTableId)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenJoinInstruction(instruction *quicksight.JoinInstruction) map[string]interface{} {
-	if instruction == nil {
+func flattenJoinInstruction(apiObject *quicksight.JoinInstruction) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if instruction.LeftJoinKeyProperties != nil {
-		tfMap["left_join_key_properties"] = flattenJoinKeyProperties(instruction.LeftJoinKeyProperties)
+	if apiObject.LeftJoinKeyProperties != nil {
+		tfMap["left_join_key_properties"] = flattenJoinKeyProperties(apiObject.LeftJoinKeyProperties)
 	}
-
-	if instruction.LeftOperand != nil {
-		tfMap["left_operand"] = aws.StringValue(instruction.LeftOperand)
+	if apiObject.LeftOperand != nil {
+		tfMap["left_operand"] = aws.StringValue(apiObject.LeftOperand)
 	}
-
-	if instruction.OnClause != nil {
-		tfMap["on_clause"] = aws.StringValue(instruction.OnClause)
+	if apiObject.OnClause != nil {
+		tfMap["on_clause"] = aws.StringValue(apiObject.OnClause)
 	}
-
-	if instruction.RightJoinKeyProperties != nil {
-		tfMap["right_join_key_properties"] = flattenJoinKeyProperties(instruction.RightJoinKeyProperties)
+	if apiObject.RightJoinKeyProperties != nil {
+		tfMap["right_join_key_properties"] = flattenJoinKeyProperties(apiObject.RightJoinKeyProperties)
 	}
-
-	if instruction.RightOperand != nil {
-		tfMap["right_operand"] = aws.StringValue(instruction.RightOperand)
+	if apiObject.RightOperand != nil {
+		tfMap["right_operand"] = aws.StringValue(apiObject.RightOperand)
 	}
-
-	if instruction.Type != nil {
-		tfMap["type"] = aws.StringValue(instruction.Type)
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
 	}
 
 	return tfMap
 }
 
-func flattenJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[string]interface{} {
-	if prop == nil {
+func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if prop.UniqueKey != nil {
-		tfMap["unique_key"] = aws.BoolValue(prop.UniqueKey)
+	if apiObject.UniqueKey != nil {
+		tfMap["unique_key"] = aws.BoolValue(apiObject.UniqueKey)
 	}
 
 	return tfMap
 }
 
-func flattenPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) *schema.Set {
-	if len(maps) == 0 {
+func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *schema.Set {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	tfSet := schema.NewSet(physicalTableMapHash, []interface{}{})
 
-	for k, v := range maps {
+	for k, v := range apiObject {
 		if v == nil {
 			continue
 		}
 
-		tfMap := flattenPhysicalTable(k, v)
+		tfMap := map[string]interface{}{
+			"physical_table_map_id": k,
+		}
+		if v.CustomSql != nil {
+			// TODO: should return []interface{}
+			tfMap["custom_sql"] = flattenCustomSql(v.CustomSql)
+		}
+		if v.RelationalTable != nil {
+			// TODO: should return []interface{}
+			tfMap["relational_table"] = flattenRelationalTable(v.RelationalTable)
+		}
+		if v.S3Source != nil {
+			tfMap["s3_source"] = flattenS3Source(v.S3Source)
+		}
 		tfSet.Add(tfMap)
 	}
 	return tfSet
@@ -2443,137 +2349,91 @@ func customUploadSettingsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenPhysicalTable(key string, table *quicksight.PhysicalTable) map[string]interface{} {
-	if table == nil {
+func flattenCustomSql(apiObject *quicksight.CustomSql) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	tfMap["physical_table_map_id"] = key
-
-	if table.CustomSql != nil {
-		tfMap["custom_sql"] = flattenCustomSql(table.CustomSql)
+	if apiObject.Columns != nil {
+		tfMap["columns"] = flattenInputColumns(apiObject.Columns)
 	}
-
-	if table.RelationalTable != nil {
-		tfMap["relational_table"] = flattenRelationalTable(table.RelationalTable)
+	if apiObject.DataSourceArn != nil {
+		tfMap["data_source_arn"] = aws.StringValue(apiObject.DataSourceArn)
 	}
-
-	if table.S3Source != nil {
-		tfMap["s3_source"] = flattenS3Source(table.S3Source)
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.SqlQuery != nil {
+		tfMap["sql_query"] = aws.StringValue(apiObject.SqlQuery)
 	}
 
 	return tfMap
 }
 
-func flattenCustomSql(sql *quicksight.CustomSql) map[string]interface{} {
-	if sql == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if sql.Columns != nil {
-		tfMap["columns"] = flattenInputColumns(sql.Columns)
-	}
-
-	if sql.DataSourceArn != nil {
-		tfMap["data_source_arn"] = aws.StringValue(sql.DataSourceArn)
-	}
-
-	if sql.Name != nil {
-		tfMap["name"] = aws.StringValue(sql.Name)
-	}
-
-	if sql.SqlQuery != nil {
-		tfMap["sql_query"] = aws.StringValue(sql.SqlQuery)
-	}
-
-	return tfMap
-}
-
-func flattenInputColumns(columns []*quicksight.InputColumn) []interface{} {
-	if len(columns) == 0 {
+func flattenInputColumns(apiObject []*quicksight.InputColumn) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, column := range columns {
+	for _, column := range apiObject {
 		if column == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenInputColumn(column))
+		tfMap := map[string]interface{}{}
+		if column.Name != nil {
+			tfMap["name"] = aws.StringValue(column.Name)
+		}
+		if column.Type != nil {
+			tfMap["type"] = aws.StringValue(column.Type)
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenInputColumn(column *quicksight.InputColumn) map[string]interface{} {
-	if column == nil {
+func flattenRelationalTable(apiObject *quicksight.RelationalTable) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if column.Name != nil {
-		tfMap["name"] = aws.StringValue(column.Name)
+	if apiObject.Catalog != nil {
+		tfMap["catalog"] = aws.StringValue(apiObject.Catalog)
 	}
-
-	if column.Type != nil {
-		tfMap["type"] = aws.StringValue(column.Type)
+	if apiObject.DataSourceArn != nil {
+		tfMap["data_source_arn"] = aws.StringValue(apiObject.DataSourceArn)
+	}
+	if apiObject.InputColumns != nil {
+		tfMap["input_columns"] = flattenInputColumns(apiObject.InputColumns)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.Schema != nil {
+		tfMap["schema"] = aws.StringValue(apiObject.Schema)
 	}
 
 	return tfMap
 }
 
-func flattenRelationalTable(table *quicksight.RelationalTable) map[string]interface{} {
-	if table == nil {
+func flattenS3Source(apiObject *quicksight.S3Source) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if table.Catalog != nil {
-		tfMap["catalog"] = aws.StringValue(table.Catalog)
+	if apiObject.DataSourceArn != nil {
+		tfMap["data_source_arn"] = aws.StringValue(apiObject.DataSourceArn)
+	}
+	if apiObject.InputColumns != nil {
+		tfMap["input_columns"] = flattenInputColumns(apiObject.InputColumns)
 	}
 
-	if table.DataSourceArn != nil {
-		tfMap["data_source_arn"] = aws.StringValue(table.DataSourceArn)
-	}
-
-	if table.InputColumns != nil {
-		tfMap["input_columns"] = flattenInputColumns(table.InputColumns)
-	}
-
-	if table.Name != nil {
-		tfMap["name"] = aws.StringValue(table.Name)
-	}
-
-	if table.Schema != nil {
-		tfMap["schema"] = aws.StringValue(table.Schema)
-	}
-
-	return tfMap
-}
-
-func flattenS3Source(source *quicksight.S3Source) []interface{} {
-	if source == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if source.DataSourceArn != nil {
-		tfMap["data_source_arn"] = aws.StringValue(source.DataSourceArn)
-	}
-
-	if source.InputColumns != nil {
-		tfMap["input_columns"] = flattenInputColumns(source.InputColumns)
-	}
-
+	// TODO: switch to required, update tests
 	// Temporarily stop writing upload_settings to state on read to avoid
 	// inconsistent final plans when default values are returned
 	// if source.UploadSettings != nil {
@@ -2583,126 +2443,100 @@ func flattenS3Source(source *quicksight.S3Source) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenUploadSettings(settings *quicksight.UploadSettings) []interface{} {
-	if settings == nil {
+func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if settings.ContainsHeader != nil {
-		tfMap["contains_header"] = aws.BoolValue(settings.ContainsHeader)
+	if apiObject.ContainsHeader != nil {
+		tfMap["contains_header"] = aws.BoolValue(apiObject.ContainsHeader)
 	}
-
-	if settings.Delimiter != nil {
-		tfMap["contains_header"] = aws.StringValue(settings.Delimiter)
+	if apiObject.Delimiter != nil {
+		tfMap["contains_header"] = aws.StringValue(apiObject.Delimiter)
 	}
-
-	if settings.Format != nil {
-		tfMap["format"] = aws.StringValue(settings.Format)
+	if apiObject.Format != nil {
+		tfMap["format"] = aws.StringValue(apiObject.Format)
 	}
-
-	if settings.StartFromRow != nil {
-		tfMap["start_from_row"] = aws.Int64Value(settings.StartFromRow)
+	if apiObject.StartFromRow != nil {
+		tfMap["start_from_row"] = aws.Int64Value(apiObject.StartFromRow)
 	}
-
-	if settings.TextQualifier != nil {
-		tfMap["text_qualifier"] = aws.StringValue(settings.TextQualifier)
+	if apiObject.TextQualifier != nil {
+		tfMap["text_qualifier"] = aws.StringValue(apiObject.TextQualifier)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenRowLevelPermissionDataSet(set *quicksight.RowLevelPermissionDataSet) []interface{} {
-	if set == nil {
+func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDataSet) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if set.Arn != nil {
-		tfMap["arn"] = aws.StringValue(set.Arn)
+	if apiObject.Arn != nil {
+		tfMap["arn"] = aws.StringValue(apiObject.Arn)
 	}
-
-	if set.FormatVersion != nil {
-		tfMap["format_version"] = aws.StringValue(set.FormatVersion)
+	if apiObject.FormatVersion != nil {
+		tfMap["format_version"] = aws.StringValue(apiObject.FormatVersion)
 	}
-
-	if set.Namespace != nil {
-		tfMap["namespace"] = aws.StringValue(set.Namespace)
+	if apiObject.Namespace != nil {
+		tfMap["namespace"] = aws.StringValue(apiObject.Namespace)
 	}
-
-	if set.PermissionPolicy != nil {
-		tfMap["permission_policy"] = aws.StringValue(set.PermissionPolicy)
+	if apiObject.PermissionPolicy != nil {
+		tfMap["permission_policy"] = aws.StringValue(apiObject.PermissionPolicy)
 	}
-
-	if set.Status != nil {
-		tfMap["status"] = aws.StringValue(set.Status)
+	if apiObject.Status != nil {
+		tfMap["status"] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
-	if configuration == nil {
+func flattenRowLevelPermissionTagConfiguration(apiObject *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	if configuration.Status != nil {
-		tfMap["status"] = aws.StringValue(configuration.Status)
+	if apiObject.Status != nil {
+		tfMap["status"] = aws.StringValue(apiObject.Status)
 	}
-
-	if configuration.TagRules != nil {
-		tfMap["tag_rules"] = flattenTagRules(configuration.TagRules)
+	if apiObject.TagRules != nil {
+		tfMap["tag_rules"] = flattenTagRules(apiObject.TagRules)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTagRules(rules []*quicksight.RowLevelPermissionTagRule) []interface{} {
-	if len(rules) == 0 {
+func flattenTagRules(apiObject []*quicksight.RowLevelPermissionTagRule) []interface{} {
+	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-
-	for _, rule := range rules {
+	for _, rule := range apiObject {
 		if rule == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenTagRule(rule))
+		tfMap := map[string]interface{}{}
+		if rule.ColumnName != nil {
+			tfMap["column_name"] = aws.StringValue(rule.ColumnName)
+		}
+		if rule.MatchAllValue != nil {
+			tfMap["match_all_value"] = aws.StringValue(rule.MatchAllValue)
+		}
+		if rule.TagKey != nil {
+			tfMap["tag_key"] = aws.StringValue(rule.TagKey)
+		}
+		if rule.TagMultiValueDelimiter != nil {
+			tfMap["tag_multi_value_delimiter"] = aws.StringValue(rule.TagMultiValueDelimiter)
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
-}
-
-func flattenTagRule(rule *quicksight.RowLevelPermissionTagRule) map[string]interface{} {
-	if rule == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if rule.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(rule.ColumnName)
-	}
-
-	if rule.MatchAllValue != nil {
-		tfMap["match_all_value"] = aws.StringValue(rule.MatchAllValue)
-	}
-
-	if rule.TagKey != nil {
-		tfMap["tag_key"] = aws.StringValue(rule.TagKey)
-	}
-
-	if rule.TagMultiValueDelimiter != nil {
-		tfMap["tag_multi_value_delimiter"] = aws.StringValue(rule.TagMultiValueDelimiter)
-	}
-
-	return tfMap
 }
 
 func ParseDataSetID(id string) (string, string, error) {
