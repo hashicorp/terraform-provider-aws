@@ -7248,6 +7248,60 @@ resource "aws_db_instance" "test" {
 `, rName, password))
 }
 
+func testAccInstanceConfig_managedMasterPassword(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage           = 5
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password = true
+  username                    = "tfacctest"
+  skip_final_snapshot         = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_managedMasterPasswordKMSKey(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage             = 5
+  engine                        = data.aws_rds_orderable_db_instance.test.engine
+  identifier                    = %[1]q
+  instance_class                = data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = aws_kms_key.example.arn
+  username                      = "tfacctest"
+  skip_final_snapshot           = true
+}
+`, rName))
+}
+
 func testAccInstanceConfig_ReplicateSourceDB_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
