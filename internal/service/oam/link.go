@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -64,10 +64,9 @@ func ResourceLink() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 50,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ResourceTypeValues(types.ResourceType("").Values()), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.ResourceType](),
 				},
-				Set: schema.HashString,
 			},
 			"sink_arn": {
 				Type:     schema.TypeString,
@@ -78,7 +77,6 @@ func ResourceLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -142,9 +140,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("link_id", out.Id)
 	d.Set("resource_types", flex.FlattenStringValueList(out.ResourceTypes))
 	d.Set("sink_arn", out.SinkArn)
-	if _, ok := d.GetOk("sink_identifier"); !ok {
-		d.Set("sink_identifier", out.SinkArn)
-	}
+	d.Set("sink_identifier", out.SinkArn)
 
 	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
@@ -261,14 +257,4 @@ func ExpandResourceTypes(resourceTypeList []interface{}) []types.ResourceType {
 	}
 
 	return resourceTypes
-}
-
-func ResourceTypeValues(resourceTypes []types.ResourceType) []string {
-	var out []string
-
-	for _, v := range resourceTypes {
-		out = append(out, string(v))
-	}
-
-	return out
 }

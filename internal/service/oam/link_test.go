@@ -64,50 +64,6 @@ func TestExpandResourceTypesUnitTest(t *testing.T) {
 	}
 }
 
-func TestResourceTypeValuesUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    []types.ResourceType
-		Expected []string
-	}{
-		{
-			TestName: "Empty resource types",
-			Input:    []types.ResourceType{},
-			Expected: []string{},
-		},
-		{
-			TestName: "Non-empty resource types",
-			Input: []types.ResourceType{
-				types.ResourceTypeAwsCloudwatchMetric,
-				types.ResourceTypeAwsLogsLoggroup,
-			},
-			Expected: []string{
-				"AWS::CloudWatch::Metric",
-				"AWS::Logs::LogGroup",
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfoam.ResourceTypeValues(testCase.Input)
-
-			if len(got) == 0 && len(testCase.Expected) == 0 {
-				return
-			}
-
-			if !awsutil.DeepEqual(got, testCase.Expected) {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
