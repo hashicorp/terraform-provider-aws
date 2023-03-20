@@ -280,6 +280,10 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
+testacc-short: fmtcheck
+	@echo "Running acceptance tests with -short flag"
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
 testacc-lint:
 	@echo "Checking acceptance tests with terrafmt"
 	find $(SVC_DIR) -type f -name '*_test.go' \
@@ -306,6 +310,8 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+
+ts: testacc-short
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
@@ -366,10 +372,12 @@ yamllint:
 	test \
 	test-compile \
 	testacc \
+	testaccs \
 	testacc-lint \
 	testacc-lint-fix \
 	tfsdk2fw \
 	tools \
+	ts \
 	website-link-check \
 	website-link-check-ghrc \
 	website-lint \
