@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/oam/types"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,54 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestExpandResourceTypesUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    []interface{}
-		Expected []types.ResourceType
-	}{
-		{
-			TestName: "Empty resource types",
-			Input:    []interface{}{},
-			Expected: nil,
-		},
-		{
-			TestName: "Non-empty resource types",
-			Input: []interface{}{
-				"AWS::CloudWatch::Metric",
-				"AWS::Logs::LogGroup",
-			},
-			Expected: []types.ResourceType{
-				types.ResourceTypeAwsCloudwatchMetric,
-				types.ResourceTypeAwsLogsLoggroup,
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfoam.ExpandResourceTypes(testCase.Input)
-
-			if got == nil && testCase.Expected == nil {
-				return
-			}
-			if !awsutil.DeepEqual(got, testCase.Expected) {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	ctx := acctest.Context(t)
 
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -109,10 +65,10 @@ func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
 }
 
 func TestAccObservabilityAccessManagerLink_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	ctx := acctest.Context(t)
 
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -142,10 +98,10 @@ func TestAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 }
 
 func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	ctx := acctest.Context(t)
 
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -201,10 +157,10 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 }
 
 func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	ctx := acctest.Context(t)
 
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

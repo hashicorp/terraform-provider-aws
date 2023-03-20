@@ -94,7 +94,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	in := &oam.CreateLinkInput{
 		LabelTemplate:  aws.String(d.Get("label_template").(string)),
-		ResourceTypes:  ExpandResourceTypes(d.Get("resource_types").(*schema.Set).List()),
+		ResourceTypes:  flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set)),
 		SinkIdentifier: aws.String(d.Get("sink_identifier").(string)),
 	}
 
@@ -172,7 +172,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("resource_types") {
-		in.ResourceTypes = ExpandResourceTypes(d.Get("resource_types").(*schema.Set).List())
+		in.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set))
 		update = true
 	}
 
@@ -238,23 +238,4 @@ func findLinkByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetLin
 	}
 
 	return out, nil
-}
-
-func ExpandResourceTypes(resourceTypeList []interface{}) []types.ResourceType {
-	if len(resourceTypeList) == 0 {
-		return nil
-	}
-
-	var resourceTypes []types.ResourceType
-
-	for _, resourceTypeString := range resourceTypeList {
-		if resourceTypeString == nil {
-			continue
-		}
-
-		resourceType := types.ResourceType(resourceTypeString.(string))
-		resourceTypes = append(resourceTypes, resourceType)
-	}
-
-	return resourceTypes
 }
