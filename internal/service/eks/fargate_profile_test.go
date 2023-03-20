@@ -26,7 +26,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
@@ -61,7 +61,7 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
@@ -86,7 +86,7 @@ func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 	resourceName2 := "aws_eks_fargate_profile.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
@@ -109,7 +109,7 @@ func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
@@ -136,7 +136,7 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckFargateProfile(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
@@ -175,11 +175,11 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckFargateProfileExists(ctx context.Context, resourceName string, fargateProfile *eks.FargateProfile) resource.TestCheckFunc {
+func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.FargateProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -200,7 +200,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, resourceName string, 
 			return err
 		}
 
-		*fargateProfile = *output
+		*v = *output
 
 		return nil
 	}
@@ -268,30 +268,10 @@ func testAccPreCheckFargateProfile(t *testing.T) {
 		endpoints.UsWest1RegionID,
 		endpoints.UsWest2RegionID,
 	}
-	region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-	for _, allowedRegion := range allowedRegions {
-		if region == allowedRegion {
-			return
-		}
-	}
-
-	message := fmt.Sprintf(`Test provider region (%s) not found in allowed EKS Fargate regions: %v
-
-The allowed regions are hardcoded in the acceptance testing since dynamically determining the
-functionality requires creating and destroying a real EKS Cluster, which is a lengthy process.
-If this check is out of date, please create an issue in the Terraform AWS Provider
-repository (https://github.com/hashicorp/terraform-provider-aws) or submit a PR to update the
-check itself (testAccPreCheckFargateProfile).
-
-For the most up to date supported region information, see the EKS User Guide:
-https://docs.aws.amazon.com/eks/latest/userguide/fargate.html
-`, region, allowedRegions)
-
-	t.Skipf("skipping acceptance testing:\n\n%s", message)
+	acctest.PreCheckRegion(t, allowedRegions...)
 }
 
-func testAccFargateProfileBaseConfig(rName string) string {
+func testAccFargateProfileConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -468,7 +448,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccFargateProfileConfig_name(rName string) string {
-	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFargateProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
   fargate_profile_name   = %[1]q
@@ -484,13 +464,11 @@ resource "aws_eks_fargate_profile" "test" {
     aws_route_table_association.private,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccFargateProfileConfig_multiple(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFargateProfileBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFargateProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   count = 2
 
@@ -512,7 +490,7 @@ resource "aws_eks_fargate_profile" "test" {
 }
 
 func testAccFargateProfileConfig_selectorLabels1(rName, labelKey1, labelValue1 string) string {
-	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFargateProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
   fargate_profile_name   = %[1]q
@@ -531,11 +509,11 @@ resource "aws_eks_fargate_profile" "test" {
     aws_route_table_association.private,
   ]
 }
-`, rName, labelKey1, labelValue1)
+`, rName, labelKey1, labelValue1))
 }
 
 func testAccFargateProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFargateProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
   fargate_profile_name   = %[1]q
@@ -555,11 +533,11 @@ resource "aws_eks_fargate_profile" "test" {
     aws_route_table_association.private,
   ]
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccFargateProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccFargateProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFargateProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
   cluster_name           = aws_eks_cluster.test.name
   fargate_profile_name   = %[1]q
@@ -580,5 +558,5 @@ resource "aws_eks_fargate_profile" "test" {
     aws_route_table_association.private,
   ]
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

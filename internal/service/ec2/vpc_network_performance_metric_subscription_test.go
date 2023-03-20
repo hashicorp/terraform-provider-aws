@@ -32,7 +32,7 @@ func testAccNetworkPerformanceMetricSubscription_basic(t *testing.T) {
 	dst := acctest.Region()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx),
@@ -59,7 +59,7 @@ func testAccNetworkPerformanceMetricSubscription_disappears(t *testing.T) {
 	dst := acctest.Region()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx),

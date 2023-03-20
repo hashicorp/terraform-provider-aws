@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_api_gateway_documentation_version")
 func ResourceDocumentationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentationVersionCreate,

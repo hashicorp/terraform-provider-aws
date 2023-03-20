@@ -32,7 +32,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"audio_normalization_settings": {
 								Type:     schema.TypeList,
 								Optional: true,
-								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -143,7 +142,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"aac_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -205,7 +203,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"ac3_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -255,7 +252,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"eac3_atmos_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -303,7 +299,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"eac3_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -427,7 +422,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"mp2_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -453,7 +447,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"pass_through_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{}, // no exported elements in this list
@@ -462,7 +455,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"wav_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -502,7 +494,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"remix_settings": {
 								Type:     schema.TypeList,
 								Optional: true,
-								Computed: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -1087,7 +1078,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"audio_only_timecodec_control": {
+													"audio_only_timecode_control": {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1105,7 +1096,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed: true,
 													},
 													"event_id": {
-														Type:     schema.TypeInt,
+														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
 													},
@@ -2539,8 +2530,8 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AacSettings
-	if v, ok := m["bitrate"].(float32); ok {
-		out.Bitrate = float64(v)
+	if v, ok := m["bitrate"].(float64); ok {
+		out.Bitrate = v
 	}
 	if v, ok := m["coding_mode"].(string); ok && v != "" {
 		out.CodingMode = types.AacCodingMode(v)
@@ -2557,8 +2548,8 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	if v, ok := m["raw_format"].(string); ok && v != "" {
 		out.RawFormat = types.AacRawFormat(v)
 	}
-	if v, ok := m["sample_rate"].(float32); ok {
-		out.SampleRate = float64(v)
+	if v, ok := m["sample_rate"].(float64); ok {
+		out.SampleRate = v
 	}
 	if v, ok := m["spec"].(string); ok && v != "" {
 		out.Spec = types.AacSpec(v)
@@ -2578,8 +2569,8 @@ func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *type
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Ac3Settings
-	if v, ok := m["bitrate"].(float32); ok {
-		out.Bitrate = float64(v)
+	if v, ok := m["bitrate"].(float64); ok {
+		out.Bitrate = v
 	}
 	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
 		out.BitstreamMode = types.Ac3BitstreamMode(v)
@@ -3938,7 +3929,7 @@ func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
 	if v, ok := m["column_depth"].(int); ok {
 		settings.ColumnDepth = int32(v)
 	}
-	if v, ok := m["column_depth"].(string); ok && v != "" {
+	if v, ok := m["include_fec"].(string); ok && v != "" {
 		settings.IncludeFec = types.FecOutputIncludeFec(v)
 	}
 	if v, ok := m["row_length"].(int); ok {
@@ -3962,10 +3953,10 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["arib"].(string); ok && v != "" {
 		s.Arib = types.M2tsArib(v)
 	}
-	if v, ok := m["arib_caption_pid"].(string); ok && v != "" {
+	if v, ok := m["arib_captions_pid"].(string); ok && v != "" {
 		s.AribCaptionsPid = aws.String(v)
 	}
-	if v, ok := m["arib_caption_pid_control"].(string); ok && v != "" {
+	if v, ok := m["arib_captions_pid_control"].(string); ok && v != "" {
 		s.AribCaptionsPidControl = types.M2tsAribCaptionsPidControl(v)
 	}
 	if v, ok := m["audio_buffer_model"].(string); ok && v != "" {
@@ -3974,7 +3965,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["audio_frames_per_pes"].(int); ok {
 		s.AudioFramesPerPes = int32(v)
 	}
-	if v, ok := m["audi_pids"].(string); ok && v != "" {
+	if v, ok := m["audio_pids"].(string); ok && v != "" {
 		s.AudioPids = aws.String(v)
 	}
 	if v, ok := m["audio_stream_type"].(string); ok && v != "" {
@@ -3996,7 +3987,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.DvbSdtSettings = expandM2tsDvbSdtSettings(v)
 	}
 	if v, ok := m["dvb_sub_pids"].(string); ok && v != "" {
-		s.AudioPids = aws.String(v)
+		s.DvbSubPids = aws.String(v)
 	}
 	if v, ok := m["dvb_tdt_settings"].([]interface{}); ok && len(v) > 0 {
 		s.DvbTdtSettings = func(tfList []interface{}) *types.DvbTdtSettings {
@@ -4104,7 +4095,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.TransportStreamId = int32(v)
 	}
 	if v, ok := m["video_pid"].(string); ok && v != "" {
-		s.TimedMetadataPid = aws.String(v)
+		s.VideoPid = aws.String(v)
 	}
 
 	return &s
@@ -5535,13 +5526,13 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":           float32(in.Bitrate),
+		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
 		"profile":           string(in.Profile),
 		"rate_control_mode": string(in.RateControlMode),
 		"raw_format":        string(in.RawFormat),
-		"sample_rate":       float32(in.SampleRate),
+		"sample_rate":       in.SampleRate,
 		"spec":              string(in.Spec),
 		"vbr_quality":       string(in.VbrQuality),
 	}
@@ -5555,7 +5546,7 @@ func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bitrate":          float32(in.Bitrate),
+		"bitrate":          in.Bitrate,
 		"bitstream_mode":   string(in.BitstreamMode),
 		"coding_mode":      string(in.CodingMode),
 		"dialnorm":         int(in.Dialnorm),

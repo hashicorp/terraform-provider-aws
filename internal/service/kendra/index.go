@@ -33,6 +33,7 @@ const (
 	validationExceptionMessage = "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity"
 )
 
+// @SDKResource("aws_kendra_index")
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexCreate,
@@ -374,7 +375,7 @@ func ResourceIndex() *schema.Resource {
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 

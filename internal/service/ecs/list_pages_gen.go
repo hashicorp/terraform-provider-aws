@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
 )
 
-func describeCapacityProvidersPages(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeCapacityProvidersInput, fn func(*ecs.DescribeCapacityProvidersOutput, bool) bool) error {
+func describeCapacityProvidersPages(ctx context.Context, conn ecsiface.ECSAPI, input *ecs.DescribeCapacityProvidersInput, fn func(*ecs.DescribeCapacityProvidersOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeCapacityProvidersWithContext(ctx, input)
 		if err != nil {

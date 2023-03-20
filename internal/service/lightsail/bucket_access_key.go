@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"time"
 
@@ -23,6 +22,7 @@ const (
 	BucketAccessKeyIdPartsCount = 2
 )
 
+// @SDKResource("aws_lightsail_bucket_access_key")
 func ResourceBucketAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAccessKeyCreate,
@@ -72,15 +72,10 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), errors.New("No operations found for request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string))
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), errors.New("Error waiting for request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
@@ -140,12 +135,10 @@ func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, 
 		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResBucketAccessKey, d.Id(), err)
 	}
 
-	op := out.Operations[0]
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteBucketAccessKey, ResBucketAccessKey, d.Id())
 
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResBucketAccessKey, d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return nil

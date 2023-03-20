@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -106,7 +107,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -199,8 +200,9 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 												},
 
 												"prefix": {
@@ -210,15 +212,14 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"service_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													RequiredWith: []string{"spec.0.grpc_route.0.match.0.method_name"},
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -394,7 +395,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -413,7 +414,7 @@ func ResourceRoute() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -523,7 +524,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 										"port": {
 											Type:         schema.TypeInt,
 											Optional:     true,
-											ValidateFunc: validation.IntBetween(1, 65535),
+											ValidateFunc: validation.IsPortNumber,
 										},
 									},
 								},
@@ -636,7 +637,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 							"port": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(1, 65535),
+								ValidateFunc: validation.IsPortNumber,
 							},
 						},
 					},
@@ -754,7 +755,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -913,16 +914,24 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
-	_, err := conn.DeleteRouteWithContext(ctx, &appmesh.DeleteRouteInput{
+	input := &appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteRouteWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Route (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -941,11 +950,16 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeRouteWithContext(ctx, &appmesh.DescribeRouteInput{
+	req := &appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),
 		RouteName:         aws.String(name),
 		VirtualRouterName: aws.String(vrName),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.DescribeRouteWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}

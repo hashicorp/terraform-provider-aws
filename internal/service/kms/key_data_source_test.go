@@ -11,12 +11,13 @@ import (
 )
 
 func TestAccKMSKeyDataSource_byKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -45,12 +46,13 @@ func TestAccKMSKeyDataSource_byKeyARN(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_byKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -79,12 +81,13 @@ func TestAccKMSKeyDataSource_byKeyID(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_byAliasARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -113,12 +116,13 @@ func TestAccKMSKeyDataSource_byAliasARN(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_byAliasID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -147,12 +151,13 @@ func TestAccKMSKeyDataSource_byAliasID(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_grantToken(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -181,12 +186,13 @@ func TestAccKMSKeyDataSource_grantToken(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_multiRegionConfigurationByARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -220,12 +226,13 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByARN(t *testing.T) {
 }
 
 func TestAccKMSKeyDataSource_multiRegionConfigurationByID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	dataSourceName := "data.aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -321,7 +328,7 @@ data "aws_kms_key" "test" {
 }
 
 func testAccKeyDataSourceConfig_grantToken(rName string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id

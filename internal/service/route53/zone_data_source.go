@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route53_zone")
 func DataSourceZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceZoneRead,
@@ -88,7 +89,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
 	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS()
+	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS()
 
 	if nameExists && idExists {
 		return sdkdiag.AppendErrorf(diags, "zone_id and name arguments can't be used together")
