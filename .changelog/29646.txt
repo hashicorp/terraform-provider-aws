@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add configurable timeout for Delete
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Retry (up to the configurable timeout) deletion of replicated Lambda@Edge functions
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add `skip_destroy` argument
+```

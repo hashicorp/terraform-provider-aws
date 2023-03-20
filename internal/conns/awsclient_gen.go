@@ -11,11 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -26,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -154,7 +158,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -291,7 +294,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -318,7 +320,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -331,13 +332,14 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []intf.ServicePackage
+	ServicePackages         []ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
 	httpClient *http.Client
 
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
+	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
 	rdsClient       lazyClient[*rds_sdkv2.Client]
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
@@ -470,7 +472,7 @@ type AWSClient struct {
 	groundstationConn                *groundstation.GroundStation
 	guarddutyConn                    *guardduty.GuardDuty
 	healthConn                       *health.Health
-	healthlakeConn                   *healthlake.HealthLake
+	healthlakeClient                 *healthlake.Client
 	honeycodeConn                    *honeycode.Honeycode
 	iamConn                          *iam.IAM
 	ivsConn                          *ivs.IVS
@@ -549,6 +551,7 @@ type AWSClient struct {
 	networkfirewallConn              *networkfirewall.NetworkFirewall
 	networkmanagerConn               *networkmanager.NetworkManager
 	nimbleConn                       *nimblestudio.NimbleStudio
+	oamClient                        *oam.Client
 	opensearchConn                   *opensearchservice.OpenSearchService
 	opensearchserverlessClient       *opensearchserverless.Client
 	opsworksConn                     *opsworks.OpsWorks
@@ -601,7 +604,7 @@ type AWSClient struct {
 	snsConn                          *sns.SNS
 	sqsConn                          *sqs.SQS
 	ssmConn                          *ssm.SSM
-	ssmcontactsConn                  *ssmcontacts.SSMContacts
+	ssmcontactsClient                *ssmcontacts.Client
 	ssmincidentsClient               *ssmincidents.Client
 	ssoConn                          *sso.SSO
 	ssoadminConn                     *ssoadmin.SSOAdmin
@@ -1167,8 +1170,8 @@ func (client *AWSClient) HealthConn() *health.Health {
 	return client.healthConn
 }
 
-func (client *AWSClient) HealthLakeConn() *healthlake.HealthLake {
-	return client.healthlakeConn
+func (client *AWSClient) HealthLakeClient() *healthlake.Client {
+	return client.healthlakeClient
 }
 
 func (client *AWSClient) HoneycodeConn() *honeycode.Honeycode {
@@ -1317,6 +1320,10 @@ func (client *AWSClient) LakeFormationConn() *lakeformation.LakeFormation {
 
 func (client *AWSClient) LambdaConn() *lambda.Lambda {
 	return client.lambdaConn
+}
+
+func (client *AWSClient) LambdaClient() *lambda_sdkv2.Client {
+	return client.lambdaClient.Client()
 }
 
 func (client *AWSClient) LexModelsConn() *lexmodelbuildingservice.LexModelBuildingService {
@@ -1485,6 +1492,10 @@ func (client *AWSClient) NetworkManagerConn() *networkmanager.NetworkManager {
 
 func (client *AWSClient) NimbleConn() *nimblestudio.NimbleStudio {
 	return client.nimbleConn
+}
+
+func (client *AWSClient) ObservabilityAccessManagerClient() *oam.Client {
+	return client.oamClient
 }
 
 func (client *AWSClient) OpenSearchConn() *opensearchservice.OpenSearchService {
@@ -1707,8 +1718,8 @@ func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
 	return client.ssmClient.Client()
 }
 
-func (client *AWSClient) SSMContactsConn() *ssmcontacts.SSMContacts {
-	return client.ssmcontactsConn
+func (client *AWSClient) SSMContactsClient() *ssmcontacts.Client {
+	return client.ssmcontactsClient
 }
 
 func (client *AWSClient) SSMIncidentsClient() *ssmincidents.Client {

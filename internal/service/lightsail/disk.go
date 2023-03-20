@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_disk")
 func ResourceDisk() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiskCreate,
@@ -73,12 +73,13 @@ func ResourceDisk() *schema.Resource {
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	id := d.Get("name").(string)
 
 	in := lightsail.CreateDiskInput{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		SizeInGb:         aws.Int64(int64(d.Get("size_in_gb").(int))),
-		DiskName:         aws.String(d.Get("name").(string)),
+		DiskName:         aws.String(id),
 	}
 
 	if len(tags) > 0 {
@@ -88,20 +89,16 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	out, err := conn.CreateDiskWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDisk, ResDisk, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDisk, ResDisk, id, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDisk, ResDisk, d.Get("name").(string), errors.New("No operations found for Create Disk request"))
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateDisk, ResDisk, id)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-	d.SetId(d.Get("name").(string))
-
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDisk, ResDisk, d.Get("name").(string), errors.New("Error waiting for Create Disk request operation"))
-	}
+	d.SetId(id)
 
 	return resourceDiskRead(ctx, d, meta)
 }
@@ -130,7 +127,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("size_in_gb", out.SizeInGb)
 	d.Set("support_code", out.SupportCode)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -177,15 +174,10 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDisk, ResDisk, d.Get("name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDisk, ResDisk, d.Get("name").(string), errors.New("No operations found for Delete Disk request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteDisk, ResDisk, d.Id())
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDisk, ResDisk, d.Get("name").(string), errors.New("Error waiting for Delete Disk request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil

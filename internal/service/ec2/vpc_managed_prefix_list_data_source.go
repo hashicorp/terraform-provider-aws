@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_managed_prefix_list")
 func DataSourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceManagedPrefixListRead,
@@ -121,7 +122,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	d.Set("owner_id", pl.OwnerId)
 	d.Set("version", pl.Version)
 
-	if err := d.Set("tags", KeyValueTags(pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

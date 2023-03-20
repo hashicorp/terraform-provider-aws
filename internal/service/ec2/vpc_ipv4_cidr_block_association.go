@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_ipv4_cidr_block_association")
 func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIPv4CIDRBlockAssociationCreate,

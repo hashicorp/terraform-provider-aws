@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_subnet_cidr_reservation")
 func ResourceSubnetCIDRReservation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetCIDRReservationCreate,

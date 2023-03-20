@@ -17,8 +17,8 @@ import (
 // updateTags updates WorkSpaces resource tags.
 // The identifier is the resource ARN.
 func updateTags(ctx context.Context, conn *inspector.Inspector, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{

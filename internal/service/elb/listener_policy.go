@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_load_balancer_listener_policy")
 func ResourceListenerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerPolicySet,
@@ -35,6 +36,11 @@ func ResourceListenerPolicy() *schema.Resource {
 			},
 			"policy_names": {
 				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"triggers": {
+				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},

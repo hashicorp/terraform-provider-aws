@@ -2,10 +2,13 @@ package evidently
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitFeatureCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
@@ -67,9 +70,13 @@ func waitLaunchCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
 		return output, err
 	}
 
@@ -84,9 +91,13 @@ func waitLaunchUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
 		return output, err
 	}
 
@@ -101,9 +112,13 @@ func waitLaunchDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		if v := aws.StringValue(output.StatusReason); v != "" {
+			tfresource.SetLastError(err, errors.New(v))
+		}
+
 		return output, err
 	}
 

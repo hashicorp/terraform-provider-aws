@@ -30,13 +30,15 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService      string
-	AWSServiceUpper string
-	ServicePackage  string
+	AWSService           string
+	AWSServiceUpper      string
+	ProviderResourceName string
+	ServicePackage       string
 
 	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
+
 	UpdateTagsFunc string
 	WithContext    bool
 }
@@ -61,10 +63,13 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
+
 	templateData := TemplateData{
-		AWSService:      awsService,
-		AWSServiceUpper: u,
-		ServicePackage:  servicePackage,
+		AWSService:           awsService,
+		AWSServiceUpper:      u,
+		ProviderResourceName: providerResName,
+		ServicePackage:       servicePackage,
 
 		CreateTagsFunc: *createTagsFunc,
 		GetTagFunc:     *getTagFunc,

@@ -247,23 +247,3 @@ func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail
 
 	return nil, err
 }
-
-// waitOperation waits for an Operation to return Succeeded or Completed with context
-func waitOperationWithContext(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{lightsail.OperationStatusStarted},
-		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(ctx, conn, oid),
-		Timeout:    OperationTimeout,
-		Delay:      OperationDelay,
-		MinTimeout: OperationMinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
-		return err
-	}
-
-	return err
-}

@@ -360,6 +360,11 @@ func init() {
 		F:    sweepIPAMs,
 	})
 
+	resource.AddTestSweepers("aws_vpc_ipam_resource_discovery", &resource.Sweeper{
+		Name: "aws_vpc_ipam_resource_discovery",
+		F:    sweepIPAMResourceDiscoveries,
+	})
+
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
 		Name: "aws_ami",
 		F:    sweepAMIs,
@@ -2449,6 +2454,53 @@ func sweepIPAMs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPAMResourceDiscoveries(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn()
+	input := &ec2.DescribeIpamResourceDiscoveriesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeIpamResourceDiscoveriesPagesWithContext(ctx, input, func(page *ec2.DescribeIpamResourceDiscoveriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamResourceDiscoveries {
+			// do not attempt to delete default resource created by each ipam
+			if !aws.BoolValue(v.IsDefault) {
+				r := ResourceIPAMResourceDiscovery()
+				d := r.Data(nil)
+				d.SetId(aws.StringValue(v.IpamResourceDiscoveryId))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Resource Discovery sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IPAM Resource Discoveries (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Resource Discoveries (%s): %w", region, err)
 	}
 
 	return nil

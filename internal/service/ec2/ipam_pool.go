@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipam_pool")
 func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceIPAMPoolCreate,
-		ReadWithoutTimeout:   ResourceIPAMPoolRead,
-		UpdateWithoutTimeout: ResourceIPAMPoolUpdate,
-		DeleteWithoutTimeout: ResourceIPAMPoolDelete,
+		CreateWithoutTimeout: resourceIPAMPoolCreate,
+		ReadWithoutTimeout:   resourceIPAMPoolRead,
+		UpdateWithoutTimeout: resourceIPAMPoolUpdate,
+		DeleteWithoutTimeout: resourceIPAMPoolDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -136,11 +137,11 @@ func ResourceIPAMPool() *schema.Resource {
 	}
 }
 
-func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	addressFamily := d.Get("address_family").(string)
 	input := &ec2.CreateIpamPoolInput{
@@ -163,7 +164,7 @@ func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("allocation_resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.AllocationResourceTags = ipamResourceTags(tftags.New(v.(map[string]interface{})))
+		input.AllocationResourceTags = ipamResourceTags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
 	if v, ok := d.GetOk("auto_import"); ok {
@@ -210,10 +211,10 @@ func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -232,7 +233,7 @@ func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("address_family", pool.AddressFamily)
-	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -247,7 +248,7 @@ func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
-	tags := KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -261,7 +262,7 @@ func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
@@ -284,8 +285,8 @@ func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("allocation_resource_tags") {
 			o, n := d.GetChange("allocation_resource_tags")
-			oldTags := tftags.New(o)
-			newTags := tftags.New(n)
+			oldTags := tftags.New(ctx, o)
+			newTags := tftags.New(ctx, n)
 
 			if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 				input.RemoveAllocationResourceTags = ipamResourceTags(removedTags.IgnoreAWS())
@@ -323,10 +324,10 @@ func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 

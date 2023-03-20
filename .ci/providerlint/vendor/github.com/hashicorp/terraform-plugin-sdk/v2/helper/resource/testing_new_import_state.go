@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/google/go-cmp/cmp"
 	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -16,9 +16,6 @@ import (
 
 func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string, providers *providerFactories) error {
 	t.Helper()
-
-	spewConf := spew.NewDefaultConfig()
-	spewConf.SortKeys = true
 
 	if step.ResourceName == "" {
 		t.Fatal("ResourceName is required for an import state test")
@@ -261,6 +258,8 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 
 			if !reflect.DeepEqual(actual, expected) {
 				// Determine only the different attributes
+				// go-cmp tries to show surrounding identical map key/value for
+				// context of differences, which may be confusing.
 				for k, v := range expected {
 					if av, ok := actual[k]; ok && v == av {
 						delete(expected, k)
@@ -268,10 +267,9 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 					}
 				}
 
-				t.Fatalf(
-					"ImportStateVerify attributes not equivalent. Difference is shown below. Top is actual, bottom is expected."+
-						"\n\n%s\n\n%s",
-					spewConf.Sdump(actual), spewConf.Sdump(expected))
+				if diff := cmp.Diff(expected, actual); diff != "" {
+					return fmt.Errorf("ImportStateVerify attributes not equivalent. Difference is shown below. The - symbol indicates attributes missing after import.\n\n%s", diff)
+				}
 			}
 		}
 	}
