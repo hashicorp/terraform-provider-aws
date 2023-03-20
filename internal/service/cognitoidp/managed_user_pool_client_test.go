@@ -903,7 +903,7 @@ func testAccManagedUserPoolClientConfig_namePattern(rName string) string {
 		testAccManagedUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_managed_user_pool_client" "test" {
-  name_pattern  = %[1]q
+  name_pattern = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
 
   depends_on = [
