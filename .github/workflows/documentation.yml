@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
-      - uses: avto-dev/markdown-lint@v1
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb
         with:
           args: 'docs'
   misspell:
