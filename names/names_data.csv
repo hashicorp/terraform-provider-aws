@@ -279,7 +279,7 @@ ram,ram,ram,ram,,ram,,,RAM,RAM,,1,,,aws_ram_,,ram_,RAM (Resource Access Manager)
 rds,rds,rds,rds,,rds,,,RDS,RDS,,1,2,aws_(db_|rds_),aws_rds_,,rds_;db_,RDS (Relational Database),Amazon,,,,,
 rds-data,rdsdata,rdsdataservice,rdsdata,,rdsdata,,rdsdataservice,RDSData,RDSDataService,,1,,,aws_rdsdata_,,rdsdata_,RDS Data,Amazon,,,,,
 pi,pi,pi,pi,,pi,,,PI,PI,,1,,,aws_pi_,,pi_,RDS Performance Insights (PI),Amazon,,,,,
-rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,1,,,aws_rbin_,,rbin_,Recycle Bin (RBin),Amazon,,,,,
+rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin_,Recycle Bin (RBin),Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,No SDK support
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,1,,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,
