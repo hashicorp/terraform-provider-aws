@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -29,15 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceManagedUserPoolClient)
-}
-
+// @FrameworkResource
 func newResourceManagedUserPoolClient(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceManagedUserPoolClient{}
-	r.SetMigratedFromPluginSDK(true)
-
-	return r, nil
+	return &resourceManagedUserPoolClient{}, nil
 }
 
 type resourceManagedUserPoolClient struct {
@@ -520,10 +513,6 @@ func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request reso
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
-		"id": data.ID.ValueString(),
-	})
 
 	response.Diagnostics.AddWarning(
 		"Cognito User Pool Client (%s) not deleted",

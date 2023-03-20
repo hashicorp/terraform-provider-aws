@@ -1,138 +1,107 @@
 ---
 subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
-page_title: "AWS: aws_cognito_user_pool_client"
+page_title: "AWS: aws_cognito_managed_user_pool_client"
 description: |-
-  Provides a Cognito User Pool Client resource.
+  Manages a Cognito User Pool Client resource created by another service.
 ---
 
-# Resource: aws_cognito_user_pool_client
+# Resource: aws_cognito_managed_user_pool_client
 
-Provides a Cognito User Pool Client resource.
+Manages a Cognito User Pool Client resource created by another service.
 
-To manage a User Pool Client created by another service, such as when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html),
-use the [`aws_cognito_managed_user_pool_client` resource](cognito_managed_user_pool_client.html) instead.
+**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
+
+The `aws_cognito_managed_user_pool_client` resource should only be used to manage a Cognito User Pool Client created automatically by an AWS service.
+For example, when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html),
+the OpenSearch service will create the User Pool Client on setup and delete it when no longer needed.
+Therefore, the `aws_cognito_managed_user_pool_client` resource does not _create_ or _delete_ this resource, but instead "adopts" it into management.
+
+For normal uses of a Cognito User Pool Client, use the [`aws_cognito_managed_user_pool_client` resource](cognito_user_pool_client.html) instead.
 
 ## Example Usage
 
-### Create a basic user pool client
-
 ```terraform
-resource "aws_cognito_user_pool_client" "client" {
-  name = "client"
+resource "aws_cognito_managed_user_pool_client" "example" {
+  name_prefix  = "AmazonOpenSearchService-example"
+  user_pool_id = aws_cognito_user_pool.example.id
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  depends_on = [
+    aws_opensearch_domain.example,
+  ]
 }
 
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-```
-
-### Create a user pool client with no SRP authentication
-
-```terraform
-resource "aws_cognito_user_pool_client" "client" {
-  name = "client"
-
-  user_pool_id = aws_cognito_user_pool.pool.id
-
-  generate_secret     = true
-  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+resource "aws_cognito_user_pool" "example" {
+  name = "example"
 }
 
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-```
+resource "aws_cognito_identity_pool" "example" {
+  identity_pool_name = "example"
 
-### Create a user pool client with pinpoint analytics
-
-```terraform
-resource "aws_cognito_user_pool_client" "test" {
-  name         = "pool_client"
-  user_pool_id = aws_cognito_user_pool.test.id
-
-  analytics_configuration {
-    application_id   = aws_pinpoint_app.test.application_id
-    external_id      = "some_id"
-    role_arn         = aws_iam_role.test.arn
-    user_data_shared = true
+  lifecycle {
+    ignore_changes = [cognito_identity_providers]
   }
 }
 
-resource "aws_cognito_user_pool" "test" {
-  name = "pool"
+resource "aws_opensearch_domain" "example" {
+  domain_name = "example"
+
+  cognito_options {
+    enabled          = true
+    user_pool_id     = aws_cognito_user_pool.example.id
+    identity_pool_id = aws_cognito_identity_pool.example.id
+    role_arn         = aws_iam_role.example.arn
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  depends_on = [
+    aws_cognito_user_pool_domain.example,
+    aws_iam_role_policy_attachment.example,
+  ]
 }
 
-data "aws_caller_identity" "current" {}
-
-resource "aws_pinpoint_app" "test" {
-  name = "pinpoint"
+resource "aws_iam_role" "example" {
+  name               = "example-role"
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.example.json
 }
 
-data "aws_iam_policy_document" "assume_role" {
+data "aws_iam_policy_document" "example" {
   statement {
-    effect = "Allow"
+    sid     = ""
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
 
     principals {
-      type        = "Service"
-      identifiers = ["cognito-idp.amazonaws.com"]
+      type = "Service"
+      identifiers = [
+        "es.${data.aws_partition.current.dns_suffix}",
+      ]
     }
-
-    actions = ["sts:AssumeRole"]
   }
 }
 
-resource "aws_iam_role" "test" {
-  name               = "role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+resource "aws_iam_role_policy_attachment" "example" {
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
 }
 
-data "aws_iam_policy_document" "test" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "mobiletargeting:UpdateEndpoint",
-      "mobiletargeting:PutEvents",
-    ]
-
-    resources = ["arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"]
-  }
-}
-
-resource "aws_iam_role_policy" "test" {
-  name   = "role_policy"
-  role   = aws_iam_role.test.id
-  policy = data.aws_iam_policy_document.test.json
-}
-```
-
-### Create a user pool client with Cognito as the identity provider
-
-```terraform
-resource "aws_cognito_user_pool_client" "userpool_client" {
-  name                                 = "client"
-  user_pool_id                         = aws_cognito_user_pool.pool.id
-  callback_urls                        = ["https://example.com"]
-  allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_flows                  = ["code", "implicit"]
-  allowed_oauth_scopes                 = ["email", "openid"]
-  supported_identity_providers         = ["COGNITO"]
-}
-
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
+data "aws_partition" "current" {}
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `name` - (Required) Name of the application client.
 * `user_pool_id` - (Required) User pool the client belongs to.
+* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client.
+  Must match only one User Pool Client.
+* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client.
+  Must match only one User Pool Client.
 
 The following arguments are optional:
 
@@ -181,11 +150,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `client_secret` - Client secret of the user pool client.
 * `id` - ID of the user pool client.
+* `name` - Name of the user pool client.
 
 ## Import
 
 Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
+$ terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
