@@ -2086,6 +2086,17 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 	}
 
+	if d.HasChange("manage_master_user_password") {
+		needsModify = true
+		input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+	}
+
+	if d.HasChange("master_user_secret_kms_key_id") {
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+	}
+
 	if d.HasChange("max_allocated_storage") {
 		needsModify = true
 		v := d.Get("max_allocated_storage").(int)
@@ -2127,7 +2138,10 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("password") {
 		needsModify = true
-		input.MasterUserPassword = aws.String(d.Get("password").(string))
+		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
+		if v, ok := d.GetOk("password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			input.MasterUserPassword = aws.String(v.(string))
+		}
 	}
 
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
