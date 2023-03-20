@@ -409,6 +409,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
+	d.Set("domain_name", out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
