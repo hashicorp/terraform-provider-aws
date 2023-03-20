@@ -184,7 +184,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Updating ObservabilityAccessManager Link Tags (%s): %#v", d.Id(), d.Get("tags_all"))
 		oldTags, newTags := d.GetChange("tags_all")
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), oldTags, newTags); err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameSink, d.Id(), err)
+			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
 		}
 	}
 

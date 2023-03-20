@@ -299,60 +299,6 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 	})
 }
 
-//func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
-//	if testing.Short() {
-//		t.Skip("skipping long-running test in short mode")
-//	}
-//	ctx := acctest.Context(t)
-//
-//	var link oam.GetLinkOutput
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	resourceName := "aws_oam_link.test"
-//
-//	resource.Test(t, resource.TestCase{
-//		PreCheck: func() {
-//			acctest.PreCheck(ctx, t)
-//			acctest.PreCheckAlternateAccount(t)
-//			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
-//			testAccPreCheck(ctx, t)
-//		},
-//		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-//		CheckDestroy:             testAccCheckLinkDestroy,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccLinkConfig_tags1(rName, "key1", "value1"),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckLinkExists(resourceName, &link),
-//					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-//					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-//				),
-//			},
-//			{
-//				Config: testAccLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckLinkExists(resourceName, &link),
-//					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-//					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-//					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-//				),
-//			},
-//			{
-//				Config: testAccLinkConfig_tags1(rName, "key2", "value2"),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckLinkExists(resourceName, &link),
-//					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-//					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-//				),
-//			},
-//			{
-//				ResourceName:      resourceName,
-//				ImportState:       true,
-//				ImportStateVerify: true,
-//			},
-//		},
-//	}
-
 func testAccCheckLinkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
 	ctx := context.Background()
