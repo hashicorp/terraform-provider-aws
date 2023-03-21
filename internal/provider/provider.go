@@ -275,14 +275,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			interceptors := interceptorItems{newServicePackageNameInterceptorItem(servicePackageName)}
-			// Append an interceptor that adds resource "friendly name" to Context. Useful for error messages.
-			if v.Name != "" {
-				interceptors = append(interceptors, newResourceNameInterceptorItem(v.Name))
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig)
+
+				return ctx
 			}
-			// Append the tags configuration interceptor.
-			interceptors = append(interceptors, newProviderConfigTagsInterceptor())
-			ds := &DataSource{interceptors: interceptors}
+			interceptors := interceptorItems{}
+			ds := &DataSource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
+			}
 
 			if v := r.ReadWithoutTimeout; v != nil {
 				r.ReadWithoutTimeout = ds.Read(v)
@@ -319,23 +322,27 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			interceptors := interceptorItems{newServicePackageNameInterceptorItem(servicePackageName)}
-			// Append an interceptor that adds resource "friendly name" to Context. Useful for error messages.
-			if v.Name != "" {
-				interceptors = append(interceptors, newResourceNameInterceptorItem(v.Name))
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig)
+
+				return ctx
 			}
-			// Append the tags configuration interceptor.
-			interceptors = append(interceptors, newProviderConfigTagsInterceptor())
-			rs := &Resource{interceptors: interceptors}
+			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
 				// TODO Ensure that r.Schema contains top-level tags and tags_all attributes.
 
-				rs.interceptors = append(rs.interceptors, interceptorItem{
+				interceptors = append(interceptors, interceptorItem{
 					When:        Before | After,
 					Why:         Create | Read | Update,
 					Interceptor: tagsInterceptor{tags: v.Tags},
 				})
+			}
+
+			rs := &Resource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
 			}
 
 			if v := r.CreateWithoutTimeout; v != nil {

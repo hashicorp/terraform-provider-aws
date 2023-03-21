@@ -26,6 +26,6 @@ func FromContext(ctx context.Context) (*InContext, bool) {
 	return v, ok
 }
 
-type key int
+type keyType int
 
-var tagKey key
+var tagKey keyType

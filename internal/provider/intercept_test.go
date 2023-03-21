@@ -81,8 +81,11 @@ func TestInterceptedHandler(t *testing.T) {
 		var diags diag.Diagnostics
 		return sdkdiag.AppendErrorf(diags, "read error")
 	}
+	bootstrapContext := func(ctx context.Context, meta any) context.Context {
+		return ctx
+	}
 
-	diags := interceptedHandler(interceptors, read, Read)(context.Background(), nil, 42)
+	diags := interceptedHandler(bootstrapContext, interceptors, read, Read)(context.Background(), nil, 42)
 	if got, want := len(diags), 1; got != want {
 		t.Errorf("length of diags = %v, want %v", got, want)
 	}

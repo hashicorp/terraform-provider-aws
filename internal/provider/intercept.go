@@ -70,10 +70,10 @@ func (s interceptorItems) Why(why Why) interceptorItems {
 }
 
 // interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-// func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](ctx context.Context, d *schema.ResourceData, meta any, interceptors Interceptors, f F, why Why) diag.Diagnostics {
-func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](interceptors interceptorItems, f F, why Why) F {
+func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why Why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
+		ctx = bootstrapContext(ctx, meta)
 		forward := interceptors.Why(why)
 
 		when := Before
@@ -118,84 +118,61 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 	}
 }
 
+type contextFunc func(context.Context, any) context.Context
+
 // DataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
 type DataSource struct {
-	interceptors interceptorItems
+	bootstrapContext contextFunc
+	interceptors     interceptorItems
 }
 
 func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedHandler(ds.interceptors, f, Read)
+	return interceptedHandler(ds.bootstrapContext, ds.interceptors, f, Read)
 }
 
 // Resource represents an interceptor dispatcher for a Plugin SDK v2 resource.
 type Resource struct {
-	interceptors interceptorItems
+	bootstrapContext contextFunc
+	interceptors     interceptorItems
 }
 
 func (r *Resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return interceptedHandler(r.interceptors, f, Create)
+	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Create)
 }
 
 func (r *Resource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return interceptedHandler(r.interceptors, f, Read)
+	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Read)
 }
 
 func (r *Resource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	return interceptedHandler(r.interceptors, f, Update)
+	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Update)
 }
 
 func (r *Resource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return interceptedHandler(r.interceptors, f, Delete)
+	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Delete)
 }
 
 func (r *Resource) State(f schema.StateContextFunc) schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		ctx = r.bootstrapContext(ctx, meta)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func (r *Resource) CustomizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		ctx = r.bootstrapContext(ctx, meta)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func (r *Resource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
 	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
+		ctx = r.bootstrapContext(ctx, meta)
+
 		return f(ctx, rawState, meta)
-	}
-}
-
-// Sets the service package name in Context.
-func newServicePackageNameInterceptorItem(servicePackageName string) interceptorItem {
-	return interceptorItem{
-		When: Before,
-		Why:  AllOps,
-		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-			return conns.NewContextWithServicePackageName(ctx, servicePackageName), diags
-		}),
-	}
-}
-
-// Sets the resource name in Context.
-func newResourceNameInterceptorItem(resourceName string) interceptorItem {
-	return interceptorItem{
-		When: Before,
-		Why:  AllOps,
-		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-			return conns.NewContextWithResourceName(ctx, resourceName), diags
-		}),
-	}
-}
-
-// Set provider configured tagging information in Context.
-func newProviderConfigTagsInterceptor() interceptorItem {
-	return interceptorItem{
-		When: Before,
-		Why:  AllOps,
-		Interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-			return tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig), diags
-		}),
 	}
 }
 
@@ -208,27 +185,27 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		return ctx, diags
 	}
 
-	spName, ok := conns.ServicePackageNameFromContext(ctx)
+	inContext, ok := conns.FromContext(ctx)
 
 	if !ok {
 		return ctx, diags
 	}
 
-	sp, ok := meta.(*conns.AWSClient).ServicePackages[spName]
+	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
 
 	if !ok {
 		return ctx, diags
 	}
 
-	serviceName, err := names.HumanFriendly(spName)
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
 
 	if err != nil {
 		serviceName = "<service>"
 	}
 
-	resourceName, ok := conns.ResourceNameFromContext(ctx)
+	resourceName := inContext.ResourceName
 
-	if !ok {
+	if resourceName == "" {
 		resourceName = "<thing>"
 	}
 

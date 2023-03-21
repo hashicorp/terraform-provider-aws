@@ -1,19 +1,12 @@
 package conns
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
-
-// InitContext creates context.
-// TODO Remove this in favor of interceptors.
-func (client *AWSClient) InitContext(ctx context.Context) context.Context {
-	return ctx
-}
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com

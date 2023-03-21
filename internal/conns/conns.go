@@ -34,30 +34,36 @@ type ServicePackageWithListTags interface {
 }
 
 type (
-	servicePackageNameContextKey int
-	resourceNameContextKey       int
+	contextKeyType int
 )
 
 var (
-	servicePackageNameKey servicePackageNameContextKey
-	resourceNameKey       resourceNameContextKey
+	contextKey contextKeyType
 )
 
-func NewContextWithServicePackageName(ctx context.Context, servicePackageName string) context.Context {
-	return context.WithValue(ctx, servicePackageNameKey, servicePackageName)
+// InitContext creates context.
+// TODO Remove this in favor of interceptors.
+func (client *AWSClient) InitContext(ctx context.Context) context.Context {
+	return ctx
 }
 
-func ServicePackageNameFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(servicePackageNameKey).(string)
-	return v, ok
+// InContext represents the resource information kept in Context.
+type InContext struct {
+	ResourceName       string // Friendly resource name, e.g. "Subnet"
+	ServicePackageName string // Canonical name defined as a constant in names package
 }
 
-func NewContextWithResourceName(ctx context.Context, resourceName string) context.Context {
-	return context.WithValue(ctx, resourceNameKey, resourceName)
+func NewContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		ResourceName:       resourceName,
+		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
 }
 
-func ResourceNameFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(resourceNameKey).(string)
+func FromContext(ctx context.Context) (*InContext, bool) {
+	v, ok := ctx.Value(contextKey).(*InContext)
 	return v, ok
 }
 
