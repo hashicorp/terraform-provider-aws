@@ -93,22 +93,17 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 
 		if diags.HasError() {
 			when = OnError
-			for _, v := range reverse {
-				if v.when&when != 0 {
-					ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
-				}
-			}
 		} else {
 			when = After
-			for _, v := range reverse {
-				if v.when&when != 0 {
-					ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
-				}
+		}
+		for _, v := range reverse {
+			if v.when&when != 0 {
+				ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 			}
 		}
 
+		when = Finally
 		for _, v := range reverse {
-			when = Finally
 			if v.when&when != 0 {
 				ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 			}
