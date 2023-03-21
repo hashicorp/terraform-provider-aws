@@ -44,7 +44,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
 	types, err := AttributeTypes[T](ctx)
 	if err != nil {
-		panic(fmt.Sprintf("AttributeTypesMust[%T] recevied error: %s", *new(T), err))
+		panic(fmt.Sprintf("AttributeTypesMust[%T] received error: %s", *new(T), err))
 	}
 	return types
 }
