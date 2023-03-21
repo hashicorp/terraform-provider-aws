@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
-	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -239,6 +238,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
+	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -548,7 +548,7 @@ type AWSClient struct {
 	QLDBSessionConn                  *qldbsession.QLDBSession
 	QuickSightConn                   *quicksight.QuickSight
 	RAMConn                          *ram.RAM
-	RBinConn                         *rbin.Client
+	RBinConn                         *recyclebin.RecycleBin
 	RDSConn                          *rds.RDS
 	RDSDataConn                      *rdsdataservice.RDSDataService
 	RUMConn                          *cloudwatchrum.CloudWatchRUM

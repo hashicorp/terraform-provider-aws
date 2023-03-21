@@ -231,6 +231,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
+	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -519,6 +520,7 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		QLDBSessionConn:                  qldbsession.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.QLDBSession])})),
 		QuickSightConn:                   quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.QuickSight])})),
 		RAMConn:                          ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RAM])})),
+		RBinConn:                         recyclebin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RBin])})),
 		RDSConn:                          rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RDS])})),
 		RDSDataConn:                      rdsdataservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RDSData])})),
 		RUMConn:                          cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RUM])})),
