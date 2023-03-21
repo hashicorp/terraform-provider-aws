@@ -1227,7 +1227,6 @@ resource "aws_cognito_managed_user_pool_client" "test" {
   ]
 
   auth_session_validity = %[2]d
-  //   explicit_auth_flows   = ["ADMIN_NO_SRP_AUTH"]
 }
 `, rName, validity))
 }
