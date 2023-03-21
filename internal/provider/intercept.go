@@ -120,39 +120,39 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 
 type contextFunc func(context.Context, any) context.Context
 
-// DataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
-type DataSource struct {
+// dataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
+type dataSource struct {
 	bootstrapContext contextFunc
 	interceptors     interceptorItems
 }
 
-func (ds *DataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
+func (ds *dataSource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
 	return interceptedHandler(ds.bootstrapContext, ds.interceptors, f, Read)
 }
 
-// Resource represents an interceptor dispatcher for a Plugin SDK v2 resource.
-type Resource struct {
+// resource represents an interceptor dispatcher for a Plugin SDK v2 resource.
+type resource struct {
 	bootstrapContext contextFunc
 	interceptors     interceptorItems
 }
 
-func (r *Resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
+func (r *resource) Create(f schema.CreateContextFunc) schema.CreateContextFunc {
 	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Create)
 }
 
-func (r *Resource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
+func (r *resource) Read(f schema.ReadContextFunc) schema.ReadContextFunc {
 	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Read)
 }
 
-func (r *Resource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
+func (r *resource) Update(f schema.UpdateContextFunc) schema.UpdateContextFunc {
 	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Update)
 }
 
-func (r *Resource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
+func (r *resource) Delete(f schema.DeleteContextFunc) schema.DeleteContextFunc {
 	return interceptedHandler(r.bootstrapContext, r.interceptors, f, Delete)
 }
 
-func (r *Resource) State(f schema.StateContextFunc) schema.StateContextFunc {
+func (r *resource) State(f schema.StateContextFunc) schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 		ctx = r.bootstrapContext(ctx, meta)
 
@@ -160,7 +160,7 @@ func (r *Resource) State(f schema.StateContextFunc) schema.StateContextFunc {
 	}
 }
 
-func (r *Resource) CustomizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+func (r *resource) CustomizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		ctx = r.bootstrapContext(ctx, meta)
 
@@ -168,7 +168,7 @@ func (r *Resource) CustomizeDiff(f schema.CustomizeDiffFunc) schema.CustomizeDif
 	}
 }
 
-func (r *Resource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
+func (r *resource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
 	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
 		ctx = r.bootstrapContext(ctx, meta)
 

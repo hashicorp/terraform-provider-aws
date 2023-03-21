@@ -282,7 +282,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				return ctx
 			}
 			interceptors := interceptorItems{}
-			ds := &DataSource{
+			ds := &dataSource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
 			}
@@ -340,7 +340,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				})
 			}
 
-			rs := &Resource{
+			rs := &resource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
 			}
