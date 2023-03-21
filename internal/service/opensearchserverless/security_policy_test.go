@@ -168,18 +168,18 @@ func testAccSecurityPolicyConfig_basic(rName string) string {
 	collection := fmt.Sprintf("collection/%s", rName)
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_security_policy" "test" {
-  name   = %[1]q
-  type   = "encryption"
+  name = %[1]q
+  type = "encryption"
   policy = jsonencode({
-	  "Rules" = [
-		{
-			"Resource" = [
+    "Rules" = [
+      {
+        "Resource" = [
 				%[2]q
-			],
-            "ResourceType" = "collection"
-		}
-	  ],
-	  "AWSOwnedKey" = true
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
   })
 }
 `, rName, collection)
