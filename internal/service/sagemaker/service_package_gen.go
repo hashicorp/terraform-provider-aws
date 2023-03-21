@@ -46,6 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 		"aws_sagemaker_model":                                     ResourceModel,
 		"aws_sagemaker_model_package_group":                       ResourceModelPackageGroup,
 		"aws_sagemaker_model_package_group_policy":                ResourceModelPackageGroupPolicy,
+		"aws_sagemaker_monitoring_schedule":                       ResourceMonitoringSchedule,
 		"aws_sagemaker_notebook_instance":                         ResourceNotebookInstance,
 		"aws_sagemaker_notebook_instance_lifecycle_configuration": ResourceNotebookInstanceLifeCycleConfiguration,
 		"aws_sagemaker_project":                                   ResourceProject,
