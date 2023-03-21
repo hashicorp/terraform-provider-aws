@@ -285,6 +285,40 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2IPSet_reference(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.IPSet
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPSetConfig_reference(ipSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPSetExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_version", wafv2.IPAddressVersionIpv4),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccIPSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -443,6 +477,21 @@ resource "aws_wafv2_ip_set" "ip_set" {
     "1.1.1.39/32", "1.1.1.90/32", "2.2.2.31/32", "1.1.1.62/32", "1.1.1.14/32",
     "1.1.1.20/32", "2.2.2.25/32", "1.1.1.45/32", "1.1.1.2/32", "2.2.2.98/32"
   ]
+}
+`, name)
+}
+
+func testAccIPSetConfig_reference(name string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "reference" {
+}
+
+resource "aws_wafv2_ip_set" "ip_set" {
+  name               = %[1]q
+  description        = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["${aws_eip.reference.public_ip}/32"]
 }
 `, name)
 }

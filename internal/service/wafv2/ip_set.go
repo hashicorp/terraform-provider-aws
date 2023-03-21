@@ -56,6 +56,10 @@ func ResourceIPSet() *schema.Resource {
 				MaxItems: 10000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Id() == "" {
+						return false
+					}
+
 					o, n := d.GetChange("addresses")
 					oldAddresses := o.(*schema.Set).List()
 					newAddresses := n.(*schema.Set).List()
