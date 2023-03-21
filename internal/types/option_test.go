@@ -5,6 +5,8 @@ import (
 )
 
 func TestIsNone(t *testing.T) {
+	t.Parallel()
+
 	none := None[int]()
 	some := Some("yes")
 
@@ -18,6 +20,8 @@ func TestIsNone(t *testing.T) {
 }
 
 func TestIsSome(t *testing.T) {
+	t.Parallel()
+
 	none := None[int]()
 	some := Some("yes")
 
@@ -31,6 +35,8 @@ func TestIsSome(t *testing.T) {
 }
 
 func TestUnwrapOr(t *testing.T) {
+	t.Parallel()
+
 	none := None[int]()
 	some := Some("yes")
 
@@ -44,6 +50,8 @@ func TestUnwrapOr(t *testing.T) {
 }
 
 func TestUnwrapOrDefault(t *testing.T) {
+	t.Parallel()
+
 	none := None[int]()
 	some := Some("yes")
 
@@ -57,6 +65,8 @@ func TestUnwrapOrDefault(t *testing.T) {
 }
 
 func TestUnwrapOrElse(t *testing.T) {
+	t.Parallel()
+
 	none := None[int]()
 	some := Some("yes")
 
