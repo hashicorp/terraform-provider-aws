@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -17,13 +18,13 @@ type resourceCRUDResponse interface {
 }
 
 type resourceInterceptor interface {
-	create(context.Context, resource.CreateRequest, resource.CreateResponse, *conns.AWSClient, when)
-	read(context.Context, resource.ReadRequest, resource.ReadResponse, *conns.AWSClient, when)
-	update(context.Context, resource.UpdateRequest, resource.UpdateResponse, *conns.AWSClient, when)
-	delete(context.Context, resource.DeleteRequest, resource.DeleteResponse, *conns.AWSClient, when)
+	create(context.Context, resource.CreateRequest, *resource.CreateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	read(context.Context, resource.ReadRequest, *resource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	update(context.Context, resource.UpdateRequest, *resource.UpdateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] func(context.Context, Request, Response, *conns.AWSClient, when)
+type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 type resourceInterceptors []resourceInterceptor
 
@@ -56,9 +57,39 @@ func (s resourceInterceptors) delete() []resourceInterceptorFunc[resource.Delete
 }
 
 // interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response)) func(context.Context, Request, *Response) {
-	return func(ctx context.Context, request Request, response *Response) {
-		f(ctx, request, response)
+func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
+	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
+		var diags diag.Diagnostics
+		forward := interceptors
+
+		when := Before
+		for _, v := range forward {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+
+			// Short circuit if any Before interceptor errors.
+			if diags.HasError() {
+				return diags
+			}
+		}
+
+		reverse := slices.Reverse(forward)
+		diags = f(ctx, request, response)
+
+		if diags.HasError() {
+			when = OnError
+		} else {
+			when = After
+		}
+		for _, v := range reverse {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+		}
+
+		when = Finally
+		for _, v := range reverse {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+		}
+
+		return diags
 	}
 }
 
@@ -135,23 +166,43 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	f := func(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) diag.Diagnostics {
+		w.inner.Create(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	interceptedHandler(w.interceptors.create(), w.inner.Create)(ctx, request, response)
+	diags := interceptedHandler(w.interceptors.create(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	f := func(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) diag.Diagnostics {
+		w.inner.Read(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	interceptedHandler(w.interceptors.read(), w.inner.Read)(ctx, request, response)
+	diags := interceptedHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	f := func(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) diag.Diagnostics {
+		w.inner.Update(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	interceptedHandler(w.interceptors.update(), w.inner.Update)(ctx, request, response)
+	diags := interceptedHandler(w.interceptors.update(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	f := func(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) diag.Diagnostics {
+		w.inner.Delete(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	interceptedHandler(w.interceptors.delete(), w.inner.Delete)(ctx, request, response)
+	diags := interceptedHandler(w.interceptors.delete(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
