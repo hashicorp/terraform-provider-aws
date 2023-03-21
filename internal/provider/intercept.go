@@ -64,8 +64,8 @@ type interceptorItems []interceptorItem
 
 // why returns a slice of interceptors that run for the specified CRUD operation.
 func (s interceptorItems) why(why why) interceptorItems {
-	return slices.Filter(s, func(t interceptorItem) bool {
-		return t.why&why != 0
+	return slices.Filter(s, func(e interceptorItem) bool {
+		return e.why&why != 0
 	})
 }
 
