@@ -209,19 +209,19 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		resourceName = "<thing>"
 	}
 
+	t, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
 	switch when {
 	case Before:
 		switch why {
 		case Create:
-			t, ok := tftags.FromContext(ctx)
-			if !ok {
-				return ctx, diags
-			}
-
 			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 			tags = tags.IgnoreAWS()
 
-			t.Tags = tags
+			t.TagsIn = tags
 		case Update:
 			if v, ok := sp.(interface {
 				UpdateTags(context.Context, any, string, any, any) error
@@ -264,46 +264,45 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 
 			fallthrough
 		case Create, Update:
-			if v, ok := sp.(interface {
-				ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
-			}); ok {
-				var identifier string
+			if t.TagsOut.IsNone() {
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
+				}); ok {
+					var identifier string
 
-				if key := r.tags.IdentifierAttribute; key == "id" {
-					identifier = d.Id()
-				} else {
-					identifier = d.Get(key).(string)
+					if key := r.tags.IdentifierAttribute; key == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(key).(string)
+					}
+
+					tags, err := v.ListTags(ctx, meta, identifier)
+
+					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+						// ISO partitions may not support tagging, giving error
+						tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
+							r.tags.IdentifierAttribute: d.Id(),
+							"error":                    err.Error(),
+						})
+						return ctx, diags
+					}
+
+					if err != nil {
+						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					}
+
+					t.TagsOut = types.Some(tags)
 				}
+			}
 
-				t, ok := tftags.FromContext(ctx)
-				if !ok {
-					return ctx, diags
-				}
+			tags := t.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(t.IgnoreConfig)
 
-				tags, err := v.ListTags(ctx, meta, identifier)
+			if err := d.Set("tags", tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+			}
 
-				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-						r.tags.IdentifierAttribute: d.Id(),
-						"error":                    err.Error(),
-					})
-					return ctx, diags
-				}
-
-				if err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-				}
-
-				tags = tags.IgnoreAWS().IgnoreConfig(t.IgnoreConfig)
-
-				if err := d.Set("tags", tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-				}
-
-				if err := d.Set("tags_all", tags.Map()); err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-				}
+			if err := d.Set("tags_all", tags.Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 			}
 		}
 	}

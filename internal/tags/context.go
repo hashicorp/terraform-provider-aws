@@ -2,13 +2,18 @@ package tags
 
 import (
 	"context"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // InContext represents the tagging information kept in Context.
 type InContext struct {
 	DefaultConfig *DefaultConfig
 	IgnoreConfig  *IgnoreConfig
-	Tags          KeyValueTags
+	// TagsIn holds tags specified in configuration. Typically this field includes any default tags and excludes system tags.
+	TagsIn KeyValueTags
+	// TagsOut holds tags returned from AWS, including any ignored or system tags.
+	TagsOut types.Option[KeyValueTags]
 }
 
 // NewContext returns a Context enhanced with tagging information.
