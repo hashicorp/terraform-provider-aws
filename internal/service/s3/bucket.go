@@ -1414,13 +1414,13 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
 	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
-	if !ok {
+	if !ok && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
 	}
 
