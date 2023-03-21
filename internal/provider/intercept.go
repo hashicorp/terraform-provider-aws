@@ -20,39 +20,39 @@ import (
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type interceptor interface {
-	run(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	run(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type interceptorFunc func(context.Context, *schema.ResourceData, any, When, Why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptorFunc func(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-func (f interceptorFunc) run(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (f interceptorFunc) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return f(ctx, d, meta, when, why, diags)
 }
 
 // interceptorItem represents a single interceptor invocation.
 type interceptorItem struct {
-	When        When
-	Why         Why
-	Interceptor interceptor
+	when        when
+	why         why
+	interceptor interceptor
 }
 
-// When represents the point in the CRUD request lifecycle that an interceptor is run.
+// when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
-type When uint16
+type when uint16
 
 const (
-	Before  When = 1 << iota // Interceptor is invoked before call to method in schema
+	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
 	After                    // Interceptor is invoked after successful call to method in schema
 	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
 	Finally                  // Interceptor is invoked after After or OnError
 )
 
-// Why represents the CRUD operation(s) that an interceptor is run.
+// why represents the CRUD operation(s) that an interceptor is run.
 // Multiple values can be ORed together.
-type Why uint16
+type why uint16
 
 const (
-	Create Why = 1 << iota // Interceptor is invoked for a Create call
+	Create why = 1 << iota // Interceptor is invoked for a Create call
 	Read                   // Interceptor is invoked for a Read call
 	Update                 // Interceptor is invoked for a Update call
 	Delete                 // Interceptor is invoked for a Delete call
@@ -62,24 +62,24 @@ const (
 
 type interceptorItems []interceptorItem
 
-// Why returns a slice of interceptors that run for the specified CRUD operation.
-func (s interceptorItems) Why(why Why) interceptorItems {
+// why returns a slice of interceptors that run for the specified CRUD operation.
+func (s interceptorItems) why(why why) interceptorItems {
 	return slices.Filter(s, func(t interceptorItem) bool {
-		return t.Why&why != 0
+		return t.why&why != 0
 	})
 }
 
 // interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why Why) F {
+func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](bootstrapContext contextFunc, interceptors interceptorItems, f F, why why) F {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 		ctx = bootstrapContext(ctx, meta)
-		forward := interceptors.Why(why)
+		forward := interceptors.why(why)
 
 		when := Before
 		for _, v := range forward {
-			if v.When&when != 0 {
-				ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
+			if v.when&when != 0 {
+				ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 
 				// Short circuit if any Before interceptor errors.
 				if diags.HasError() {
@@ -94,23 +94,23 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 		if diags.HasError() {
 			when = OnError
 			for _, v := range reverse {
-				if v.When&when != 0 {
-					ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
+				if v.when&when != 0 {
+					ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 				}
 			}
 		} else {
 			when = After
 			for _, v := range reverse {
-				if v.When&when != 0 {
-					ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
+				if v.when&when != 0 {
+					ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 				}
 			}
 		}
 
 		for _, v := range reverse {
 			when = Finally
-			if v.When&when != 0 {
-				ctx, diags = v.Interceptor.run(ctx, d, meta, when, why, diags)
+			if v.when&when != 0 {
+				ctx, diags = v.interceptor.run(ctx, d, meta, when, why, diags)
 			}
 		}
 
@@ -180,7 +180,7 @@ type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when When, why Why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
