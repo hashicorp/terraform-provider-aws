@@ -277,7 +277,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
-				ctx = tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
 
 				return ctx
 			}
@@ -324,7 +326,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
-				ctx = tftags.NewContext(ctx, meta.(*conns.AWSClient).DefaultTagsConfig, meta.(*conns.AWSClient).IgnoreTagsConfig)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
 
 				return ctx
 			}

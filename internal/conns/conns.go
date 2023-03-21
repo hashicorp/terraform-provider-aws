@@ -30,12 +30,6 @@ var (
 	contextKey contextKeyType
 )
 
-// InitContext creates context.
-// TODO Remove this in favor of interceptors.
-func (client *AWSClient) InitContext(ctx context.Context) context.Context {
-	return ctx
-}
-
 // InContext represents the resource information kept in Context.
 type InContext struct {
 	ResourceName       string // Friendly resource name, e.g. "Subnet"

@@ -12,25 +12,37 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+type contextFunc func(context.Context, *conns.AWSClient) context.Context
+
 // wrappedDataSource wraps a data source, adding common functionality.
 type wrappedDataSource struct {
-	inner    datasource.DataSourceWithConfigure
-	typeName string
+	bootstrapContext contextFunc
+	inner            datasource.DataSourceWithConfigure
+	meta             *conns.AWSClient
+	typeName         string
 }
 
-func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
-	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+func newWrappedDataSource(bootstrapContext contextFunc, inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
+	return &wrappedDataSource{
+		bootstrapContext: bootstrapContext,
+		inner:            inner,
+		typeName:         strings.TrimPrefix(reflect.TypeOf(inner).String(), "*"),
+	}
 }
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Metadata(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+
 	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
 
 	w.inner.Read(ctx, request, response)
@@ -39,32 +51,38 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Configure(ctx, request, response)
 }
 
 // wrappedResource wraps a resource, adding common functionality.
 type wrappedResource struct {
-	inner    resource.ResourceWithConfigure
-	meta     *conns.AWSClient
-	typeName string
+	bootstrapContext contextFunc
+	inner            resource.ResourceWithConfigure
+	meta             *conns.AWSClient
+	typeName         string
 }
 
-func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
-	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+func newWrappedResource(bootstrapContext contextFunc, inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
+	return &wrappedResource{
+		bootstrapContext: bootstrapContext,
+		inner:            inner,
+		typeName:         strings.TrimPrefix(reflect.TypeOf(inner).String(), "*"),
+	}
 }
 
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Metadata(ctx, request, response)
 }
 
 func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Schema(ctx, request, response)
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
+	ctx = w.bootstrapContext(ctx, w.meta)
 
 	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
 
@@ -74,9 +92,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
+	ctx = w.bootstrapContext(ctx, w.meta)
 
 	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
 
@@ -86,9 +102,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
+	ctx = w.bootstrapContext(ctx, w.meta)
 
 	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
 
@@ -98,9 +112,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
+	ctx = w.bootstrapContext(ctx, w.meta)
 
 	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
 
@@ -113,16 +125,13 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		w.meta = v
 	}
-
+	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
+		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ImportState(ctx, request, response)
 
 		return
@@ -136,10 +145,7 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
+		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
 
 		return
@@ -148,6 +154,7 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
 		return v.ConfigValidators(ctx)
 	}
 
@@ -156,10 +163,7 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
+		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ValidateConfig(ctx, request, response)
 	}
 }

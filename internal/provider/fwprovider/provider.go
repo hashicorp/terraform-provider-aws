@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -298,8 +299,10 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	var dataSources []func() datasource.DataSource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+
 		for _, v := range sp.FrameworkDataSources(ctx) {
-			v, err := v.Factory(ctx)
+			inner, err := v.Factory(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating data source", map[string]interface{}{
@@ -310,8 +313,17 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
+			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				if meta != nil {
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(v)
+				return newWrappedDataSource(bootstrapContext, inner)
 			})
 		}
 	}
@@ -328,8 +340,10 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+
 		for _, v := range sp.FrameworkResources(ctx) {
-			v, err := v.Factory(ctx)
+			inner, err := v.Factory(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating resource", map[string]interface{}{
@@ -340,8 +354,17 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				continue
 			}
 
+			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				if meta != nil {
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(v)
+				return newWrappedResource(bootstrapContext, inner)
 			})
 		}
 	}
