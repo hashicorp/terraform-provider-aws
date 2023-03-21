@@ -29,6 +29,7 @@ func ResourceVirtualGateway() *schema.Resource {
 		ReadWithoutTimeout:   resourceVirtualGatewayRead,
 		UpdateWithoutTimeout: resourceVirtualGatewayUpdate,
 		DeleteWithoutTimeout: resourceVirtualGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVirtualGatewayImport,
 		},
@@ -604,6 +605,39 @@ func ResourceVirtualGateway() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"format": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"json": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"key": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																					"value": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																				},
+																			},
+																		},
+																		"text": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 1000),
+																		},
+																	},
+																},
+															},
 															"path": {
 																Type:         schema.TypeString,
 																Required:     true,
@@ -809,17 +843,23 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
-	_, err := conn.DeleteVirtualGatewayWithContext(ctx, &appmesh.DeleteVirtualGatewayInput{
+	input := &appmesh.DeleteVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualGatewayWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Gateway (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1110,6 +1150,30 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 				file := &appmesh.VirtualGatewayFileAccessLog{}
 
 				mFile := vFile[0].(map[string]interface{})
+
+				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+					format := &appmesh.LoggingFormat{}
+
+					mFormat := vFormat[0].(map[string]interface{})
+
+					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+						jsonFormatRefs := []*appmesh.JsonFormatRef{}
+						for _, vJsonFormatRef := range vJsonFormatRefs {
+							mJsonFormatRef := &appmesh.JsonFormatRef{
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+							}
+							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
+						}
+						format.Json = jsonFormatRefs
+					}
+
+					if vText, ok := mFormat["text"].(string); ok && vText != "" {
+						format.Text = aws.String(vText)
+					}
+
+					file.Format = format
+				}
 
 				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
@@ -1423,11 +1487,36 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 			mAccessLog := map[string]interface{}{}
 
 			if file := accessLog.File; file != nil {
-				mAccessLog["file"] = []interface{}{
-					map[string]interface{}{
-						"path": aws.StringValue(file.Path),
-					},
+				mFile := map[string]interface{}{}
+
+				if format := file.Format; format != nil {
+					mFormat := map[string]interface{}{}
+
+					if jsons := format.Json; jsons != nil {
+						vJsons := []interface{}{}
+
+						for _, j := range format.Json {
+							mJson := map[string]interface{}{
+								"key":   aws.StringValue(j.Key),
+								"value": aws.StringValue(j.Value),
+							}
+
+							vJsons = append(vJsons, mJson)
+						}
+
+						mFormat["json"] = vJsons
+					}
+
+					if text := format.Text; text != nil {
+						mFormat["text"] = aws.StringValue(text)
+					}
+
+					mFile["format"] = []interface{}{mFormat}
 				}
+
+				mFile["path"] = aws.StringValue(file.Path)
+
+				mAccessLog["file"] = []interface{}{mFile}
 			}
 
 			mLogging["access_log"] = []interface{}{mAccessLog}

@@ -29,6 +29,7 @@ func ResourceVirtualNode() *schema.Resource {
 		ReadWithoutTimeout:   resourceVirtualNodeRead,
 		UpdateWithoutTimeout: resourceVirtualNodeUpdate,
 		DeleteWithoutTimeout: resourceVirtualNodeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVirtualNodeImport,
 		},
@@ -705,6 +706,39 @@ func ResourceVirtualNode() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"format": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"json": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"key": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																					"value": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																				},
+																			},
+																		},
+																		"text": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 1000),
+																		},
+																	},
+																},
+															},
 															"path": {
 																Type:         schema.TypeString,
 																Required:     true,
@@ -1148,17 +1182,23 @@ func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
-	_, err := conn.DeleteVirtualNodeWithContext(ctx, &appmesh.DeleteVirtualNodeInput{
+	input := &appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualNodeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual node (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Node (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1176,10 +1216,15 @@ func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeVirtualNodeWithContext(ctx, &appmesh.DescribeVirtualNodeInput{
+	req := &appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(mesh),
 		VirtualNodeName: aws.String(name),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.DescribeVirtualNodeWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}

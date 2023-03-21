@@ -38,7 +38,7 @@ func ResourceBusPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
+				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
 			"policy": {
