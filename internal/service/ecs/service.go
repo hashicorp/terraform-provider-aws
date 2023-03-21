@@ -1576,7 +1576,8 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 
 // Expects the following ARNs:
 // arn:aws:iam::0123456789:role/EcsService
+// arn:aws:iam::0123456789:role/role_group/EcsService
 // arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
 func getNameFromARN(arn string) string {
-	return strings.Split(arn, "/")[1]
+	return strings.SplitAfterN(arn, "/", 2)[1]
 }
