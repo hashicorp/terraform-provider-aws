@@ -218,7 +218,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	case Before:
 		switch why {
 		case Create:
-			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			tags = tags.IgnoreAWS()
 
 			t.TagsIn = tags
@@ -234,8 +234,8 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					identifier = d.Get(key).(string)
 				}
 
-				if d.HasChange("tags_all") {
-					o, n := d.GetChange("tags_all")
+				if d.HasChange(names.AttrTagsAll) {
+					o, n := d.GetChange(names.AttrTagsAll)
 					err := v.UpdateTags(ctx, meta, identifier, o, n)
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
@@ -297,12 +297,12 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 
 			tags := t.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(t.IgnoreConfig)
 
-			if err := d.Set("tags", tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
-				return ctx, sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
-			if err := d.Set("tags_all", tags.Map()); err != nil {
-				return ctx, sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 			}
 		}
 	}
