@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -19,23 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// func TestAccLightsailDistribution_serial(t *testing.T) {
-// 	t.Parallel()
+// serializing tests so that we do not hit the lightsail rate limit for distributions
+func TestAccLightsailDistribution_serial(t *testing.T) {
+	t.Parallel()
 
-// 	testCases := map[string]map[string]func(t *testing.T){
-// 		"distribution": {
-// 			"basic":             testAccDistribution_basic,
-// 			"disappears":        testAccDistribution_disappears,
-// 			"name":              testAccDistribution_name,
-// 			"health_check_path": testAccDistribution_healthCheckPath,
-// 			"tags":              testAccDistribution_tags,
-// 		},
-// 	}
+	testCases := map[string]map[string]func(t *testing.T){
+		"distribution": {
+			"basic":          testAccDistribution_basic,
+			"disappears":     testAccDistribution_disappears,
+			"is_enabled":     testAccDistribution_isEnabled,
+			"cache_behavior": testAccDistribution_cacheBehavior,
+			"tags":           testAccDistribution_tags,
+		},
+	}
 
-// 	acctest.RunSerialTests2Levels(t, testCases, 0)
-// }
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
 
-func TestAccLightsailDistribution_basic(t *testing.T) {
+func testAccDistribution_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -44,7 +46,7 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -61,7 +63,7 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`distribution/*`)),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
@@ -105,7 +107,7 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDistribution_isEnabled(t *testing.T) {
+func testAccDistribution_isEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -116,7 +118,7 @@ func TestAccLightsailDistribution_isEnabled(t *testing.T) {
 	isEnabled := "true"
 	isDisabled := "false"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -150,7 +152,71 @@ func TestAccLightsailDistribution_isEnabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDistribution_tags(t *testing.T) {
+func testAccDistribution_cacheBehavior(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	resourceName := "aws_lightsail_distribution.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	path1 := "/path1"
+	behaviorCache := "cache"
+	path2 := "/path2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_cacheBehavior1(rName, bucketName, path1, behaviorCache),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"path": path1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"behavior": behaviorCache,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_cacheBehavior2(rName, bucketName, path1, behaviorCache, path2, behaviorCache),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"path": path1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"behavior": behaviorCache,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"path": path2,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
+						"behavior": behaviorCache,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccDistribution_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -159,7 +225,7 @@ func TestAccLightsailDistribution_tags(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -203,7 +269,7 @@ func TestAccLightsailDistribution_tags(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDistribution_disappears(t *testing.T) {
+func testAccDistribution_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -212,7 +278,7 @@ func TestAccLightsailDistribution_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -417,4 +483,75 @@ resource "aws_lightsail_distribution" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDistributionConfig_cacheBehavior1(rName, bucketName, path1, behavior1 string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`	
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
+  cache_behavior {
+    path = %[2]q
+    behavior = %[3]q
+  }
+}
+`, rName, path1, behavior1))
+}
+
+func testAccDistributionConfig_cacheBehavior2(rName, bucketName, path1, behavior1, path2, behavior2 string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`	
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
+  cache_behavior {
+    path = %[2]q
+    behavior = %[3]q
+  }
+
+  cache_behavior {
+    path = %[4]q
+    behavior = %[5]q
+  }
+}
+`, rName, path1, behavior1, path2, behavior2))
 }
