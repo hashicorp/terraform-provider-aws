@@ -16,14 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	sdkstructure "github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -215,6 +213,7 @@ func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.I
 	}
 
 	state := resourceSecurityPolicyData{
+		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
 		Type: types.StringValue(parts[1]),
 	}
@@ -247,16 +246,6 @@ func (rd *resourceSecurityPolicyData) refreshFromOutput(ctx context.Context, out
 	}
 
 	p := string(policyBytes)
-
-	p, err = verify.SecondJSONUnlessEquivalent(*flex.StringFromFramework(ctx, rd.Policy), p)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("refreshing state for Security Policy (%s)", rd.Name), err.Error())
-	}
-
-	p, err = sdkstructure.NormalizeJsonString(p)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("refreshing state for Security Policy (%s)", rd.Name), err.Error())
-	}
 
 	rd.Policy = flex.StringToFramework(ctx, &p)
 

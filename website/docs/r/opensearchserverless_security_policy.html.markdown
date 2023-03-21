@@ -16,21 +16,19 @@ Terraform resource for managing an AWS OpenSearch Serverless Security Policy.
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
-  name   = "example"
-  type   = "encryption"
-  policy = <<-EOT
-  {
-	  "Rules": [
-		  {
-		  	"Resource": [
-		  		"collection/example"
-		  	],
-		  	"ResourceType": "collection"
-		  }
-	  ],
-	  "AWSOwnedKey": true
-  }
-  EOT
+  name = "example"
+  type = "encryption"
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/example"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
 }
 ```
 

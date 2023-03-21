@@ -29,7 +29,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,11 +43,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccSecurityPolicyImportStateIdFunc(resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccSecurityPolicyImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -55,9 +54,6 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 
 func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var securitypolicy opensearchserverless.GetSecurityPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,7 +63,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -151,9 +147,8 @@ func testAccSecurityPolicyImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
 
 	input := &opensearchserverless.ListSecurityPoliciesInput{
 		Type: types.SecurityPolicyTypeEncryption,
@@ -175,19 +170,17 @@ func testAccSecurityPolicyConfig_basic(rName string) string {
 resource "aws_opensearchserverless_security_policy" "test" {
   name   = %[1]q
   type   = "encryption"
-  policy = <<-EOT
-  {
-	  "Rules": [
-		  {
-		  	"Resource": [
-		  		%[2]q
-		  	],
-		  	"ResourceType": "collection"
-		  }
+  policy = jsonencode({
+	  "Rules" = [
+		{
+			"Resource" = [
+				%[2]q
+			],
+            "ResourceType" = "collection"
+		}
 	  ],
-	  "AWSOwnedKey": true
-  }
-  EOT
+	  "AWSOwnedKey" = true
+  })
 }
 `, rName, collection)
 }
