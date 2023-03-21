@@ -342,8 +342,8 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.CacheBehaviorSettings = expandCacheSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("cache_behavior"); ok && len(v.([]interface{})) > 0 {
-		in.CacheBehaviors = expandCacheBehaviorsPerPath(v.([]interface{}))
+	if v, ok := d.GetOk("cache_behavior"); ok && v.(*schema.Set).Len() > 0 {
+		in.CacheBehaviors = expandCacheBehaviorsPerPath(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -478,7 +478,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("cache_behavior") {
-		in.CacheBehaviors = expandCacheBehaviorsPerPath(d.Get("cache_behavior").([]interface{}))
+		in.CacheBehaviors = expandCacheBehaviorsPerPath(d.Get("cache_behavior").(*schema.Set).List())
 		update = true
 	}
 
