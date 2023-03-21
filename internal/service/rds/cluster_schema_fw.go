@@ -139,12 +139,6 @@ func clusterSchemaFramework(ctx context.Context, version int64) schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"db_cluster_parameter_group_name_actual": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"db_instance_parameter_group_name": schema.StringAttribute{
 				Optional: true,
 			},
