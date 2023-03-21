@@ -24,4 +24,3 @@ rules:
       - pattern-not-inside: |
           if <... !d.IsNewResource() ...> { ... }
     severity: WARNING
-  
