@@ -47,6 +47,30 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_monitoring_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitoringScheduleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitoringScheduleExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
