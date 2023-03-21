@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -21,16 +20,6 @@ type ServicePackage interface {
 	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
 	SDKResources(context.Context) []*types.ServicePackageSDKResource
 	ServicePackageName() string
-}
-
-type ServicePackageWithUpdateTags interface {
-	ServicePackage
-	UpdateTags(context.Context, any, string, any, any) error
-}
-
-type ServicePackageWithListTags interface {
-	ServicePackage
-	ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
 }
 
 type (

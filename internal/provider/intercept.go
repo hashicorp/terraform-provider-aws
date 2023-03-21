@@ -223,7 +223,9 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 
 			t.Tags = tags
 		case Update:
-			if v, ok := sp.(conns.ServicePackageWithUpdateTags); ok {
+			if v, ok := sp.(interface {
+				UpdateTags(context.Context, any, string, any, any) error
+			}); ok {
 				var identifier string
 
 				if key := r.tags.IdentifierAttribute; key == "id" {
@@ -253,20 +255,24 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	case After:
 		switch why {
-		case Create, Read, Update:
-			if v, ok := sp.(conns.ServicePackageWithListTags); ok {
+		case Read:
+			// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
+			// Disappears test
+			if d.Id() == "" {
+				return ctx, diags
+			}
+
+			fallthrough
+		case Create, Update:
+			if v, ok := sp.(interface {
+				ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
+			}); ok {
 				var identifier string
 
 				if key := r.tags.IdentifierAttribute; key == "id" {
 					identifier = d.Id()
 				} else {
 					identifier = d.Get(key).(string)
-				}
-
-				// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
-				// Disappears test
-				if identifier == "" {
-					return ctx, diags
 				}
 
 				t, ok := tftags.FromContext(ctx)
