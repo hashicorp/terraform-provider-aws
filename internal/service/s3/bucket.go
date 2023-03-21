@@ -1413,28 +1413,31 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.SetId("")
 		return diags
 	}
+	skipTags := tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented)
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !skipTags {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
+	if !skipTags {
 
-	tags, ok := tagsRaw.(tftags.KeyValueTags)
+		tags, ok := tagsRaw.(tftags.KeyValueTags)
 
-	if !ok && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
+		if !ok {
+			return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
+		}
+
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+		}
+
 	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "s3",
