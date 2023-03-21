@@ -19,10 +19,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// func TestAccLightsailDistribution_serial(t *testing.T) {
+// 	t.Parallel()
+
+// 	testCases := map[string]map[string]func(t *testing.T){
+// 		"distribution": {
+// 			"basic":             testAccDistribution_basic,
+// 			"disappears":        testAccDistribution_disappears,
+// 			"name":              testAccDistribution_name,
+// 			"health_check_path": testAccDistribution_healthCheckPath,
+// 			"tags":              testAccDistribution_tags,
+// 		},
+// 	}
+
+// 	acctest.RunSerialTests2Levels(t, testCases, 0)
+// }
+
 func TestAccLightsailDistribution_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -86,6 +100,104 @@ func TestAccLightsailDistribution_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLightsailDistribution_isEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	resourceName := "aws_lightsail_distribution.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	isEnabled := "true"
+	isDisabled := "false"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isDisabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", isDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", isEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailDistribution_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_tags2(rName, bucketName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -175,12 +287,18 @@ func testAccCheckDistributionExists(ctx context.Context, name string) resource.T
 	}
 }
 
-func testAccDistributionConfig_basic(rName, bucketName string) string {
+func testAccDistributionConfig_base(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
-  name      = %[2]q
+  name      = %[1]q
   bundle_id = "small_1_0"
+}`, bucketName)
 }
+
+func testAccDistributionConfig_basic(rName, bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`
 resource "aws_lightsail_distribution" "test" {
   name      = %[1]q
   bundle_id = "small_1_0"
@@ -203,5 +321,100 @@ resource "aws_lightsail_distribution" "test" {
     }
   }
 }
-`, rName, bucketName)
+`, rName))
+}
+
+func testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  is_enabled = %[2]s
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
+}
+`, rName, isEnabled))
+}
+
+func testAccDistributionConfig_tags1(rName, bucketName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`	
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccDistributionConfig_tags2(rName, bucketName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`	
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    forwarded_cookies {
+      cookies_allow_list = []
+    }
+    forwarded_headers {
+      headers_allow_list = []
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = []
+    }
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
