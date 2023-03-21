@@ -964,7 +964,6 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 }
 
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
-	t.Skip("skipping test that requires alternate providers because framework data source is not available")
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1419,7 +1418,6 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
 func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testing.T) {
-	t.Skip("skipping test that requires alternate providers because framework data source is not available")
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1458,7 +1456,6 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13715
 func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *testing.T) {
-	t.Skip("skipping test that requires alternate providers because framework data source is not available")
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1494,7 +1491,6 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14457
 func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(t *testing.T) {
-	t.Skip("skipping test that requires alternate providers because framework data source is not available")
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3892,7 +3888,7 @@ data "aws_availability_zones" "alternate" {
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = "%[1]s"
   engine                    = "aurora-mysql"
-  engine_version            = "5.7.mysql_aurora.2.08.1"
+  engine_version            = "5.7.mysql_aurora.2.11.1"
 }
 
 resource "aws_rds_cluster" "primary" {

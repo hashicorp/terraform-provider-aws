@@ -26,7 +26,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func rdsSchemaFramework(ctx context.Context, version int64) schema.Schema {
+func clusterSchemaFramework(ctx context.Context, version int64) schema.Schema {
 	s := schema.Schema{
 		Version: version,
 		Attributes: map[string]schema.Attribute{
@@ -135,9 +135,9 @@ func rdsSchemaFramework(ctx context.Context, version int64) schema.Schema {
 			"db_cluster_parameter_group_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				//PlanModifiers: []planmodifier.String{
-				//	stringplanmodifier.UseStateForUnknown(),
-				//},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"db_cluster_parameter_group_name_actual": schema.StringAttribute{
 				Computed: true,
@@ -517,7 +517,7 @@ func rdsSchemaFramework(ctx context.Context, version int64) schema.Schema {
 							Optional: true,
 							Computed: true,
 							PlanModifiers: []planmodifier.Int64{
-								fwint64planmodifier.DefaultValue(300),
+								fwint64planmodifier.DefaultValue(300), //nolint:gomnd
 							},
 							Validators: []validator.Int64{
 								int64validator.Between(300, 86400),
@@ -545,13 +545,13 @@ func rdsSchemaFramework(ctx context.Context, version int64) schema.Schema {
 						"max_capacity": schema.Float64Attribute{
 							Required: true,
 							Validators: []validator.Float64{
-								float64validator.Between(0.5, 128),
+								float64validator.Between(0.5, 128), //nolint:gomnd
 							},
 						},
 						"min_capacity": schema.Float64Attribute{
 							Required: true,
 							Validators: []validator.Float64{
-								float64validator.Between(0.5, 128),
+								float64validator.Between(0.5, 128), //nolint:gomnd
 							},
 						},
 					},

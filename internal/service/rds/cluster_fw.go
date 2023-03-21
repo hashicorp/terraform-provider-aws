@@ -58,7 +58,7 @@ func (r *resourceCluster) Metadata(_ context.Context, request resource.MetadataR
 
 // Schema returns the schema for this resource.
 func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	response.Schema = rdsSchemaFramework(ctx, 1)
+	response.Schema = clusterSchemaFramework(ctx, 1)
 }
 
 // Create is called when the provider must create a new resource.
@@ -831,18 +831,6 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 			}
 		}
 
-		var dbClusterParameterGroupNameConfig, dbClusterParameterGroupNameState types.String
-		response.Diagnostics.Append(request.Config.GetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), &dbClusterParameterGroupNameConfig)...)
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), &dbClusterParameterGroupNameState)...)
-
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if (dbClusterParameterGroupNameConfig.IsNull() || dbClusterParameterGroupNameConfig.IsUnknown()) && (!dbClusterParameterGroupNameState.IsNull() || !dbClusterParameterGroupNameState.IsUnknown()) {
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringValue(dbClusterParameterGroupNameState.ValueString()))...)
-		}
-
 		var scalingConfigurationPlan, scalingConfigurationState types.List
 		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationPlan)...)
 		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationState)...)
@@ -854,6 +842,23 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		if (!scalingConfigurationPlan.IsNull() && len(scalingConfigurationPlan.Elements()) > 0) && (!scalingConfigurationState.IsNull() && len(scalingConfigurationState.Elements()) > 0) {
 			if !scalingConfigurationPlan.Equal(scalingConfigurationState) {
 				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("scaling_configuration_actual"), types.ListUnknown(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}))...)
+			}
+		}
+
+		var allowMajorVersionUpgrade types.Bool
+		var dbClusterParameterGroupName types.String
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("allow_major_version_upgrade"), &allowMajorVersionUpgrade)...)
+		response.Diagnostics.Append(request.Config.GetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), &dbClusterParameterGroupName)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if (!allowMajorVersionUpgrade.IsNull() && allowMajorVersionUpgrade.ValueBool()) && dbClusterParameterGroupName.IsNull() {
+			if (!engineVersionPlan.IsNull() && !engineVersionPlan.IsUnknown()) && (!engineVersionState.IsNull() && !engineVersionState.IsUnknown()) {
+				if !engineVersionPlan.Equal(engineVersionState) {
+					response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringUnknown())...)
+				}
 			}
 		}
 
@@ -917,7 +922,7 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 }
 
 func (r *resourceCluster) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	s := rdsSchemaFramework(ctx, 0)
+	s := clusterSchemaFramework(ctx, 0)
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema: &s,
@@ -1525,7 +1530,7 @@ func createClusterInput(ctx context.Context, identifier string, data resourceClu
 		input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
 	}
 
-	if !data.ReplicationSourceIdentifier.IsUnknown() && !data.ReplicationSourceIdentifier.IsNull() {
+	if !data.ReplicationSourceIdentifier.IsUnknown() && !data.ReplicationSourceIdentifier.IsNull() && data.GlobalClusterIdentifier.IsNull() {
 		input.ReplicationSourceIdentifier = aws.String(data.ReplicationSourceIdentifier.ValueString())
 	}
 
