@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_ip_set: Fix inconsistent final plan when the addresses attribute contains unknown values
+```
