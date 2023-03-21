@@ -377,6 +377,26 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(id)
 
+	isEnabled := d.Get("is_enabled").(bool)
+
+	if !isEnabled {
+		updateIn := &lightsail.UpdateDistributionInput{
+			DistributionName: aws.String(id),
+			IsEnabled:        aws.Bool(isEnabled),
+		}
+		updateOut, err := conn.UpdateDistributionWithContext(ctx, updateIn)
+
+		if err != nil {
+			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+		}
+
+		diagUpdate := expandOperation(ctx, conn, updateOut.Operation, lightsail.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
+
+		if diagUpdate != nil {
+			return diagUpdate
+		}
+	}
+
 	return resourceDistributionRead(ctx, d, meta)
 }
 
@@ -482,7 +502,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		bundleUpdate = true
 	}
 
-	if !update && !bundleUpdate {
+	if !update && !bundleUpdate && !d.HasChange("tags_all") {
 		return nil
 	}
 
@@ -511,6 +531,14 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if diag != nil {
 			return diag
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 	}
 
