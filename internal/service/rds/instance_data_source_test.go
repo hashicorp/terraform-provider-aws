@@ -113,8 +113,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   name                    = "test"
-  skip_final_snapshot     = true
   password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
   username                = "tfacctest"
 
   enabled_cloudwatch_logs_exports = [
@@ -149,7 +149,6 @@ resource "aws_db_instance" "test" {
   manage_master_user_password = true
   name                        = "test"
   skip_final_snapshot         = true
-
   username                    = "tfacctest"
 
   tags = {
