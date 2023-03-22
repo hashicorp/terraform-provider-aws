@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appmesh_virtual_service")
@@ -34,20 +35,24 @@ func ResourceVirtualService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"mesh_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"mesh_owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -55,7 +60,16 @@ func ResourceVirtualService() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"spec": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -86,7 +100,6 @@ func ResourceVirtualService() *schema.Resource {
 											},
 										},
 									},
-
 									"virtual_router": {
 										Type:          schema.TypeList,
 										Optional:      true,
@@ -109,30 +122,8 @@ func ResourceVirtualService() *schema.Resource {
 					},
 				},
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
