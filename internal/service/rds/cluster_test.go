@@ -2466,6 +2466,76 @@ func TestAccRDSCluster_MigrateFromPluginSDK(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_MigrateFromPluginSDK_allowMajorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_rds_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	engine := "aurora-postgresql"
+	engineVersion1 := "12.9"
+
+	var dbCluster rds.DBCluster
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.59.0",
+					},
+				},
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_MigrateFromPluginSDK_scalingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_rds_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	var dbCluster rds.DBCluster
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.59.0",
+					},
+				},
+				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
