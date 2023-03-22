@@ -81,7 +81,7 @@ func ResourceDistribution() *schema.Resource {
 			},
 			"cache_behavior_settings": {
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				MaxItems:    1,
 				Description: "An object that describes the cache behavior settings of the distribution.",
 				Elem: &schema.Resource{
@@ -91,31 +91,28 @@ func ResourceDistribution() *schema.Resource {
 							Optional:     true,
 							Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
-							Default:      "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
 						},
 						"cached_http_methods": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "The HTTP method responses that are cached by your distribution.",
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
-							Default:      "GET,HEAD",
 						},
 						"default_ttl": {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "The default amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the content has been updated.",
-							Default:     86400,
 						},
 						"forwarded_cookies": {
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							MaxItems:    1,
 							Description: "An object that describes the cookies that are forwarded to the origin. Your content is cached based on the cookies that are forwarded.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies_allow_list": {
 										Type:        schema.TypeList,
-										Required:    true,
+										Optional:    true,
 										Description: "The specific cookies to forward to your distribution's origin.",
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
@@ -124,21 +121,20 @@ func ResourceDistribution() *schema.Resource {
 										Optional:     true,
 										Description:  "Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter.",
 										ValidateFunc: validation.StringInSlice(lightsail.ForwardValues_Values(), false),
-										Default:      "none",
 									},
 								},
 							},
 						},
 						"forwarded_headers": {
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							MaxItems:    1,
 							Description: "An object that describes the headers that are forwarded to the origin. Your content is cached based on the headers that are forwarded.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"headers_allow_list": {
 										Type:        schema.TypeList,
-										Required:    true,
+										Optional:    true,
 										Description: "The specific headers to forward to your distribution's origin.",
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -149,15 +145,14 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Description:  "The headers that you want your distribution to forward to your origin and base caching on.",
-										ValidateFunc: validation.StringInSlice(lightsail.ForwardValues_Values(), false),
-										Default:      "default",
+										ValidateFunc: validation.StringInSlice([]string{"default", lightsail.ForwardValuesAllowList, lightsail.ForwardValuesAll}, false),
 									},
 								},
 							},
 						},
 						"forwarded_query_strings": {
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							MaxItems:    1,
 							Description: "An object that describes the query strings that are forwarded to the origin. Your content is cached based on the query strings that are forwarded.",
 							Elem: &schema.Resource{
@@ -166,11 +161,10 @@ func ResourceDistribution() *schema.Resource {
 										Type:        schema.TypeBool,
 										Optional:    true,
 										Description: "Indicates whether the distribution forwards and caches based on query strings.",
-										Default:     false,
 									},
 									"query_strings_allowed_list": {
 										Type:        schema.TypeList,
-										Required:    true,
+										Optional:    true,
 										Description: "The specific query strings that the distribution forwards to the origin.",
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
@@ -181,13 +175,11 @@ func ResourceDistribution() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "The maximum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
-							Default:     31536000,
 						},
 						"minimum_ttl": {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "The minimum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
-							Default:     0,
 						},
 					},
 				},
@@ -338,7 +330,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("cache_behavior_settings"); ok {
+	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 {
 		in.CacheBehaviorSettings = expandCacheSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -921,27 +913,27 @@ func expandCacheSettings(tfMap map[string]interface{}) *lightsail.CacheSettings 
 		a.CachedHTTPMethods = aws.String(v)
 	}
 
-	if v, ok := tfMap["default_ttl"].(int); ok {
+	if v, ok := tfMap["default_ttl"].(int); ok && v != 0 {
 		a.DefaultTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["forwarded_cookies"]; ok {
+	if v, ok := tfMap["forwarded_cookies"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		a.ForwardedCookies = expandCookieObject(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["forwarded_headers"]; ok {
+	if v, ok := tfMap["forwarded_headers"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		a.ForwardedHeaders = expandHeaderObject(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["forwarded_query_strings"]; ok {
+	if v, ok := tfMap["forwarded_query_strings"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		a.ForwardedQueryStrings = expandQueryStringObject(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["maximum_ttl"].(int); ok {
+	if v, ok := tfMap["maximum_ttl"].(int); ok && v != 0 {
 		a.MaximumTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["minimum_ttl"].(int); ok {
+	if v, ok := tfMap["minimum_ttl"].(int); ok && v != 0 {
 		a.MinimumTTL = aws.Int64(int64(v))
 	}
 
