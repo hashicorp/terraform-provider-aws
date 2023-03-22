@@ -689,24 +689,26 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	req := &appmesh.CreateRouteInput{
+	name := d.Get("name").(string)
+	input := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
-		RouteName:         aws.String(d.Get("name").(string)),
-		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
+		RouteName:         aws.String(name),
 		Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
 		Tags:              Tags(tags.IgnoreAWS()),
+		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
+		input.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
-	resp, err := conn.CreateRouteWithContext(ctx, req)
+	output, err := conn.CreateRouteWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Route (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Route.Metadata.Uid))
+	d.SetId(aws.StringValue(output.Route.Metadata.Uid))
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
@@ -811,30 +813,30 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
-		_, v := d.GetChange("spec")
-		req := &appmesh.UpdateRouteInput{
+		input := &appmesh.UpdateRouteInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			RouteName:         aws.String(d.Get("name").(string)),
+			Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-			Spec:              expandRouteSpec(v.([]interface{})),
-		}
-		if v, ok := d.GetOk("mesh_owner"); ok {
-			req.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh route: %#v", req)
-		_, err := conn.UpdateRouteWithContext(ctx, req)
+		if v, ok := d.GetOk("mesh_owner"); ok {
+			input.MeshOwner = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateRouteWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh route: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Route (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh route (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Route (%s) tags: %s", arn, err)
 		}
 	}
 
