@@ -4,210 +4,250 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAccessPolicy() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceAccessPolicyCreate,
-		ReadWithoutTimeout:   resourceAccessPolicyRead,
-		UpdateWithoutTimeout: resourceAccessPolicyUpdate,
-		DeleteWithoutTimeout: resourceAccessPolicyDelete,
+// @FrameworkResource
+func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceAccessPolicy{}, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				const idSeparator = "/"
-				parts := strings.Split(d.Id(), idSeparator)
-				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected access-policy-name%[2]saccess-policy-type", d.Id(), idSeparator)
-				}
-
-				d.SetId(parts[0])
-				d.Set("type", parts[1])
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		Schema: map[string]*schema.Schema{
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(3, 32),
-			},
-			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(1, 20480),
-				),
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"policy_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AccessPolicyType](),
-			},
-		},
-	}
+type resourceAccessPolicyData struct {
+	Description   types.String `tfsdk:"description"`
+	ID            types.String `tfsdk:"id"`
+	Name          types.String `tfsdk:"name"`
+	Policy        types.String `tfsdk:"policy"`
+	PolicyVersion types.String `tfsdk:"policy_version"`
+	Type          types.String `tfsdk:"type"`
 }
 
 const (
 	ResNameAccessPolicy = "Access Policy"
+	idSeparator         = "/"
 )
 
-func resourceAccessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
+type resourceAccessPolicy struct {
+	framework.ResourceWithConfigure
+}
 
-	in := &opensearchserverless.CreateAccessPolicyInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
-		Policy:      aws.String(d.Get("policy").(string)),
-		Type:        types.AccessPolicyType(d.Get("type").(string)),
+func (r *resourceAccessPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_opensearchserverless_access_policy"
+}
+
+func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"description": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1000),
+				},
+			},
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 32),
+				},
+			},
+			"policy": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 20480),
+				},
+			},
+			"policy_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"type": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.AccessPolicyType](),
+				},
+			},
+		},
+	}
+}
+
+func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceAccessPolicyData
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+	conn := r.Meta().OpenSearchServerlessClient()
+
+	in := &opensearchserverless.CreateAccessPolicyInput{
+		ClientToken: aws.String(sdkresource.UniqueId()),
+		Name:        aws.String(plan.Name.ValueString()),
+		Policy:      aws.String(plan.Policy.ValueString()),
+		Type:        awstypes.AccessPolicyType(plan.Type.ValueString()),
+	}
+
+	if !plan.Description.IsNull() {
+		in.Description = aws.String(plan.Description.ValueString())
 	}
 
 	out, err := conn.CreateAccessPolicy(ctx, in)
 	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionCreating, ResNameAccessPolicy, d.Get("name").(string), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameAccessPolicy, plan.Name.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 
-	if out == nil || out.AccessPolicyDetail == nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionCreating, ResNameAccessPolicy, d.Get("name").(string), errors.New("empty output"))
-	}
-
-	d.SetId(aws.ToString(out.AccessPolicyDetail.Name))
-
-	return resourceAccessPolicyRead(ctx, d, meta)
+	state := plan
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.AccessPolicyDetail)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceAccessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
-	out, err := findAccessPolicyByNameAndType(ctx, conn, d.Id(), d.Get("type").(string))
+func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] OpenSearchServerless AccessPolicy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	var state resourceAccessPolicyData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
+
+	var plan, state resourceAccessPolicyData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Description.Equal(state.Description) ||
+		!plan.Policy.Equal(state.Policy) {
+		input := &opensearchserverless.UpdateAccessPolicyInput{
+			ClientToken:   aws.String(sdkresource.UniqueId()),
+			Name:          flex.StringFromFramework(ctx, plan.Name),
+			PolicyVersion: flex.StringFromFramework(ctx, plan.PolicyVersion),
+			Type:          awstypes.AccessPolicyType(plan.Type.ValueString()),
+		}
+
+		if !plan.Description.Equal(state.Description) {
+			input.Description = aws.String(plan.Description.ValueString())
+		}
+
+		out, err := conn.UpdateAccessPolicy(ctx, input)
+
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			return
+		}
+		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.AccessPolicyDetail)...)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
+
+	var state resourceAccessPolicyData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.DeleteAccessPolicy(ctx, &opensearchserverless.DeleteAccessPolicyInput{
+		ClientToken: aws.String(sdkresource.UniqueId()),
+		Name:        aws.String(state.Name.ValueString()),
+		Type:        awstypes.AccessPolicyType(state.Type.ValueString()),
+	})
 	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionReading, ResNameAccessPolicy, d.Id(), err)
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameAccessPolicy, state.Name.String(), nil),
+			err.Error(),
+		)
+	}
+}
+
+func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts := strings.Split(req.ID, idSeparator)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
+		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())
+		return
 	}
 
-	d.Set("name", out.Name)
-	d.Set("type", out.Type)
-	d.Set("description", out.Description)
+	state := resourceAccessPolicyData{
+		ID:   types.StringValue(parts[0]),
+		Name: types.StringValue(parts[0]),
+		Type: types.StringValue(parts[1]),
+	}
+
+	diags := resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+// refreshFromOutput writes state data from an AWS response object
+func (rd *resourceAccessPolicyData) refreshFromOutput(ctx context.Context, out *awstypes.AccessPolicyDetail) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if out == nil {
+		return diags
+	}
+
+	rd.ID = flex.StringToFramework(ctx, out.Name)
+	rd.Description = flex.StringToFramework(ctx, out.Description)
+	rd.Name = flex.StringToFramework(ctx, out.Name)
+	rd.Type = flex.StringValueToFramework(ctx, out.Type)
+	rd.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
 
 	policyBytes, err := out.Policy.MarshalSmithyDocument()
 	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionSetting, ResNameAccessPolicy, d.Id(), err)
+		diags.AddError(fmt.Sprintf("refreshing state for Security Policy (%s)", rd.Name), err.Error())
+		return diags
 	}
 
 	p := string(policyBytes)
 
-	p, err = verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), p)
-	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionSetting, ResNameAccessPolicy, d.Id(), err)
-	}
+	rd.Policy = flex.StringToFramework(ctx, &p)
 
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionSetting, ResNameAccessPolicy, d.Id(), err)
-	}
-
-	d.Set("policy", p)
-
-	return nil
-}
-
-func resourceAccessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
-
-	update := false
-
-	in := &opensearchserverless.UpdateAccessPolicyInput{
-		ClientToken:   aws.String(resource.UniqueId()),
-		Name:          aws.String(d.Id()),
-		PolicyVersion: aws.String(d.Get("policy_version").(string)),
-		Type:          types.AccessPolicyType((d.Get("type").(string))),
-	}
-
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
-		update = true
-	}
-
-	if d.HasChanges("policy") {
-		in.Policy = aws.String(d.Get("policy").(string))
-		update = true
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating OpenSearchServerless AccessPolicy (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateAccessPolicy(ctx, in)
-	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionUpdating, ResNameAccessPolicy, d.Id(), err)
-	}
-
-	return resourceAccessPolicyRead(ctx, d, meta)
-}
-
-func resourceAccessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
-
-	log.Printf("[INFO] Deleting OpenSearchServerless AccessPolicy %s", d.Id())
-
-	_, err := conn.DeleteAccessPolicy(ctx, &opensearchserverless.DeleteAccessPolicyInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		Name:        aws.String(d.Id()),
-		Type:        types.AccessPolicyType(d.Get("type").(string)),
-	})
-
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionDeleting, ResNameAccessPolicy, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }

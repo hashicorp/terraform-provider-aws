@@ -20,15 +20,16 @@ import (
 )
 
 func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var accesspolicy opensearchserverless.GetAccessPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,26 +43,27 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccAccessPolicyImportStateIdFunc(resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAccessPolicyImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	var accesspolicy opensearchserverless.GetAccessPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,7 +73,7 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(resourceName, &accesspolicy),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearchserverless.ResourceAccessPolicy(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceAccessPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,13 +143,12 @@ func testAccAccessPolicyImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["id"], rs.Primary.Attributes["type"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
 
 	input := &opensearchserverless.ListAccessPoliciesInput{
 		Type: types.AccessPolicyTypeData,
@@ -164,38 +165,34 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func testAccAccessPolicyConfig_basic(rName string) string {
-	collection := fmt.Sprintf("collection/%s", rName)
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-
 resource "aws_opensearchserverless_access_policy" "test" {
-  name   = %[1]q
-  type   = "data"
-  policy = <<-EOT
-  [
-	{
-	  "Rules": [
-		{
-		  "ResourceType": "index",
-		  "Resource": [
-			"index/books/*"
-		  ],
-		  "Permission": [
-			"aoss:CreateIndex",
-			"aoss:ReadDocument",
-			"aoss:UpdateIndex",
-			"aoss:DeleteIndex",
-			"aoss:WriteDocument"
-		  ]
-		}
-	  ],
-	  "Principal": [
-		"arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin"
-	  ]
-	}
-  ]
-  EOT
+  name = %[1]q
+  type = "data"
+  policy = jsonencode([
+    {
+      "Rules" : [
+        {
+          "ResourceType" : "index",
+          "Resource" : [
+            "index/books/*"
+          ],
+          "Permission" : [
+            "aoss:CreateIndex",
+            "aoss:ReadDocument",
+            "aoss:UpdateIndex",
+            "aoss:DeleteIndex",
+            "aoss:WriteDocument"
+          ]
+        }
+      ],
+      "Principal" : [
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin"
+      ]
+    }
+  ])
 }
-`, rName, collection)
+`, rName)
 }
