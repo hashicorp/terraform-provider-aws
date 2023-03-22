@@ -23,14 +23,17 @@ import (
 // serializing tests so that we do not hit the lightsail rate limit for distributions
 func TestAccLightsailDistribution_serial(t *testing.T) {
 	t.Parallel()
-
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
-			"basic":          testAccDistribution_basic,
-			"disappears":     testAccDistribution_disappears,
-			"is_enabled":     testAccDistribution_isEnabled,
-			"cache_behavior": testAccDistribution_cacheBehavior,
-			"tags":           testAccDistribution_tags,
+			"basic":                   testAccDistribution_basic,
+			"disappears":              testAccDistribution_disappears,
+			"is_enabled":              testAccDistribution_isEnabled,
+			"cache_behavior":          testAccDistribution_cacheBehavior,
+			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
+			"tags":                    testAccDistribution_tags,
 		},
 	}
 
@@ -39,9 +42,6 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 
 func testAccDistribution_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
@@ -63,7 +63,7 @@ func testAccDistribution_basic(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`distribution/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Distribution/*`)),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
@@ -109,9 +109,6 @@ func testAccDistribution_basic(t *testing.T) {
 
 func testAccDistribution_isEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -154,9 +151,6 @@ func testAccDistribution_isEnabled(t *testing.T) {
 
 func testAccDistribution_cacheBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -216,11 +210,86 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 	})
 }
 
+func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_distribution.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	allow1 := "test"
+	allow2 := "special"
+	header1 := "Host"
+	header2 := "Origin"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_cacheBehaviorSettings(rName, bucketName, allow1, allow2, header1, header2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.allowed_http_methods", "GET,HEAD,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.cached_http_methods", "GET,HEAD,OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.default_ttl", "50000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.maximum_ttl", "100000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.minimum_ttl", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "allow-list"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow2),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "allow-list"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.*", header1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.*", header2),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.*", allow1),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.*", allow2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_basic(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.cached_http_methods", "GET,HEAD"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.maximum_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.minimum_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "none"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDistribution_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
@@ -271,9 +340,6 @@ func testAccDistribution_tags(t *testing.T) {
 
 func testAccDistribution_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
@@ -554,4 +620,41 @@ resource "aws_lightsail_distribution" "test" {
   }
 }
 `, rName, path1, behavior1, path2, behavior2))
+}
+
+func testAccDistributionConfig_cacheBehaviorSettings(rName, bucketName, allow1, allow2, header1, header2 string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`	
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = "small_1_0"
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+	allowed_http_methods = "GET,HEAD,OPTIONS"
+	cached_http_methods = "GET,HEAD,OPTIONS"
+	default_ttl = 50000
+    forwarded_cookies {
+      cookies_allow_list = [%[2]q, %[3]q]
+	  option = "allow-list"
+    }
+    forwarded_headers {
+      headers_allow_list = [%[4]q, %[5]q]
+	  option = "allow-list"
+    }
+    forwarded_query_strings {
+      query_strings_allowed_list = [%[2]q, %[3]q]
+	  option = true
+    }
+	maximum_ttl = 100000
+	minimum_ttl = 10000
+  }
+}
+`, rName, allow1, allow2, header1, header2))
 }
