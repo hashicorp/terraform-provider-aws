@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLightsailLoadBalancerCertificate_basic(t *testing.T) {
+func testAccLoadBalancerCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificate lightsail.LoadBalancerTlsCertificate
 	resourceName := "aws_lightsail_lb_certificate.test"
@@ -27,7 +27,7 @@ func TestAccLightsailLoadBalancerCertificate_basic(t *testing.T) {
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -56,7 +56,7 @@ func TestAccLightsailLoadBalancerCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
+func testAccLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificate lightsail.LoadBalancerTlsCertificate
 	resourceName := "aws_lightsail_lb_certificate.test"
@@ -65,7 +65,7 @@ func TestAccLightsailLoadBalancerCertificate_subjectAlternativeNames(t *testing.
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -88,7 +88,7 @@ func TestAccLightsailLoadBalancerCertificate_subjectAlternativeNames(t *testing.
 	})
 }
 
-func TestAccLightsailLoadBalancerCertificate_domainValidationRecords(t *testing.T) {
+func testAccLoadBalancerCertificate_domainValidationRecords(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificate lightsail.LoadBalancerTlsCertificate
 	resourceName := "aws_lightsail_lb_certificate.test"
@@ -99,7 +99,7 @@ func TestAccLightsailLoadBalancerCertificate_domainValidationRecords(t *testing.
 	domainName := fmt.Sprintf("%s.com", acctest.ResourcePrefix)
 	subjectAlternativeName := fmt.Sprintf("%s.com", acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -127,7 +127,7 @@ func TestAccLightsailLoadBalancerCertificate_domainValidationRecords(t *testing.
 	})
 }
 
-func TestAccLightsailLoadBalancerCertificate_disappears(t *testing.T) {
+func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificate lightsail.LoadBalancerTlsCertificate
 	resourceName := "aws_lightsail_lb_certificate.test"
@@ -135,7 +135,7 @@ func TestAccLightsailLoadBalancerCertificate_disappears(t *testing.T) {
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)

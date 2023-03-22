@@ -29,6 +29,7 @@ func ResourceVirtualRouter() *schema.Resource {
 		ReadWithoutTimeout:   resourceVirtualRouterRead,
 		UpdateWithoutTimeout: resourceVirtualRouterUpdate,
 		DeleteWithoutTimeout: resourceVirtualRouterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVirtualRouterImport,
 		},
@@ -288,15 +289,23 @@ func resourceVirtualRouterDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
-	_, err := conn.DeleteVirtualRouterWithContext(ctx, &appmesh.DeleteVirtualRouterInput{
+	input := &appmesh.DeleteVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualRouterWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual router: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Router (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -314,10 +323,15 @@ func resourceVirtualRouterImport(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeVirtualRouterWithContext(ctx, &appmesh.DescribeVirtualRouterInput{
+	req := &appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(mesh),
 		VirtualRouterName: aws.String(name),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.DescribeVirtualRouterWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
