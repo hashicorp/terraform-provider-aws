@@ -231,7 +231,7 @@ func main() {
 		ConnsPkg:         *listTags || *updateTags,
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
-		InternalTypesPkg: *listTags,
+		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
 		SkipTypesImp:     *skipTypesImp,
 		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
