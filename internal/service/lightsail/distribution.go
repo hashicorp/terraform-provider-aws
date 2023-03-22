@@ -832,6 +832,26 @@ func expandCacheBehaviorsPerPath(tfList []interface{}) []*lightsail.CacheBehavio
 	return s
 }
 
+func expandAllowList(tfList []interface{}) []*string {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []*string
+
+	for _, r := range tfList {
+		m, ok := r.(string)
+
+		if !ok {
+			continue
+		}
+
+		s = append(s, aws.String(m))
+	}
+
+	return s
+}
+
 func expandCookieObject(tfMap map[string]interface{}) *lightsail.CookieObject {
 	if tfMap == nil {
 		return nil
@@ -839,8 +859,8 @@ func expandCookieObject(tfMap map[string]interface{}) *lightsail.CookieObject {
 
 	a := &lightsail.CookieObject{}
 
-	if v, ok := tfMap["cookies_allow_list"].([]string); ok {
-		a.CookiesAllowList = aws.StringSlice(v)
+	if v, ok := tfMap["cookies_allow_list"]; ok && len(v.([]interface{})) > 0 {
+		a.CookiesAllowList = expandAllowList(v.([]interface{}))
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
@@ -857,8 +877,8 @@ func expandHeaderObject(tfMap map[string]interface{}) *lightsail.HeaderObject {
 
 	a := &lightsail.HeaderObject{}
 
-	if v, ok := tfMap["headers_allow_list"].([]string); ok {
-		a.HeadersAllowList = aws.StringSlice(v)
+	if v, ok := tfMap["headers_allow_list"]; ok && len(v.([]interface{})) > 0 {
+		a.HeadersAllowList = expandAllowList(v.([]interface{}))
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
@@ -875,8 +895,8 @@ func expandQueryStringObject(tfMap map[string]interface{}) *lightsail.QueryStrin
 
 	a := &lightsail.QueryStringObject{}
 
-	if v, ok := tfMap["query_string_allow_list"].([]string); ok {
-		a.QueryStringsAllowList = aws.StringSlice(v)
+	if v, ok := tfMap["query_string_allow_list"]; ok && len(v.([]interface{})) > 0 {
+		a.QueryStringsAllowList = expandAllowList(v.([]interface{}))
 	}
 
 	if v, ok := tfMap["option"].(bool); ok {
