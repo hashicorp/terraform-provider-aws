@@ -189,8 +189,7 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("mesh_owner", vs.Metadata.MeshOwner)
 	d.Set("name", vs.VirtualServiceName)
 	d.Set("resource_owner", vs.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenVirtualServiceSpec(vs.Spec))
-	if err != nil {
+	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 

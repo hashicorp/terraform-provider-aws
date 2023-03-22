@@ -146,8 +146,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
 	d.Set("name", mesh.MeshName)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenMeshSpec(mesh.Spec))
-	if err != nil {
+	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
