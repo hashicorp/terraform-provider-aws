@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -13,13 +14,13 @@ import (
 
 // FindCognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
 // Returns nil if no UI Customization is found.
-func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
+func FindCognitoUserPoolUICustomization(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
 	input := &cognitoidentityprovider.GetUICustomizationInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	output, err := conn.GetUICustomization(input)
+	output, err := conn.GetUICustomizationWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -39,7 +40,7 @@ func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIde
 }
 
 // FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
-func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
+func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
 	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(username),
@@ -47,7 +48,7 @@ func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvide
 
 	found := false
 
-	err := conn.AdminListGroupsForUserPages(input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
+	err := conn.AdminListGroupsForUserPagesWithContext(ctx, input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -77,13 +78,13 @@ func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvide
 	return found, nil
 }
 
-func FindCognitoUserPoolClient(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
+func FindCognitoUserPoolClient(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	output, err := conn.DescribeUserPoolClient(input)
+	output, err := conn.DescribeUserPoolClientWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -103,7 +104,7 @@ func FindCognitoUserPoolClient(conn *cognitoidentityprovider.CognitoIdentityProv
 	return output.UserPoolClient, nil
 }
 
-func FindRiskConfigurationById(conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
+func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
 	userPoolId, clientId, err := RiskConfigurationParseID(id)
 	if err != nil {
 		return nil, err
@@ -117,7 +118,7 @@ func FindRiskConfigurationById(conn *cognitoidentityprovider.CognitoIdentityProv
 		input.ClientId = aws.String(clientId)
 	}
 
-	output, err := conn.DescribeRiskConfiguration(input)
+	output, err := conn.DescribeRiskConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{

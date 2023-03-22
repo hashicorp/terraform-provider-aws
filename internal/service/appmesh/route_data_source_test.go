@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAppMeshRouteDataSource_http2Route(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -19,10 +20,10 @@ func TestAccAppMeshRouteDataSource_http2Route(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_http2Route(meshName, vrName, vnName, rName),
@@ -44,6 +45,7 @@ func TestAccAppMeshRouteDataSource_http2Route(t *testing.T) {
 }
 
 func TestAccAppMeshRouteDataSource_httpRoute(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,10 +54,10 @@ func TestAccAppMeshRouteDataSource_httpRoute(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_httpRoute(meshName, vrName, vnName, rName),
@@ -77,6 +79,7 @@ func TestAccAppMeshRouteDataSource_httpRoute(t *testing.T) {
 }
 
 func TestAccAppMeshRouteDataSource_grpcRoute(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -85,10 +88,10 @@ func TestAccAppMeshRouteDataSource_grpcRoute(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_grpcRoute(meshName, vrName, vnName, rName),
@@ -110,6 +113,7 @@ func TestAccAppMeshRouteDataSource_grpcRoute(t *testing.T) {
 }
 
 func TestAccAppMeshRouteDataSource_tcpRoute(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_appmesh_route.test"
 	dataSourceName := "data.aws_appmesh_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -118,10 +122,10 @@ func TestAccAppMeshRouteDataSource_tcpRoute(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteDataSourceConfig_tcpRoute(meshName, vrName, vnName, rName),

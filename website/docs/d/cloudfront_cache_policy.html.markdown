@@ -12,9 +12,21 @@ Use this data source to retrieve information about a CloudFront cache policy.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 data "aws_cloudfront_cache_policy" "example" {
   name = "example-policy"
+}
+```
+
+### AWS-Managed Policies
+
+AWS managed cache policy names are prefixed with `Managed-`:
+
+```terraform
+data "aws_cloudfront_cache_policy" "example" {
+  name = "Managed-CachingOptimized"
 }
 ```
 

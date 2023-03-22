@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_managed_prefix_list")
 func ResourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListCreate,
@@ -25,7 +27,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 		DeleteWithoutTimeout: resourceManagedPrefixListDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -90,9 +92,9 @@ func ResourceManagedPrefixList() *schema.Resource {
 }
 
 func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateManagedPrefixListInput{}
 
@@ -133,7 +135,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -165,7 +167,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_id", pl.OwnerId)
 	d.Set("version", pl.Version)
 
-	tags := KeyValueTags(pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -180,9 +182,29 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	// MaxEntries & Entry cannot change in the same API call.
+	//   If MaxEntry is increasing, complete before updating entry(s)
+	//   If MaxEntry is decreasing, complete after updating entry(s)
+	maxEntryChangedDecrease := false
+	var newMaxEntryInt int64
+
+	if d.HasChange("max_entries") {
+		oldMaxEntry, newMaxEntry := d.GetChange("max_entries")
+		newMaxEntryInt = int64(d.Get("max_entries").(int))
+
+		if newMaxEntry.(int) < oldMaxEntry.(int) {
+			maxEntryChangedDecrease = true
+		} else {
+			err := updateMaxEntry(ctx, conn, d.Id(), newMaxEntryInt)
+			if err != nil {
+				return diag.Errorf("updating EC2 Managed Prefix List (%s) increased MaxEntries : %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChangesExcept("tags", "tags_all", "max_entries") {
 		input := &ec2.ModifyManagedPrefixListInput{
 			PrefixListId: aws.String(d.Id()),
 		}
@@ -264,11 +286,6 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 		}
 
-		if d.HasChange("max_entries") {
-			input.MaxEntries = aws.Int64(int64(d.Get("max_entries").(int)))
-			wait = true
-		}
-
 		_, err := conn.ModifyManagedPrefixListWithContext(ctx, input)
 
 		if err != nil {
@@ -282,10 +299,18 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	// Only decrease MaxEntries after entry(s) have had opportunity to be removed
+	if maxEntryChangedDecrease {
+		err := updateMaxEntry(ctx, conn, d.Id(), newMaxEntryInt)
+		if err != nil {
+			return diag.Errorf("updating EC2 Managed Prefix List (%s) decreased MaxEntries : %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Managed Prefix List (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -294,7 +319,7 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Managed Prefix List: %s", d.Id())
 	_, err := conn.DeleteManagedPrefixListWithContext(ctx, &ec2.DeleteManagedPrefixListInput{
@@ -311,6 +336,25 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 
 	if _, err := WaitManagedPrefixListDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for EC2 Managed Prefix List (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func updateMaxEntry(ctx context.Context, conn *ec2.EC2, id string, maxEntries int64) error {
+	_, err := conn.ModifyManagedPrefixListWithContext(ctx, &ec2.ModifyManagedPrefixListInput{
+		PrefixListId: aws.String(id),
+		MaxEntries:   aws.Int64(maxEntries),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+	}
+
+	_, err = WaitManagedPrefixListModified(ctx, conn, id)
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
 	}
 
 	return nil

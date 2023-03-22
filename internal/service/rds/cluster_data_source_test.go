@@ -11,12 +11,13 @@ import (
 )
 
 func TestAccRDSClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -29,6 +30,9 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "database_name", resourceName, "database_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_mode", resourceName, "engine_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "master_username"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),

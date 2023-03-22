@@ -1,19 +1,22 @@
 package appmesh
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_appmesh_route")
 func DataSourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRouteRead,
+		ReadWithoutTimeout: dataSourceRouteRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -569,8 +572,9 @@ func DataSourceRouteHTTPRouteSchema() *schema.Schema {
 	}
 }
 
-func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeRouteInput{
@@ -585,7 +589,7 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeRoute(req)
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: %s", err)
 	}
 
 	arn := aws.StringValue(resp.Route.Metadata.Arn)
@@ -603,18 +607,18 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = d.Set("spec", flattenRouteSpec(resp.Route.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh Route (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

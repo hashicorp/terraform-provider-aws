@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_lambda_function_url")
 func ResourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionURLCreate,
@@ -113,7 +114,7 @@ func ResourceFunctionURL() *schema.Resource {
 }
 
 func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -169,7 +170,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -218,7 +219,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -241,6 +242,8 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("cors") {
 		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.Cors = &lambda.Cors{}
 		}
 	}
 
@@ -255,7 +258,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 

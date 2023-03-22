@@ -2,9 +2,13 @@ package medialive_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccMediaLive_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Multiplex": {
 			"basic":      testAccMultiplex_basic,
@@ -13,17 +17,12 @@ func TestAccMediaLive_serial(t *testing.T) {
 			"updateTags": testAccMultiplex_updateTags,
 			"start":      testAccMultiplex_start,
 		},
+		"MultiplexProgram": {
+			"basic":      testAccMultiplexProgram_basic,
+			"update":     testAccMultiplexProgram_update,
+			"disappears": testAccMultiplexProgram_disappears,
+		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

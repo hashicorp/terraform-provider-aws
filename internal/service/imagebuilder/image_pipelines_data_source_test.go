@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccImageBuilderImagePipelinesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_pipelines.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImagePipelineDestroy,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelinesDataSourceConfig_filter(rName),

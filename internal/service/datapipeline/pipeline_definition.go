@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_datapipeline_pipeline_definition")
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePipelineDefinitionPut,
-		ReadContext:   resourcePipelineDefinitionRead,
-		UpdateContext: resourcePipelineDefinitionPut,
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourcePipelineDefinitionPut,
+		ReadWithoutTimeout:   resourcePipelineDefinitionRead,
+		UpdateWithoutTimeout: resourcePipelineDefinitionPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -129,7 +130,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.PutPipelineDefinitionInput{
@@ -194,7 +195,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
 	}

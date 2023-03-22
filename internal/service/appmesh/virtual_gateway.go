@@ -1,6 +1,7 @@
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,24 +10,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appmesh_virtual_gateway")
 func ResourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVirtualGatewayCreate,
-		Read:   resourceVirtualGatewayRead,
-		Update: resourceVirtualGatewayUpdate,
-		Delete: resourceVirtualGatewayDelete,
+		CreateWithoutTimeout: resourceVirtualGatewayCreate,
+		ReadWithoutTimeout:   resourceVirtualGatewayRead,
+		UpdateWithoutTimeout: resourceVirtualGatewayUpdate,
+		DeleteWithoutTimeout: resourceVirtualGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceVirtualGatewayImport,
+			StateContext: resourceVirtualGatewayImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -278,7 +283,6 @@ func ResourceVirtualGateway() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
@@ -302,11 +306,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http": {
@@ -329,11 +328,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http2": {
@@ -349,11 +343,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
 													},
 												},
 											},
@@ -462,11 +451,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"file": {
@@ -489,11 +473,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"sds": {
@@ -508,11 +487,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																			Required: true,
 																		},
 																	},
-																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
 																},
 															},
 														},
@@ -580,10 +554,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																					},
 																				},
 																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
-																			},
 																		},
 
 																		"sds": {
@@ -599,10 +569,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																						ValidateFunc: validation.StringLenBetween(1, 255),
 																					},
 																				},
-																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
 																			},
 																		},
 																	},
@@ -639,6 +605,39 @@ func ResourceVirtualGateway() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"format": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"json": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"key": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																					"value": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 100),
+																					},
+																				},
+																			},
+																		},
+																		"text": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 1000),
+																		},
+																	},
+																},
+															},
 															"path": {
 																Type:         schema.TypeString,
 																Required:     true,
@@ -686,10 +685,11 @@ func ResourceVirtualGateway() *schema.Resource {
 	}
 }
 
-func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
@@ -702,28 +702,29 @@ func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual gateway: %s", input)
-	output, err := conn.CreateVirtualGateway(input)
+	output, err := conn.CreateVirtualGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating App Mesh virtual gateway: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VirtualGateway.Metadata.Uid))
 
-	return resourceVirtualGatewayRead(d, meta)
+	return append(diags, resourceVirtualGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var virtualGateway *appmesh.VirtualGatewayData
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		virtualGateway, err = FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = FindVirtualGateway(ctx, conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -737,37 +738,37 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		virtualGateway, err = FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = FindVirtualGateway(ctx, conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading App Mesh Virtual Gateway: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway: %s", err)
 	}
 
 	if virtualGateway == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("reading App Mesh Virtual Gateway: not found after creation")
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway: not found after creation")
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if aws.StringValue(virtualGateway.Status.Status) == appmesh.VirtualGatewayStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("reading App Mesh Virtual Gateway: %s after creation", aws.StringValue(virtualGateway.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway: %s after creation", aws.StringValue(virtualGateway.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(virtualGateway.Metadata.Arn)
@@ -780,31 +781,32 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec))
 	if err != nil {
-		return fmt.Errorf("setting spec: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for App Mesh virtual gateway (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh virtual gateway (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualGatewayInput{
@@ -817,10 +819,10 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh virtual gateway: %s", input)
-		_, err := conn.UpdateVirtualGateway(input)
+		_, err := conn.UpdateVirtualGatewayWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating App Mesh virtual gateway (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual gateway (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -828,35 +830,42 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating App Mesh virtual gateway (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual gateway (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceVirtualGatewayRead(d, meta)
+	return append(diags, resourceVirtualGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual gateway (%s)", d.Id())
-	_, err := conn.DeleteVirtualGateway(&appmesh.DeleteVirtualGatewayInput{
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
+	input := &appmesh.DeleteVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualGatewayWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting App Mesh virtual gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Virtual Gateway (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name'", d.Id())
@@ -866,9 +875,9 @@ func resourceVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual gateway %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	virtualGateway, err := FindVirtualGateway(conn, mesh, name, "")
+	virtualGateway, err := FindVirtualGateway(ctx, conn, mesh, name, "")
 
 	if err != nil {
 		return nil, err
@@ -1142,6 +1151,30 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mFile := vFile[0].(map[string]interface{})
 
+				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+					format := &appmesh.LoggingFormat{}
+
+					mFormat := vFormat[0].(map[string]interface{})
+
+					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+						jsonFormatRefs := []*appmesh.JsonFormatRef{}
+						for _, vJsonFormatRef := range vJsonFormatRefs {
+							mJsonFormatRef := &appmesh.JsonFormatRef{
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+							}
+							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
+						}
+						format.Json = jsonFormatRefs
+					}
+
+					if vText, ok := mFormat["text"].(string); ok && vText != "" {
+						format.Text = aws.String(vText)
+					}
+
+					file.Format = format
+				}
+
 				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
@@ -1308,142 +1341,143 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
 	}
 
-	if spec.Listeners != nil && spec.Listeners[0] != nil {
-		// Per schema definition, set at most 1 Listener
-		listener := spec.Listeners[0]
-		mListener := map[string]interface{}{}
+	if spec.Listeners != nil && len(spec.Listeners) > 0 {
+		var mListeners []interface{}
+		for _, listener := range spec.Listeners {
+			mListener := map[string]interface{}{}
 
-		if connectionPool := listener.ConnectionPool; connectionPool != nil {
-			mConnectionPool := map[string]interface{}{}
+			if connectionPool := listener.ConnectionPool; connectionPool != nil {
+				mConnectionPool := map[string]interface{}{}
 
-			if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
-				mGrpcConnectionPool := map[string]interface{}{
-					"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
-				}
-				mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
-			}
-
-			if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
-				mHttpConnectionPool := map[string]interface{}{
-					"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
-					"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
-				}
-				mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
-			}
-
-			if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
-				mHttp2ConnectionPool := map[string]interface{}{
-					"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
-				}
-				mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
-			}
-
-			mListener["connection_pool"] = []interface{}{mConnectionPool}
-		}
-
-		if healthCheck := listener.HealthCheck; healthCheck != nil {
-			mHealthCheck := map[string]interface{}{
-				"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
-				"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
-				"path":                aws.StringValue(healthCheck.Path),
-				"port":                int(aws.Int64Value(healthCheck.Port)),
-				"protocol":            aws.StringValue(healthCheck.Protocol),
-				"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
-				"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
-			}
-			mListener["health_check"] = []interface{}{mHealthCheck}
-		}
-
-		if portMapping := listener.PortMapping; portMapping != nil {
-			mPortMapping := map[string]interface{}{
-				"port":     int(aws.Int64Value(portMapping.Port)),
-				"protocol": aws.StringValue(portMapping.Protocol),
-			}
-			mListener["port_mapping"] = []interface{}{mPortMapping}
-		}
-
-		if tls := listener.Tls; tls != nil {
-			mTls := map[string]interface{}{
-				"mode": aws.StringValue(tls.Mode),
-			}
-
-			if certificate := tls.Certificate; certificate != nil {
-				mCertificate := map[string]interface{}{}
-
-				if acm := certificate.Acm; acm != nil {
-					mAcm := map[string]interface{}{
-						"certificate_arn": aws.StringValue(acm.CertificateArn),
+				if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
+					mGrpcConnectionPool := map[string]interface{}{
+						"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
 					}
-
-					mCertificate["acm"] = []interface{}{mAcm}
+					mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
 				}
 
-				if file := certificate.File; file != nil {
-					mFile := map[string]interface{}{
-						"certificate_chain": aws.StringValue(file.CertificateChain),
-						"private_key":       aws.StringValue(file.PrivateKey),
+				if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
+					mHttpConnectionPool := map[string]interface{}{
+						"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
+						"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
 					}
-
-					mCertificate["file"] = []interface{}{mFile}
+					mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
 				}
 
-				if sds := certificate.Sds; sds != nil {
-					mSds := map[string]interface{}{
-						"secret_name": aws.StringValue(sds.SecretName),
+				if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
+					mHttp2ConnectionPool := map[string]interface{}{
+						"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
 					}
-
-					mCertificate["sds"] = []interface{}{mSds}
+					mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
 				}
 
-				mTls["certificate"] = []interface{}{mCertificate}
+				mListener["connection_pool"] = []interface{}{mConnectionPool}
 			}
 
-			if validation := tls.Validation; validation != nil {
-				mValidation := map[string]interface{}{}
+			if healthCheck := listener.HealthCheck; healthCheck != nil {
+				mHealthCheck := map[string]interface{}{
+					"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
+					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
+					"path":                aws.StringValue(healthCheck.Path),
+					"port":                int(aws.Int64Value(healthCheck.Port)),
+					"protocol":            aws.StringValue(healthCheck.Protocol),
+					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
+					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
+				}
+				mListener["health_check"] = []interface{}{mHealthCheck}
+			}
 
-				if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
-					mSubjectAlternativeNames := map[string]interface{}{}
+			if portMapping := listener.PortMapping; portMapping != nil {
+				mPortMapping := map[string]interface{}{
+					"port":     int(aws.Int64Value(portMapping.Port)),
+					"protocol": aws.StringValue(portMapping.Protocol),
+				}
+				mListener["port_mapping"] = []interface{}{mPortMapping}
+			}
 
-					if match := subjectAlternativeNames.Match; match != nil {
-						mMatch := map[string]interface{}{
-							"exact": flex.FlattenStringSet(match.Exact),
+			if tls := listener.Tls; tls != nil {
+				mTls := map[string]interface{}{
+					"mode": aws.StringValue(tls.Mode),
+				}
+
+				if certificate := tls.Certificate; certificate != nil {
+					mCertificate := map[string]interface{}{}
+
+					if acm := certificate.Acm; acm != nil {
+						mAcm := map[string]interface{}{
+							"certificate_arn": aws.StringValue(acm.CertificateArn),
 						}
 
-						mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+						mCertificate["acm"] = []interface{}{mAcm}
 					}
 
-					mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
-				}
-
-				if trust := validation.Trust; trust != nil {
-					mTrust := map[string]interface{}{}
-
-					if file := trust.File; file != nil {
+					if file := certificate.File; file != nil {
 						mFile := map[string]interface{}{
 							"certificate_chain": aws.StringValue(file.CertificateChain),
+							"private_key":       aws.StringValue(file.PrivateKey),
 						}
 
-						mTrust["file"] = []interface{}{mFile}
+						mCertificate["file"] = []interface{}{mFile}
 					}
 
-					if sds := trust.Sds; sds != nil {
+					if sds := certificate.Sds; sds != nil {
 						mSds := map[string]interface{}{
 							"secret_name": aws.StringValue(sds.SecretName),
 						}
 
-						mTrust["sds"] = []interface{}{mSds}
+						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mValidation["trust"] = []interface{}{mTrust}
+					mTls["certificate"] = []interface{}{mCertificate}
 				}
 
-				mTls["validation"] = []interface{}{mValidation}
+				if validation := tls.Validation; validation != nil {
+					mValidation := map[string]interface{}{}
+
+					if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
+						mSubjectAlternativeNames := map[string]interface{}{}
+
+						if match := subjectAlternativeNames.Match; match != nil {
+							mMatch := map[string]interface{}{
+								"exact": flex.FlattenStringSet(match.Exact),
+							}
+
+							mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+						}
+
+						mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+					}
+
+					if trust := validation.Trust; trust != nil {
+						mTrust := map[string]interface{}{}
+
+						if file := trust.File; file != nil {
+							mFile := map[string]interface{}{
+								"certificate_chain": aws.StringValue(file.CertificateChain),
+							}
+
+							mTrust["file"] = []interface{}{mFile}
+						}
+
+						if sds := trust.Sds; sds != nil {
+							mSds := map[string]interface{}{
+								"secret_name": aws.StringValue(sds.SecretName),
+							}
+
+							mTrust["sds"] = []interface{}{mSds}
+						}
+
+						mValidation["trust"] = []interface{}{mTrust}
+					}
+
+					mTls["validation"] = []interface{}{mValidation}
+				}
+
+				mListener["tls"] = []interface{}{mTls}
 			}
-
-			mListener["tls"] = []interface{}{mTls}
+			mListeners = append(mListeners, mListener)
 		}
-
-		mSpec["listener"] = []interface{}{mListener}
+		mSpec["listener"] = mListeners
 	}
 
 	if logging := spec.Logging; logging != nil {
@@ -1453,11 +1487,36 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 			mAccessLog := map[string]interface{}{}
 
 			if file := accessLog.File; file != nil {
-				mAccessLog["file"] = []interface{}{
-					map[string]interface{}{
-						"path": aws.StringValue(file.Path),
-					},
+				mFile := map[string]interface{}{}
+
+				if format := file.Format; format != nil {
+					mFormat := map[string]interface{}{}
+
+					if jsons := format.Json; jsons != nil {
+						vJsons := []interface{}{}
+
+						for _, j := range format.Json {
+							mJson := map[string]interface{}{
+								"key":   aws.StringValue(j.Key),
+								"value": aws.StringValue(j.Value),
+							}
+
+							vJsons = append(vJsons, mJson)
+						}
+
+						mFormat["json"] = vJsons
+					}
+
+					if text := format.Text; text != nil {
+						mFormat["text"] = aws.StringValue(text)
+					}
+
+					mFile["format"] = []interface{}{mFormat}
 				}
+
+				mFile["path"] = aws.StringValue(file.Path)
+
+				mAccessLog["file"] = []interface{}{mFile}
 			}
 
 			mLogging["access_log"] = []interface{}{mAccessLog}

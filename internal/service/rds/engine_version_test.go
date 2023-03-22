@@ -61,6 +61,8 @@ func TestCompareActualEngineVersion(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			r := ResourceCluster()
 			d := r.Data(nil)
 			d.Set("engine_version", test.configuredVersion)

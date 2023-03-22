@@ -9,6 +9,8 @@ import (
 )
 
 func TestExpandParameters(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":         "character_set_client",
@@ -16,7 +18,7 @@ func TestExpandParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters := ExpandParameters(expanded)
+	parameters := expandParameters(expanded)
 
 	expected := &rds.Parameter{
 		ParameterName:  aws.String("character_set_client"),
@@ -33,6 +35,8 @@ func TestExpandParameters(t *testing.T) {
 }
 
 func TestFlattenParameters(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  []*rds.Parameter
 		Output []map[string]interface{}
@@ -70,7 +74,7 @@ func TestFlattenParameters(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := FlattenParameters(tc.Input)
+		output := flattenParameters(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}

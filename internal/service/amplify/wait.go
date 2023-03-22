@@ -1,6 +1,7 @@
 package amplify
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -15,15 +16,15 @@ const (
 	domainAssociationVerifiedTimeout = 15 * time.Minute
 )
 
-func waitDomainAssociationCreated(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{amplify.DomainStatusCreating, amplify.DomainStatusInProgress, amplify.DomainStatusRequestingCertificate},
 		Target:  []string{amplify.DomainStatusPendingVerification, amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
-		Refresh: statusDomainAssociation(conn, appID, domainName),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: domainAssociationCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*amplify.DomainAssociation); ok {
 		if status := aws.StringValue(v.DomainStatus); status == amplify.DomainStatusFailed {
@@ -36,15 +37,15 @@ func waitDomainAssociationCreated(conn *amplify.Amplify, appID, domainName strin
 	return nil, err
 }
 
-func waitDomainAssociationVerified(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) { //nolint:unparam
+func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{amplify.DomainStatusUpdating, amplify.DomainStatusInProgress, amplify.DomainStatusPendingVerification},
 		Target:  []string{amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
-		Refresh: statusDomainAssociation(conn, appID, domainName),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: domainAssociationVerifiedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*amplify.DomainAssociation); ok {
 		if v != nil && aws.StringValue(v.DomainStatus) == amplify.DomainStatusFailed {

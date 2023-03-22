@@ -11,12 +11,13 @@ import (
 )
 
 func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -32,6 +33,8 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "transit_gateway_attachment_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
 				),
 			},
 		},
@@ -39,12 +42,13 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T) {
 }
 
 func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -60,6 +64,8 @@ func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "transit_gateway_attachment_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
 				),
 			},
 		},

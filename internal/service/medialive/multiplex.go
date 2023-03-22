@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_medialive_multiplex")
 func ResourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
@@ -104,7 +105,7 @@ const (
 )
 
 func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(resource.UniqueId()),
@@ -117,7 +118,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -148,7 +149,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindMultiplexByID(ctx, conn, d.Id())
 
@@ -191,7 +192,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
@@ -234,7 +235,6 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -249,7 +249,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
 

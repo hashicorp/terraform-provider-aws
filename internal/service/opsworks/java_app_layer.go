@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_java_app_layer")
 func ResourceJavaAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeJavaApp,
@@ -39,5 +40,5 @@ func ResourceJavaAppLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

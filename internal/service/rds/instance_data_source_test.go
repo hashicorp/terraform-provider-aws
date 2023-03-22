@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRDSInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -20,7 +21,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -38,11 +39,14 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", resourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_type", resourceName, "storage_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},

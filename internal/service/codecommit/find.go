@@ -1,6 +1,7 @@
 package codecommit
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,14 +11,14 @@ import (
 )
 
 // FindApprovalRuleTemplateAssociation validates that an approval rule template has the named associated repository
-func FindApprovalRuleTemplateAssociation(conn *codecommit.CodeCommit, approvalRuleTemplateName, repositoryName string) error {
+func FindApprovalRuleTemplateAssociation(ctx context.Context, conn *codecommit.CodeCommit, approvalRuleTemplateName, repositoryName string) error {
 	input := &codecommit.ListRepositoriesForApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
 	}
 
 	found := false
 
-	err := conn.ListRepositoriesForApprovalRuleTemplatePages(input, func(page *codecommit.ListRepositoriesForApprovalRuleTemplateOutput, lastPage bool) bool {
+	err := conn.ListRepositoriesForApprovalRuleTemplatePagesWithContext(ctx, input, func(page *codecommit.ListRepositoriesForApprovalRuleTemplateOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

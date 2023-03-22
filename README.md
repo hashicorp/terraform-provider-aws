@@ -1,6 +1,10 @@
 <!-- markdownlint-disable first-line-h1 no-inline-html -->
 <a href="https://terraform.io">
-    <img src=".github/terraform_logo.svg" alt="Terraform logo" title="Terraform" align="right" height="50" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/terraform_logo_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset=".github/terraform_logo_light.svg">
+    <img src=".github/terraform_logo_light.svg" alt="Terraform logo" title="Terraform" align="right" height="50">
+  </picture>
 </a>
 
 # Terraform AWS Provider
@@ -17,7 +21,6 @@ The [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/
 - [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/)
 - [Tutorials](https://learn.hashicorp.com/collections/terraform/aws-get-started)
 - [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
-- [gitter](https://gitter.im/hashicorp-terraform/Lobby)
 - [Google Groups](http://groups.google.com/group/terraform-tool)
 
 _**Please note:** We take Terraform's security and our users' trust very seriously. If you believe you have found a security issue in the Terraform AWS Provider, please responsibly disclose it by contacting us at security@hashicorp.com._

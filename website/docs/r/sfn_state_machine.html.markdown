@@ -101,7 +101,8 @@ The following arguments are supported:
 
 * `definition` - (Required) The [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) definition of the state machine.
 * `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
-* `name` - (Required) The name of the state machine. To enable logging with CloudWatch Logs, the name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`.
+* `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tracing_configuration` - (Optional) Selects whether AWS X-Ray tracing is enabled.

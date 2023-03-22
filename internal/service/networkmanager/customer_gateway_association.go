@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_customer_gateway_association")
 func ResourceCustomerGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayAssociationCreate,
@@ -25,7 +26,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomerGatewayAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -60,7 +61,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 }
 
 func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	customerGatewayARN := d.Get("customer_gateway_arn").(string)
@@ -76,7 +77,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Customer Gateway Association: %s", input)
-	_, err := tfresource.RetryWhenContext(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateCustomerGatewayWithContext(ctx, input)
 		},
@@ -115,7 +116,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
@@ -144,7 +145,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 

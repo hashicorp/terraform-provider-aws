@@ -1,6 +1,8 @@
 package events
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	DefaultEventBusName = "default"

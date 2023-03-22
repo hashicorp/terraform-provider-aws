@@ -17,6 +17,11 @@ in-line. At this time you cannot use a Managed Prefix List with in-line rules in
 conjunction with any Managed Prefix List Entry resources. Doing so will cause a conflict
 of entries and will overwrite entries.
 
+~> **NOTE on Managed Prefix Lists with many entries:**  To improved execution times on larger
+updates, if you plan to create a prefix list with more than 100 entries, it is **recommended**
+that you use the inline `entry` block as part of the [Managed Prefix List resource](ec2_managed_prefix_list.html)
+resource instead.
+
 ## Example Usage
 
 Basic usage

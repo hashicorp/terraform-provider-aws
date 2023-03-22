@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_php_app_layer")
 func ResourcePHPAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypePhpApp,
@@ -13,5 +14,5 @@ func ResourcePHPAppLayer() *schema.Resource {
 		Attributes: map[string]*opsworksLayerTypeAttribute{},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

@@ -56,13 +56,13 @@ The following arguments are required:
 * `name` - (Required) Unique name for the Cost Category.
 * `rule` - (Required) Configuration block for the Cost Category rules used to categorize costs. See below.
 * `rule_version` - (Required) Rule schema version in this particular Cost Category.
+* `effective_start`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 
 The following arguments are optional:
 
 * `default_value` - (Optional) Default value for the cost category.
 * `split_charge_rule` - (Optional) Configuration block for the split charge rules used to allocate your charges between your Cost Category values. See below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 
 ### `rule`
 
@@ -83,7 +83,7 @@ The following arguments are optional:
 * `dimension` - (Optional) Configuration block for the specific `Dimension` to use for `Expression`. See below.
 * `not` - (Optional) Return results that match both `Dimension` object.
 * `or` - (Optional) Return results that match both `Dimension` object.
-* `tag` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
+* `tags` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `cost_category`
 
@@ -97,7 +97,7 @@ The following arguments are optional:
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
-### `tag`
+### `tags`
 
 * `key` - (Optional) Key for the tag.
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
@@ -121,7 +121,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cost category.
 * `effective_end` - Effective end data of your Cost Category.
-* `effective_start` - Effective state data of your Cost Category.
 * `id` - Unique ID of the cost category.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
