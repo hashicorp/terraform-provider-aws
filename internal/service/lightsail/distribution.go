@@ -111,7 +111,7 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies_allow_list": {
-										Type:        schema.TypeList,
+										Type:        schema.TypeSet,
 										Optional:    true,
 										Description: "The specific cookies to forward to your distribution's origin.",
 										Elem:        &schema.Schema{Type: schema.TypeString},
@@ -133,7 +133,7 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"headers_allow_list": {
-										Type:        schema.TypeList,
+										Type:        schema.TypeSet,
 										Optional:    true,
 										Description: "The specific headers to forward to your distribution's origin.",
 										Elem: &schema.Schema{
@@ -163,7 +163,7 @@ func ResourceDistribution() *schema.Resource {
 										Description: "Indicates whether the distribution forwards and caches based on query strings.",
 									},
 									"query_strings_allowed_list": {
-										Type:        schema.TypeList,
+										Type:        schema.TypeSet,
 										Optional:    true,
 										Description: "The specific query strings that the distribution forwards to the origin.",
 										Elem:        &schema.Schema{Type: schema.TypeString},
@@ -330,7 +330,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.CacheBehaviorSettings = expandCacheSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -494,6 +494,24 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		bundleUpdate = true
 	}
 
+	if d.HasChange("ip_address_type") {
+		out, err := conn.SetIpAddressTypeWithContext(ctx, &lightsail.SetIpAddressTypeInput{
+			ResourceName:  aws.String(d.Id()),
+			ResourceType:  aws.String("Distribution"),
+			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
+		})
+
+		if err != nil {
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeSetIpAddressType, ResNameDistribution, d.Id(), err)
+		}
+
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetIpAddressType, ResNameDistribution, d.Id())
+
+		if diag != nil {
+			return diag
+		}
+	}
+
 	if !update && !bundleUpdate && !d.HasChange("tags_all") {
 		return nil
 	}
@@ -593,7 +611,7 @@ func flattenCookieObject(apiObject *lightsail.CookieObject) map[string]interface
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.CookiesAllowList; v != nil {
+	if v := apiObject.CookiesAllowList; v != nil && len(v) > 0 {
 		m["cookies_allow_list"] = v
 	}
 
@@ -611,7 +629,7 @@ func flattenHeaderObject(apiObject *lightsail.HeaderObject) map[string]interface
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.HeadersAllowList; v != nil {
+	if v := apiObject.HeadersAllowList; v != nil && len(v) > 0 {
 		m["headers_allow_list"] = v
 	}
 
@@ -629,7 +647,7 @@ func flattenQueryStringObject(apiObject *lightsail.QueryStringObject) map[string
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.QueryStringsAllowList; v != nil {
+	if v := apiObject.QueryStringsAllowList; v != nil && len(v) > 0 {
 		m["query_strings_allowed_list"] = v
 	}
 
@@ -851,8 +869,8 @@ func expandCookieObject(tfMap map[string]interface{}) *lightsail.CookieObject {
 
 	a := &lightsail.CookieObject{}
 
-	if v, ok := tfMap["cookies_allow_list"]; ok && len(v.([]interface{})) > 0 {
-		a.CookiesAllowList = expandAllowList(v.([]interface{}))
+	if v, ok := tfMap["cookies_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+		a.CookiesAllowList = expandAllowList(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
@@ -869,8 +887,8 @@ func expandHeaderObject(tfMap map[string]interface{}) *lightsail.HeaderObject {
 
 	a := &lightsail.HeaderObject{}
 
-	if v, ok := tfMap["headers_allow_list"]; ok && len(v.([]interface{})) > 0 {
-		a.HeadersAllowList = expandAllowList(v.([]interface{}))
+	if v, ok := tfMap["headers_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+		a.HeadersAllowList = expandAllowList(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
@@ -887,8 +905,8 @@ func expandQueryStringObject(tfMap map[string]interface{}) *lightsail.QueryStrin
 
 	a := &lightsail.QueryStringObject{}
 
-	if v, ok := tfMap["query_string_allow_list"]; ok && len(v.([]interface{})) > 0 {
-		a.QueryStringsAllowList = expandAllowList(v.([]interface{}))
+	if v, ok := tfMap["query_string_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+		a.QueryStringsAllowList = expandAllowList(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["option"].(bool); ok {
