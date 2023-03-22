@@ -124,67 +124,29 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeMeshInput{
-		MeshName: aws.String(d.Id()),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
+	}, d.IsNewResource())
 
-	var resp *appmesh.DescribeMeshOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.DescribeMeshWithContext(ctx, req)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeMeshWithContext(ctx, req)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.Mesh == nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: empty response")
-	}
-
-	if aws.StringValue(resp.Mesh.Status.Status) == appmesh.MeshStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s after creation", aws.StringValue(resp.Mesh.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
-	d.Set("name", resp.Mesh.MeshName)
+	mesh := outputRaw.(*appmesh.MeshData)
+	arn := aws.StringValue(mesh.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.Mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
-	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
+	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
+	d.Set("name", mesh.MeshName)
+	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	err = d.Set("spec", flattenMeshSpec(mesh.Spec))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -192,7 +154,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh service mesh (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -256,4 +218,49 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func FindMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owner string) (*appmesh.MeshData, error) {
+	input := &appmesh.DescribeMeshInput{
+		MeshName: aws.String(name),
+	}
+	if owner != "" {
+		input.MeshOwner = aws.String(owner)
+	}
+
+	output, err := findMesh(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.MeshStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findMesh(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeMeshInput) (*appmesh.MeshData, error) {
+	output, err := conn.DescribeMeshWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Mesh == nil || output.Mesh.Metadata == nil || output.Mesh.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Mesh, nil
 }
