@@ -823,6 +823,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"SpotInstances",
 		"Nodegroups",
 		"Roles",
+		"Subnets",
 	}
 
 	return validation.All(
