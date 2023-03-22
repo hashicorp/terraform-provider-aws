@@ -70,6 +70,20 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"allow_external_data_filtering": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"external_data_filtering_allow_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"authorized_session_tag_value_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -107,6 +121,9 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
+	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 
 	return diags
 }
