@@ -14,7 +14,7 @@ Terraform resource for managing an AWS Lightsail Distribution.
 
 ### Basic Usage
 
-Below is a basic example
+Below is a basic example with a bucket as an origin.
 
 ```terraform
 resource "aws_lightsail_bucket" "test" {
@@ -32,15 +32,113 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-      cookies_allow_list = []
+      option = "none"
     }
     forwarded_headers {
-      headers_allow_list = []
+      option = "default"
     }
     forwarded_query_strings {
-      query_strings_allowed_list = []
+      option = false
     }
+  }
+}
+```
+
+### instance origin example
+
+Below is an example of an instance as the origin.
+
+```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_static_ip_attachment" "test" {
+  static_ip_name = aws_lightsail_static_ip.test.name
+  instance_name  = aws_lightsail_instance.test.name
+}
+
+resource "aws_lightsail_static_ip" "test" {
+  name = "test-static-ip"
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = "test-instance"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "micro_1_0"
+}
+
+resource "aws_lightsail_distribution" "test" {
+  name       = "test-distribution"
+  depends_on = [aws_lightsail_static_ip_attachment.test]
+  bundle_id  = "small_1_0"
+  origin {
+    name        = aws_lightsail_instance.test.name
+    region_name = data.aws_availability_zones.available.id
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+}
+```
+
+### lb origin example
+
+Below is an example with a load balancer as an origin
+
+```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_lb" "test" {
+  name              = "test-load-balancer"
+  health_check_path = "/"
+  instance_port     = "80"
+  tags = {
+    foo = "bar"
+  }
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = "test-instance"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+}
+
+resource "aws_lightsail_lb_attachment" "test" {
+  lb_name       = aws_lightsail_lb.test.name
+  instance_name = aws_lightsail_instance.test.name
+}
+
+resource "aws_lightsail_distribution" "test" {
+  name       = "test-distribution"
+  depends_on = [aws_lightsail_lb_attachment.test]
+  bundle_id  = "small_1_0"
+  origin {
+    name        = aws_lightsail_lb.test.name
+    region_name = data.aws_availability_zones.available.id
+  }
+  default_cache_behavior {
+    behavior = "cache"
   }
 }
 ```
@@ -79,28 +177,28 @@ The following arguments are optional:
 
 ### cache_behavior_settings
 
-* `allowed_http_methods` - (Optional) The HTTP methods that are processed and forwarded to the distribution's origin. Default: `GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE`.
-* `cached_http_methods` - (Optional) The HTTP method responses that are cached by your distribution. Default: `GET,HEAD`.
-* `default_ttl` - (Optional) The default amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the content has been updated. Default: `86400`.
+* `allowed_http_methods` - (Optional) The HTTP methods that are processed and forwarded to the distribution's origin.
+* `cached_http_methods` - (Optional) The HTTP method responses that are cached by your distribution.
+* `default_ttl` - (Optional) The default amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the content has been updated.
 * `forwarded_cookies` - (Required) An object that describes the cookies that are forwarded to the origin. Your content is cached based on the cookies that are forwarded. [Detailed below](#forwarded_cookies)
 * `forwarded_headers` - (Required) An object that describes the headers that are forwarded to the origin. Your content is cached based on the headers that are forwarded. [Detailed below](#forwarded_headers)
 * `forwarded_query_strings` - (Required) An object that describes the query strings that are forwarded to the origin. Your content is cached based on the query strings that are forwarded. [Detailed below](#forwarded_query_strings)
-* `maximum_ttl` - (Optional) The maximum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated. Default: `31536000`.
-* `minimum_ttl` - (Optional) The minimum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated. Default: `0`
+* `maximum_ttl` - (Optional) The maximum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.
+* `minimum_ttl` - (Optional) The minimum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.
 
 #### forwarded_cookies
 
 * `cookies_allow_list` - (Required) The specific cookies to forward to your distribution's origin.
-* `option` - (Optional) Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter. Default: `none`.
+* `option` - (Optional) Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter.
 
 #### forwarded_headers
 
 * `headers_allow_list` - (Required) The specific headers to forward to your distribution's origin.
-* `option` - (Optional) The headers that you want your distribution to forward to your origin and base caching on. Default `default`.
+* `option` - (Optional) The headers that you want your distribution to forward to your origin and base caching on.
 
 #### forwarded_query_strings
 
-* `option` - (Optional) Indicates whether the distribution forwards and caches based on query strings. Default: `false`.
+* `option` - (Optional) Indicates whether the distribution forwards and caches based on query strings.
 * `query_strings_allowed_list` - (Required) The specific query strings that the distribution forwards to the origin.
 
 ### cache_behavior
