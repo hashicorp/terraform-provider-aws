@@ -28,7 +28,6 @@ var (
 	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
-	contextOnly        = flag.Bool("ContextOnly", false, "whether to only generate Context-aware functions")
 
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
@@ -120,6 +119,7 @@ type TemplateData struct {
 	AWSService             string
 	AWSServiceIfacePackage string
 	ClientType             string
+	ProviderNameUpper      string
 	ServicePackage         string
 
 	GetTagFunc              string
@@ -154,11 +154,10 @@ type TemplateData struct {
 	UntagInTagsElem         string
 	UntagOp                 string
 	UpdateTagsFunc          string
-	ContextOnly             bool
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
-	ContextPkg      bool
+	ConnsPkg        bool
 	FmtPkg          bool
 	HelperSchemaPkg bool
 	SkipTypesImp    bool
@@ -199,6 +198,12 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	providerNameUpper, err := names.ProviderNameUpper(servicePackage)
+
+	if err != nil {
+		g.Fatalf("encountered: %s", err)
+	}
+
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -219,9 +224,10 @@ func main() {
 		AWSService:             awsPkg,
 		AWSServiceIfacePackage: awsIntfPkg,
 		ClientType:             clientType,
+		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags),
+		ConnsPkg:        *listTags || *updateTags,
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
 		SkipTypesImp:    *skipTypesImp,
@@ -259,7 +265,6 @@ func main() {
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
-		ContextOnly:             *contextOnly,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

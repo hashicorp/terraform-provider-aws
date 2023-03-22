@@ -9,10 +9,6 @@ issues:
     - linters:
         - unparam
       text: "always receives"
-    - path: _test\.go
-      linters:
-        - contextcheck
-        - errorlint
   max-per-linter: 0
   max-same-issues: 0
 
@@ -42,6 +38,7 @@ linters:
     - nolintlint
     - paralleltest
     - predeclared
+    - revive
     - staticcheck
     - stylecheck
     - tenv
@@ -116,6 +113,40 @@ linters-settings:
       - unparam
   predeclared:
     ignore: cap,close,copy,delete,len,new
+  revive:
+    # Recommended configuration.
+    # See https://github.com/mgechev/revive#recommended-configuration.
+    ignore-generated-header: true
+    severity: warning
+    confidence: 0.8
+    error-code: 0
+    warning-code: 0
+    rules:
+      - name: atomic
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: empty-block
+      - name: error-naming
+      - name: error-return
+      # - name: error-strings
+      - name: errorf
+      # - name: exported
+      # - name: if-return
+      # - name: increment-decrement
+      # - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      # - name: redefines-builtin-id
+      - name: superfluous-else
+      - name: time-naming
+      # - name: unexported-return
+      - name: unreachable-code
+      # - name: unused-parameter
+      - name: var-declaration
+      # - name: var-naming
   staticcheck:
     checks: ["all", "-SA1019"]
   stylecheck:

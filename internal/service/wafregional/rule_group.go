@@ -221,7 +221,11 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := DeleteRuleGroup(ctx, d.Id(), oldRules, conn, region)
 
-	return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rule Group (%s): %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rule Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func DeleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {

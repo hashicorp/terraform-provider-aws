@@ -21,7 +21,7 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_monitoring_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_monitoring_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
@@ -98,7 +98,7 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 	resourceName := "aws_sagemaker_monitoring_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
@@ -145,7 +145,7 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_monitoring_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),

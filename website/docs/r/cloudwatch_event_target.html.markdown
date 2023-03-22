@@ -271,14 +271,16 @@ resource "aws_api_gateway_stage" "example" {
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["events.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
@@ -462,7 +464,8 @@ The following arguments are optional:
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
-* `event_bus_name` - (Optional) The event bus to associate with the rule. If you omit this, the `default` event bus is used.
+* `event_bus_name` - (Optional) The name or ARN of the event bus to associate with the rule.
+  If you omit this, the `default` event bus is used.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
@@ -491,7 +494,7 @@ The following arguments are optional:
 ### dead_letter_config
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
-  
+
 ### ecs_target
 
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.

@@ -1257,6 +1257,78 @@ func FindInstanceTypeOfferings(ctx context.Context, conn *ec2.EC2, input *ec2.De
 	return output, nil
 }
 
+func FindPublicIPv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) (*ec2.PublicIpv4Pool, error) {
+	output, err := FindPublicIPv4Pools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindPublicIPv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
+	var output []*ec2.PublicIpv4Pool
+
+	err := conn.DescribePublicIpv4PoolsPagesWithContext(ctx, input, func(page *ec2.DescribePublicIpv4PoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.PublicIpv4Pools {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindPublicIPv4PoolByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.PublicIpv4Pool, error) {
+	input := &ec2.DescribePublicIpv4PoolsInput{
+		PoolIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindPublicIPv4Pool(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.PoolId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindLocalGatewayRouteTables(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 

@@ -1,18 +1,12 @@
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-{{- if not ( .ContextOnly ) }}
-func {{ .UpdateTagsFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags interface{}, newTags interface{}) error {
-	return {{ .UpdateTagsFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
-}
-{{- end }}
-func {{ if .ContextOnly }}{{ .UpdateTagsFunc }}{{ else }}{{ .UpdateTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }},
-{{- if  .TagTypeAddBoolElem -}}
-oldTagsSet interface{}, newTagsSet interface{}) error {
+{{if  .TagTypeAddBoolElem -}}
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any) error {
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 	newTags := KeyValueTags(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-{{- else -}}
-oldTagsMap interface{}, newTagsMap interface{}) error {
+{{- else }}
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
@@ -133,4 +127,8 @@ oldTagsMap interface{}, newTagsMap interface{}) error {
 	{{- end }}
 
 	return nil
+}
+
+func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }

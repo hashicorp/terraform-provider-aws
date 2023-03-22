@@ -22,7 +22,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -73,7 +73,7 @@ func TestAccSageMakerDataQualityJobDefinition_appSpecificationOptional(t *testin
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -105,7 +105,7 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -168,7 +168,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformCsvHeader(t *testing
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -198,7 +198,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJson(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -227,7 +227,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJsonLine(t *testing.
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -259,7 +259,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformOptional(t *testing.
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -290,7 +290,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpointOptional(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -321,7 +321,7 @@ func TestAccSageMakerDataQualityJobDefinition_ouputConfigKmsKeyId(t *testing.T) 
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -349,7 +349,7 @@ func TestAccSageMakerDataQualityJobDefinition_outputConfigOptional(t *testing.T)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -380,7 +380,7 @@ func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKmsKeyId(t *test
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -409,7 +409,7 @@ func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -437,7 +437,7 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -467,7 +467,7 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigTrafficEncryption(t *
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -495,7 +495,7 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigEnableNetworkIsolatio
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -523,7 +523,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
@@ -568,7 +568,7 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),

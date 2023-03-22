@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/batch/batchiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -17,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn batchiface.BatchAPI, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn batchiface.BatchAPI, identifier, key string) (*string, error) {
 	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
@@ -48,6 +49,10 @@ func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
+	return ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+}
+
 // map[string]*string handling
 
 // Tags returns batch service tags.
@@ -63,7 +68,8 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 // UpdateTags updates batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,4 +100,8 @@ func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier, oldTags, newTags)
 }

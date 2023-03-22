@@ -5,57 +5,139 @@ package sagemaker
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_sagemaker_prebuilt_ecr_image": DataSourcePrebuiltECRImage,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourcePrebuiltECRImage,
+			TypeName: "aws_sagemaker_prebuilt_ecr_image",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_sagemaker_app":                                       ResourceApp,
-		"aws_sagemaker_app_image_config":                          ResourceAppImageConfig,
-		"aws_sagemaker_code_repository":                           ResourceCodeRepository,
-		"aws_sagemaker_data_quality_job_definition":               ResourceDataQualityJobDefinition,
-		"aws_sagemaker_device":                                    ResourceDevice,
-		"aws_sagemaker_device_fleet":                              ResourceDeviceFleet,
-		"aws_sagemaker_domain":                                    ResourceDomain,
-		"aws_sagemaker_endpoint":                                  ResourceEndpoint,
-		"aws_sagemaker_endpoint_configuration":                    ResourceEndpointConfiguration,
-		"aws_sagemaker_feature_group":                             ResourceFeatureGroup,
-		"aws_sagemaker_flow_definition":                           ResourceFlowDefinition,
-		"aws_sagemaker_human_task_ui":                             ResourceHumanTaskUI,
-		"aws_sagemaker_image":                                     ResourceImage,
-		"aws_sagemaker_image_version":                             ResourceImageVersion,
-		"aws_sagemaker_model":                                     ResourceModel,
-		"aws_sagemaker_model_package_group":                       ResourceModelPackageGroup,
-		"aws_sagemaker_model_package_group_policy":                ResourceModelPackageGroupPolicy,
-		"aws_sagemaker_monitoring_schedule":                       ResourceMonitoringSchedule,
-		"aws_sagemaker_notebook_instance":                         ResourceNotebookInstance,
-		"aws_sagemaker_notebook_instance_lifecycle_configuration": ResourceNotebookInstanceLifeCycleConfiguration,
-		"aws_sagemaker_project":                                   ResourceProject,
-		"aws_sagemaker_servicecatalog_portfolio_status":           ResourceServicecatalogPortfolioStatus,
-		"aws_sagemaker_space":                                     ResourceSpace,
-		"aws_sagemaker_studio_lifecycle_config":                   ResourceStudioLifecycleConfig,
-		"aws_sagemaker_user_profile":                              ResourceUserProfile,
-		"aws_sagemaker_workforce":                                 ResourceWorkforce,
-		"aws_sagemaker_workteam":                                  ResourceWorkteam,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceApp,
+			TypeName: "aws_sagemaker_app",
+		},
+		{
+			Factory:  ResourceAppImageConfig,
+			TypeName: "aws_sagemaker_app_image_config",
+		},
+		{
+			Factory:  ResourceCodeRepository,
+			TypeName: "aws_sagemaker_code_repository",
+		},
+		{
+			Factory:  ResourceDataQualityJobDefinition,
+			TypeName: "aws_sagemaker_data_quality_job_definition",
+		},
+		{
+			Factory:  ResourceDevice,
+			TypeName: "aws_sagemaker_device",
+		},
+		{
+			Factory:  ResourceDeviceFleet,
+			TypeName: "aws_sagemaker_device_fleet",
+		},
+		{
+			Factory:  ResourceDomain,
+			TypeName: "aws_sagemaker_domain",
+		},
+		{
+			Factory:  ResourceEndpoint,
+			TypeName: "aws_sagemaker_endpoint",
+		},
+		{
+			Factory:  ResourceEndpointConfiguration,
+			TypeName: "aws_sagemaker_endpoint_configuration",
+		},
+		{
+			Factory:  ResourceFeatureGroup,
+			TypeName: "aws_sagemaker_feature_group",
+		},
+		{
+			Factory:  ResourceFlowDefinition,
+			TypeName: "aws_sagemaker_flow_definition",
+		},
+		{
+			Factory:  ResourceHumanTaskUI,
+			TypeName: "aws_sagemaker_human_task_ui",
+		},
+		{
+			Factory:  ResourceImage,
+			TypeName: "aws_sagemaker_image",
+		},
+		{
+			Factory:  ResourceImageVersion,
+			TypeName: "aws_sagemaker_image_version",
+		},
+		{
+			Factory:  ResourceModel,
+			TypeName: "aws_sagemaker_model",
+		},
+		{
+			Factory:  ResourceModelPackageGroup,
+			TypeName: "aws_sagemaker_model_package_group",
+		},
+		{
+			Factory:  ResourceModelPackageGroupPolicy,
+			TypeName: "aws_sagemaker_model_package_group_policy",
+		},
+		{
+			Factory:  ResourceMonitoringSchedule,
+			TypeName: "aws_sagemaker_monitoring_schedule",
+		},
+		{
+			Factory:  ResourceNotebookInstance,
+			TypeName: "aws_sagemaker_notebook_instance",
+		},
+		{
+			Factory:  ResourceNotebookInstanceLifeCycleConfiguration,
+			TypeName: "aws_sagemaker_notebook_instance_lifecycle_configuration",
+		},
+		{
+			Factory:  ResourceProject,
+			TypeName: "aws_sagemaker_project",
+		},
+		{
+			Factory:  ResourceServicecatalogPortfolioStatus,
+			TypeName: "aws_sagemaker_servicecatalog_portfolio_status",
+		},
+		{
+			Factory:  ResourceSpace,
+			TypeName: "aws_sagemaker_space",
+		},
+		{
+			Factory:  ResourceStudioLifecycleConfig,
+			TypeName: "aws_sagemaker_studio_lifecycle_config",
+		},
+		{
+			Factory:  ResourceUserProfile,
+			TypeName: "aws_sagemaker_user_profile",
+		},
+		{
+			Factory:  ResourceWorkforce,
+			TypeName: "aws_sagemaker_workforce",
+		},
+		{
+			Factory:  ResourceWorkteam,
+			TypeName: "aws_sagemaker_workteam",
+		},
 	}
 }
 

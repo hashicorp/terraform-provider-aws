@@ -2,6 +2,7 @@ package ecr
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -14,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_repository")
@@ -109,6 +112,10 @@ func ResourceRepository() *schema.Resource {
 	}
 }
 
+const (
+	ResNameRepository = "Repository"
+)
+
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRConn()
@@ -181,6 +188,12 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] ECR Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return create.DiagError(names.ECR, create.ErrActionReading, ResNameRepository, d.Id(), err)
+	}
+	if outputRaw == nil {
+		return create.DiagError(names.ECR, create.ErrActionReading, ResNameRepository, d.Id(), errors.New("empty output"))
 	}
 
 	repository := outputRaw.(*ecr.Repository)

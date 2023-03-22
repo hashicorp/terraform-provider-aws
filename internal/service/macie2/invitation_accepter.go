@@ -114,8 +114,8 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 	output, err := conn.GetAdministratorAccountWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie InvitationAccepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -27,7 +27,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
@@ -64,7 +64,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
@@ -20,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -28,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -156,7 +159,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -253,7 +255,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -293,7 +294,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -472,7 +472,7 @@ type AWSClient struct {
 	groundstationConn                *groundstation.GroundStation
 	guarddutyConn                    *guardduty.GuardDuty
 	healthConn                       *health.Health
-	healthlakeConn                   *healthlake.HealthLake
+	healthlakeClient                 *healthlake.Client
 	honeycodeConn                    *honeycode.Honeycode
 	iamConn                          *iam.IAM
 	ivsConn                          *ivs.IVS
@@ -574,7 +574,7 @@ type AWSClient struct {
 	qldbsessionConn                  *qldbsession.QLDBSession
 	quicksightConn                   *quicksight.QuickSight
 	ramConn                          *ram.RAM
-	rbinConn                         *recyclebin.RecycleBin
+	rbinClient                       *rbin.Client
 	rdsConn                          *rds.RDS
 	rdsdataConn                      *rdsdataservice.RDSDataService
 	rumConn                          *cloudwatchrum.CloudWatchRUM
@@ -604,7 +604,7 @@ type AWSClient struct {
 	snsConn                          *sns.SNS
 	sqsConn                          *sqs.SQS
 	ssmConn                          *ssm.SSM
-	ssmcontactsConn                  *ssmcontacts.SSMContacts
+	ssmcontactsClient                *ssmcontacts.Client
 	ssmincidentsClient               *ssmincidents.Client
 	ssoConn                          *sso.SSO
 	ssoadminConn                     *ssoadmin.SSOAdmin
@@ -1170,8 +1170,8 @@ func (client *AWSClient) HealthConn() *health.Health {
 	return client.healthConn
 }
 
-func (client *AWSClient) HealthLakeConn() *healthlake.HealthLake {
-	return client.healthlakeConn
+func (client *AWSClient) HealthLakeClient() *healthlake.Client {
+	return client.healthlakeClient
 }
 
 func (client *AWSClient) HoneycodeConn() *honeycode.Honeycode {
@@ -1586,8 +1586,8 @@ func (client *AWSClient) RAMConn() *ram.RAM {
 	return client.ramConn
 }
 
-func (client *AWSClient) RBinConn() *recyclebin.RecycleBin {
-	return client.rbinConn
+func (client *AWSClient) RBinClient() *rbin.Client {
+	return client.rbinClient
 }
 
 func (client *AWSClient) RDSConn() *rds.RDS {
@@ -1718,8 +1718,8 @@ func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
 	return client.ssmClient.Client()
 }
 
-func (client *AWSClient) SSMContactsConn() *ssmcontacts.SSMContacts {
-	return client.ssmcontactsConn
+func (client *AWSClient) SSMContactsClient() *ssmcontacts.Client {
+	return client.ssmcontactsClient
 }
 
 func (client *AWSClient) SSMIncidentsClient() *ssmincidents.Client {

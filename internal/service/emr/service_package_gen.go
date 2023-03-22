@@ -5,37 +5,63 @@ package emr
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_emr_release_labels": DataSourceReleaseLabels,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceReleaseLabels,
+			TypeName: "aws_emr_release_labels",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_emr_cluster":                ResourceCluster,
-		"aws_emr_instance_fleet":         ResourceInstanceFleet,
-		"aws_emr_instance_group":         ResourceInstanceGroup,
-		"aws_emr_managed_scaling_policy": ResourceManagedScalingPolicy,
-		"aws_emr_security_configuration": ResourceSecurityConfiguration,
-		"aws_emr_studio":                 ResourceStudio,
-		"aws_emr_studio_session_mapping": ResourceStudioSessionMapping,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceBlockPublicAccessConfiguration,
+			TypeName: "aws_emr_block_public_access_configuration",
+		},
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_emr_cluster",
+		},
+		{
+			Factory:  ResourceInstanceFleet,
+			TypeName: "aws_emr_instance_fleet",
+		},
+		{
+			Factory:  ResourceInstanceGroup,
+			TypeName: "aws_emr_instance_group",
+		},
+		{
+			Factory:  ResourceManagedScalingPolicy,
+			TypeName: "aws_emr_managed_scaling_policy",
+		},
+		{
+			Factory:  ResourceSecurityConfiguration,
+			TypeName: "aws_emr_security_configuration",
+		},
+		{
+			Factory:  ResourceStudio,
+			TypeName: "aws_emr_studio",
+		},
+		{
+			Factory:  ResourceStudioSessionMapping,
+			TypeName: "aws_emr_studio_session_mapping",
+		},
 	}
 }
 
