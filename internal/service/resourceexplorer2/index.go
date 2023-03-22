@@ -81,13 +81,9 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().ResourceExplorer2Client()
 
-	tags := r.ExpandTags(ctx, data.Tags)
 	input := &resourceexplorer2.CreateIndexInput{
 		ClientToken: aws.String(sdkresource.UniqueId()),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:        GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateIndex(ctx, input)
@@ -131,7 +127,6 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
-	data.TagsAll = r.FlattenTagsAll(ctx, tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -165,9 +160,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
-	apiTags := KeyValueTags(ctx, output.Tags)
-	data.Tags = r.FlattenTags(ctx, apiTags)
-	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
+	SetTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -206,14 +199,6 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		if _, err := waitIndexUpdated(ctx, conn, updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
 		}
