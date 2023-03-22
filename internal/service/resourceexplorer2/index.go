@@ -26,7 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Index")
+// @Tags(identifierAttribute="id")
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIndex{}
 	r.SetDefaultCreateTimeout(2 * time.Hour)
