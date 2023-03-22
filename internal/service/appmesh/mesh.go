@@ -100,9 +100,9 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	meshName := d.Get("name").(string)
+	name := d.Get("name").(string)
 	input := &appmesh.CreateMeshInput{
-		MeshName: aws.String(meshName),
+		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		Tags:     Tags(tags.IgnoreAWS()),
 	}
@@ -110,10 +110,10 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	_, err := conn.CreateMeshWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh Service Mesh (%s): %s", meshName, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Service Mesh (%s): %s", name, err)
 	}
 
-	d.SetId(meshName)
+	d.SetId(name)
 
 	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }

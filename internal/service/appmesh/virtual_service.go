@@ -136,23 +136,25 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	req := &appmesh.CreateVirtualServiceInput{
+	name := d.Get("name").(string)
+	input := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualServiceName: aws.String(d.Get("name").(string)),
 		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
 		Tags:               Tags(tags.IgnoreAWS()),
+		VirtualServiceName: aws.String(name),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
+		input.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual service: %#v", req)
-	resp, err := conn.CreateVirtualServiceWithContext(ctx, req)
+	output, err := conn.CreateVirtualServiceWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Virtual Service (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.VirtualService.Metadata.Uid))
+	d.SetId(aws.StringValue(output.VirtualService.Metadata.Uid))
 
 	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
@@ -255,20 +257,20 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
-		_, v := d.GetChange("spec")
-		req := &appmesh.UpdateVirtualServiceInput{
+		input := &appmesh.UpdateVirtualServiceInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
+			Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
 			VirtualServiceName: aws.String(d.Get("name").(string)),
-			Spec:               expandVirtualServiceSpec(v.([]interface{})),
-		}
-		if v, ok := d.GetOk("mesh_owner"); ok {
-			req.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual service: %#v", req)
-		_, err := conn.UpdateVirtualServiceWithContext(ctx, req)
+		if v, ok := d.GetOk("mesh_owner"); ok {
+			input.MeshOwner = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateVirtualServiceWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual service: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Service (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -277,7 +279,7 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual service (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Service (%s) tags: %s", arn, err)
 		}
 	}
 
