@@ -165,69 +165,31 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeVirtualServiceInput{
-		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualServiceName: aws.String(d.Get("name").(string)),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+	}, d.IsNewResource())
 
-	var resp *appmesh.DescribeVirtualServiceOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.DescribeVirtualServiceWithContext(ctx, req)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeVirtualServiceWithContext(ctx, req)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Virtual Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.VirtualService == nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: empty response")
-	}
+	vs := outputRaw.(*appmesh.VirtualServiceData)
 
-	if aws.StringValue(resp.VirtualService.Status.Status) == appmesh.VirtualServiceStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: %s after creation", aws.StringValue(resp.VirtualService.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Virtual Service (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	arn := aws.StringValue(resp.VirtualService.Metadata.Arn)
-	d.Set("name", resp.VirtualService.VirtualServiceName)
-	d.Set("mesh_name", resp.VirtualService.MeshName)
-	d.Set("mesh_owner", resp.VirtualService.Metadata.MeshOwner)
+	arn := aws.StringValue(vs.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
+	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", vs.MeshName)
+	d.Set("mesh_owner", vs.Metadata.MeshOwner)
+	d.Set("name", vs.VirtualServiceName)
+	d.Set("resource_owner", vs.Metadata.ResourceOwner)
+	err = d.Set("spec", flattenVirtualServiceSpec(vs.Spec))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -235,7 +197,7 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh virtual service (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -338,4 +300,50 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 	d.Set("mesh_name", resp.VirtualService.MeshName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualServiceData, error) {
+	input := &appmesh.DescribeVirtualServiceInput{
+		MeshName:           aws.String(meshName),
+		VirtualServiceName: aws.String(name),
+	}
+	if meshOwner != "" {
+		input.MeshOwner = aws.String(meshOwner)
+	}
+
+	output, err := findVirtualService(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.VirtualServiceStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVirtualService(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeVirtualServiceInput) (*appmesh.VirtualServiceData, error) {
+	output, err := conn.DescribeVirtualServiceWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VirtualService == nil || output.VirtualService.Metadata == nil || output.VirtualService.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VirtualService, nil
 }
