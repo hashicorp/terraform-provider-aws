@@ -338,16 +338,20 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				if v, ok := r.Schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						continue
 					}
 				} else {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
 				}
 				if v, ok := r.Schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
 					}
 				} else {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					continue
 				}
 
 				interceptors = append(interceptors, interceptorItem{
