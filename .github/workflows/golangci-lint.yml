@@ -27,7 +27,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.51.0
+          version: v1.52.0
           args: --config .ci/.golangci.yml
   golangci-lintb:
     name: 2 of 2
@@ -41,5 +41,5 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.51.0
+          version: v1.52.0
           args: --config .ci/.golangci2.yml
