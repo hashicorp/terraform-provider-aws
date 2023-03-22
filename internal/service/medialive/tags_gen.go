@@ -55,6 +55,25 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 	return tftags.New(ctx, tags)
 }
 
+// GetTagsIn returns medialive service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets medialive service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates medialive service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

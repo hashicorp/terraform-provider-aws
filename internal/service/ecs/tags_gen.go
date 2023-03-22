@@ -102,6 +102,25 @@ func KeyValueTags(ctx context.Context, tags []*ecs.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns ecs service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*ecs.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ecs service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*ecs.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

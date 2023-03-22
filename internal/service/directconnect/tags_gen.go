@@ -73,6 +73,25 @@ func KeyValueTags(ctx context.Context, tags []*directconnect.Tag) tftags.KeyValu
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns directconnect service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*directconnect.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets directconnect service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*directconnect.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates directconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

@@ -74,6 +74,25 @@ func KeyValueTags(ctx context.Context, tags []*ssm.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns ssm service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*ssm.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ssm service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*ssm.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

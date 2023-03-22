@@ -73,6 +73,25 @@ func KeyValueTags(ctx context.Context, tags []*timestreamwrite.Tag) tftags.KeyVa
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns timestreamwrite service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*timestreamwrite.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets timestreamwrite service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*timestreamwrite.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates timestreamwrite service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

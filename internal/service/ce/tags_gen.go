@@ -73,6 +73,25 @@ func KeyValueTags(ctx context.Context, tags []*costexplorer.ResourceTag) tftags.
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns ce service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*costexplorer.ResourceTag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ce service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*costexplorer.ResourceTag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

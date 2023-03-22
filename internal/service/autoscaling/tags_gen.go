@@ -159,7 +159,7 @@ func Tags(tags tftags.KeyValueTags) []*autoscaling.Tag {
 //   - []*autoscaling.TagDescription
 //   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
-func KeyValueTags(ctx context.Context, tags any, identifier string, resourceType string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*autoscaling.Tag:
 		m := make(map[string]*tftags.TagData, len(tags))
@@ -241,6 +241,25 @@ func KeyValueTags(ctx context.Context, tags any, identifier string, resourceType
 		return tftags.New(ctx, result)
 	default:
 		return tftags.New(ctx, nil)
+	}
+}
+
+// GetTagsIn returns autoscaling service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*autoscaling.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets autoscaling service tags in Context.
+func SetTagsOut(ctx context.Context, tags any, identifier, resourceType string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags, identifier, resourceType))
 	}
 }
 

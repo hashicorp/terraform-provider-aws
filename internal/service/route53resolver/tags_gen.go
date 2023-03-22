@@ -93,6 +93,25 @@ func KeyValueTags(ctx context.Context, tags []*route53resolver.Tag) tftags.KeyVa
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns route53resolver service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*route53resolver.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets route53resolver service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*route53resolver.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

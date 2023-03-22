@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -36,4 +37,23 @@ func KeyValueTags(ctx context.Context, tags []*iam.Tag) tftags.KeyValueTags {
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns iam service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*iam.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets iam service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*iam.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
