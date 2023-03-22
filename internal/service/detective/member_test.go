@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,7 @@ import (
 )
 
 func testAccMember_basic(t *testing.T) {
-	var providers []*schema.Provider
+	ctx := acctest.Context(t)
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
@@ -24,17 +23,17 @@ func testAccMember_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -54,25 +53,25 @@ func testAccMember_basic(t *testing.T) {
 }
 
 func testAccMember_disappears(t *testing.T) {
-	var providers []*schema.Provider
+	ctx := acctest.Context(t)
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
 	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &detectiveOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdetective.ResourceMember(), resourceName),
+					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,25 +80,25 @@ func testAccMember_disappears(t *testing.T) {
 }
 
 func testAccMember_message(t *testing.T) {
+	ctx := acctest.Context(t)
 	var detectiveOutput detective.MemberDetail
-	var providers []*schema.Provider
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invitationMessage(email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -110,7 +109,7 @@ func testAccMember_message(t *testing.T) {
 			{
 				Config: testAccMemberConfig_invitationMessage(email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -129,21 +128,21 @@ func testAccMember_message(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(resourceName string, detectiveSession *detective.MemberDetail) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, resourceName string, detectiveSession *detective.MemberDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
 		graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(context.Background(), conn, graphArn, accountId)
+		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
 		if err != nil {
 			return err
 		}
@@ -158,35 +157,36 @@ func testAccCheckMemberExists(resourceName string, detectiveSession *detective.M
 	}
 }
 
-func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_detective_member" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_detective_member" {
+				continue
+			}
+
+			graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			resp, err := tfdetective.FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
+			if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil {
+				return fmt.Errorf("detective Member %q still exists", rs.Primary.ID)
+			}
 		}
 
-		graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := tfdetective.FindMemberByGraphARNAndAccountID(context.Background(), conn, graphArn, accountId)
-		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil {
-			return fmt.Errorf("detective Member %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
-
 }
 
 func testAccMemberConfig_basic(email string) string {

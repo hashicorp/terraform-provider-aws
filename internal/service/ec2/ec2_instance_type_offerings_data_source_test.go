@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,13 +12,14 @@ import (
 )
 
 func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
@@ -32,13 +34,14 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
@@ -52,14 +55,14 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 	})
 }
 
-func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),
 	}
 
-	_, err := conn.DescribeInstanceTypeOfferings(input)
+	_, err := conn.DescribeInstanceTypeOfferingsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

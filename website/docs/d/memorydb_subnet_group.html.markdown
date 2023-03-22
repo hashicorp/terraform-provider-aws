@@ -32,5 +32,5 @@ In addition, the following attributes are exported:
 * `arn` - ARN of the subnet group.
 * `description` - Description of the subnet group.
 * `subnet_ids` - Set of VPC Subnet ID-s of the subnet group.
-* `vpc_id` - The VPC in which the subnet group exists.
-* `tags` - A map of tags assigned to the subnet group.
+* `vpc_id` - VPC in which the subnet group exists.
+* `tags` - Map of tags assigned to the subnet group.

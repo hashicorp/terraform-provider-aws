@@ -25,3 +25,9 @@ func ProtocolWarn(ctx context.Context, msg string, additionalFields ...map[strin
 func ProtocolTrace(ctx context.Context, msg string, additionalFields ...map[string]interface{}) {
 	tfsdklog.SubsystemTrace(ctx, SubsystemProto, msg, additionalFields...)
 }
+
+// ProtocolSetField returns a context with the additional protocol subsystem
+// field set.
+func ProtocolSetField(ctx context.Context, key string, value any) context.Context {
+	return tfsdklog.SubsystemSetField(ctx, SubsystemProto, key, value)
+}

@@ -1,6 +1,7 @@
 package neptune
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,23 +9,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_neptune_cluster_endpoint")
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterEndpointCreate,
-		Read:   resourceClusterEndpointRead,
-		Update: resourceClusterEndpointUpdate,
-		Delete: resourceClusterEndpointDelete,
+		CreateWithoutTimeout: resourceClusterEndpointCreate,
+		ReadWithoutTimeout:   resourceClusterEndpointRead,
+		UpdateWithoutTimeout: resourceClusterEndpointUpdate,
+		DeleteWithoutTimeout: resourceClusterEndpointDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,10 +76,11 @@ func ResourceClusterEndpoint() *schema.Resource {
 	}
 }
 
-func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
@@ -96,38 +101,38 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateDBClusterEndpoint(input)
+	out, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster Endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Endpoint: %s", err)
 	}
 
 	clusterId := aws.StringValue(out.DBClusterIdentifier)
 	endpointId := aws.StringValue(out.DBClusterEndpointIdentifier)
 	d.SetId(fmt.Sprintf("%s:%s", clusterId, endpointId))
 
-	_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
+	_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Available: %s", d.Id(), err)
 	}
 
-	return resourceClusterEndpointRead(d, meta)
-
+	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindEndpointByID(conn, d.Id())
+	resp, err := FindEndpointByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
 		log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Neptune Cluster Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_endpoint_identifier", resp.DBClusterEndpointIdentifier)
@@ -142,32 +147,33 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 
 	// Tags are currently only supported in AWS Commercial.
 	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := ListTags(conn, arn)
+		tags, err := ListTags(ctx, conn, arn)
 
 		if err != nil {
-			return fmt.Errorf("error listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster Endpoint (%s): %s", arn, err)
 		}
 
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	} else {
 		d.Set("tags", nil)
 		d.Set("tags_all", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &neptune.ModifyDBClusterEndpointInput{
@@ -186,14 +192,14 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 			req.ExcludedMembers = flex.ExpandStringSet(d.Get("excluded_members").(*schema.Set))
 		}
 
-		_, err := conn.ModifyDBClusterEndpoint(req)
+		_, err := conn.ModifyDBClusterEndpointWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Endpoint (%q): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%q): %s", d.Id(), err)
 		}
 
-		_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
+		_, err = WaitDBClusterEndpointAvailable(ctx, conn, d.Id())
 		if err != nil {
-			return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Available: %s", d.Id(), err)
 		}
 	}
 
@@ -201,37 +207,38 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Endpoint (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceClusterEndpointRead(d, meta)
+	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
 	input := &neptune.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 	}
 
-	_, err := conn.DeleteDBClusterEndpoint(input)
+	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
 			tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Neptune Cluster Endpoint cannot be deleted: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Neptune Cluster Endpoint cannot be deleted: %s", err)
 	}
-	_, err = WaitDBClusterEndpointDeleted(conn, d.Id())
+	_, err = WaitDBClusterEndpointDeleted(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Endpoint (%q) to be Deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

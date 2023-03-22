@@ -41,50 +41,53 @@ func FindKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.Dynamo
 	return result, nil
 }
 
-func findTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func FindTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(name),
 	}
 
-	output, err := conn.DescribeTable(input)
+	output, err := conn.DescribeTableWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Table, nil
 }
 
-func findGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
-	table, err := findTableByName(conn, tableName)
+func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+	table, err := FindTableByName(ctx, conn, tableName)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if table == nil {
-		return nil, nil
-	}
-
-	for _, gsi := range table.GlobalSecondaryIndexes {
-		if aws.StringValue(gsi.IndexName) == indexName {
-			return gsi, nil
+	for _, v := range table.GlobalSecondaryIndexes {
+		if aws.StringValue(v.IndexName) == indexName {
+			return v, nil
 		}
 	}
 
-	return nil, nil
+	return nil, &resource.NotFoundError{}
 }
 
-func findPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
+func findPITRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeContinuousBackups(input)
+	output, err := conn.DescribeContinuousBackupsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -101,12 +104,12 @@ func findPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (
 	return output.ContinuousBackupsDescription.PointInTimeRecoveryDescription, nil
 }
 
-func findTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
+func findTTLRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
 	input := &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeTimeToLive(input)
+	output, err := conn.DescribeTimeToLiveWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

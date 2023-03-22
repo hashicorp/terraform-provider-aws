@@ -59,7 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 
 ### `action`
@@ -80,7 +80,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles).
+* `key` - (Required) Target type. Valid values are `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances).
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stop_condition`

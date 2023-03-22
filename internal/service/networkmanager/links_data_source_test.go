@@ -11,14 +11,15 @@ import (
 )
 
 func TestAccNetworkManagerLinksDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceAllName := "data.aws_networkmanager_links.all"
 	dataSourceByTagsName := "data.aws_networkmanager_links.by_tags"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),

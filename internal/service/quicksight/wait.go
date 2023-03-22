@@ -25,7 +25,7 @@ func waitCreated(ctx context.Context, conn *quicksight.QuickSight, accountId, da
 		Timeout: dataSourceCreateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*quicksight.DataSource); ok {
 		if status, errorInfo := aws.StringValue(output.Status), output.ErrorInfo; status == quicksight.ResourceStatusCreationFailed && errorInfo != nil {
@@ -47,7 +47,7 @@ func waitUpdated(ctx context.Context, conn *quicksight.QuickSight, accountId, da
 		Timeout: dataSourceUpdateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*quicksight.DataSource); ok {
 		if status, errorInfo := aws.StringValue(output.Status), output.ErrorInfo; status == quicksight.ResourceStatusUpdateFailed && errorInfo != nil {

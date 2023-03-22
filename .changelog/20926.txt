@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_db_instance: Add retries (for handling IAM eventual consistency) when creating database replicas that use enhanced monitoring
+```
+
+```release-note:bug
+resource/aws_db_instance: Apply `monitoring_interval` and `monitoring_role_arn` when creating via `restore_to_point_in_time`
+```

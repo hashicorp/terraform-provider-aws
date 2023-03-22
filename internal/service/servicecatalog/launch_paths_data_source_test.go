@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalog_launch_paths.test"
 	resourceNameProduct := "aws_servicecatalog_product.test"
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"
@@ -19,9 +20,9 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchPathsDataSourceConfig_basic(rName, domain, acctest.DefaultEmailAddress),

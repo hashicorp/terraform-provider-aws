@@ -12,15 +12,16 @@ import (
 )
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInvocationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_basic(rName, testData),
@@ -33,15 +34,16 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_qualifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInvocationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_qualifier(rName, testData),
@@ -54,15 +56,16 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInvocationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_complex(rName, testData),
@@ -75,16 +78,17 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_triggers(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 	testData2 := "value4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInvocationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_triggers(rName, testData),

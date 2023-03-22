@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
+func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -19,9 +20,9 @@ func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupDataSourceConfig_groupID(rName, rName2, rName3),
@@ -46,7 +47,8 @@ func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 	})
 }
 
-func TestAccConnectUserHierarchyGroupDataSource_name(t *testing.T) {
+func testAccUserHierarchyGroupDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -55,9 +57,9 @@ func TestAccConnectUserHierarchyGroupDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyGroupDataSourceConfig_name(rName, rName2, rName3),

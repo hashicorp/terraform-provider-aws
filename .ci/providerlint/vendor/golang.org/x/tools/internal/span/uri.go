@@ -38,6 +38,26 @@ func filename(uri URI) (string, error) {
 	if uri == "" {
 		return "", nil
 	}
+
+	// This conservative check for the common case
+	// of a simple non-empty absolute POSIX filename
+	// avoids the allocation of a net.URL.
+	if strings.HasPrefix(string(uri), "file:///") {
+		rest := string(uri)[len("file://"):] // leave one slash
+		for i := 0; i < len(rest); i++ {
+			b := rest[i]
+			// Reject these cases:
+			if b < ' ' || b == 0x7f || // control character
+				b == '%' || b == '+' || // URI escape
+				b == ':' || // Windows drive letter
+				b == '@' || b == '&' || b == '?' { // authority or query
+				goto slow
+			}
+		}
+		return rest, nil
+	}
+slow:
+
 	u, err := url.ParseRequestURI(string(uri))
 	if err != nil {
 		return "", err
@@ -45,11 +65,12 @@ func filename(uri URI) (string, error) {
 	if u.Scheme != fileScheme {
 		return "", fmt.Errorf("only file URIs are supported, got %q from %q", u.Scheme, uri)
 	}
-	// If the URI is a Windows URI, we trim the leading "/" and lowercase
+	// If the URI is a Windows URI, we trim the leading "/" and uppercase
 	// the drive letter, which will never be case sensitive.
 	if isWindowsDriveURIPath(u.Path) {
 		u.Path = strings.ToUpper(string(u.Path[1])) + u.Path[2:]
 	}
+
 	return u.Path, nil
 }
 
@@ -80,6 +101,10 @@ func URIFromURI(s string) URI {
 	return URI(u.String())
 }
 
+// CompareURI performs a three-valued comparison of two URIs.
+// Lexically unequal URIs may compare equal if they are "file:" URIs
+// that share the same base name (ignoring case) and denote the same
+// file device/inode, according to stat(2).
 func CompareURI(a, b URI) int {
 	if equalURI(a, b) {
 		return 0

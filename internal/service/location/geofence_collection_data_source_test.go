@@ -11,20 +11,21 @@ import (
 )
 
 func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_location_geofence_collection.test"
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGeofenceCollectionExists(dataSourceName),
+					testAccCheckGeofenceCollectionExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_arn", resourceName, "collection_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_name", resourceName, "collection_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),

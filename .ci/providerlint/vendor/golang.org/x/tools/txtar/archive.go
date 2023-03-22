@@ -6,15 +6,15 @@
 //
 // The goals for the format are:
 //
-//	- be trivial enough to create and edit by hand.
-//	- be able to store trees of text files describing go command test cases.
-//	- diff nicely in git history and code reviews.
+//   - be trivial enough to create and edit by hand.
+//   - be able to store trees of text files describing go command test cases.
+//   - diff nicely in git history and code reviews.
 //
 // Non-goals include being a completely general archive format,
 // storing binary data, storing file modes, storing special files like
 // symbolic links, and so on.
 //
-// Txtar format
+// # Txtar format
 //
 // A txtar archive is zero or more comment lines and then a sequence of file entries.
 // Each file entry begins with a file marker line of the form "-- FILENAME --"
@@ -121,7 +121,7 @@ func isMarker(data []byte) (name string, after []byte) {
 	if i := bytes.IndexByte(data, '\n'); i >= 0 {
 		data, after = data[:i], data[i+1:]
 	}
-	if !bytes.HasSuffix(data, markerEnd) {
+	if !(bytes.HasSuffix(data, markerEnd) && len(data) >= len(marker)+len(markerEnd)) {
 		return "", nil
 	}
 	return strings.TrimSpace(string(data[len(marker) : len(data)-len(markerEnd)])), after

@@ -8,6 +8,7 @@ import (
 )
 
 func TestQueuePolicyMigrateState(t *testing.T) {
+	t.Parallel()
 
 	cases := map[string]struct {
 		StateVersion int

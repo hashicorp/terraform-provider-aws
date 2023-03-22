@@ -36,6 +36,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `auto_minor_version_upgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
+* `data_tiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
 * `engine_version` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
 * `final_snapshot_name` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
@@ -54,7 +55,7 @@ The following arguments are optional:
 * `snapshot_window` - (Optional) The daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:00-09:00`.
 * `sns_topic_arn` - (Optional) ARN of the SNS topic to which cluster notifications are sent.
 * `subnet_group_name` - (Optional, Forces new resource) The name of the subnet group to be used for the cluster. Defaults to a subnet group consisting of default VPC subnets.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. When set to `false`, the `acl_name` must be `open-access`. Defaults to `true`.
 
 ## Attributes Reference
@@ -78,15 +79,15 @@ In addition to all arguments above, the following attributes are exported:
         * `endpoint`
             * `address` - DNS hostname of the node.
             * `port` - Port number that this node is listening on.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_memorydb_cluster` provides the following [timeout configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120 minutes`) Used when creating a cluster.
-- `update` - (Default `120 minutes`) Used when updating a cluster.
-- `delete` - (Default `120 minutes`) Used when deleting a cluster.
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 

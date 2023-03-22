@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_acl.test"
 	dataSourceName := "data.aws_memorydb_acl.test"
@@ -18,9 +19,9 @@ func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
 	userName2 := "tf-" + sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccACLDataSourceConfig_basic(rName, userName1, userName2),

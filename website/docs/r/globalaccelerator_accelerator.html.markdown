@@ -16,6 +16,7 @@ Creates a Global Accelerator accelerator.
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "Example"
   ip_address_type = "IPV4"
+  ip_addresses    = ["1.2.3.4"]
   enabled         = true
 
   attributes {
@@ -31,10 +32,11 @@ resource "aws_globalaccelerator_accelerator" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the accelerator.
-* `ip_address_type` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`.
+* `ip_address_type` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`, `DUAL_STACK`.
+* `ip_addresses` - (Optional) The IP addresses to use for BYOIP accelerators. If not specified, the service assigns IP addresses. Valid values: 1 or 2 IPv4 addresses.
 * `enabled` - (Optional) Indicates whether the accelerator is enabled. Defaults to `true`. Valid values: `true`, `false`.
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **attributes** supports the following attributes:
 
@@ -52,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
   route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
   is simply an alias for the zone ID `Z2BJ6XQ5FK7U4H`.
 * `ip_sets` - IP address set associated with the accelerator.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 **ip_sets** exports the following attributes:
 
@@ -63,11 +65,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_globalaccelerator_accelerator` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be updated.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

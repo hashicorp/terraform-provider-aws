@@ -27,11 +27,7 @@ func EmptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) (i
 	n, err := forEachObjectVersionsPage(ctx, conn, bucket, deletePageOfDeleteMarkers)
 	nObjects += n
 
-	if err != nil {
-		return nObjects, err
-	}
-
-	return nObjects, nil
+	return nObjects, err
 }
 
 // forEachObjectVersionsPage calls the specified function for each page returned from the S3 ListObjectVersionsPages API.

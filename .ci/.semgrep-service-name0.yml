@@ -1173,6 +1173,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Athena"
     severity: WARNING
+  - id: auditmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in func name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-test-name
+    languages:
+      - go
+    message: Include "AuditManager" in test name
+    paths:
+      include:
+        - internal/service/auditmanager/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAuditManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in const name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
+  - id: auditmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in var name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
   - id: autoscaling-in-func-name
     languages:
       - go
@@ -1520,6 +1578,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
+            - pattern-not-regex: ServicePackage
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ce-in-test-name
@@ -1564,6 +1623,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: ServicePackage
     severity: WARNING
   - id: chime-in-func-name
     languages:
@@ -2217,6 +2277,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchevents"
     severity: WARNING
+  - id: cloudwatchevidently-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in func name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchevidently-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in const name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+    severity: WARNING
+  - id: cloudwatchevidently-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in var name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+    severity: WARNING
   - id: cloudwatchlog-in-func-name
     languages:
       - go
@@ -2302,6 +2405,49 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
+    severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in func name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in const name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
+    severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in var name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
     severity: WARNING
   - id: cloudwatchrum-in-func-name
     languages:
@@ -2562,6 +2708,64 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)codedeploy"
+    severity: WARNING
+  - id: codegurureviewer-in-func-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in func name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-test-name
+    languages:
+      - go
+    message: Include "CodeGuruReviewer" in test name
+    paths:
+      include:
+        - internal/service/codegurureviewer/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCodeGuruReviewer"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-const-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in const name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+    severity: WARNING
+  - id: codegurureviewer-in-var-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in var name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
     severity: WARNING
   - id: codepipeline-in-func-name
     languages:
@@ -2896,6 +3100,122 @@ rules:
           patterns:
             - pattern-regex: "(?i)CognitoIDP"
     severity: WARNING
+  - id: comprehend-in-func-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in func name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: comprehend-in-test-name
+    languages:
+      - go
+    message: Include "Comprehend" in test name
+    paths:
+      include:
+        - internal/service/comprehend/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccComprehend"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: comprehend-in-const-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in const name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+    severity: WARNING
+  - id: comprehend-in-var-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in var name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+    severity: WARNING
+  - id: computeoptimizer-in-func-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in func name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: computeoptimizer-in-test-name
+    languages:
+      - go
+    message: Include "ComputeOptimizer" in test name
+    paths:
+      include:
+        - internal/service/computeoptimizer/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccComputeOptimizer"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: computeoptimizer-in-const-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
   - id: configservice-in-func-name
     languages:
       - go
@@ -2969,49 +3289,4 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-const-name
-    languages:
-      - go
-    message: Do not use "Connect" in const name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connect-in-var-name
-    languages:
-      - go
-    message: Do not use "Connect" in var name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
     severity: WARNING

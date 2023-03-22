@@ -11,7 +11,6 @@ description: |-
 Manages a FSx Storage Virtual Machine.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html) for more information.
 
-
 ## Example Usage
 
 ### Basic Usage
@@ -52,7 +51,7 @@ The following arguments are supported:
 * `file_system_id` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) The name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.
 * `root_volume_security_style` - (Optional) Specifies the root volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `UNIX`.
-* `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### active_directory_configuration
 
@@ -80,7 +79,7 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoints` - The endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
 * `subtype` - Describes the SVM's subtype, e.g. `DEFAULT`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The SVM's UUID (universally unique identifier).
 
 ### Endpoints
@@ -97,12 +96,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_ontap_storage_virtual_machine` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`) How long to wait for the storage virtual machine to be created.
-* `delete` - (Default `30m`) How long to wait for the storage virtual machine to be deleted.
-* `update` - (Default `30m`) How long to wait for the storage virtual machine to be updated.
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

@@ -35,7 +35,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `website_ca_id` - A unique identifier for the Certificate Authority.
 
-
 ## Import
 
 WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.,

@@ -22,3 +22,9 @@ The following attributes are exported:
 
 * `enabled` - Whether or not default EBS encryption is enabled. Returns as `true` or `false`.
 * `id` - Region of default EBS encryption.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

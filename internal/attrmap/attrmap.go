@@ -13,11 +13,14 @@ import (
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
 // Useful for SQS Queue or SNS Topic attribute handling.
 type attributeInfo struct {
-	apiAttributeName string
-	tfType           schema.ValueType
-	tfComputed       bool
-	tfOptional       bool
-	isIAMPolicy      bool
+	alwaysSendConfiguredValueOnCreate bool
+	apiAttributeName                  string
+	tfType                            schema.ValueType
+	tfComputed                        bool
+	tfOptional                        bool
+	isIAMPolicy                       bool
+	missingSetToNil                   bool
+	skipUpdate                        bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -57,13 +60,13 @@ func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]strin
 				tfAttributeValue, err = strconv.ParseBool(v)
 
 				if err != nil {
-					return fmt.Errorf("error parsing %s value (%s) into boolean: %w", tfAttributeName, v, err)
+					return fmt.Errorf("parsing %s value (%s) into boolean: %w", tfAttributeName, v, err)
 				}
 			case schema.TypeInt:
 				tfAttributeValue, err = strconv.Atoi(v)
 
 				if err != nil {
-					return fmt.Errorf("error parsing %s value (%s) into integer: %w", tfAttributeName, v, err)
+					return fmt.Errorf("parsing %s value (%s) into integer: %w", tfAttributeName, v, err)
 				}
 			case schema.TypeString:
 				tfAttributeValue = v
@@ -82,9 +85,9 @@ func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]strin
 			}
 
 			if err := d.Set(tfAttributeName, tfAttributeValue); err != nil {
-				return fmt.Errorf("error setting %s: %w", tfAttributeName, err)
+				return fmt.Errorf("setting %s: %w", tfAttributeName, err)
 			}
-		} else {
+		} else if attributeInfo.missingSetToNil {
 			d.Set(tfAttributeName, nil)
 		}
 	}
@@ -104,11 +107,12 @@ func (m AttributeMap) ResourceDataToAPIAttributesCreate(d *schema.ResourceData) 
 		}
 
 		var apiAttributeValue string
+		configuredValue := d.GetRawConfig().GetAttr(tfAttributeName)
 		tfOptionalComputed := attributeInfo.tfComputed && attributeInfo.tfOptional
 
 		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
 		case schema.TypeBool:
-			if v := v.(bool); v {
+			if v := v.(bool); v || (attributeInfo.alwaysSendConfiguredValueOnCreate && !configuredValue.IsNull()) {
 				apiAttributeValue = strconv.FormatBool(v)
 			}
 		case schema.TypeInt:
@@ -121,7 +125,6 @@ func (m AttributeMap) ResourceDataToAPIAttributesCreate(d *schema.ResourceData) 
 
 			if attributeInfo.isIAMPolicy && apiAttributeValue != "" {
 				policy, err := structure.NormalizeJsonString(apiAttributeValue)
-
 				if err != nil {
 					return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", apiAttributeValue, err)
 				}
@@ -146,6 +149,10 @@ func (m AttributeMap) ResourceDataToAPIAttributesUpdate(d *schema.ResourceData) 
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
+		if attributeInfo.skipUpdate {
+			continue
+		}
+
 		// Purely Computed values aren't specified on update.
 		if attributeInfo.tfComputed && !attributeInfo.tfOptional {
 			continue
@@ -195,12 +202,53 @@ func (m AttributeMap) APIAttributeNames() []string {
 	return apiAttributeNames
 }
 
+// WithAlwaysSendConfiguredBooleanValueOnCreate marks the specified Terraform Boolean attribute as always having any configured value sent on resource create.
+// By default a Boolean value is only sent to the API on resource create if its configured value is true.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithAlwaysSendConfiguredBooleanValueOnCreate(tfAttributeName string) AttributeMap {
+	if attributeInfo, ok := m[tfAttributeName]; ok && attributeInfo.tfType == schema.TypeBool {
+		attributeInfo.alwaysSendConfiguredValueOnCreate = true
+		m[tfAttributeName] = attributeInfo
+	}
+
+	return m
+}
+
 // WithIAMPolicyAttribute marks the specified Terraform attribute as holding an AWS IAM policy.
 // AWS IAM policies get special handling.
 // This method is intended to be chained with other similar helper methods in a builder pattern.
 func (m AttributeMap) WithIAMPolicyAttribute(tfAttributeName string) AttributeMap {
 	if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.isIAMPolicy = true
+		m[tfAttributeName] = attributeInfo
+	}
+
+	return m
+}
+
+// WithMissingSetToNil marks the specified Terraform attribute as being set to nil if it's missing after reading the API.
+// An attribute name of "*" means all attributes get marked.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithMissingSetToNil(tfAttributeName string) AttributeMap {
+	if tfAttributeName == "*" {
+		for k, attributeInfo := range m {
+			attributeInfo.missingSetToNil = true
+			m[k] = attributeInfo
+		}
+	} else if attributeInfo, ok := m[tfAttributeName]; ok {
+		attributeInfo.missingSetToNil = true
+		m[tfAttributeName] = attributeInfo
+	}
+
+	return m
+}
+
+// WithSkipUpdate marks the specified Terraform attribute as skipping update handling.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithSkipUpdate(tfAttributeName string) AttributeMap {
+	if attributeInfo, ok := m[tfAttributeName]; ok {
+		attributeInfo.skipUpdate = true
+		m[tfAttributeName] = attributeInfo
 	}
 
 	return m

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `qualified_invoke_arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `qualified_invoke_arn` attribute
+```

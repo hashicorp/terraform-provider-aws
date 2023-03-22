@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -18,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_category")
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostCategoryCreate,
-		ReadContext:   resourceCostCategoryRead,
-		UpdateContext: resourceCostCategoryUpdate,
-		DeleteContext: resourceCostCategoryDelete,
+		CreateWithoutTimeout: resourceCostCategoryCreate,
+		ReadWithoutTimeout:   resourceCostCategoryRead,
+		UpdateWithoutTimeout: resourceCostCategoryUpdate,
+		DeleteWithoutTimeout: resourceCostCategoryDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -47,6 +49,7 @@ func ResourceCostCategory() *schema.Resource {
 			},
 			"effective_start": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -370,9 +373,9 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 }
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -388,18 +391,22 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("effective_start"); ok {
+		input.EffectiveStart = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateCostCategoryDefinitionWithContext(ctx, input)
 		},
 		costexplorer.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionCreating, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
@@ -408,7 +415,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -420,7 +427,7 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.Set("arn", costCategory.CostCategoryArn)
@@ -429,34 +436,34 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
 	}
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, "setting tags_all", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting tags_all", ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
@@ -473,17 +480,21 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
 		}
 
+		if d.HasChange("effective_start") {
+			input.EffectiveStart = aws.String(d.Get("effective_start").(string))
+		}
+
 		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}
 
@@ -491,7 +502,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
@@ -502,7 +513,7 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil

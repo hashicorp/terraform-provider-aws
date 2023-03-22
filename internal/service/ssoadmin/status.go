@@ -1,6 +1,8 @@
 package ssoadmin
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,14 +15,14 @@ const (
 	permissionSetProvisioningStatusNotFound = "NotFound"
 )
 
-func statusAccountAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
 			AccountAssignmentCreationRequestId: aws.String(requestID),
 			InstanceArn:                        aws.String(instanceArn),
 		}
 
-		resp, err := conn.DescribeAccountAssignmentCreationStatus(input)
+		resp, err := conn.DescribeAccountAssignmentCreationStatusWithContext(ctx, input)
 
 		if err != nil {
 			return nil, accountAssignmentStatusUnknown, err
@@ -34,14 +36,14 @@ func statusAccountAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn, reque
 	}
 }
 
-func statusAccountAssignmentDeletion(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
 			AccountAssignmentDeletionRequestId: aws.String(requestID),
 			InstanceArn:                        aws.String(instanceArn),
 		}
 
-		resp, err := conn.DescribeAccountAssignmentDeletionStatus(input)
+		resp, err := conn.DescribeAccountAssignmentDeletionStatusWithContext(ctx, input)
 
 		if err != nil {
 			return nil, accountAssignmentStatusUnknown, err
@@ -55,14 +57,14 @@ func statusAccountAssignmentDeletion(conn *ssoadmin.SSOAdmin, instanceArn, reque
 	}
 }
 
-func statusPermissionSetProvisioning(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
 			InstanceArn:                     aws.String(instanceArn),
 			ProvisionPermissionSetRequestId: aws.String(requestID),
 		}
 
-		resp, err := conn.DescribePermissionSetProvisioningStatus(input)
+		resp, err := conn.DescribePermissionSetProvisioningStatusWithContext(ctx, input)
 
 		if err != nil {
 			return nil, permissionSetProvisioningStatusUnknown, err

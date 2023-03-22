@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
@@ -27,7 +28,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_arn(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -41,6 +42,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},
@@ -48,15 +50,16 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
@@ -64,7 +67,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -82,6 +85,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},
@@ -156,7 +160,7 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-//lintignore:AWSAT003,AWSAT005
+// lintignore:AWSAT003,AWSAT005
 const testAccCertificateAuthorityDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"
