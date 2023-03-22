@@ -41,6 +41,7 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 ```
 
 ### Enable EMR access to LakeFormation resources
+
 ```terraform
 resource "aws_lakeformation_data_lake_settings" "example" {
   admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
