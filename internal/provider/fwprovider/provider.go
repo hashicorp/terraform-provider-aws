@@ -2,7 +2,9 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -337,22 +339,23 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // The resource type name is determined by the Resource implementing
 // the Metadata method. All resources must have unique names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var errs *multierror.Error
 	var resources []func() resource.Resource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				tflog.Warn(ctx, "creating resource", map[string]interface{}{
-					"service_package_name": n,
-					"error":                err.Error(),
-				})
-
+				errs = multierror.Append(errs, fmt.Errorf("creating resource: %w", err))
 				continue
 			}
+
+			metadataResponse := resource.MetadataResponse{}
+			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
 
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
@@ -362,11 +365,42 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 				return ctx
 			}
+			interceptors := resourceInterceptors{}
+
+			if v.Tags != nil {
+				schemaResponse := resource.SchemaResponse{}
+				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if v.IsComputed() {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
+					if !v.IsComputed() {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTagsAll, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
 
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(bootstrapContext, inner)
+				return newWrappedResource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errs.ErrorOrNil(); err != nil {
+		tflog.Warn(ctx, "registering resources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return resources

@@ -148,10 +148,11 @@ type wrappedResource struct {
 	meta             *conns.AWSClient
 }
 
-func newWrappedResource(bootstrapContext contextFunc, inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
+func newWrappedResource(bootstrapContext contextFunc, inner resource.ResourceWithConfigure, interceptors resourceInterceptors) resource.ResourceWithConfigure {
 	return &wrappedResource{
 		bootstrapContext: bootstrapContext,
 		inner:            inner,
+		interceptors:     interceptors,
 	}
 }
 
