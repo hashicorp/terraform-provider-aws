@@ -101,16 +101,16 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	meshName := d.Get("name").(string)
-	req := &appmesh.CreateMeshInput{
+	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
-	_, err := conn.CreateMeshWithContext(ctx, req)
+	_, err := conn.CreateMeshWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Service Mesh (%s): %s", meshName, err)
 	}
 
 	d.SetId(meshName)
@@ -214,25 +214,24 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
-		_, v := d.GetChange("spec")
-		req := &appmesh.UpdateMeshInput{
+		input := &appmesh.UpdateMeshInput{
 			MeshName: aws.String(d.Id()),
-			Spec:     expandMeshSpec(v.([]interface{})),
+			Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh service mesh: %#v", req)
-		_, err := conn.UpdateMeshWithContext(ctx, req)
+		_, err := conn.UpdateMeshWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -247,11 +246,13 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	_, err := conn.DeleteMeshWithContext(ctx, &appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
 
 	return diags
