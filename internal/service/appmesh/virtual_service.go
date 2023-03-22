@@ -281,23 +281,19 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
 	}
 
-	mesh := parts[0]
-	name := parts[1]
-	log.Printf("[DEBUG] Importing App Mesh virtual service %s from mesh %s", name, mesh)
-
 	conn := meta.(*conns.AWSClient).AppMeshConn()
+	meshName := parts[0]
+	name := parts[1]
 
-	resp, err := conn.DescribeVirtualServiceWithContext(ctx, &appmesh.DescribeVirtualServiceInput{
-		MeshName:           aws.String(mesh),
-		VirtualServiceName: aws.String(name),
-	})
+	vs, err := FindVirtualServiceByThreePartKey(ctx, conn, meshName, "", name)
+
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(resp.VirtualService.Metadata.Uid))
-	d.Set("name", resp.VirtualService.VirtualServiceName)
-	d.Set("mesh_name", resp.VirtualService.MeshName)
+	d.SetId(aws.StringValue(vs.Metadata.Uid))
+	d.Set("mesh_name", vs.MeshName)
+	d.Set("name", vs.VirtualServiceName)
 
 	return []*schema.ResourceData{d}, nil
 }
