@@ -261,7 +261,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		case Create, Update:
 			if t.TagsOut.IsNone() {
 				if v, ok := sp.(interface {
-					ListTags(context.Context, any, string) (tftags.KeyValueTags, error)
+					ListTags(context.Context, any, string) error
 				}); ok {
 					var identifier string
 
@@ -271,7 +271,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						identifier = d.Get(key).(string)
 					}
 
-					tags, err := v.ListTags(ctx, meta, identifier)
+					err := v.ListTags(ctx, meta, identifier) // Sets tags in Context
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 						// ISO partitions may not support tagging, giving error
@@ -285,8 +285,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					if err != nil {
 						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
-
-					t.TagsOut = types.Some(tags)
 				}
 			}
 

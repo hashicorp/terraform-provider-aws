@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -190,6 +189,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
+		TagSpecifications:           tagSpecificationsFromTags(GetTagsIn(ctx), ec2.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -218,11 +218,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
-	}
-
-	tags, ok := tftags.FromContext(ctx)
-	if ok && len(tags.TagsIn) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags.TagsIn, ec2.ResourceTypeVpc)
 	}
 
 	output, err := conn.CreateVpcWithContext(ctx, input)
@@ -394,10 +389,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	tags, ok := tftags.FromContext(ctx)
-	if ok {
-		tags.TagsOut = types.Some(KeyValueTags(ctx, vpc.Tags))
-	}
+	SetTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

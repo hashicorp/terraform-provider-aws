@@ -246,6 +246,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
@@ -261,11 +262,6 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 
 		delete(attributes, TopicAttributeNameFIFOTopic)
-	}
-
-	tags, ok := tftags.FromContext(ctx)
-	if ok && len(tags.TagsIn) > 0 {
-		input.Tags = Tags(tags.TagsIn)
 	}
 
 	output, err := conn.CreateTopicWithContext(ctx, input)
@@ -290,18 +286,21 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags.TagsIn) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags.TagsIn)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+	if input.Tags == nil {
+		if tags := GetTagsIn(ctx); len(tags) > 0 {
+			err := UpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
-			return append(diags, resourceTopicRead(ctx, d, meta)...)
-		}
+			if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+				log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+				return append(diags, resourceTopicRead(ctx, d, meta)...)
+			}
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
