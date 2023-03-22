@@ -53,8 +53,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-func TestAccRDSInstanceDataSource_manage_password(t *testing.T) {
+func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -70,7 +69,7 @@ func TestAccRDSInstanceDataSource_manage_password(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_manage_password(rName),
+				Config: testAccInstanceDataSourceConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
@@ -79,13 +78,14 @@ func TestAccRDSInstanceDataSource_manage_password(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group", resourceName, "db_subnet_group_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled_cloudwatch_logs_exports.#", resourceName, "enabled_cloudwatch_logs_exports.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret_arn", resourceName, "master_user_secret_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.kms_key_id", resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_arn", resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_status", resourceName, "master_user_secret.0.secret_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
@@ -133,7 +133,7 @@ data "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_manage_password(rName string) string {
+func testAccInstanceDataSourceConfig_managedMasterPassword(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),
@@ -146,15 +146,11 @@ resource "aws_db_instance" "test" {
   engine_version              = data.aws_rds_engine_version.default.version
   identifier                  = %[1]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  manage_master_user_password = true
   name                        = "test"
   skip_final_snapshot         = true
-  username                    = "tfacctest"
-  manage_master_user_password = true
 
-  enabled_cloudwatch_logs_exports = [
-    "audit",
-    "error",
-  ]
+  username                    = "tfacctest"
 
   tags = {
     Name = %[1]q
