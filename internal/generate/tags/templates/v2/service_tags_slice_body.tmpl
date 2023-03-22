@@ -69,12 +69,12 @@ func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
 {{- end }}
 
 // Tags returns {{ .ServicePackage }} service tags.
-func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
+func Tags(tags tftags.KeyValueTags) []awstypes.{{ .TagType }} {
 	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
-	var result []types.{{ .TagType }}
+	var result []awstypes.{{ .TagType }}
 
 	for _, key := range tags.Keys() {
-		tag := types.{{ .TagType }}{
+		tag := awstypes.{{ .TagType }}{
 			{{ .TagTypeKeyElem }}:        aws.String(key),
 			{{ .TagTypeValElem }}:      tags.KeyValue(key),
 			{{- if ( .TagTypeIDElem ) }}
@@ -91,10 +91,10 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 		result = append(result, tag)
 	}
 	{{- else }}
-	result := make([]types.{{ .TagType }}, 0, len(tags))
+	result := make([]awstypes.{{ .TagType }}, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := types.{{ .TagType }}{
+		tag := awstypes.{{ .TagType }}{
 			{{ .TagTypeKeyElem }}:   aws.String(k),
 			{{ .TagTypeValElem }}: aws.String(v),
 		}
@@ -110,9 +110,9 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
 //
 // Accepts the following types:
-//   - []types.{{ .TagType }}
+//   - []awstypes.{{ .TagType }}
 {{- if .TagType2 }}
-//   - []types.{{ .TagType2 }}
+//   - []awstypes.{{ .TagType2 }}
 {{- end }}
 {{- if .TagTypeAddBoolElem }}
 //   - []any (Terraform TypeList configuration block compatible)
@@ -120,7 +120,7 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 {{- end }}
 func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
-	case []types.{{ .TagType }}:
+	case []awstypes.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -247,7 +247,7 @@ func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifi
 	}
 }
 {{- else }}
-func KeyValueTags(ctx context.Context, tags []types.{{ .TagType }}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.{{ .TagType }}) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
