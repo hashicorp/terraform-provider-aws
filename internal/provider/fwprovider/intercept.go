@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type resourceCRUDRequest interface {
@@ -251,4 +252,24 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ValidateConfig(ctx, request, response)
 	}
+}
+
+type tagsInterceptor struct {
+	tags *types.ServicePackageResourceTags
+}
+
+func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	return ctx, diags
+}
+
+func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	return ctx, diags
+}
+
+func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	return ctx, diags
+}
+
+func (r tagsInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	return ctx, diags
 }

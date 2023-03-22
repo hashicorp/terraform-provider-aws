@@ -389,6 +389,8 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
 					continue
 				}
+
+				interceptors = append(interceptors, tagsInterceptor{tags: v.Tags})
 			}
 
 			resources = append(resources, func() resource.Resource {
