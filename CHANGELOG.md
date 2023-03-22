@@ -2,11 +2,14 @@
 
 FEATURES:
 
+* **New Resource:** `aws_oam_link` ([#30125](https://github.com/hashicorp/terraform-provider-aws/issues/30125))
 * **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
 
 ENHANCEMENTS:
 
 * data-source/aws_ecs_cluster: Add `tags` attribute ([#30073](https://github.com/hashicorp/terraform-provider-aws/issues/30073))
+* resource/aws_appmesh_virtual_gateway: Add `logging.access_log.file.format` configuration block ([#29315](https://github.com/hashicorp/terraform-provider-aws/issues/29315))
+* resource/aws_appmesh_virtual_node: Add `logging.access_log.file.format` configuration block ([#29315](https://github.com/hashicorp/terraform-provider-aws/issues/29315))
 * resource/aws_securityhub_account: Add `enable_default_standards` argument ([#13477](https://github.com/hashicorp/terraform-provider-aws/issues/13477))
 * resource/aws_securityhub_member: `email` is Optional ([#19065](https://github.com/hashicorp/terraform-provider-aws/issues/19065))
 

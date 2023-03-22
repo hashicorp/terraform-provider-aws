@@ -1,5 +1,9 @@
 name: TeamCity Config Generator
 on:
+  push:
+    branches:
+      - main
+      - "release/**"
   pull_request:
     paths:
       - .teamcity/**
