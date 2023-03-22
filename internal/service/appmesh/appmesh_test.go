@@ -23,6 +23,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 		},
 		"Mesh": {
 			"basic":                    testAccMesh_basic,
+			"disappears":               testAccMesh_disappears,
 			"egressFilter":             testAccMesh_egressFilter,
 			"tags":                     testAccMesh_tags,
 			"dataSourceBasic":          testAccMeshDataSource_basic,
