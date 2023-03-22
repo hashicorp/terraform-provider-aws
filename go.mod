@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
 	github.com/aws/aws-sdk-go v1.44.225
-	github.com/aws/aws-sdk-go-v2 v1.17.6
+	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.6
@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.90.0
-	github.com/aws/aws-sdk-go-v2/service/fis v1.14.5
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.6
@@ -81,8 +81,8 @@ require (
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.12 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.30 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.25 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.24 // indirect
