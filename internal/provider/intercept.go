@@ -204,7 +204,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		resourceName = "<thing>"
 	}
 
-	t, ok := tftags.FromContext(ctx)
+	tagsInContext, ok := tftags.FromContext(ctx)
 	if !ok {
 		return ctx, diags
 	}
@@ -213,32 +213,31 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	case Before:
 		switch why {
 		case Create:
-			tags := t.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			tags = tags.IgnoreAWS()
 
-			t.TagsIn = tags
+			tagsInContext.TagsIn = tags
 		case Update:
 			if v, ok := sp.(interface {
 				UpdateTags(context.Context, any, string, any, any) error
 			}); ok {
-				var identifier string
-
-				if key := r.tags.IdentifierAttribute; key == "id" {
-					identifier = d.Id()
-				} else {
-					identifier = d.Get(key).(string)
-				}
-
 				if d.HasChange(names.AttrTagsAll) {
+					var identifier string
+					if key := r.tags.IdentifierAttribute; key == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(key).(string)
+					}
 					o, n := d.GetChange(names.AttrTagsAll)
 					err := v.UpdateTags(ctx, meta, identifier, o, n)
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 						// ISO partitions may not support tagging, giving error
 						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: d.Id(),
+							r.tags.IdentifierAttribute: identifier,
 							"error":                    err.Error(),
 						})
+
 						return ctx, diags
 					}
 
@@ -259,7 +258,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 
 			fallthrough
 		case Create, Update:
-			if t.TagsOut.IsNone() {
+			if tagsInContext.TagsOut.IsNone() {
 				if v, ok := sp.(interface {
 					ListTags(context.Context, any, string) error
 				}); ok {
@@ -288,9 +287,9 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				}
 			}
 
-			tags := t.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(t.IgnoreConfig)
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig)
 
-			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(t.DefaultConfig).Map()); err != nil {
+			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
