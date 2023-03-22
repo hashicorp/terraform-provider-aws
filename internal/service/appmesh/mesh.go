@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appmesh_mesh")
@@ -26,18 +27,38 @@ func ResourceMesh() *schema.Resource {
 		ReadWithoutTimeout:   resourceMeshRead,
 		UpdateWithoutTimeout: resourceMeshUpdate,
 		DeleteWithoutTimeout: resourceMeshDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"mesh_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"spec": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -54,13 +75,10 @@ func ResourceMesh() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  appmesh.EgressFilterTypeDropAll,
-										ValidateFunc: validation.StringInSlice([]string{
-											appmesh.EgressFilterTypeAllowAll,
-											appmesh.EgressFilterTypeDropAll,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      appmesh.EgressFilterTypeDropAll,
+										ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
 									},
 								},
 							},
@@ -68,35 +86,8 @@ func ResourceMesh() *schema.Resource {
 					},
 				},
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
