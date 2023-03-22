@@ -3565,7 +3565,7 @@ resource "aws_rds_cluster" "test" {
 `, n)
 }
 
-func testAccClusterConfig_replicationSourceIDKMSKeyID(rName string) string { //nolint:unused // test skipped because of known alternate provider issue
+func testAccClusterConfig_replicationSourceIDKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   provider = "awsalternate"
@@ -3841,7 +3841,7 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string { //nolint:unused // test skipped because of known alternate provider issue
+func testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -3938,7 +3938,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
-func testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string { //nolint:unused // test skipped because of known alternate provider issue
+func testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -4036,7 +4036,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
-func testAccClusterConfig_GlobalClusterID_replicationSourceID(rName string) string { //nolint:unused // test skipped because of known alternate provider issue
+func testAccClusterConfig_GlobalClusterID_replicationSourceID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
