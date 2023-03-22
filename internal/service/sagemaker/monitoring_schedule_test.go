@@ -92,6 +92,53 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_monitoring_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMonitoringScheduleConfig_scheduleExpressionDaily(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 0 ? * * *)"),
+				),
+			},
+			{
+				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -313,4 +360,34 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName string) string {
+	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_monitoring_schedule" "test" {
+  name                 = %[1]q
+  monitoring_schedule_config {
+    monitoring_job_definition_name = aws_sagemaker_data_quality_job_definition.test.name
+    monitoring_type = "DataQuality"
+    schedule_config {
+      schedule_expression = "cron(0 * ? * * *)"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccMonitoringScheduleConfig_scheduleExpressionDaily(rName string) string {
+	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_monitoring_schedule" "test" {
+  name                 = %[1]q
+  monitoring_schedule_config {
+    monitoring_job_definition_name = aws_sagemaker_data_quality_job_definition.test.name
+    monitoring_type = "DataQuality"
+    schedule_config {
+      schedule_expression = "cron(0 0 ? * * *)"
+    }
+  }
+}
+`, rName))
 }

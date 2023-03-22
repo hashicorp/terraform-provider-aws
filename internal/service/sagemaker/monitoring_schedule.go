@@ -3,6 +3,7 @@ package sagemaker
 import (
 	"context"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -54,6 +55,23 @@ func ResourceMonitoringSchedule() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.MonitoringType_Values(), false),
+						},
+						"schedule_config": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"schedule_expression": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^cron`), ""),
+											validation.StringLenBetween(1, 512),
+										),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -117,6 +135,26 @@ func expandMonitoringScheduleConfig(configured []interface{}) *sagemaker.Monitor
 		c.MonitoringType = aws.String(v)
 	}
 
+	if v, ok := m["schedule_config"].([]interface{}); ok && len(v) > 0 {
+		c.ScheduleConfig = expandScheduleConfig(v)
+	}
+
+	return c
+}
+
+func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ScheduleConfig{}
+
+	if v, ok := m["schedule_expression"].(string); ok && v != "" {
+		c.ScheduleExpression = aws.String(v)
+	}
+
 	return c
 }
 
@@ -177,6 +215,24 @@ func flattenMonitoringScheduleConfig(monitoringScheduleConfig *sagemaker.Monitor
 
 	if monitoringScheduleConfig.MonitoringType != nil {
 		spec["monitoring_type"] = aws.StringValue(monitoringScheduleConfig.MonitoringType)
+	}
+
+	if monitoringScheduleConfig.ScheduleConfig != nil {
+		spec["schedule_config"] = flattenScheduleConfig(monitoringScheduleConfig.ScheduleConfig)
+	}
+
+	return []map[string]interface{}{spec}
+}
+
+func flattenScheduleConfig(scheduleConfig *sagemaker.ScheduleConfig) []map[string]interface{} {
+	if scheduleConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	spec := map[string]interface{}{}
+
+	if scheduleConfig.ScheduleExpression != nil {
+		spec["schedule_expression"] = aws.StringValue(scheduleConfig.ScheduleExpression)
 	}
 
 	return []map[string]interface{}{spec}
