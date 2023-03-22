@@ -167,7 +167,6 @@ resource "aws_rds_cluster" "test" {
 You can specify the `master_user_secret_kms_key_id` attribute to specify a specific KMS Key.
 
 ```terraform
-
 resource "aws_kms_key" "example" {
   description = "Example KMS Key"
 }
@@ -371,7 +370,7 @@ load-balanced across replicas
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 [5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
 
-### `master_user_secret`
+### master_user_secret
 
 The `master_user_secret` configuration block supports the following attributes:
 
