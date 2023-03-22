@@ -2,13 +2,21 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type resourceCRUDRequest interface {
@@ -259,17 +267,213 @@ type tagsInterceptor struct {
 }
 
 func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		var planTags fwtypes.Map
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
+		tags = tags.IgnoreAWS()
+
+		tagsInContext.TagsIn = tags
+	case After:
+		// Set values for unknowns.
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+	}
+
 	return ctx, diags
 }
 
 func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+
+	if !ok {
+		return ctx, diags
+	}
+
+	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
+
+	if !ok {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case After:
+		if response.State.Raw.IsNull() {
+			// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
+			// Disappears test
+			return ctx, diags
+		}
+
+		if tagsInContext.TagsOut.IsNone() {
+			if v, ok := sp.(interface {
+				ListTags(context.Context, any, string) error
+			}); ok {
+				var identifier string
+				diags.Append(request.State.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				err := v.ListTags(ctx, meta, identifier) // Sets tags in Context
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+
+					return ctx, diags
+				}
+			}
+		}
+
+		apiTags := tagsInContext.TagsOut.UnwrapOrDefault()
+
+		// AWS APIs often return empty lists of tags when none have been configured.
+		stateTags := tftags.Null
+		if v := apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
+			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+		}
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+	}
+
 	return ctx, diags
 }
 
 func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+
+	if !ok {
+		return ctx, diags
+	}
+
+	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
+
+	if !ok {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	switch when {
+	case Before:
+		if v, ok := sp.(interface {
+			UpdateTags(context.Context, any, string, any, any) error
+		}); ok {
+			var oldTagsAll, newTagsAll fwtypes.Map
+
+			diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
+
+			if diags.HasError() {
+				return ctx, diags
+			}
+
+			diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTagsAll), &newTagsAll)...)
+
+			if diags.HasError() {
+				return ctx, diags
+			}
+
+			if !newTagsAll.Equal(oldTagsAll) {
+				var identifier string
+
+				diags.Append(request.Plan.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				err := v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
+
+				if verify.ErrorISOUnsupported(meta.Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+						r.tags.IdentifierAttribute: identifier,
+						"error":                    err.Error(),
+					})
+
+					return ctx, diags
+				}
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+
+					return ctx, diags
+				}
+			}
+		}
+	}
+
 	return ctx, diags
 }
 
 func (r tagsInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	if r.tags == nil {
+		return ctx, diags
+	}
+
 	return ctx, diags
 }
