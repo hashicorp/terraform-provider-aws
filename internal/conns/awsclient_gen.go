@@ -10,6 +10,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -345,6 +346,7 @@ type AWSClient struct {
 
 	httpClient *http.Client
 
+	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -982,6 +984,10 @@ func (client *AWSClient) DRSConn() *drs.Drs {
 
 func (client *AWSClient) DSConn() *directoryservice.DirectoryService {
 	return client.dsConn
+}
+
+func (client *AWSClient) DSClient() *directoryservice_sdkv2.Client {
+	return client.dsClient.Client()
 }
 
 func (client *AWSClient) DataBrewConn() *gluedatabrew.GlueDataBrew {
