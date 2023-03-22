@@ -719,79 +719,38 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeRouteInput{
-		MeshName:          aws.String(d.Get("mesh_name").(string)),
-		RouteName:         aws.String(d.Get("name").(string)),
-		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get("name").(string))
+	}, d.IsNewResource())
 
-	var resp *appmesh.DescribeRouteOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.DescribeRouteWithContext(ctx, req)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeRouteWithContext(ctx, req)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.Route == nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: empty response")
-	}
-
-	if aws.StringValue(resp.Route.Status.Status) == appmesh.RouteStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Route: %s after creation", aws.StringValue(resp.Route.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	arn := aws.StringValue(resp.Route.Metadata.Arn)
-	d.Set("name", resp.Route.RouteName)
-	d.Set("mesh_name", resp.Route.MeshName)
-	d.Set("mesh_owner", resp.Route.Metadata.MeshOwner)
-	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
+	route := outputRaw.(*appmesh.RouteData)
+	arn := aws.StringValue(route.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("resource_owner", resp.Route.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenRouteSpec(resp.Route.Spec))
-	if err != nil {
+	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", route.MeshName)
+	d.Set("mesh_owner", route.Metadata.MeshOwner)
+	d.Set("name", route.RouteName)
+	d.Set("resource_owner", route.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
+	d.Set("virtual_router_name", route.VirtualRouterName)
 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh route (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -877,31 +836,69 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-router-name/route-name'", d.Id())
 	}
 
-	mesh := parts[0]
-	vrName := parts[1]
+	meshName := parts[0]
+	virtualRouterName := parts[1]
 	name := parts[2]
-	log.Printf("[DEBUG] Importing App Mesh route %s from mesh %s/virtual router %s ", name, mesh, vrName)
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	req := &appmesh.DescribeRouteInput{
-		MeshName:          aws.String(mesh),
-		RouteName:         aws.String(name),
-		VirtualRouterName: aws.String(vrName),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	route, err := FindRouteByFourPartKey(ctx, conn, meshName, "", virtualRouterName, name)
 
-	resp, err := conn.DescribeRouteWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(resp.Route.Metadata.Uid))
-	d.Set("name", resp.Route.RouteName)
-	d.Set("mesh_name", resp.Route.MeshName)
-	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
+	d.SetId(aws.StringValue(route.Metadata.Uid))
+	d.Set("mesh_name", route.MeshName)
+	d.Set("name", route.RouteName)
+	d.Set("virtual_router_name", route.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, virtualRouterName, name string) (*appmesh.RouteData, error) {
+	input := &appmesh.DescribeRouteInput{
+		MeshName:          aws.String(meshName),
+		RouteName:         aws.String(name),
+		VirtualRouterName: aws.String(virtualRouterName),
+	}
+	if meshOwner != "" {
+		input.MeshOwner = aws.String(meshOwner)
+	}
+
+	output, err := findRoute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.RouteStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findRoute(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeRouteInput) (*appmesh.RouteData, error) {
+	output, err := conn.DescribeRouteWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Route == nil || output.Route.Metadata == nil || output.Route.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Route, nil
 }
