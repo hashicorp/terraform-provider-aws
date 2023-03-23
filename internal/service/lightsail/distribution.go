@@ -413,11 +413,18 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("cache_behavior", flattenCacheBehaviorsPerPath(out.CacheBehaviors)); err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	if err := d.Set("cache_behavior_settings", []interface{}{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+
+	if out.CacheBehaviorSettings != nil {
+		if err := d.Set("cache_behavior_settings", []interface{}{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
+			return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		}
+	} else {
+		d.Set("cache_behavior_settings", nil)
 	}
+
 	d.Set("certificate_name", out.CertificateName)
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
