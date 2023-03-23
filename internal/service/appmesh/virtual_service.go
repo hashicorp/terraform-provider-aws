@@ -70,50 +70,58 @@ func ResourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"provider": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"virtual_node": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MinItems:      0,
-										MaxItems:      1,
-										ConflictsWith: []string{"spec.0.provider.0.virtual_router"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_node_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 255),
-												},
-											},
+			"spec":            resourceVirualServiceSpecSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
+
+func resourceVirualServiceSpecSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"provider": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"virtual_node": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								MinItems:      0,
+								MaxItems:      1,
+								ConflictsWith: []string{"spec.0.provider.0.virtual_router"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"virtual_node_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 									},
-									"virtual_router": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MinItems:      0,
-										MaxItems:      1,
-										ConflictsWith: []string{"spec.0.provider.0.virtual_node"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_router_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 255),
-												},
-											},
+								},
+							},
+							"virtual_router": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								MinItems:      0,
+								MaxItems:      1,
+								ConflictsWith: []string{"spec.0.provider.0.virtual_node"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"virtual_router_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 									},
 								},
@@ -122,11 +130,7 @@ func ResourceVirtualService() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

@@ -48,46 +48,7 @@ func DataSourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"provider": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"virtual_node": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_node_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"virtual_router": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_router_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"spec":         dataSourcePropertyFromResourceProperty(resourceVirualServiceSpecSchema()),
 			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
