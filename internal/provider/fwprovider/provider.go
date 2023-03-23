@@ -315,6 +315,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
@@ -357,6 +358,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
 			typeName := metadataResponse.TypeName
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
@@ -368,6 +370,8 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			interceptors := resourceInterceptors{}
 
 			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
 				schemaResponse := resource.SchemaResponse{}
 				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 

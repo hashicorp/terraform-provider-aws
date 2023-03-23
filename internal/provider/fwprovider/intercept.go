@@ -26,16 +26,24 @@ type resourceCRUDResponse interface {
 	resource.CreateResponse | resource.ReadResponse | resource.UpdateResponse | resource.DeleteResponse
 }
 
+// A resource interceptor is functionality invoked during the resource's CRUD request lifecycle.
+// If a Before interceptor returns Diagnostics indicating an error occurred then
+// no further interceptors in the chain are run and neither is the schema's method.
+// In other cases all interceptors in the chain are run.
 type resourceInterceptor interface {
+	// create is invoke for a Create call.
 	create(context.Context, resource.CreateRequest, *resource.CreateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	// read is invoke for a Read call.
 	read(context.Context, resource.ReadRequest, *resource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	// update is invoke for an Update call.
 	update(context.Context, resource.UpdateRequest, *resource.UpdateResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	// delete is invoke for a Delete call.
 	delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
-
 type resourceInterceptors []resourceInterceptor
+
+type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // create returns a slice of interceptors that run on resource Create.
 func (s resourceInterceptors) create() []resourceInterceptorFunc[resource.CreateRequest, resource.CreateResponse] {
@@ -65,10 +73,22 @@ func (s resourceInterceptors) delete() []resourceInterceptorFunc[resource.Delete
 	})
 }
 
+// when represents the point in the CRUD request lifecycle that an interceptor is run.
+// Multiple values can be ORed together.
+type when uint16
+
+const (
+	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
+	After                    // Interceptor is invoked after successful call to method in schema
+	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
+	Finally                  // Interceptor is invoked after After or OnError
+)
+
 // interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
 func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
 	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
+		// Before interceptors are run first to last.
 		forward := interceptors
 
 		when := Before
@@ -81,6 +101,7 @@ func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDRespon
 			}
 		}
 
+		// All other interceptors are run last to first.
 		reverse := slices.Reverse(forward)
 		diags = f(ctx, request, response)
 
@@ -102,21 +123,12 @@ func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDRespon
 	}
 }
 
-// when represents the point in the CRUD request lifecycle that an interceptor is run.
-// Multiple values can be ORed together.
-type when uint16
-
-const (
-	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
-	After                    // Interceptor is invoked after successful call to method in schema
-	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
-	Finally                  // Interceptor is invoked after After or OnError
-)
-
+// contextFunc augments Context.
 type contextFunc func(context.Context, *conns.AWSClient) context.Context
 
-// wrappedDataSource wraps a data source, adding common functionality.
+// wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            datasource.DataSourceWithConfigure
 	meta             *conns.AWSClient
@@ -149,8 +161,9 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-// wrappedResource wraps a resource, adding common functionality.
+// wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
 type wrappedResource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            resource.ResourceWithConfigure
 	interceptors     resourceInterceptors
@@ -262,6 +275,7 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 	}
 }
 
+// tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
@@ -285,12 +299,16 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 			return ctx, diags
 		}
 
+		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
+		// Remove system tags.
 		tags = tags.IgnoreAWS()
 
 		tagsInContext.TagsIn = tags
 	case After:
 		// Set values for unknowns.
+		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
+		// Computed tags_all include any provider configured default_tags.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
@@ -338,13 +356,14 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 
 	switch when {
 	case After:
+		// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
 		if response.State.Raw.IsNull() {
-			// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
-			// Disappears test
 			return ctx, diags
 		}
 
+		// If the R handler didn't set tags, try and read them from the service API.
 		if tagsInContext.TagsOut.IsNone() {
+			// If the service package has a generic resource list tags methods, call it.
 			if v, ok := sp.(interface {
 				ListTags(context.Context, any, string) error
 			}); ok {
@@ -369,6 +388,8 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 
 		// AWS APIs often return empty lists of tags when none have been configured.
 		stateTags := tftags.Null
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		// The resource's configured tags do not include any provider configured default_tags.
 		if v := apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
 			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
 		}
@@ -378,6 +399,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 			return ctx, diags
 		}
 
+		// Computed tags_all do.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
@@ -420,6 +442,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 
 	switch when {
 	case Before:
+		// If the service package has a generic resource update tags methods, call it.
 		if v, ok := sp.(interface {
 			UpdateTags(context.Context, any, string, any, any) error
 		}); ok {
@@ -464,6 +487,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 					return ctx, diags
 				}
 			}
+			// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 		}
 	}
 
@@ -471,9 +495,5 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 }
 
 func (r tagsInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-	if r.tags == nil {
-		return ctx, diags
-	}
-
 	return ctx, diags
 }
