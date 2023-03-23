@@ -14,17 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
 	tfrbin "github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRBinRBinRule_basic(t *testing.T) {
+func TestAccRBinRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rbinrule rbin.GetRuleOutput
 	description := "my test description"
 	resourceType := "EBS_SNAPSHOT"
-	resourceName := "aws_rbin_rbin_rule.test"
+	resourceName := "aws_rbin_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -62,7 +61,7 @@ func TestAccRBinRBinRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccRBinRBinRule_disappears(t *testing.T) {
+func TestAccRBinRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rbinrule rbin.GetRuleOutput
 	description := "my test description"
@@ -83,7 +82,7 @@ func TestAccRBinRBinRule_disappears(t *testing.T) {
 				Config: testAccRBinRuleConfig_basic(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRBinRuleExists(resourceName, &rbinrule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRBinRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +110,7 @@ func testAccCheckRBinRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return create.Error(names.RBin, create.ErrActionCheckingDestroyed, tfrbin.ResNameRBinRule, rs.Primary.ID, errors.New("not destroyed"))
+		return create.Error(names.RBin, create.ErrActionCheckingDestroyed, tfrbin.ResNameRule, rs.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
@@ -121,11 +120,11 @@ func testAccCheckRBinRuleExists(name string, rbinrule *rbin.GetRuleOutput) resou
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRBinRule, name, errors.New("not found"))
+			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRBinRule, name, errors.New("not set"))
+			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
@@ -135,7 +134,7 @@ func testAccCheckRBinRuleExists(name string, rbinrule *rbin.GetRuleOutput) resou
 		})
 
 		if err != nil {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRBinRule, rs.Primary.ID, err)
+			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, rs.Primary.ID, err)
 		}
 
 		*rbinrule = *resp
@@ -172,7 +171,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccCheckRBinRuleNotRecreated(before, after *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Identifier), aws.ToString(after.Identifier); before != after {
-			return create.Error(names.RBin, create.ErrActionCheckingNotRecreated, tfrbin.ResNameRBinRule, before, errors.New("recreated"))
+			return create.Error(names.RBin, create.ErrActionCheckingNotRecreated, tfrbin.ResNameRule, before, errors.New("recreated"))
 		}
 
 		return nil
@@ -181,7 +180,7 @@ func testAccCheckRBinRuleNotRecreated(before, after *rbin.GetRuleOutput) resourc
 
 func testAccRBinRuleConfig_basic(description, resourceType string) string {
 	return fmt.Sprintf(`
-resource "aws_rbin_rbin_rule" "test" {
+resource "aws_rbin_rule" "test" {
   description   = %[1]q
   resource_type = %[2]q
   resource_tags {

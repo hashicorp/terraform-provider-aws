@@ -23,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rbin_rbin_rule")
-func ResourceRBinRule() *schema.Resource {
+// @SDKResource("aws_rbin_rule")
+func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceRBinRuleCreate,
-		ReadWithoutTimeout:   resourceRBinRuleRead,
-		UpdateWithoutTimeout: resourceRBinRuleUpdate,
-		DeleteWithoutTimeout: resourceRBinRuleDelete,
+		CreateWithoutTimeout: resourceRuleCreate,
+		ReadWithoutTimeout:   resourceRuleRead,
+		UpdateWithoutTimeout: resourceRuleUpdate,
+		DeleteWithoutTimeout: resourceRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -111,11 +111,10 @@ func ResourceRBinRule() *schema.Resource {
 }
 
 const (
-	ResNameRBinRule  = "Recycle Bin Rule"
-	ResourceNameRBin = "Recycle Bin"
+	ResNameRule = "Rule"
 )
 
-func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RBinClient()
 
 	in := &rbin.CreateRuleInput{
@@ -137,26 +136,26 @@ func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRBinRule, d.Get("identifier").(string), err)
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("identifier").(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRBinRule, d.Get("identifier").(string), errors.New("empty output"))
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("identifier").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Identifier))
 
-	if _, err := waitRBinRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForCreation, ResNameRBinRule, d.Id(), err)
+	if _, err := waitRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.RBin, create.ErrActionWaitingForCreation, ResNameRule, d.Id(), err)
 	}
 
-	return resourceRBinRuleRead(ctx, d, meta)
+	return resourceRuleRead(ctx, d, meta)
 }
 
-func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RBinClient()
 
-	out, err := findRBinRuleByID(ctx, conn, d.Id())
+	out, err := findRuleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RBin RBinRule (%s) not found, removing from state", d.Id())
@@ -165,7 +164,7 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
 	}
 
 	d.Set("description", out.Description)
@@ -174,11 +173,11 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("status", string(out.Status))
 
 	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
 	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
 	c := meta.(*conns.AWSClient)
@@ -191,7 +190,7 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	tags, err := ListTags(ctx, conn, ARN.String())
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -199,17 +198,17 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceRBinRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RBinClient()
 
 	update := false
@@ -241,17 +240,17 @@ func resourceRBinRuleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Updating RBin RBinRule (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionUpdating, ResNameRBinRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionUpdating, ResNameRule, d.Id(), err)
 	}
 
-	if _, err := waitRBinRuleUpdated(ctx, conn, aws.ToString(out.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForUpdate, ResNameRBinRule, d.Id(), err)
+	if _, err := waitRuleUpdated(ctx, conn, aws.ToString(out.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.DiagError(names.RBin, create.ErrActionWaitingForUpdate, ResNameRule, d.Id(), err)
 	}
 
-	return resourceRBinRuleRead(ctx, d, meta)
+	return resourceRuleRead(ctx, d, meta)
 }
 
-func resourceRBinRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting RBin RBinRule %s", d.Id())
 
 	conn := meta.(*conns.AWSClient).RBinClient()
@@ -266,21 +265,21 @@ func resourceRBinRuleDelete(ctx context.Context, d *schema.ResourceData, meta in
 			return nil
 		}
 
-		return create.DiagError(names.Comprehend, create.ErrActionDeleting, ResourceNameRBin, d.Id(), err)
+		return create.DiagError(names.Comprehend, create.ErrActionDeleting, ResNameRule, d.Id(), err)
 	}
 
-	if _, err := waitRBinRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForDeletion, ResNameRBinRule, d.Id(), err)
+	if _, err := waitRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.DiagError(names.RBin, create.ErrActionWaitingForDeletion, ResNameRule, d.Id(), err)
 	}
 
 	return nil
 }
 
-func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
+func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{string(types.RuleStatusPending)},
 		Target:                    []string{string(types.RuleStatusAvailable)},
-		Refresh:                   statusRBinRule(ctx, conn, id),
+		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -294,11 +293,11 @@ func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, time
 	return nil, err
 }
 
-func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
+func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{string(types.RuleStatusPending)},
 		Target:                    []string{string(types.RuleStatusAvailable)},
-		Refresh:                   statusRBinRule(ctx, conn, id),
+		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -312,11 +311,11 @@ func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, time
 	return nil, err
 }
 
-func waitRBinRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
+func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{string(types.RuleStatusPending), string(types.RuleStatusAvailable)},
 		Target:  []string{},
-		Refresh: statusRBinRule(ctx, conn, id),
+		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -328,9 +327,9 @@ func waitRBinRuleDeleted(ctx context.Context, conn *rbin.Client, id string, time
 	return nil, err
 }
 
-func statusRBinRule(ctx context.Context, conn *rbin.Client, id string) resource.StateRefreshFunc {
+func statusRule(ctx context.Context, conn *rbin.Client, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findRBinRuleByID(ctx, conn, id)
+		out, err := findRuleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -343,7 +342,7 @@ func statusRBinRule(ctx context.Context, conn *rbin.Client, id string) resource.
 	}
 }
 
-func findRBinRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetRuleOutput, error) {
+func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetRuleOutput, error) {
 	in := &rbin.GetRuleInput{
 		Identifier: aws.String(id),
 	}
