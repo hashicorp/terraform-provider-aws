@@ -751,7 +751,6 @@ resource "aws_lightsail_distribution" "test" {
   origin {
     name            = aws_lightsail_bucket.test.name
     region_name     = aws_lightsail_bucket.test.region
-    protocol_policy = "http-only"
   }
   default_cache_behavior {
     behavior = "cache"
