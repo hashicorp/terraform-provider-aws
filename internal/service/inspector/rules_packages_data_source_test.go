@@ -15,13 +15,13 @@ func TestAccInspectorRulesPackagesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSInspectorRulesPackagesConfig,
+				Config: testAccRulesPackagesDataSourceConfig_basic,
 				Check:  resource.TestCheckResourceAttrSet("data.aws_inspector_rules_packages.test", "arns.#"),
 			},
 		},
 	})
 }
 
-const testAccCheckAWSInspectorRulesPackagesConfig = `
+const testAccRulesPackagesDataSourceConfig_basic = `
 data "aws_inspector_rules_packages" "test" {}
 `

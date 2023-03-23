@@ -3,6 +3,7 @@ package verify
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -52,6 +53,12 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 	}
 
 	return nil
+}
+
+// SuppressEquivalentStringCaseInsensitive provides custom difference suppression
+// for strings that are equal under case-insensitivity.
+func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
+	return strings.EqualFold(old, new)
 }
 
 // SuppressEquivalentRoundedTime returns a difference suppression function that compares

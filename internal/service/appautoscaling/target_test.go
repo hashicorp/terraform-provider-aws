@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
@@ -202,35 +201,23 @@ func testAccCheckTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the target
-		describeTargets, err := conn.DescribeScalableTargets(
-			&applicationautoscaling.DescribeScalableTargetsInput{
-				ResourceIds:      []*string{aws.String(rs.Primary.ID)},
-				ServiceNamespace: aws.String(rs.Primary.Attributes["service_namespace"]),
-			},
-		)
+		_, err := tfappautoscaling.FindTargetByThreePartKey(conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
-		if err == nil {
-			if len(describeTargets.ScalableTargets) != 0 &&
-				*describeTargets.ScalableTargets[0].ResourceId == rs.Primary.ID {
-				return fmt.Errorf("Application AutoScaling Target still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify error
-		e, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if e.Code() != "" {
-			return e
-		}
+
+		return fmt.Errorf("Application AutoScaling Target %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTargetExists(n string, target *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(n string, v *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -243,19 +230,13 @@ func testAccCheckTargetExists(n string, target *applicationautoscaling.ScalableT
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
-		namespace := rs.Primary.Attributes["service_namespace"]
-		dimension := rs.Primary.Attributes["scalable_dimension"]
+		output, err := tfappautoscaling.FindTargetByThreePartKey(conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
-		tgt, err := tfappautoscaling.GetTarget(rs.Primary.ID, namespace, dimension, conn)
 		if err != nil {
 			return err
 		}
-		if tgt == nil {
-			return fmt.Errorf("Scalable target for %q (%s/%s) not found",
-				rs.Primary.ID, namespace, dimension)
-		}
 
-		*target = *tgt
+		*v = *output
 
 		return nil
 	}

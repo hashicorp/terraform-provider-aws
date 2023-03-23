@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	route53RecoveryControlConfigTimeout    = 60 * time.Second
-	route53RecoveryControlConfigMinTimeout = 5 * time.Second
+	timeout    = 60 * time.Second
+	minTimeout = 5 * time.Second
 )
 
 func waitClusterCreated(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) (*r53rcc.DescribeClusterOutput, error) {
@@ -17,8 +17,8 @@ func waitClusterCreated(conn *r53rcc.Route53RecoveryControlConfig, clusterArn st
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusCluster(conn, clusterArn),
-		Timeout:    route53RecoveryControlConfigTimeout,
-		MinTimeout: route53RecoveryControlConfigMinTimeout,
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -35,8 +35,8 @@ func waitClusterDeleted(conn *r53rcc.Route53RecoveryControlConfig, clusterArn st
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusCluster(conn, clusterArn),
-		Timeout:        route53RecoveryControlConfigTimeout,
-		Delay:          route53RecoveryControlConfigMinTimeout,
+		Timeout:        timeout,
+		Delay:          minTimeout,
 		NotFoundChecks: 1,
 	}
 
@@ -54,8 +54,8 @@ func waitRoutingControlCreated(conn *r53rcc.Route53RecoveryControlConfig, routin
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusRoutingControl(conn, routingControlArn),
-		Timeout:    route53RecoveryControlConfigTimeout,
-		MinTimeout: route53RecoveryControlConfigMinTimeout,
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -72,8 +72,8 @@ func waitRoutingControlDeleted(conn *r53rcc.Route53RecoveryControlConfig, routin
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusRoutingControl(conn, routingControlArn),
-		Timeout:        route53RecoveryControlConfigTimeout,
-		Delay:          route53RecoveryControlConfigMinTimeout,
+		Timeout:        timeout,
+		Delay:          minTimeout,
 		NotFoundChecks: 1,
 	}
 
@@ -91,8 +91,8 @@ func waitControlPanelCreated(conn *r53rcc.Route53RecoveryControlConfig, controlP
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusControlPanel(conn, controlPanelArn),
-		Timeout:    route53RecoveryControlConfigTimeout,
-		MinTimeout: route53RecoveryControlConfigMinTimeout,
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -109,8 +109,8 @@ func waitControlPanelDeleted(conn *r53rcc.Route53RecoveryControlConfig, controlP
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusControlPanel(conn, controlPanelArn),
-		Timeout:        route53RecoveryControlConfigTimeout,
-		Delay:          route53RecoveryControlConfigMinTimeout,
+		Timeout:        timeout,
+		Delay:          minTimeout,
 		NotFoundChecks: 1,
 	}
 
@@ -128,8 +128,8 @@ func waitSafetyRuleCreated(conn *r53rcc.Route53RecoveryControlConfig, safetyRule
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusSafetyRule(conn, safetyRuleArn),
-		Timeout:    route53RecoveryControlConfigTimeout,
-		MinTimeout: route53RecoveryControlConfigMinTimeout,
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -146,8 +146,8 @@ func waitSafetyRuleDeleted(conn *r53rcc.Route53RecoveryControlConfig, safetyRule
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusSafetyRule(conn, safetyRuleArn),
-		Timeout:        route53RecoveryControlConfigTimeout,
-		Delay:          route53RecoveryControlConfigMinTimeout,
+		Timeout:        timeout,
+		Delay:          minTimeout,
 		NotFoundChecks: 1,
 	}
 

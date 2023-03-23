@@ -135,7 +135,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
+		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 	if len(tags) > 0 {
 		req.NewPublicVirtualInterface.Tags = Tags(tags.IgnoreAWS())
@@ -149,7 +149,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
-	if err := dxPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := publicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourcePublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
+	if err := virtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
@@ -222,13 +222,13 @@ func resourcePublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourcePublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	return virtualInterfaceDelete(d, meta)
 }
 
 func resourcePublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -259,8 +259,8 @@ func resourcePublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema
 	return nil
 }
 
-func dxPublicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func publicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

@@ -576,10 +576,6 @@ func expandWorkflows(tfList []interface{}) []*transfer.WorkflowStep {
 			apiObject.TagStepDetails = expandTagStepDetails(v)
 		}
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
@@ -948,10 +944,6 @@ func expandS3Tags(tfList []interface{}) []*transfer.S3Tag {
 
 		if v, ok := tfMap["value"].(string); ok && v != "" {
 			apiObject.Value = aws.String(v)
-		}
-
-		if apiObject == nil {
-			continue
 		}
 
 		apiObjects = append(apiObjects, apiObject)

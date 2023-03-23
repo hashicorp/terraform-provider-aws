@@ -323,7 +323,7 @@ func testAccCheckRepositoryRepositoryURL(resourceName, repositoryName string) re
 	}
 }
 
-func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ecr-in-func-name
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was not recreated")
@@ -333,7 +333,7 @@ func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFun
 	}
 }
 
-func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ecr-in-func-name
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was recreated")

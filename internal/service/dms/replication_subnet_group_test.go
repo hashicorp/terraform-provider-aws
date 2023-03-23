@@ -22,12 +22,12 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      dmsReplicationSubnetGroupDestroy,
+		CheckDestroy:      replicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationSubnetGroupConfig(randId),
+				Config: testAccReplicationSubnetGroupConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsReplicationSubnetGroupExists(resourceName),
+					checkReplicationSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 				),
 			},
@@ -37,21 +37,21 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dmsReplicationSubnetGroupConfigUpdate(randId),
+				Config: testAccReplicationSubnetGroupConfig_update(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsReplicationSubnetGroupExists(resourceName),
+					checkReplicationSubnetGroupExists(resourceName),
 				),
 			},
 		},
 	})
 }
 
-func checkDmsReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
+func checkReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
 	providers := []*schema.Provider{acctest.Provider}
-	return checkDmsReplicationSubnetGroupExistsWithProviders(n, &providers)
+	return checkReplicationSubnetGroupExistsProviders(n, &providers)
 }
 
-func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*schema.Provider) resource.TestCheckFunc {
+func checkReplicationSubnetGroupExistsProviders(n string, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -87,13 +87,13 @@ func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*s
 	}
 }
 
-func dmsReplicationSubnetGroupDestroy(s *terraform.State) error {
+func replicationSubnetGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_replication_subnet_group" {
 			continue
 		}
 
-		err := checkDmsReplicationSubnetGroupExists(rs.Primary.ID)
+		err := checkReplicationSubnetGroupExists(rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Found replication subnet group that was not destroyed: %s", rs.Primary.ID)
 		}
@@ -102,7 +102,7 @@ func dmsReplicationSubnetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func dmsReplicationSubnetGroupConfig(randId string) string {
+func testAccReplicationSubnetGroupConfig_basic(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
@@ -162,7 +162,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 `, randId))
 }
 
-func dmsReplicationSubnetGroupConfigUpdate(randId string) string {
+func testAccReplicationSubnetGroupConfig_update(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"

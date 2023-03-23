@@ -101,7 +101,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 			},
 			{
 				Config: testAccMetricFilterManyConfig(rInt),
-				Check:  testAccCheckCloudwatchLogMetricFilterManyExist("aws_cloudwatch_log_metric_filter.test", &mf),
+				Check:  testAccCheckMetricFilterManyExist("aws_cloudwatch_log_metric_filter.test", &mf),
 			},
 		},
 	})
@@ -265,7 +265,7 @@ func testAccCheckMetricFilterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudwatchLogMetricFilterManyExist(basename string, mf *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
+func testAccCheckMetricFilterManyExist(basename string, mf *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for i := 0; i < 15; i++ {
 			n := fmt.Sprintf("%s.%d", basename, i)

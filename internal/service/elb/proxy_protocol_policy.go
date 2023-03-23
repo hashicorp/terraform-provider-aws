@@ -207,12 +207,12 @@ func resourceProxyProtocolPolicyRemove(policyName string, ports []interface{}, b
 			continue
 		}
 
-		for _, policy := range curPolicies {
-			if policy == policyName {
+		for _, p := range curPolicies {
+			if p == policyName {
 				// remove the policy
 				continue
 			}
-			newPolicies = append(newPolicies, &policy)
+			newPolicies = append(newPolicies, aws.String(p))
 		}
 
 		inputs = append(inputs, &elb.SetLoadBalancerPoliciesForBackendServerInput{
@@ -237,9 +237,8 @@ func resourceProxyProtocolPolicyAdd(policyName string, ports []interface{}, back
 			if p == policyName {
 				// Just remove it for now. It will be back later.
 				continue
-			} else {
-				newPolicies = append(newPolicies, &p)
 			}
+			newPolicies = append(newPolicies, aws.String(p))
 		}
 		newPolicies = append(newPolicies, aws.String(policyName))
 

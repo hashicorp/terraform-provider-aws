@@ -18,7 +18,7 @@ import (
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestQuickSightDataSourcePermissionsDiff(t *testing.T) {
+func TestDataSourcePermissionsDiff(t *testing.T) {
 	testCases := []struct {
 		name            string
 		oldPermissions  []interface{}

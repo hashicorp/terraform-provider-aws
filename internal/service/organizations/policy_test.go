@@ -385,7 +385,7 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	})
 }
 
-func testAccPolicy_ImportAwsManagedPolicy(t *testing.T) {
+func testAccPolicy_importManagedPolicy(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resourceID := "p-FullAWSAccess"
@@ -397,10 +397,10 @@ func testAccPolicy_ImportAwsManagedPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_AwsManagedPolicySetup,
+				Config: testAccPolicyConfig_managedPolicySetup,
 			},
 			{
-				Config:        testAccPolicyConfig_AwsManagedPolicy,
+				Config:        testAccPolicyConfig_managedPolicy,
 				ResourceName:  resourceName,
 				ImportStateId: resourceID,
 				ImportState:   true,
@@ -721,13 +721,13 @@ resource "aws_organizations_policy" "test" {
 `, strconv.Quote(content), rName, policyType)
 }
 
-const testAccPolicyConfig_AwsManagedPolicySetup = `
+const testAccPolicyConfig_managedPolicySetup = `
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
 }
 `
 
-const testAccPolicyConfig_AwsManagedPolicy = `
+const testAccPolicyConfig_managedPolicy = `
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
 }

@@ -11,7 +11,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -801,8 +800,14 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if twoPhases {
 		for _, hook := range generatePutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			if err = resourceLifecycleHookPutOp(conn, &hook); err != nil {
-				return fmt.Errorf("Error creating initial lifecycle hooks: %s", err)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+				func() (interface{}, error) {
+					return conn.PutLifecycleHook(&hook)
+				},
+				ErrCodeValidationError, "Unable to publish test message to notification target")
+
+			if err != nil {
+				return fmt.Errorf("creating Auto Scaling Group (%s) Lifecycle Hook: %w", d.Id(), err)
 			}
 		}
 
@@ -1409,16 +1414,14 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	// scaling operations within 5m.
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				switch awserr.Code() {
-				case "InvalidGroup.NotFound":
-					// Already gone? Sure!
-					return nil
-				case "ResourceInUse", "ScalingActivityInProgress":
-					// These are retryable
-					return resource.RetryableError(awserr)
-				}
+			if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
+				return nil
 			}
+
+			if tfawserr.ErrCodeEquals(err, "ResourceInUse", "ScalingActivityInProgress") {
+				return resource.RetryableError(err)
+			}
+
 			// Didn't recognize the error, so shouldn't retry.
 			return resource.NonRetryableError(err)
 		}
@@ -1480,13 +1483,10 @@ func resourceGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, m
 		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 			_, err := conn.DeleteWarmPool(&deleteopts)
 			if err != nil {
-				if callerr, ok := err.(awserr.Error); ok {
-					switch callerr.Code() {
-					case "ResourceInUse", "ScalingActivityInProgress":
-						// These are retryable
-						return resource.RetryableError(callerr)
-					}
+				if tfawserr.ErrCodeEquals(err, "ResourceInUse", "ScalingActivityInProgress") {
+					return resource.RetryableError(err)
 				}
+
 				// Didn't recognize the error, so shouldn't retry.
 				return resource.NonRetryableError(err)
 			}
@@ -1554,8 +1554,7 @@ func getGroupWarmPool(asgName string, conn *autoscaling.AutoScaling) (*autoscali
 	log.Printf("[DEBUG] Warm Pool describe configuration input: %#v", describeOpts)
 	describeWarmPoolOutput, err := conn.DescribeWarmPool(&describeOpts)
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && autoscalingerr.Code() == "InvalidGroup.NotFound" {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil, nil
 		}
 
@@ -1626,8 +1625,7 @@ func getGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group
 	log.Printf("[DEBUG] Auto Scaling Group describe configuration: %#v", describeOpts)
 	describeGroups, err := conn.DescribeAutoScalingGroups(&describeOpts)
 	if err != nil {
-		autoscalingerr, ok := err.(awserr.Error)
-		if ok && autoscalingerr.Code() == "InvalidGroup.NotFound" {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil, nil
 		}
 

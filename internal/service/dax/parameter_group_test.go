@@ -25,7 +25,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaxParameterGroupConfig(rName),
+				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
@@ -37,7 +37,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDaxParameterGroupConfig_parameters(rName),
+				Config: testAccParameterGroupConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
@@ -85,7 +85,7 @@ func testAccCheckParameterGroupExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDaxParameterGroupConfig(rName string) string {
+func testAccParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"
@@ -93,7 +93,7 @@ resource "aws_dax_parameter_group" "test" {
 `, rName)
 }
 
-func testAccDaxParameterGroupConfig_parameters(rName string) string {
+func testAccParameterGroupConfig_parameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"

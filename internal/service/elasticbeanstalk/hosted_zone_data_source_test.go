@@ -21,7 +21,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElasticBeanstalkHostedZoneDataSource_currentRegion,
+				Config: testAccHostedZoneDataSourceConfig_currentRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedZone(dataSourceName, acctest.Region()),
 				),
@@ -70,7 +70,7 @@ func testAccCheckHostedZone(resourceName string, region string) resource.TestChe
 	}
 }
 
-const testAccCheckAWSElasticBeanstalkHostedZoneDataSource_currentRegion = `
+const testAccHostedZoneDataSourceConfig_currentRegion = `
 data "aws_elastic_beanstalk_hosted_zone" "test" {}
 `
 

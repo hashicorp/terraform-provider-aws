@@ -26,8 +26,8 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_connection_confirmation.test"
-	providerFunc := testAccDxConnectionConfirmationProvider(&providers, 0)
-	altProviderFunc := testAccDxConnectionConfirmationProvider(&providers, 1)
+	providerFunc := testAccConnectionConfirmationProvider(&providers, 0)
+	altProviderFunc := testAccConnectionConfirmationProvider(&providers, 1)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +39,7 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckHostedConnectionDestroy(altProviderFunc),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfirmationConfig(connectionName, env.ConnectionId, env.OwnerAccountId),
+				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
 				Check:  testAccCheckConnectionConfirmationExists(resourceName, providerFunc),
 			},
 		},
@@ -74,7 +74,7 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 	}
 }
 
-func testAccDxConnectionConfirmationConfig(name, connectionId, ownerAccountId string) string {
+func testAccConnectionConfirmationConfig_basic(name, connectionId, ownerAccountId string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -94,7 +94,7 @@ resource "aws_dx_connection_confirmation" "test" {
 `, name, connectionId, ownerAccountId))
 }
 
-func testAccDxConnectionConfirmationProvider(providers *[]*schema.Provider, index int) func() *schema.Provider {
+func testAccConnectionConfirmationProvider(providers *[]*schema.Provider, index int) func() *schema.Provider {
 	return func() *schema.Provider {
 		return (*providers)[index]
 	}

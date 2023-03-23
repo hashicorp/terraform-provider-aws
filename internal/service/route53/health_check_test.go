@@ -143,7 +143,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 		CheckDestroy:      testAccCheckHealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfig_withChildHealthChecks,
+				Config: testAccHealthCheckConfig_childHealthChecks,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 				),
@@ -253,7 +253,7 @@ func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 		CheckDestroy:      testAccCheckHealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckCloudWatchAlarm,
+				Config: testAccHealthCheckConfig_cloudWatchAlarm,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm_name", "cloudwatch-healthcheck-alarm"),
@@ -278,7 +278,7 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 		CheckDestroy:      testAccCheckHealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigWithoutSNI,
+				Config: testAccHealthCheckConfig_noSNI,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
@@ -514,7 +514,7 @@ resource "aws_route53_health_check" "test" {
 `, ip)
 }
 
-const testAccRoute53HealthCheckConfig_withChildHealthChecks = `
+const testAccHealthCheckConfig_childHealthChecks = `
 resource "aws_route53_health_check" "child1" {
   fqdn              = "child1.example.com"
   port              = 80
@@ -554,7 +554,7 @@ resource "aws_route53_health_check" "test" {
 `, strings.Join(regions, "\", \""))
 }
 
-const testAccRoute53HealthCheckCloudWatchAlarm = `
+const testAccHealthCheckConfig_cloudWatchAlarm = `
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name          = "cloudwatch-healthcheck-alarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -597,7 +597,7 @@ resource "aws_route53_health_check" "test" {
 `, search, invert)
 }
 
-const testAccRoute53HealthCheckConfigWithoutSNI = `
+const testAccHealthCheckConfig_noSNI = `
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
   port               = 443

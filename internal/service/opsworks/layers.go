@@ -47,8 +47,8 @@ type opsworksLayerType struct {
 }
 
 var (
-	opsworksTrueString  = "true"
-	opsworksFalseString = "false"
+	trueString  = "true"
+	falseString = "false"
 )
 
 func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
@@ -696,9 +696,9 @@ func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*s
 		case schema.TypeBool:
 			boolValue := value.(bool)
 			if boolValue {
-				attrs[def.AttrName] = &opsworksTrueString
+				attrs[def.AttrName] = &trueString
 			} else {
-				attrs[def.AttrName] = &opsworksFalseString
+				attrs[def.AttrName] = &falseString
 			}
 		default:
 			// should never happen
@@ -733,7 +733,7 @@ func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[s
 				}
 			case schema.TypeBool:
 				boolValue := true
-				if strValue == opsworksFalseString {
+				if strValue == falseString {
 					boolValue = false
 				}
 				d.Set(key, boolValue)
@@ -850,7 +850,7 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 			data["number_of_disks"] = aws.Int64Value(config.NumberOfDisks)
 		}
 		if config.RaidLevel != nil {
-			data["raid_level"] = strconv.Itoa(int(*config.RaidLevel))
+			data["raid_level"] = strconv.Itoa(int(aws.Int64Value(config.RaidLevel)))
 		}
 		if config.Size != nil {
 			data["size"] = aws.Int64Value(config.Size)

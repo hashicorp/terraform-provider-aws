@@ -45,7 +45,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
+func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,7 +54,7 @@ func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDocumentDataSourceAWSManagedDocumentConfig(),
+				Config: testAccDocumentDataSourceConfig_managed(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "AWS-StartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "arn", "AWS-StartEC2Instance"),
@@ -98,7 +98,7 @@ data "aws_ssm_document" "test" {
 `, name, documentFormat)
 }
 
-func testAccCheckDocumentDataSourceAWSManagedDocumentConfig() string {
+func testAccDocumentDataSourceConfig_managed() string {
 	return `
 data "aws_ssm_document" "test" {
   name = "AWS-StartEC2Instance"

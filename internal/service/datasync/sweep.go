@@ -54,7 +54,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_datasync_location_hdfs", &resource.Sweeper{
 		Name: "aws_datasync_location_hdfs",
-		F:    sweepLocationHdfss,
+		F:    sweepLocationHDFSs,
 	})
 
 	resource.AddTestSweepers("aws_datasync_task", &resource.Sweeper{
@@ -455,7 +455,7 @@ func sweepLocationSMBs(region string) error {
 	return nil
 }
 
-func sweepLocationHdfss(region string) error {
+func sweepLocationHDFSs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -467,28 +467,28 @@ func sweepLocationHdfss(region string) error {
 		output, err := conn.ListLocations(input)
 
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DataSync Location Hdfs sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping DataSync Location HDFS sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Location Hdfss: %w", err)
+			return fmt.Errorf("Error retrieving DataSync Location HDFSs: %w", err)
 		}
 
 		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location Hdfss to sweep")
+			log.Print("[DEBUG] No DataSync Location HDFSs to sweep")
 			return nil
 		}
 
 		for _, location := range output.Locations {
 			uri := aws.StringValue(location.LocationUri)
 			if !strings.HasPrefix(uri, "hdfs://") {
-				log.Printf("[INFO] Skipping DataSync Location Hdfs: %s", uri)
+				log.Printf("[INFO] Skipping DataSync Location HDFS: %s", uri)
 				continue
 			}
-			log.Printf("[INFO] Deleting DataSync Location Hdfs: %s", uri)
+			log.Printf("[INFO] Deleting DataSync Location HDFS: %s", uri)
 
-			r := ResourceLocationHdfs()
+			r := ResourceLocationHDFS()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)
@@ -497,7 +497,7 @@ func sweepLocationHdfss(region string) error {
 			}
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DataSync Location Hdfs (%s): %s", uri, err)
+				log.Printf("[ERROR] Failed to delete DataSync Location HDFS (%s): %s", uri, err)
 			}
 		}
 

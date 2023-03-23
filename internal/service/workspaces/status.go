@@ -23,6 +23,7 @@ func StatusDirectoryState(conn *workspaces.WorkSpaces, id string) resource.State
 	}
 }
 
+// nosemgrep: workspaces-in-func-name
 func StatusWorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{

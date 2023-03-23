@@ -322,14 +322,14 @@ func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
 						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
-								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName1),
+								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName1),
 								Check: resource.ComposeTestCheckFunc(
 									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName1))),
 								),
 							},
 							{
-								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName2),
+								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName2),
 								Check: resource.ComposeTestCheckFunc(
 									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName2))),
@@ -469,7 +469,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, iamRoleName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
-func testAccPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
+func testAccPlatformApplicationConfig_topicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "%s"

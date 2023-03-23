@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	LexSlotTypeCreateTimeout = 1 * time.Minute
-	LexSlotTypeUpdateTimeout = 1 * time.Minute
-	LexSlotTypeDeleteTimeout = 5 * time.Minute
+	slotTypeCreateTimeout = 1 * time.Minute
+	slotTypeUpdateTimeout = 1 * time.Minute
+	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceSlotType() *schema.Resource {
@@ -35,9 +35,9 @@ func ResourceSlotType() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexSlotTypeCreateTimeout),
-			Update: schema.DefaultTimeout(LexSlotTypeUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexSlotTypeDeleteTimeout),
+			Create: schema.DefaultTimeout(slotTypeCreateTimeout),
+			Update: schema.DefaultTimeout(slotTypeUpdateTimeout),
+			Delete: schema.DefaultTimeout(slotTypeDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

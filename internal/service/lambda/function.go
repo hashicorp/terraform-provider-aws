@@ -27,7 +27,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-const awsMutexLambdaKey = `aws_lambda_function`
+const keyMutex = `aws_lambda_function`
 
 const FunctionVersionLatest = "$LATEST"
 
@@ -434,8 +434,8 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		// Grab an exclusive lock so that we're only reading one function into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+		conns.GlobalMutexKV.Lock(keyMutex)
+		defer conns.GlobalMutexKV.Unlock(keyMutex)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
@@ -1214,8 +1214,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexLambdaKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexLambdaKey)
+			conns.GlobalMutexKV.Lock(keyMutex)
+			defer conns.GlobalMutexKV.Unlock(keyMutex)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)

@@ -253,9 +253,9 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
-	})
+	}, "ValidationException")
 
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker model: %w", err)

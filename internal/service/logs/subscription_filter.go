@@ -99,7 +99,7 @@ func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error creating Cloudwatch log subscription filter: %s", err)
 	}
 
-	d.SetId(cloudwatchLogsSubscriptionFilterId(d.Get("log_group_name").(string)))
+	d.SetId(subscriptionFilterID(d.Get("log_group_name").(string)))
 	log.Printf("[DEBUG] Cloudwatch logs subscription %q created", d.Id())
 	return nil
 }
@@ -137,7 +137,7 @@ func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating CloudWatch Log Subscription Filter (%s): %w", d.Get("log_group_name").(string), err)
 	}
 
-	d.SetId(cloudwatchLogsSubscriptionFilterId(d.Get("log_group_name").(string)))
+	d.SetId(subscriptionFilterID(d.Get("log_group_name").(string)))
 	return resourceSubscriptionFilterRead(d, meta)
 }
 
@@ -219,12 +219,12 @@ func resourceSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("log_group_name", logGroupName)
 	d.Set("name", filterNamePrefix)
-	d.SetId(cloudwatchLogsSubscriptionFilterId(filterNamePrefix))
+	d.SetId(subscriptionFilterID(filterNamePrefix))
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func cloudwatchLogsSubscriptionFilterId(log_group_name string) string {
+func subscriptionFilterID(log_group_name string) string {
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf("%s-", log_group_name)) // only one filter allowed per log_group_name at the moment

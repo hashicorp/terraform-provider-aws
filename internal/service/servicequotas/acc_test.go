@@ -36,6 +36,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// nosemgrep: servicequotas-in-func-name
 func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
 

@@ -17,6 +17,7 @@ linters:
   enable:
     - deadcode
     - errcheck
+    - exportloopref
     - gofmt
     - gomnd
     - gosimple

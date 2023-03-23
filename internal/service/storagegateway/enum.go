@@ -57,16 +57,16 @@ func gatewayType_Values() []string {
 }
 
 const (
-	mediumChangerTypeAWS_Gateway_VTL   = "AWS-Gateway-VTL"
-	mediumChangerTypeIBM_03584L32_0402 = "IBM-03584L32-0402"
-	mediumChangerTypeSTK_L700          = "STK-L700"
+	mediumChangerType_gatewayVTL       = "AWS-Gateway-VTL"
+	mediumChangerType_ibm03584L32_0402 = "IBM-03584L32-0402"
+	mediumChangerType_stkL700          = "STK-L700"
 )
 
 func mediumChangerType_Values() []string {
 	return []string{
-		mediumChangerTypeAWS_Gateway_VTL,
-		mediumChangerTypeIBM_03584L32_0402,
-		mediumChangerTypeSTK_L700,
+		mediumChangerType_gatewayVTL,
+		mediumChangerType_ibm03584L32_0402,
+		mediumChangerType_stkL700,
 	}
 }
 

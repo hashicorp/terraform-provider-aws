@@ -1,5 +1,9 @@
 package ec2
 
+import (
+	"github.com/aws/aws-sdk-go/service/ec2"
+)
+
 const (
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreditSpecificationRequest.html#API_CreditSpecificationRequest_Contents
 	CPUCreditsStandard  = "standard"
@@ -11,6 +15,30 @@ func CPUCredits_Values() []string {
 		CPUCreditsStandard,
 		CPUCreditsUnlimited,
 	}
+}
+
+const (
+	// The AWS SDK constant ec2.FleetOnDemandAllocationStrategyLowestPrice is incorrect.
+	FleetOnDemandAllocationStrategyLowestPrice = "lowestPrice"
+)
+
+func FleetOnDemandAllocationStrategy_Values() []string {
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
+		FleetOnDemandAllocationStrategyLowestPrice,
+	)
+}
+
+const (
+	// The AWS SDK constant ec2.SpotAllocationStrategyLowestPrice is incorrect.
+	SpotAllocationStrategyLowestPrice = "lowestPrice"
+)
+
+func SpotAllocationStrategy_Values() []string {
+	return append(
+		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		SpotAllocationStrategyLowestPrice,
+	)
 }
 
 const (
@@ -188,3 +216,13 @@ const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )
+
+func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
+	for i, v := range slice {
+		if v == s {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+
+	return slice
+}

@@ -15,7 +15,7 @@ import (
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 )
 
-func testAccDetectiveMember_basic(t *testing.T) {
+func testAccMember_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
@@ -28,13 +28,13 @@ func testAccDetectiveMember_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDetectiveMemberDestroy,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveMemberConfigBasic(email),
+				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectiveMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -43,7 +43,7 @@ func testAccDetectiveMember_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccDetectiveMemberConfigBasic(email),
+				Config:                  testAccMemberConfig_basic(email),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -53,7 +53,7 @@ func testAccDetectiveMember_basic(t *testing.T) {
 	})
 }
 
-func testAccDetectiveMember_disappears(t *testing.T) {
+func testAccMember_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
@@ -65,13 +65,13 @@ func testAccDetectiveMember_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDetectiveMemberDestroy,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveMemberConfigBasic(email),
+				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectiveMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(resourceName, &detectiveOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,7 +80,7 @@ func testAccDetectiveMember_disappears(t *testing.T) {
 	})
 }
 
-func testAccDetectiveMember_message(t *testing.T) {
+func testAccMember_message(t *testing.T) {
 	var detectiveOutput detective.MemberDetail
 	var providers []*schema.Provider
 	resourceName := "aws_detective_member.test"
@@ -93,13 +93,13 @@ func testAccDetectiveMember_message(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDetectiveInvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveMemberConfigInvitationMessage(email, false),
+				Config: testAccMemberConfig_invitationMessage(email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectiveMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -108,9 +108,9 @@ func testAccDetectiveMember_message(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDetectiveMemberConfigInvitationMessage(email, true),
+				Config: testAccMemberConfig_invitationMessage(email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectiveMemberExists(resourceName, &detectiveOutput),
+					testAccCheckMemberExists(resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -119,7 +119,7 @@ func testAccDetectiveMember_message(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccDetectiveMemberConfigInvitationMessage(email, true),
+				Config:                  testAccMemberConfig_invitationMessage(email, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -129,7 +129,7 @@ func testAccDetectiveMember_message(t *testing.T) {
 	})
 }
 
-func testAccCheckDetectiveMemberExists(resourceName string, detectiveSession *detective.MemberDetail) resource.TestCheckFunc {
+func testAccCheckMemberExists(resourceName string, detectiveSession *detective.MemberDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -158,7 +158,7 @@ func testAccCheckDetectiveMemberExists(resourceName string, detectiveSession *de
 	}
 }
 
-func testAccCheckDetectiveMemberDestroy(s *terraform.State) error {
+func testAccCheckMemberDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -189,7 +189,7 @@ func testAccCheckDetectiveMemberDestroy(s *terraform.State) error {
 
 }
 
-func testAccDetectiveMemberConfigBasic(email string) string {
+func testAccMemberConfig_basic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -205,7 +205,7 @@ resource "aws_detective_member" "test" {
 `, email)
 }
 
-func testAccDetectiveMemberConfigInvitationMessage(email string, invite bool) string {
+func testAccMemberConfig_invitationMessage(email string, invite bool) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"

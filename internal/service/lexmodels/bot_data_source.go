@@ -61,7 +61,7 @@ func DataSourceBot() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"nlu_intent_confidence_threshold": {
 				Type:     schema.TypeFloat,
@@ -75,7 +75,7 @@ func DataSourceBot() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      BotVersionLatest,
-				ValidateFunc: validateLexBotVersion,
+				ValidateFunc: validBotVersion,
 			},
 			"voice_id": {
 				Type:     schema.TypeString,

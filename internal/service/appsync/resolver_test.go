@@ -611,10 +611,11 @@ func testAccResolverConfig_multipleResolvers(rName string) string {
 `, i)
 		resolverResources = resolverResources + fmt.Sprintf(`
 resource "aws_appsync_resolver" "test%d" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
-  field            = "singlePost%d"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  api_id      = aws_appsync_graphql_api.test.id
+  field       = "singlePost%d"
+  type        = "Query"
+  data_source = aws_appsync_datasource.test.name
+
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -625,6 +626,7 @@ resource "aws_appsync_resolver" "test%d" {
     }
 }
 EOF
+
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body

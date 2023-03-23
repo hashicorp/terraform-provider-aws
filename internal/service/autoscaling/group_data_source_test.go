@@ -28,6 +28,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_cooldown", resourceName, "default_cooldown"),
 					resource.TestCheckResourceAttrPair(datasourceName, "desired_capacity", resourceName, "desired_capacity"),
+					resource.TestCheckResourceAttrPair(datasourceName, "enabled_metrics.#", resourceName, "enabled_metrics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_grace_period", resourceName, "health_check_grace_period"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_type", resourceName, "health_check_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_configuration", resourceName, "launch_configuration"),
@@ -61,6 +62,7 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_cooldown", resourceName, "default_cooldown"),
 					resource.TestCheckResourceAttrPair(datasourceName, "desired_capacity", resourceName, "desired_capacity"),
+					resource.TestCheckResourceAttrPair(datasourceName, "enabled_metrics.#", resourceName, "enabled_metrics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_grace_period", resourceName, "health_check_grace_period"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_type", resourceName, "health_check_type"),
 					resource.TestCheckResourceAttr(datasourceName, "launch_configuration", ""),
@@ -98,6 +100,7 @@ resource "aws_autoscaling_group" "match" {
   health_check_grace_period = 300
   health_check_type         = "ELB"
   desired_capacity          = 0
+  enabled_metrics           = ["GroupDesiredCapacity"]
   force_delete              = true
   launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
   availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
@@ -110,6 +113,7 @@ resource "aws_autoscaling_group" "no_match" {
   health_check_grace_period = 300
   health_check_type         = "ELB"
   desired_capacity          = 0
+  enabled_metrics           = ["GroupDesiredCapacity", "GroupStandbyInstances"]
   force_delete              = true
   launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
   availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]

@@ -22,7 +22,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for s3control Bucket state to propagate
-	s3controlBucketStatePropagationTimeout = 5 * time.Minute
+	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
 func ResourceBucket() *schema.Resource {
@@ -213,7 +213,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	// S3 Control Bucket have a backend state which cannot be checked so this error
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
-	err = resource.Retry(s3controlBucketStatePropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(bucketStatePropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteBucket(input)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidBucketState") {

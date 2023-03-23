@@ -349,3 +349,22 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
+
+// FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is greater than threshold.
+func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v <= threshold {
+			es = append(es, fmt.Errorf("expected %s to be greater than (%f), got %f", k, threshold, v))
+			return
+		}
+
+		return
+	}
+}

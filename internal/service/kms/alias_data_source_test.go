@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccKMSAliasDataSource_awsService(t *testing.T) {
+func TestAccKMSAliasDataSource_service(t *testing.T) {
 	rName := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 

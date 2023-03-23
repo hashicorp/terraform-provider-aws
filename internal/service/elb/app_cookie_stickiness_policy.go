@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -103,16 +103,17 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
+
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException, elb.ErrCodePolicyNotFoundException) {
+		log.Printf("[WARN] Load Balancer / Load Balancer Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound" {
-				log.Printf("[WARN] Load Balancer / Load Balancer Policy (%s) not found, removing from state", d.Id())
-				d.SetId("")
-			}
-			return nil
-		}
 		return fmt.Errorf("Error retrieving policy: %s", err)
 	}
+
 	if len(getResp.PolicyDescriptions) != 1 {
 		return fmt.Errorf("Unable to find policy %#v", getResp.PolicyDescriptions)
 	}
@@ -153,12 +154,12 @@ func resourceSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *el
 		LoadBalancerNames: []*string{aws.String(lbName)},
 	}
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
+
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return false, nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				return false, nil
-			}
-		}
 		return false, fmt.Errorf("Error retrieving ELB description: %s", err)
 	}
 

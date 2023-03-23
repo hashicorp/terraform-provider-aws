@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -2121,11 +2121,8 @@ func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema
 			}
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DBClusterNotFoundFault" {
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+			continue
 		}
 
 		return err
@@ -2163,17 +2160,14 @@ func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
 					DBClusterIdentifier: aws.String(rs.Primary.ID),
 				})
 
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+				continue
+			}
+
 			if err == nil {
 				if len(resp.DBClusters) != 0 &&
 					*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
 					return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-				}
-			}
-
-			// Return nil if the cluster is already destroyed
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "DBClusterNotFoundFault" {
-					return nil
 				}
 			}
 

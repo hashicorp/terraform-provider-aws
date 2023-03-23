@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -471,9 +473,9 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := verify.RetryOnAWSCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateUserPoolClient(params)
-	})
+	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
 	if err != nil {
 		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
 	}

@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 30 * time.Minute
-	emrInstanceGroupUpdateTimeout = 30 * time.Minute
+	instanceGroupCreateTimeout = 30 * time.Minute
+	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func ResourceInstanceGroup() *schema.Resource {
@@ -189,7 +189,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
-	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
@@ -319,7 +319,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
+		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}

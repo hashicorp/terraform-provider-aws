@@ -31,6 +31,7 @@ interpolation.
 * `availability_zones` - One or more Availability Zones for the group.
 * `default_cool_down` - The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desired_capacity` - The desired size of the group.
+* `enabled_metrics` - The list of metrics enabled for collection.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - The service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.

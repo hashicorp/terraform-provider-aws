@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 
 	"github.com/hashicorp/hc-install/internal/httpclient"
 )
@@ -95,14 +94,16 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 			contentType, zipMimeTypes)
 	}
 
+	expectedSize := resp.ContentLength
+
 	if d.VerifyChecksum {
-		d.Logger.Printf("calculating checksum of %q", pb.Filename)
+		d.Logger.Printf("verifying checksum of %q", pb.Filename)
 		// provide extra reader to calculate & compare checksum
 		var buf bytes.Buffer
 		r := io.TeeReader(resp.Body, &buf)
 		pkgReader = &buf
 
-		err := compareChecksum(d.Logger, r, verifiedChecksum)
+		err := compareChecksum(d.Logger, r, verifiedChecksum, pb.Filename, expectedSize)
 		if err != nil {
 			return err
 		}
@@ -114,21 +115,17 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 	}
 	defer pkgFile.Close()
 
-	d.Logger.Printf("copying downloaded file to %s", pkgFile.Name())
+	d.Logger.Printf("copying %q (%d bytes) to %s", pb.Filename, expectedSize, pkgFile.Name())
+	// Unless the bytes were already downloaded above for checksum verification
+	// this may take a while depending on network connection as the io.Reader
+	// is expected to be http.Response.Body which streams the bytes
+	// on demand over the network.
 	bytesCopied, err := io.Copy(pkgFile, pkgReader)
 	if err != nil {
 		return err
 	}
 	d.Logger.Printf("copied %d bytes to %s", bytesCopied, pkgFile.Name())
 
-	expectedSize := 0
-	if length := resp.Header.Get("content-length"); length != "" {
-		var err error
-		expectedSize, err = strconv.Atoi(length)
-		if err != nil {
-			return err
-		}
-	}
 	if expectedSize != 0 && bytesCopied != int64(expectedSize) {
 		return fmt.Errorf("unexpected size (downloaded: %d, expected: %d)",
 			bytesCopied, expectedSize)

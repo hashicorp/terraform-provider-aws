@@ -49,7 +49,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
@@ -111,7 +111,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
@@ -224,7 +224,7 @@ func testAccCheckLocationFSxWindowsExists(resourceName string, locationFsxWindow
 	}
 }
 
-func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccLocationFSxWindowsImportStateID(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

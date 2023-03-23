@@ -21,7 +21,7 @@ import (
 // Global Route53 Zone ID for Global Accelerators, exported as a
 // convenience attribute for Route53 aliases (see
 // https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
-const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
+const route53ZoneID = "Z2BJ6XQ5FK7U4H"
 
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
@@ -185,7 +185,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 

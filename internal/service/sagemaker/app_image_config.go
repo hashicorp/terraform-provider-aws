@@ -283,10 +283,6 @@ func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{
 			kernelSpec.DisplayName = aws.String(v)
 		}
 
-		if kernelSpec == nil {
-			continue
-		}
-
 		kernelSpecs = append(kernelSpecs, kernelSpec)
 	}
 

@@ -127,7 +127,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", accelerator.AcceleratorArn)
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))

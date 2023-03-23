@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) {
+func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:aws-in-func-name
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{

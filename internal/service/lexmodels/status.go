@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	lexModelBuildingServiceStatusCreated  = "CREATED"
-	lexModelBuildingServiceStatusNotFound = "NOTFOUND"
-	lexModelBuildingServiceStatusUnknown  = "UNKNOWN"
+	serviceStatusCreated  = "CREATED"
+	serviceStatusNotFound = "NOTFOUND"
+	serviceStatusUnknown  = "UNKNOWN"
 )
 
 func statusBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
@@ -42,7 +42,7 @@ func statusSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, name,
 			return nil, "", err
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }
 
@@ -52,17 +52,17 @@ func statusIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id stri
 			Name: aws.String(id),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, lexModelBuildingServiceStatusUnknown, err
+			return nil, serviceStatusUnknown, err
 		}
 
 		if output == nil || len(output.Intents) == 0 {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }
 
@@ -73,15 +73,15 @@ func statusBotAlias(conn *lexmodelbuildingservice.LexModelBuildingService, botAl
 			Name:    aws.String(botAliasName),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, lexModelBuildingServiceStatusUnknown, err
+			return nil, serviceStatusUnknown, err
 		}
 		if output == nil {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+			return nil, serviceStatusNotFound, nil
 		}
 
-		return output, lexModelBuildingServiceStatusCreated, nil
+		return output, serviceStatusCreated, nil
 	}
 }

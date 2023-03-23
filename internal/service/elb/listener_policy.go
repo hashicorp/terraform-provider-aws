@@ -94,7 +94,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	policyNames := []*string{}
 	for _, listener := range lb.ListenerDescriptions {
-		if loadBalancerPort != strconv.Itoa(int(*listener.Listener.LoadBalancerPort)) {
+		if loadBalancerPort != strconv.Itoa(int(aws.Int64Value(listener.Listener.LoadBalancerPort))) {
 			continue
 		}
 

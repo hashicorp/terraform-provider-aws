@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
+func TestDecodeServiceLinkedRoleID(t *testing.T) {
 	var testCases = []struct {
 		Input        string
 		ServiceName  string

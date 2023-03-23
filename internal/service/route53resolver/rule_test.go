@@ -25,7 +25,7 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
+				Config: testAccRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
@@ -115,7 +115,7 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverRuleConfig_basicTags,
+				Config: testAccRuleConfig_basicTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
@@ -131,7 +131,7 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverRuleConfig_basicTagsChanged,
+				Config: testAccRuleConfig_basicTagsChanged,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
@@ -142,7 +142,7 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
+				Config: testAccRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
@@ -395,14 +395,14 @@ resource "aws_route53_resolver_rule" "example" {
 `, domainName)
 }
 
-const testAccRoute53ResolverRuleConfig_basicNoTags = `
+const testAccRuleConfig_basicNoTags = `
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
 }
 `
 
-const testAccRoute53ResolverRuleConfig_basicTags = `
+const testAccRuleConfig_basicTags = `
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"
@@ -414,7 +414,7 @@ resource "aws_route53_resolver_rule" "example" {
 }
 `
 
-const testAccRoute53ResolverRuleConfig_basicTagsChanged = `
+const testAccRuleConfig_basicTagsChanged = `
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "example.com"
   rule_type   = "SYSTEM"

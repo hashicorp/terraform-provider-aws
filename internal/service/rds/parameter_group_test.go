@@ -140,7 +140,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: createParameterGroupsExceedDefaultAWSLimit(groupName),
+				Config: createParameterGroupsExceedDefaultLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -319,7 +319,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: updateParameterGroupsExceedDefaultAWSLimit(groupName),
+				Config: updateParameterGroupsExceedDefaultLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -1253,7 +1253,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func createParameterGroupsExceedDefaultAWSLimit(rName string) string {
+func createParameterGroupsExceedDefaultLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1473,7 +1473,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func updateParameterGroupsExceedDefaultAWSLimit(rName string) string {
+func updateParameterGroupsExceedDefaultLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q

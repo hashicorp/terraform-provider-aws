@@ -8,7 +8,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -597,37 +596,23 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	input := &autoscaling.DeleteLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
-	// Retry for Autoscaling eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
+	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteLaunchConfiguration(&autoscaling.DeleteLaunchConfigurationInput{
+				LaunchConfigurationName: aws.String(d.Id()),
+			})
+		},
+		autoscaling.ErrCodeResourceInUseFault)
 
-		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeResourceInUseFault) {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
 		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

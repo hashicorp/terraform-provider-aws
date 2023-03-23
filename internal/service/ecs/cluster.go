@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -18,11 +17,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	ecsClusterTimeoutDelete = 10 * time.Minute
-	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -392,7 +386,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {

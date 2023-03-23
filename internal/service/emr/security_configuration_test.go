@@ -23,7 +23,7 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmrSecurityConfigurationConfig,
+				Config: testAccSecurityConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
@@ -99,7 +99,7 @@ func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccEmrSecurityConfigurationConfig = `
+const testAccSecurityConfigurationConfig_basic = `
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}

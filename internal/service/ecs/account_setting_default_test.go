@@ -98,7 +98,7 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	})
 }
 
-func TestAccECSAccountSettingDefault_awsvpcTrunking(t *testing.T) {
+func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := ecs.SettingNameAwsvpcTrunking
 

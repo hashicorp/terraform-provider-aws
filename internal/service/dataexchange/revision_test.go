@@ -24,12 +24,12 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeRevisionDestroy,
+		CheckDestroy:      testAccCheckRevisionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeRevisionConfig(rName),
+				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+/revisions/.+`)),
@@ -53,12 +53,12 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeRevisionDestroy,
+		CheckDestroy:      testAccCheckRevisionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeRevisionConfigTags1(rName, "key1", "value1"),
+				Config: testAccRevisionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -69,18 +69,18 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataExchangeRevisionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRevisionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDataExchangeRevisionConfigTags1(rName, "key2", "value2"),
+				Config: testAccRevisionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -98,12 +98,12 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeRevisionDestroy,
+		CheckDestroy:      testAccCheckRevisionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeRevisionConfig(rName),
+				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
@@ -122,12 +122,12 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, dataexchange.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataExchangeRevisionDestroy,
+		CheckDestroy:      testAccCheckRevisionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataExchangeRevisionConfig(rName),
+				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataExchangeRevisionExists(resourceName, &proj),
+					testAccCheckRevisionExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
@@ -137,7 +137,7 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 	})
 }
 
-func testAccCheckDataExchangeRevisionExists(n string, v *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
+func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -169,7 +169,7 @@ func testAccCheckDataExchangeRevisionExists(n string, v *dataexchange.GetRevisio
 	}
 }
 
-func testAccCheckDataExchangeRevisionDestroy(s *terraform.State) error {
+func testAccCheckRevisionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -198,7 +198,7 @@ func testAccCheckDataExchangeRevisionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDataExchangeRevisionConfig(rName string) string {
+func testAccRevisionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"
@@ -212,7 +212,7 @@ resource "aws_dataexchange_revision" "test" {
 `, rName)
 }
 
-func testAccDataExchangeRevisionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccRevisionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"
@@ -230,7 +230,7 @@ resource "aws_dataexchange_revision" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDataExchangeRevisionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRevisionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dataexchange_data_set" "test" {
   asset_type  = "S3_SNAPSHOT"

@@ -146,7 +146,7 @@ var (
 		},
 	}
 
-	sqsQueueAttributeMap = attrmap.New(map[string]string{
+	queueAttributeMap = attrmap.New(map[string]string{
 		"arn":                               sqs.QueueAttributeNameQueueArn,
 		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
 		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
@@ -201,7 +201,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		QueueName: aws.String(name),
 	}
 
-	attributes, err := sqsQueueAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := queueAttributeMap.ResourceDataToApiAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	output := outputRaw.(map[string]string)
 
-	err = sqsQueueAttributeMap.ApiAttributesToResourceData(output, d)
+	err = queueAttributeMap.ApiAttributesToResourceData(output, d)
 
 	if err != nil {
 		return err
@@ -336,7 +336,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		attributes, err := sqsQueueAttributeMap.ResourceDataToApiAttributesUpdate(d)
+		attributes, err := queueAttributeMap.ResourceDataToApiAttributesUpdate(d)
 
 		if err != nil {
 			return err

@@ -419,7 +419,7 @@ func resourceDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
-			removeKeys = append(removeKeys, &k)
+			removeKeys = append(removeKeys, aws.String(k))
 		}
 
 		input.AddArguments = add

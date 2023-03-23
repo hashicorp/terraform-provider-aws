@@ -23,14 +23,14 @@ func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSitesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsSitesAttributes(dataSourceName),
+					testAccCheckSitesAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsSitesAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {

@@ -28,7 +28,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfigBasic(rName1),
+				Config: testAccLagConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
@@ -45,7 +45,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxLagConfigBasic(rName2),
+				Config: testAccLagConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
@@ -83,7 +83,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfigBasic(rName),
+				Config: testAccLagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
@@ -107,7 +107,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfigConnectionID(rName),
+				Config: testAccLagConfig_connectionID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
@@ -145,7 +145,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfigProviderName(rName),
+				Config: testAccLagConfig_providerName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
@@ -183,7 +183,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfigTags1(rName, "key1", "value1"),
+				Config: testAccLagConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -198,7 +198,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccDxLagConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLagConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -208,7 +208,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxLagConfigTags1(rName, "key2", "value2"),
+				Config: testAccLagConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -269,7 +269,7 @@ func testAccCheckLagExists(name string, v *directconnect.Lag) resource.TestCheck
 	}
 }
 
-func testAccDxLagConfigBasic(rName string) string {
+func testAccLagConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -281,7 +281,7 @@ resource "aws_dx_lag" "test" {
 `, rName)
 }
 
-func testAccDxLagConfigConnectionID(rName string) string {
+func testAccLagConfig_connectionID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -300,7 +300,7 @@ resource "aws_dx_connection" "test" {
 `, rName)
 }
 
-func testAccDxLagConfigProviderName(rName string) string {
+func testAccLagConfig_providerName(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -318,7 +318,7 @@ resource "aws_dx_lag" "test" {
 `, rName)
 }
 
-func testAccDxLagConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccLagConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -335,7 +335,7 @@ resource "aws_dx_lag" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDxLagConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccLagConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

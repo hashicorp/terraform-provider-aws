@@ -29,7 +29,7 @@ func TestAccOutpostsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFunc { // nosemgrep: outposts-in-func-name
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -48,7 +48,7 @@ func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccOutpostsDataSourceConfig_basic() string {
+func testAccOutpostsDataSourceConfig_basic() string { // nosemgrep: outposts-in-func-name
 	return `
 data "aws_outposts_outposts" "test" {}
 `
