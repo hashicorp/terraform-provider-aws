@@ -274,7 +274,7 @@ data "aws_availability_zones" "available" {
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 
@@ -304,7 +304,7 @@ data "aws_availability_zones" "available" {
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 
@@ -340,7 +340,7 @@ data "aws_availability_zones" "available" {
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 
@@ -371,7 +371,7 @@ data "aws_availability_zones" "available" {
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 

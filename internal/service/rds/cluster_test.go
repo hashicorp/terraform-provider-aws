@@ -1257,7 +1257,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
-				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
+				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
@@ -1319,7 +1319,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
 		},
 	})

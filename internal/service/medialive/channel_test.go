@@ -539,7 +539,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig_update(rName, "AVC", "HD"),
+				Config: testAccChannelConfig_update(rName, rName, "AVC", "HD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -566,7 +566,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccChannelConfig_update(rNameUpdated, "AVC", "HD"),
+				Config: testAccChannelConfig_update(rName, rNameUpdated, "AVC", "HD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
@@ -1583,20 +1583,20 @@ resource "aws_medialive_channel" "test" {
 `, rName, start))
 }
 
-func testAccChannelConfig_update(rName, codec, inputResolution string) string {
+func testAccChannelConfig_update(rName, rNameUpdated, codec, inputResolution string) string {
 	return acctest.ConfigCompose(
 		testAccChannelBaseConfig(rName),
 		testAccChannelBaseS3Config(rName),
 		testAccChannelBaseMultiplexConfig(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
-  name          = %[1]q
+  name          = %[2]q
   channel_class = "STANDARD"
   role_arn      = aws_iam_role.test.arn
 
   input_specification {
-    codec            = %[2]q
-    input_resolution = %[3]q
+    codec            = %[3]q
+    input_resolution = %[4]q
     maximum_bitrate  = "MAX_20_MBPS"
   }
 
@@ -1661,7 +1661,7 @@ resource "aws_medialive_channel" "test" {
     }
   }
 }
-`, rName, codec, inputResolution))
+`, rName, rNameUpdated, codec, inputResolution))
 }
 
 func testAccChannelConfig_tags1(rName, key1, value1 string) string {

@@ -16,7 +16,7 @@ This resource can be useful for getting back a set of subnet ids for a vpc.
 
 ## Example Usage
 
-The following shows outputing all cidr blocks for every subnet id in a vpc.
+The following shows outputting all cidr blocks for every subnet id in a vpc.
 
 ```terraform
 data "aws_subnet_ids" "example" {
