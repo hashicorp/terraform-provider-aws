@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -431,6 +432,13 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ConflictsWith: []string{
+					// Clusters cannot be joined to an existing global cluster as part of
+					// the "restore from snapshot" operation. Trigger an error during plan
+					// to prevent an apply with unexpected results (ie. a regional
+					// cluster which is not joined to the provided global cluster).
+					"global_cluster_identifier",
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
@@ -1488,7 +1496,13 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	dbCluster := output.DBClusters[0]
 
 	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+	if arn.IsARN(id) {
+		if aws.StringValue(dbCluster.DBClusterArn) != id {
+			return nil, &resource.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}

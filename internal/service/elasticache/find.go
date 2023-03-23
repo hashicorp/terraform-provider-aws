@@ -183,30 +183,6 @@ func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func FindUserByID(ctx context.Context, conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
-	input := &elasticache.DescribeUsersInput{
-		UserId: aws.String(userID),
-	}
-	out, err := conn.DescribeUsersWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch len(out.Users) {
-	case 0:
-		return nil, &resource.NotFoundError{
-			Message: "empty result",
-		}
-	case 1:
-		return out.Users[0], nil
-	default:
-		return nil, &resource.NotFoundError{
-			Message: "too many results",
-		}
-	}
-}
-
 func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(groupID),

@@ -15,14 +15,14 @@ import (
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
-func TestAccLightsailLoadBalancerStickinessPolicy_basic(t *testing.T) {
+func testAccLoadBalancerStickinessPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cookieDuration := "150"
 	enabled := "true"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -45,7 +45,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
+func testAccLoadBalancerStickinessPolicy_cookieDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -53,7 +53,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
 	cookieDuration2 := "500"
 	enabled := "true"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -86,7 +86,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerStickinessPolicy_Enabled(t *testing.T) {
+func testAccLoadBalancerStickinessPolicy_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -94,7 +94,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_Enabled(t *testing.T) {
 	enabledTrue := "true"
 	enabledFalse := "false"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -127,14 +127,14 @@ func TestAccLightsailLoadBalancerStickinessPolicy_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
+func testAccLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cookieDuration := "200"
 	enabled := "true"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)

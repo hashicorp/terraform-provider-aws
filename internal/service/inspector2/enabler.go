@@ -71,7 +71,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	in := &inspector2.EnableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
+		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
 		ClientToken:   aws.String(resource.UniqueId()),
 	}
 
@@ -129,7 +129,7 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	in := &inspector2.DisableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
+		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
 	}
 
 	_, err := conn.Disable(ctx, in)
@@ -345,16 +345,6 @@ func compositeStatus(ec2, ecr bool, ec2Status, ecrStatus string) string {
 	}
 
 	return string(types.StatusSuspended)
-}
-
-func expandResourceScanTypes(s []string) []types.ResourceScanType {
-	vs := make([]types.ResourceScanType, 0, len(s))
-	for _, v := range s {
-		if v != "" {
-			vs = append(vs, types.ResourceScanType(v))
-		}
-	}
-	return vs
 }
 
 func EnablerID(accountIDs []string, types []string) string {

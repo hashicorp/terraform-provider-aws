@@ -53,3 +53,24 @@ func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 }
+
+// DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.
+func (client *AWSClient) DefaultKMSKeyPolicy() string {
+	return fmt.Sprintf(`
+{
+	"Id": "default",
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Enable IAM User Permissions",
+			"Effect": "Allow",
+			"Principal": {
+				"AWS": "arn:%[1]s:iam::%[2]s:root"
+			},
+			"Action": "kms:*",
+			"Resource": "*"
+		}
+	]
+}	
+`, client.Partition, client.AccountID)
+}

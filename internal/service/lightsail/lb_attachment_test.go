@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLightsailLoadBalancerAttachment_basic(t *testing.T) {
+func testAccLoadBalancerAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_attachment.test"
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -46,13 +46,13 @@ func TestAccLightsailLoadBalancerAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerAttachment_disappears(t *testing.T) {
+func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_attachment.test"
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
@@ -147,7 +147,7 @@ resource "aws_lightsail_lb" "test" {
 resource "aws_lightsail_instance" "test" {
   name              = %[2]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 resource "aws_lightsail_lb_attachment" "test" {
