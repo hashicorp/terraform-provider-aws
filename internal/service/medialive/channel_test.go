@@ -76,7 +76,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
+func TestAccMediaLiveChannel_M2TS_settings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -268,7 +268,7 @@ func TestAccMediaLiveChannel_MsSmooth_outputSettings(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
+func TestAccMediaLiveChannel_AudioDescriptions_codecSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -327,7 +327,7 @@ func TestAccMediaLiveChannel_audioDescriptions_codecSettings(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_videoDescriptions_codecSettings_h264Settings(t *testing.T) {
+func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h264Settings(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1182,14 +1182,14 @@ resource "aws_medialive_channel" "test" {
                 audio_buffer_model        = "ATSC"
                 buffer_model              = "MULTIPLEX"
                 rate_mode                 = "CBR"
-                audio_pids                = "200"
-                dvb_sub_pids              = "300"
-                arib_captions_pid         = "100"
+                audio_pids                = 200
+                dvb_sub_pids              = 300
+                arib_captions_pid         = 100
                 arib_captions_pid_control = "AUTO"
-                video_pid                 = "101"
-                fragment_time             = "1.92"
-                program_num               = "1"
-                segmentation_time         = "1.92"
+                video_pid                 = 101
+                fragment_time             = 1.92
+                program_num               = 1
+                segmentation_time         = 1.92
               }
             }
           }
@@ -1363,29 +1363,29 @@ resource "aws_medialive_channel" "test" {
           adaptive_quantization   = "LOW"
           bitrate                 = "5400000"
           buf_size                = "10800000"
-          buf_fill_pct            = "90"
+          buf_fill_pct            = 90
           entropy_encoding        = "CABAC"
           flicker_aq              = "ENABLED"
           force_field_pictures    = "DISABLED"
           framerate_control       = "SPECIFIED"
-          framerate_numerator     = "50"
-          framerate_denominator   = "1"
+          framerate_numerator     = 50
+          framerate_denominator   = 1
           gop_b_reference         = "DISABLED"
-          gop_closed_cadence      = "1"
-          gop_num_b_frames        = "1"
-          gop_size                = "1.92"
+          gop_closed_cadence      = 1
+          gop_num_b_frames        = 1
+          gop_size                = 1.92
           gop_size_units          = "SECONDS"
           subgop_length           = "FIXED"
           scan_type               = "PROGRESSIVE"
           level                   = "H264_LEVEL_AUTO"
           look_ahead_rate_control = "HIGH"
-          num_ref_frames          = "3"
+          num_ref_frames          = 3
           par_control             = "INITIALIZE_FROM_SOURCE"
           profile                 = "HIGH"
           rate_control_mode       = "CBR"
           syntax                  = "DEFAULT"
           scene_change_detect     = "ENABLED"
-          slices                  = "1"
+          slices                  = 1
           spatial_aq              = "ENABLED"
           temporal_aq             = "ENABLED"
           timecode_insertion      = "PIC_TIMING_SEI"
