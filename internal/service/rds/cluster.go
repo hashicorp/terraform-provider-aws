@@ -432,6 +432,13 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ConflictsWith: []string{
+					// Clusters cannot be joined to an existing global cluster as part of
+					// the "restore from snapshot" operation. Trigger an error during plan
+					// to prevent an apply with unexpected results (ie. a regional
+					// cluster which is not joined to the provided global cluster).
+					"global_cluster_identifier",
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
