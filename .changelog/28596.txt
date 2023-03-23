@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_ec2_placement_group: Default `spread_level` to `rack` to avoid replacement.
+resource/aws_placement_group: Change `spread_level` to Computed
 ```
