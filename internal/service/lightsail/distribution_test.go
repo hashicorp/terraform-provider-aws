@@ -337,11 +337,11 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.*", allow2),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "allow-list"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.*", header1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.*", header2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header2),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "true"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.*", allow1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.*", allow2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow2),
 				),
 			},
 			{
@@ -366,11 +366,11 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.cookies_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", "0"),
 				),
 			},
 		},
@@ -531,22 +531,19 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
 }
@@ -558,8 +555,8 @@ func testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled string) st
 		testAccDistributionConfig_base(bucketName),
 		fmt.Sprintf(`
 resource "aws_lightsail_distribution" "test" {
-  name      = %[1]q
-  bundle_id = "small_1_0"
+  name       = %[1]q
+  bundle_id  = "small_1_0"
   is_enabled = %[2]s
   origin {
     name        = aws_lightsail_bucket.test.name
@@ -569,22 +566,19 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
 }
@@ -606,22 +600,19 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
   tags = {
@@ -646,22 +637,19 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
   tags = {
@@ -687,26 +675,23 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
   cache_behavior {
-    path = %[2]q
+    path     = %[2]q
     behavior = %[3]q
   }
 }
@@ -728,31 +713,28 @@ resource "aws_lightsail_distribution" "test" {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
-	cached_http_methods  = "GET,HEAD"
-	default_ttl          = 86400
-	maximum_ttl          = 31536000
-	minimum_ttl          = 0
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
     forwarded_cookies {
-	  cookies_allow_list = []
-	  option             = "none"
+      option = "none"
     }
     forwarded_headers {
-	  headers_allow_list = []
-	  option             = "default"
+      option = "default"
     }
     forwarded_query_strings {
-	  option                     = false
-	  query_strings_allowed_list = []
+      option = false
     }
   }
   cache_behavior {
-    path = %[2]q
+    path     = %[2]q
     behavior = %[3]q
   }
 
   cache_behavior {
-    path = %[4]q
+    path     = %[4]q
     behavior = %[5]q
   }
 }
@@ -767,31 +749,31 @@ resource "aws_lightsail_distribution" "test" {
   name      = %[1]q
   bundle_id = "small_1_0"
   origin {
-    name        = aws_lightsail_bucket.test.name
-    region_name = aws_lightsail_bucket.test.region
-	protocol_policy = "http-only"
+    name            = aws_lightsail_bucket.test.name
+    region_name     = aws_lightsail_bucket.test.region
+    protocol_policy = "http-only"
   }
   default_cache_behavior {
     behavior = "cache"
   }
   cache_behavior_settings {
-	allowed_http_methods = "GET,HEAD,OPTIONS"
-	cached_http_methods = "GET,HEAD,OPTIONS"
-	default_ttl = 50000
+    allowed_http_methods = "GET,HEAD,OPTIONS"
+    cached_http_methods  = "GET,HEAD,OPTIONS"
+    default_ttl          = 50000
     forwarded_cookies {
       cookies_allow_list = [%[2]q, %[3]q]
-	  option = "allow-list"
+      option             = "allow-list"
     }
     forwarded_headers {
       headers_allow_list = [%[4]q, %[5]q]
-	  option = "allow-list"
+      option             = "allow-list"
     }
     forwarded_query_strings {
       query_strings_allowed_list = [%[2]q, %[3]q]
-	  option = true
+      option                     = true
     }
-	maximum_ttl = 100000
-	minimum_ttl = 10000
+    maximum_ttl = 100000
+    minimum_ttl = 10000
   }
 }
 `, rName, allow1, allow2, header1, header2))
@@ -799,84 +781,107 @@ resource "aws_lightsail_distribution" "test" {
 
 func testAccDistributionConfig_defaultCacheBehaviorDontCache(rName, instanceName, ipName string) string {
 	return fmt.Sprintf(`
-	data "aws_availability_zones" "available" {
-		state = "available"
-	  
-		filter {
-		  name   = "opt-in-status"
-		  values = ["opt-in-not-required"]
-		}
-	  }
-	  
-	  resource "aws_lightsail_static_ip_attachment" "test" {
-		static_ip_name = aws_lightsail_static_ip.test.name
-		instance_name  = aws_lightsail_instance.test.name
-	  }
-	  
-	  resource "aws_lightsail_static_ip" "test" {
-		name = %[3]q
-	  }
-	  
-	  resource "aws_lightsail_instance" "test" {
-		name              = %[2]q
-		availability_zone = data.aws_availability_zones.available.names[0]
-		blueprint_id      = "amazon_linux_2"
-		bundle_id         = "micro_1_0"
-	  }
-	  
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_static_ip_attachment" "test" {
+  static_ip_name = aws_lightsail_static_ip.test.name
+  instance_name  = aws_lightsail_instance.test.name
+}
+
+resource "aws_lightsail_static_ip" "test" {
+  name = %[3]q
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = %[2]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "micro_1_0"
+}
+
 resource "aws_lightsail_distribution" "test" {
-  name      = %[1]q
+  name       = %[1]q
   depends_on = [aws_lightsail_static_ip_attachment.test]
-  bundle_id = "small_1_0"
+  bundle_id  = "small_1_0"
   origin {
-    name        = aws_lightsail_instance.test.name
-    region_name = data.aws_availability_zones.available.id
-	protocol_policy = "http-only"
+    name            = aws_lightsail_instance.test.name
+    region_name     = data.aws_availability_zones.available.id
+    protocol_policy = "http-only"
   }
   default_cache_behavior {
     behavior = "dont-cache"
   }
+  cache_behavior_settings {}
+
 }
 `, rName, instanceName, ipName)
 }
 
 func testAccDistributionConfig_defaultCacheBehaviorCache(rName, instanceName, ipName string) string {
 	return fmt.Sprintf(`
-	data "aws_availability_zones" "available" {
-		state = "available"
-	  
-		filter {
-		  name   = "opt-in-status"
-		  values = ["opt-in-not-required"]
-		}
-	  }
-	  
-	  resource "aws_lightsail_static_ip_attachment" "test" {
-		static_ip_name = aws_lightsail_static_ip.test.name
-		instance_name  = aws_lightsail_instance.test.name
-	  }
-	  
-	  resource "aws_lightsail_static_ip" "test" {
-		name = %[3]q
-	  }
-	  
-	  resource "aws_lightsail_instance" "test" {
-		name              = %[2]q
-		availability_zone = data.aws_availability_zones.available.names[0]
-		blueprint_id      = "amazon_linux_2"
-		bundle_id         = "micro_1_0"
-	  }
-	  
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_static_ip_attachment" "test" {
+  static_ip_name = aws_lightsail_static_ip.test.name
+  instance_name  = aws_lightsail_instance.test.name
+}
+
+resource "aws_lightsail_static_ip" "test" {
+  name = %[3]q
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = %[2]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "micro_1_0"
+}
+
 resource "aws_lightsail_distribution" "test" {
-  name      = %[1]q
+  name       = %[1]q
   depends_on = [aws_lightsail_static_ip_attachment.test]
-  bundle_id = "small_1_0"
+  bundle_id  = "small_1_0"
   origin {
-    name        = aws_lightsail_instance.test.name
-    region_name = data.aws_availability_zones.available.id
+    name            = aws_lightsail_instance.test.name
+    region_name     = data.aws_availability_zones.available.id
+    protocol_policy = "http-only"
   }
   default_cache_behavior {
     behavior = "cache"
+  }
+  cache_behavior_settings {
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+
+    forwarded_cookies {
+      option = "none"
+    }
+
+    forwarded_headers {
+      headers_allow_list = ["Host"]
+      option             = "allow-list"
+    }
+
+    forwarded_query_strings {
+      option = false
+    }
+
   }
 }
 `, rName, instanceName, ipName)
@@ -887,16 +892,31 @@ func testAccDistributionConfig_ipAddressType(rName, bucketName, IpAddressType st
 		testAccDistributionConfig_base(bucketName),
 		fmt.Sprintf(`
 resource "aws_lightsail_distribution" "test" {
-  name      = %[1]q
-  bundle_id = "small_1_0"
-  ip_address_type = %[2]s
+  name            = %[1]q
+  bundle_id       = "small_1_0"
+  ip_address_type = %[2]q
   origin {
     name        = aws_lightsail_bucket.test.name
     region_name = aws_lightsail_bucket.test.region
-	protocol_policy = "http-only"
   }
   default_cache_behavior {
     behavior = "cache"
+  }
+  cache_behavior_settings {
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
+    forwarded_cookies {
+      option = "none"
+    }
+    forwarded_headers {
+      option = "default"
+    }
+    forwarded_query_strings {
+      option = false
+    }
   }
 }
 `, rName, IpAddressType))
