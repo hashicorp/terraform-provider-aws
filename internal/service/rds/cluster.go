@@ -1149,8 +1149,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
 		}
 
-		if d.HasChange("db_instance_parameter_group_name") {
-			input.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		// DB instance parameter group name is not currently returned from the
+		// DescribeDBClusters API. This means there is no drift detection, so when
+		// set, the configured attribute should always be sent on modify.
+		if v, ok := d.GetOk("db_instance_parameter_group_name"); ok || d.HasChange("db_instance_parameter_group_name") {
+			input.DBInstanceParameterGroupName = aws.String(v.(string))
 		}
 
 		if d.HasChange("deletion_protection") {
@@ -1177,6 +1180,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("engine_version") {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
+
+		// This can happen when updates are deferred (apply_immediately = false), and
+		// multiple applies occur before the maintenance window. In this case,
+		// continue sending the desired engine_version as part of the modify request.
+		if d.Get("engine_version").(string) != d.Get("engine_version_actual").(string) {
 			input.EngineVersion = aws.String(d.Get("engine_version").(string))
 		}
 
