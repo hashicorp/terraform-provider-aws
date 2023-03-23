@@ -253,9 +253,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	}
 
 	var errs *multierror.Error
-	servicePackages := servicePackages(ctx)
+	servicePackageMap := make(map[string]conns.ServicePackage)
 
-	for _, sp := range servicePackages {
+	for _, sp := range servicePackages(ctx) {
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+
 		for _, v := range sp.SDKDataSources(ctx) {
 			typeName := v.TypeName
 
@@ -264,19 +267,34 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := v.Factory()
+			r := v.Factory()
 
 			// Ensure that the correct CRUD handler variants are used.
-			if ds.Read != nil || ds.ReadContext != nil {
+			if r.Read != nil || r.ReadContext != nil {
 				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 
-			if v := ds.ReadWithoutTimeout; v != nil {
-				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+			interceptors := interceptorItems{}
+			ds := &wrappedDataSource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
 			}
 
-			provider.DataSourcesMap[typeName] = ds
+			if v := r.ReadWithoutTimeout; v != nil {
+				r.ReadWithoutTimeout = ds.Read(v)
+			}
+
+			provider.DataSourcesMap[typeName] = r
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
@@ -307,29 +325,74 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := r.Schema[names.AttrTags]; ok {
+					if v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+					if !v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when:        Before | After,
+					why:         Create | Read | Update,
+					interceptor: tagsInterceptor{tags: v.Tags},
+				})
+			}
+
+			rs := &wrappedResource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
+			}
+
 			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
+				r.CreateWithoutTimeout = rs.Create(v)
 			}
 			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
+				r.ReadWithoutTimeout = rs.Read(v)
 			}
 			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v)
+				r.UpdateWithoutTimeout = rs.Update(v)
 			}
 			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
+				r.DeleteWithoutTimeout = rs.Delete(v)
 			}
 			if v := r.Importer; v != nil {
 				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = wrappedStateContextFunc(v)
+					r.Importer.StateContext = rs.State(v)
 				}
 			}
 			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = wrappedCustomizeDiffFunc(v)
+				r.CustomizeDiff = rs.CustomizeDiff(v)
 			}
 			for _, stateUpgrader := range r.StateUpgraders {
 				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = wrappedStateUpgradeFunc(v)
+					stateUpgrader.Upgrade = rs.StateUpgrade(v)
 				}
 			}
 
@@ -350,7 +413,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta.ServicePackages = servicePackages
+	meta.ServicePackages = servicePackageMap
 	provider.SetMeta(meta)
 
 	return provider, nil
@@ -793,60 +856,4 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 	}
 
 	return endpoints, nil
-}
-
-func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedCustomizeDiffFunc(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateUpgradeFunc(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
-	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, rawState, meta)
-	}
 }

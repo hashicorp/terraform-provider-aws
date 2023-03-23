@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists inspector service tags.
@@ -28,8 +29,18 @@ func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -59,4 +70,23 @@ func KeyValueTags(ctx context.Context, tags []*inspector.Tag) tftags.KeyValueTag
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns inspector service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*inspector.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets inspector service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*inspector.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }

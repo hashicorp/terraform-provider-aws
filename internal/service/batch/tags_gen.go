@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // GetTag fetches an individual batch service tag for a resource.
@@ -49,8 +50,18 @@ func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -63,6 +74,25 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 // KeyValueTags creates KeyValueTags from batch service tags.
 func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
+}
+
+// GetTagsIn returns batch service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets batch service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates batch service tags.
