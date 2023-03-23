@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_virtual_service")
-func DataSourceVirtualService() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_gateway")
+func DataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceVirtualServiceRead,
+		ReadWithoutTimeout: dataSourceVirtualGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,7 +37,6 @@ func DataSourceVirtualService() *schema.Resource {
 			},
 			"mesh_owner": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -48,35 +47,35 @@ func DataSourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceVirualServiceSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceVirtualGatewaySpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	virtualServiceName := d.Get("name").(string)
-	vs, err := FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
+	virtualGatewayName := d.Get("name").(string)
+	virtualGateway, err := FindVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway (%s): %s", virtualGatewayName, err)
 	}
 
-	d.SetId(aws.StringValue(vs.VirtualServiceName))
-	arn := aws.StringValue(vs.Metadata.Arn)
+	d.SetId(aws.StringValue(virtualGateway.VirtualGatewayName))
+	arn := aws.StringValue(virtualGateway.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vs.MeshName)
-	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
+	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", virtualGateway.MeshName)
+	meshOwner := aws.StringValue(virtualGateway.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", vs.VirtualServiceName)
-	d.Set("resource_owner", vs.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
+	d.Set("name", virtualGateway.VirtualGatewayName)
+	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -89,7 +88,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		tags, err = ListTags(ctx, conn, arn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Gateway (%s): %s", arn, err)
 		}
 	}
 
