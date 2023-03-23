@@ -30,7 +30,6 @@ func TestAccRBinRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,7 +72,6 @@ func TestAccRBinRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -106,7 +104,6 @@ func TestAccRBinRule_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RBin)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RBin),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -196,31 +193,6 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 		*rbinrule = *resp
 
 		return nil
-	}
-}
-
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
-	ctx := context.Background()
-
-	input := &rbin.ListRulesInput{
-		ResourceType: types.ResourceTypeEc2Image,
-	}
-	_, err := conn.ListRules(ctx, input)
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	input = &rbin.ListRulesInput{
-		ResourceType: types.ResourceTypeEbsSnapshot,
-	}
-	_, err = conn.ListRules(ctx, input)
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

@@ -80,7 +80,7 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"EBS_SNAPSHOT", "EC2_IMAGE"}, false),
 			},
 			"retention_period": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
 				MaxItems: 1,
