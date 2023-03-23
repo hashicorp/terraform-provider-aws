@@ -51,7 +51,6 @@ func DataSourceVirtualGateway() *schema.Resource {
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
-
 }
 
 func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
