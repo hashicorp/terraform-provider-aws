@@ -618,7 +618,7 @@ func flattenCookieObject(apiObject *lightsail.CookieObject) map[string]interface
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.CookiesAllowList; v != nil && len(v) > 0 {
+	if v := apiObject.CookiesAllowList; len(v) > 0 {
 		m["cookies_allow_list"] = v
 	}
 
@@ -636,7 +636,7 @@ func flattenHeaderObject(apiObject *lightsail.HeaderObject) map[string]interface
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.HeadersAllowList; v != nil && len(v) > 0 {
+	if v := apiObject.HeadersAllowList; len(v) > 0 {
 		m["headers_allow_list"] = v
 	}
 
@@ -654,7 +654,7 @@ func flattenQueryStringObject(apiObject *lightsail.QueryStringObject) map[string
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.QueryStringsAllowList; v != nil && len(v) > 0 {
+	if v := apiObject.QueryStringsAllowList; len(v) > 0 {
 		m["query_strings_allowed_list"] = v
 	}
 
@@ -912,7 +912,7 @@ func expandQueryStringObject(tfMap map[string]interface{}) *lightsail.QueryStrin
 
 	a := &lightsail.QueryStringObject{}
 
-	if v, ok := tfMap["query_string_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap["query_strings_allowed_list"]; ok && len(v.(*schema.Set).List()) > 0 {
 		a.QueryStringsAllowList = expandAllowList(v.(*schema.Set).List())
 	}
 
