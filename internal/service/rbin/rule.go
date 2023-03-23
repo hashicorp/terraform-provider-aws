@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -277,8 +278,8 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.RuleStatusPending)},
-		Target:                    []string{string(types.RuleStatusAvailable)},
+		Pending:                   enum.Slice(types.RuleStatusPending),
+		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -295,8 +296,8 @@ func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout 
 
 func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.RuleStatusPending)},
-		Target:                    []string{string(types.RuleStatusAvailable)},
+		Pending:                   enum.Slice(types.RuleStatusPending),
+		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -313,7 +314,7 @@ func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout 
 
 func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.RuleStatusPending), string(types.RuleStatusAvailable)},
+		Pending: enum.Slice(types.RuleStatusPending, types.RuleStatusAvailable),
 		Target:  []string{},
 		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
