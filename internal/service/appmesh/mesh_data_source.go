@@ -67,16 +67,24 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("arn", arn)
 	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
+	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
+	d.Set("mesh_owner", meshOwner)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	// https://docs.aws.amazon.com/app-mesh/latest/userguide/sharing.html#sharing-permissions
+	// Owners and consumers can list tags and can tag/untag resources in a mesh that the account created.
+	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
+	var tags tftags.KeyValueTags
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)
+	if meshOwner == meta.(*conns.AWSClient).AccountID {
+		tags, err = ListTags(ctx, conn, arn)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)
+		}
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

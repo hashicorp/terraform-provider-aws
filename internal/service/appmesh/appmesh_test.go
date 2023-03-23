@@ -29,6 +29,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceBasic":          testAccMeshDataSource_basic,
 			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
 			"dataSourceSpecAndTagsSet": testAccMeshDataSource_specAndTagsSet,
+			"dataSourceShared":         testAccMeshDataSource_shared,
 		},
 		"Route": {
 			"disappears":              testAccRoute_disappears,
