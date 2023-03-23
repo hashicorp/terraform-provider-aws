@@ -1,4 +1,3 @@
 ```release-note:bug
-resource/aws_medialive_channel: Changed typeSet to typeList on video_description, to get more precise actions from
-plan output
+resource/aws_medialive_channel: Change `TypeSet` to `TypeList` on `video_description`, to get more precise actions from plan output
 ```
