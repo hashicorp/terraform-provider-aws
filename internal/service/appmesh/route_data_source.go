@@ -76,7 +76,8 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
-	d.Set("mesh_owner", route.Metadata.MeshOwner)
+	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
+	d.Set("mesh_owner", meshOwner)
 	d.Set("name", route.RouteName)
 	d.Set("resource_owner", route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
@@ -84,10 +85,17 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("virtual_router_name", route.VirtualRouterName)
 
-	tags, err := ListTags(ctx, conn, arn)
+	// https://docs.aws.amazon.com/app-mesh/latest/userguide/sharing.html#sharing-permissions
+	// Owners and consumers can list tags and can tag/untag resources in a mesh that the account created.
+	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
+	var tags tftags.KeyValueTags
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
+	if meshOwner == meta.(*conns.AWSClient).AccountID {
+		tags, err = ListTags(ctx, conn, arn)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
+		}
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
