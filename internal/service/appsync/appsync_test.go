@@ -30,6 +30,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"Type_none":                     testAccDataSource_Type_none,
 			"Type_rdbms":                    testAccDataSource_Type_relationalDatabase,
 			"Type_rdbms_options":            testAccDataSource_Type_relationalDatabaseWithOptions,
+			"Type_eventBridge":              testAccDataSource_Type_eventBridge,
 		},
 		"GraphQLAPI": {
 			"basic":                     testAccGraphQLAPI_basic,

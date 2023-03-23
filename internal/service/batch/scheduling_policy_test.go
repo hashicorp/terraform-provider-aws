@@ -3,10 +3,8 @@ package batch_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
@@ -88,12 +87,11 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, sp *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		log.Printf("State: %#v", s.RootModule().Resources)
 		if !ok {
-			return fmt.Errorf("Batch Scheduling Policy not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -101,14 +99,14 @@ func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, sp *batch
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
-		schedulingPolicy, err := GetSchedulingPolicyNoContext(ctx, conn, rs.Primary.ID)
+
+		output, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if schedulingPolicy == nil {
-			return fmt.Errorf("Batch Scheduling Polic not found: %s", n)
-		}
-		*sp = *schedulingPolicy
+
+		*v = *output
 
 		return nil
 	}
@@ -121,42 +119,25 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
-			sp, err := GetSchedulingPolicyNoContext(ctx, conn, rs.Primary.ID)
-			if err == nil {
-				if sp != nil {
-					return fmt.Errorf("Error: Scheduling Policy still exists")
-				}
+
+			_, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			return nil
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Batch Scheduling Policy %s still exists", rs.Primary.ID)
 		}
 		return nil
 	}
 }
 
-func GetSchedulingPolicyNoContext(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
-	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
-		Arns: []*string{aws.String(arn)},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	numSchedulingPolicies := len(resp.SchedulingPolicies)
-	switch {
-	case numSchedulingPolicies == 0:
-		log.Printf("[DEBUG] Scheduling Policy %q is already gone", arn)
-		return nil, nil
-	case numSchedulingPolicies == 1:
-		return resp.SchedulingPolicies[0], nil
-	case numSchedulingPolicies > 1:
-		return nil, fmt.Errorf("Multiple Scheduling Policy with arn %s", arn)
-	}
-	return nil, nil
-}
-
 func testAccSchedulingPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {
   name = %[1]q
 
@@ -174,12 +155,11 @@ resource "aws_batch_scheduling_policy" "test" {
     "Name" = "Test Batch Scheduling Policy"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccSchedulingPolicyConfig_basic2(rName string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {
   name = %[1]q
 
@@ -202,5 +182,5 @@ resource "aws_batch_scheduling_policy" "test" {
     "Name" = "Test Batch Scheduling Policy"
   }
 }
-`, rName))
+`, rName)
 }

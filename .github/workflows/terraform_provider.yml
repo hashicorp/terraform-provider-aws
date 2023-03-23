@@ -8,7 +8,6 @@ on:
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
-      - .ci/scripts/providerlint.sh
       - .ci/.golangci.yml
       - .ci/tools/go.mod
       - .markdownlint.yml
@@ -32,8 +31,8 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
@@ -51,7 +50,7 @@ jobs:
     needs: [go_mod_download]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         continue-on-error: true
         id: cache-terraform-plugin-dir
@@ -60,7 +59,7 @@ jobs:
           path: terraform-plugin-dir
           key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -87,8 +86,8 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -119,10 +118,10 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, large]
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -148,8 +147,8 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -176,10 +175,10 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -206,7 +205,7 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         continue-on-error: true
         id: cache-terraform-providers-schema
@@ -221,7 +220,7 @@ jobs:
           path: terraform-plugin-dir
           key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
@@ -241,8 +240,8 @@ jobs:
     needs: [terraform_providers_schema]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
@@ -271,8 +270,8 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: avto-dev/markdown-lint@v1
+      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb
         with:
           args: '.'
           ignore: './docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs'

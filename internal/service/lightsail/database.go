@@ -227,11 +227,13 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("creating Lightsail Relational Database (%s): %s", relationalDatabaseName, err)
 	}
 
-	d.SetId(relationalDatabaseName)
+	diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeCreateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
 
-	if err := waitOperationWithContext(ctx, conn, output.Operations[0].Id); err != nil {
-		return diag.Errorf("waiting for Lightsail Relational Database (%s) create: %s", d.Id(), err)
+	if diagError != nil {
+		return diagError
 	}
+
+	d.SetId(relationalDatabaseName)
 
 	// Backup Retention is not a value you can pass on creation and defaults to true.
 	// Forcing an update of the value after creation if the backup_retention_enabled value is false.
@@ -248,8 +250,10 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.Errorf("updating Lightsail Relational Database (%s) backup retention: %s", d.Id(), err)
 		}
 
-		if err := waitOperationWithContext(ctx, conn, output.Operations[0].Id); err != nil {
-			return diag.Errorf("waiting for Lightsail Relational Database (%s) update: %s", d.Id(), err)
+		diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeUpdateRelationalDatabase, ResNameDatabase, relationalDatabaseName)
+
+		if diagError != nil {
+			return diagError
 		}
 
 		if err := waitDatabaseBackupRetentionModified(ctx, conn, aws.String(d.Id()), false); err != nil {
@@ -366,8 +370,10 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.Errorf("updating Lightsail Relational Database (%s): %s", d.Id(), err)
 		}
 
-		if err := waitOperationWithContext(ctx, conn, output.Operations[0].Id); err != nil {
-			return diag.Errorf("waiting for Lightsail Relational Database (%s) update: %s", d.Id(), err)
+		diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeUpdateRelationalDatabase, ResNameDatabase, d.Id())
+
+		if diagError != nil {
+			return diagError
 		}
 
 		if d.HasChange("backup_retention_enabled") {
@@ -428,8 +434,10 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("deleting Lightsail Relational Database (%s): %s", d.Id(), err)
 	}
 
-	if err := waitOperationWithContext(ctx, conn, output.Operations[0].Id); err != nil {
-		return diag.Errorf("waiting for Lightsail Relational Database (%s) delete: %s", d.Id(), err)
+	diagError := expandOperations(ctx, conn, output.Operations, lightsail.OperationTypeDeleteRelationalDatabase, ResNameDatabase, d.Id())
+
+	if diagError != nil {
+		return diagError
 	}
 
 	return nil
