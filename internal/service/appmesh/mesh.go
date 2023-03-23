@@ -298,22 +298,21 @@ func dataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
 	case schema.TypeSet:
 		ds.Set = rs.Set
 		fallthrough
-	case schema.TypeList:
+	case schema.TypeList, schema.TypeMap:
 		// List & Set types are generally used for 2 cases:
 		// - a list/set of simple primitive values (e.g. list of strings)
 		// - a sub resource
-		if elem, ok := rs.Elem.(*schema.Resource); ok {
+		// Maps are usually used for maps of simple primitives
+		switch elem := rs.Elem.(type) {
+		case *schema.Resource:
 			// handle the case where the Element is a sub-resource
 			ds.Elem = &schema.Resource{
 				Schema: dataSourceSchemaFromResourceSchema(elem.Schema),
 			}
-		} else {
+		case *schema.Schema:
 			// handle simple primitive case
-			ds.Elem = rs.Elem
+			ds.Elem = &schema.Schema{Type: elem.Type}
 		}
-	default:
-		// Elem of all other types are copied as-is
-		ds.Elem = rs.Elem
 	}
 
 	return ds
