@@ -49,6 +49,10 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tcpRouteWithPortMatch":   testAccRoute_tcpRouteWithPortMatch,
 			"tcpRouteTimeout":         testAccRoute_tcpRouteTimeout,
 			"tags":                    testAccRoute_tags,
+			"dataSourceHTTP2Route":    testAccRouteDataSource_http2Route,
+			"dataSourceHTTPRoute":     testAccRouteDataSource_httpRoute,
+			"dataSourceGRPCRoute":     testAccRouteDataSource_grpcRoute,
+			"dataSourceTCPRoute":      testAccRouteDataSource_tcpRoute,
 		},
 		"VirtualGateway": {
 			"basic":                      testAccVirtualGateway_basic,

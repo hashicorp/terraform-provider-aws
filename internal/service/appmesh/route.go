@@ -25,6 +25,68 @@ import (
 
 // @SDKResource("aws_appmesh_route")
 func ResourceRoute() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceRouteCreate,
+		ReadWithoutTimeout:   resourceRouteRead,
+		UpdateWithoutTimeout: resourceRouteUpdate,
+		DeleteWithoutTimeout: resourceRouteDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceRouteImport,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"mesh_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"mesh_owner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"spec":            resourceRouteSpecSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"virtual_router_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
+
+func resourceRouteSpecSchema() *schema.Schema {
 	// httpRouteSchema returns the schema for `http_route` and `http2_route` attributes.
 	httpRouteSchema := func() *schema.Schema {
 		return &schema.Schema{
@@ -265,294 +327,245 @@ func ResourceRoute() *schema.Resource {
 		}
 	}
 
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceRouteCreate,
-		ReadWithoutTimeout:   resourceRouteRead,
-		UpdateWithoutTimeout: resourceRouteUpdate,
-		DeleteWithoutTimeout: resourceRouteDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRouteImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"mesh_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"grpc_route": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MinItems:      0,
-							MaxItems:      1,
-							ConflictsWith: []string{"spec.0.http2_route", "spec.0.http_route", "spec.0.tcp_route"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"weighted_target": {
-													Type:     schema.TypeSet,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 10,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"port": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IsPortNumber,
-															},
-															"virtual_node": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 255),
-															},
-															"weight": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntBetween(0, 100),
-															},
-														},
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"grpc_route": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      0,
+					MaxItems:      1,
+					ConflictsWith: []string{"spec.0.http2_route", "spec.0.http_route", "spec.0.tcp_route"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"weighted_target": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"port": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IsPortNumber,
+													},
+													"virtual_node": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+													"weight": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(0, 100),
 													},
 												},
 											},
 										},
 									},
-									"match": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"metadata": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 10,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"invert": {
-																Type:     schema.TypeBool,
-																Optional: true,
-																Default:  false,
-															},
-															"match": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"exact": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																		"prefix": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																		"range": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MinItems: 0,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"end": {
-																						Type:     schema.TypeInt,
-																						Required: true,
-																					},
-																					"start": {
-																						Type:     schema.TypeInt,
-																						Required: true,
-																					},
-																				},
+								},
+							},
+							"match": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metadata": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"invert": {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Default:  false,
+													},
+													"match": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"exact": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+																"prefix": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+																"range": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 0,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"end": {
+																				Type:     schema.TypeInt,
+																				Required: true,
 																			},
-																		},
-																		"regex": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																		"suffix": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
+																			"start": {
+																				Type:     schema.TypeInt,
+																				Required: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"name": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 50),
+																"regex": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+																"suffix": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
 															},
 														},
 													},
-												},
-												"method_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
-												},
-												"port": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
-												"prefix": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 50),
-												},
-												"service_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													"name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 50),
+													},
 												},
 											},
 										},
+										"method_name": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
+										},
+										"port": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										"prefix": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 50),
+										},
+										"service_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
-									"retry_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"grpc_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"http_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"max_retries": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-												"per_retry_timeout": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
+								},
+							},
+							"retry_policy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"grpc_retry_events": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"http_retry_events": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"max_retries": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"per_retry_timeout": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 													},
-												},
-												"tcp_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
 												},
 											},
 										},
+										"tcp_retry_events": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 0,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									"timeout": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"idle": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
+								},
+							},
+							"timeout": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"idle": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+													},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 												},
-												"per_request": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
+											},
+										},
+										"per_request": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+													},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 												},
 											},
@@ -561,103 +574,103 @@ func ResourceRoute() *schema.Resource {
 								},
 							},
 						},
-						"http_route": func() *schema.Schema {
-							schema := httpRouteSchema()
-							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.tcp_route"}
-							return schema
-						}(),
-						"http2_route": func() *schema.Schema {
-							schema := httpRouteSchema()
-							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
-							return schema
-						}(),
-						"priority": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
-						},
-						"tcp_route": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MinItems:      0,
-							MaxItems:      1,
-							ConflictsWith: []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.http_route"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"weighted_target": {
-													Type:     schema.TypeSet,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 10,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"port": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IsPortNumber,
-															},
-															"virtual_node": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 255),
-															},
-															"weight": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntBetween(0, 100),
-															},
-														},
+					},
+				},
+				"http_route": func() *schema.Schema {
+					schema := httpRouteSchema()
+					schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.tcp_route"}
+					return schema
+				}(),
+				"http2_route": func() *schema.Schema {
+					schema := httpRouteSchema()
+					schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
+					return schema
+				}(),
+				"priority": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+				"tcp_route": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      0,
+					MaxItems:      1,
+					ConflictsWith: []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.http_route"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"weighted_target": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"port": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IsPortNumber,
+													},
+													"virtual_node": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+													"weight": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(0, 100),
 													},
 												},
 											},
 										},
 									},
-									"match": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"port": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
-											},
+								},
+							},
+							"match": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"port": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IsPortNumber,
 										},
 									},
-									"timeout": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"idle": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
+								},
+							},
+							"timeout": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"idle": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+													},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 												},
 											},
@@ -669,17 +682,7 @@ func ResourceRoute() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"virtual_router_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
