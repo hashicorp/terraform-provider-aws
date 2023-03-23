@@ -180,9 +180,9 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
-
 	if !new.Type.Equal(old.Type) {
+		conn := r.Meta().ResourceExplorer2Client()
+
 		input := &resourceexplorer2.UpdateIndexTypeInput{
 			Arn:  flex.StringFromFramework(ctx, new.ID),
 			Type: awstypes.IndexType(new.Type.ValueString()),
