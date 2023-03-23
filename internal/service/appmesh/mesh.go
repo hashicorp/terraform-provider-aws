@@ -290,8 +290,6 @@ func dataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 func dataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
 	ds := &schema.Schema{
 		Computed:    true,
-		ForceNew:    false,
-		Required:    false,
 		Description: rs.Description,
 		Type:        rs.Type,
 	}
