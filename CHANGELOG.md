@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_appmesh_route` ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
+* **New Data Source:** `aws_appmesh_virtual_gateway` ([#27057](https://github.com/hashicorp/terraform-provider-aws/issues/27057))
 * **New Resource:** `aws_oam_link` ([#30125](https://github.com/hashicorp/terraform-provider-aws/issues/30125))
 * **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
 
@@ -33,6 +34,7 @@ BUG FIXES:
 * resource/aws_medialive_channel: Fix type casting of `program_num`, `segmentation_time` and `fragment_time` for `m2ts_settings` ([#30025](https://github.com/hashicorp/terraform-provider-aws/issues/30025))
 * resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
 * resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_placement_group: Change `spread_level` to Computed ([#28596](https://github.com/hashicorp/terraform-provider-aws/issues/28596))
 * resource/aws_security_group: Improve respect for delete timeout set by user and retry of certain errors ([#30114](https://github.com/hashicorp/terraform-provider-aws/issues/30114))
 * resource/aws_transfer_server: Fix error refreshing `protocol_details.as2_transports` value ([#30115](https://github.com/hashicorp/terraform-provider-aws/issues/30115))
 
