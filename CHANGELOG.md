@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_appmesh_route` ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
 * **New Resource:** `aws_oam_link` ([#30125](https://github.com/hashicorp/terraform-provider-aws/issues/30125))
 * **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
 
@@ -16,6 +17,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_appmesh_mesh: Don't attempt to list tags if the current AWS account is not the mesh owner ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
+* data-source/aws_appmesh_virtual_service: Don't attempt to list tags if the current AWS account is not the mesh owner ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
 * resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_appmesh_gateway_route: Use configured `mesh_owner` when deleting shared gateway route ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
