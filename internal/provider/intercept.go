@@ -54,7 +54,7 @@ type why uint16
 const (
 	Create why = 1 << iota // Interceptor is invoked for a Create call
 	Read                   // Interceptor is invoked for a Read call
-	Update                 // Interceptor is invoked for a Update call
+	Update                 // Interceptor is invoked for an Update call
 	Delete                 // Interceptor is invoked for a Delete call
 
 	AllOps = Create | Read | Update | Delete // Interceptor is invoked for all calls
@@ -74,6 +74,7 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 		ctx = bootstrapContext(ctx, meta)
+		// Before interceptors are run first to last.
 		forward := interceptors.why(why)
 
 		when := Before
@@ -88,6 +89,7 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 			}
 		}
 
+		// All other interceptors are run last to first.
 		reverse := slices.Reverse(forward)
 		diags = f(ctx, d, meta)
 
@@ -113,10 +115,12 @@ func interceptedHandler[F ~func(context.Context, *schema.ResourceData, any) diag
 	}
 }
 
+// contextFunc augments Context.
 type contextFunc func(context.Context, any) context.Context
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin SDK v2 data source.
 type wrappedDataSource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     interceptorItems
 }
@@ -125,8 +129,9 @@ func (ds *wrappedDataSource) Read(f schema.ReadContextFunc) schema.ReadContextFu
 	return interceptedHandler(ds.bootstrapContext, ds.interceptors, f, Read)
 }
 
-// wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 wrappedResource.
+// wrappedResource represents an interceptor dispatcher for a Plugin SDK v2 resource.
 type wrappedResource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	interceptors     interceptorItems
 }
@@ -171,6 +176,7 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 }
 
+// tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
@@ -213,11 +219,14 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	case Before:
 		switch why {
 		case Create:
+			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+			// Remove system tags.
 			tags = tags.IgnoreAWS()
 
 			tagsInContext.TagsIn = tags
 		case Update:
+			// If the service package has a generic resource update tags methods, call it.
 			if v, ok := sp.(interface {
 				UpdateTags(context.Context, any, string, any, any) error
 			}); ok {
@@ -245,20 +254,24 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
 				}
+				// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 			}
 		}
 	case After:
+		// Set tags and tags_all in state after CRU.
+		// C & U handlers are assumed to tail call the R handler.
 		switch why {
 		case Read:
-			// may occur on a refresh when the resource does not exist in AWS and needs to be recreated
-			// Disappears test
+			// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
 			if d.Id() == "" {
 				return ctx, diags
 			}
 
 			fallthrough
 		case Create, Update:
+			// If the R handler didn't set tags, try and read them from the service API.
 			if tagsInContext.TagsOut.IsNone() {
+				// If the service package has a generic resource list tags methods, call it.
 				if v, ok := sp.(interface {
 					ListTags(context.Context, any, string) error
 				}); ok {
@@ -287,12 +300,15 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				}
 			}
 
+			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig)
 
+			// The resource's configured tags do not include any provider configured default_tags.
 			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
+			// Computed tags_all do.
 			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 			}

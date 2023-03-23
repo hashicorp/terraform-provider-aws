@@ -275,6 +275,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
@@ -324,6 +325,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
@@ -335,6 +337,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
 				if v, ok := r.Schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
