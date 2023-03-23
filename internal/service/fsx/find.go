@@ -1,6 +1,8 @@
 package fsx
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
-	fileSystem, err := FindFileSystemByID(conn, fsID)
+func FindAdministrativeActionByFileSystemIDAndActionType(ctx context.Context, conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
+	fileSystem, err := FindFileSystemByID(ctx, conn, fsID)
 
 	if err != nil {
 		return nil, err
@@ -29,12 +31,12 @@ func FindAdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, ac
 	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
 }
 
-func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
+func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
 		BackupIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeBackups(input)
+	output, err := conn.DescribeBackupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
 		return nil, &resource.NotFoundError{
@@ -54,13 +56,13 @@ func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return output.Backups[0], nil
 }
 
-func findFileCacheByID(conn *fsx.FSx, id string) (*fsx.FileCache, error) {
+func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileCache, error) {
 	input := &fsx.DescribeFileCachesInput{
 		FileCacheIds: []*string{aws.String(id)},
 	}
 	var fileCaches []*fsx.FileCache
 
-	err := conn.DescribeFileCachesPages(input, func(page *fsx.DescribeFileCachesOutput, lastPage bool) bool {
+	err := conn.DescribeFileCachesPagesWithContext(ctx, input, func(page *fsx.DescribeFileCachesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -87,13 +89,13 @@ func findFileCacheByID(conn *fsx.FSx, id string) (*fsx.FileCache, error) {
 	return fileCaches[0], nil
 }
 
-func findDataRepositoryAssociationsByIDs(conn *fsx.FSx, ids []*string) ([]*fsx.DataRepositoryAssociation, error) {
+func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids []*string) ([]*fsx.DataRepositoryAssociation, error) {
 	input := &fsx.DescribeDataRepositoryAssociationsInput{
 		AssociationIds: ids,
 	}
 	var dataRepositoryAssociations []*fsx.DataRepositoryAssociation
 
-	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -117,14 +119,14 @@ func findDataRepositoryAssociationsByIDs(conn *fsx.FSx, ids []*string) ([]*fsx.D
 	return dataRepositoryAssociations, nil
 }
 
-func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},
 	}
 
 	var filesystems []*fsx.FileSystem
 
-	err := conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -156,14 +158,14 @@ func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	return filesystems[0], nil
 }
 
-func FindDataRepositoryAssociationByID(conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
+func FindDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
 	input := &fsx.DescribeDataRepositoryAssociationsInput{
 		AssociationIds: []*string{aws.String(id)},
 	}
 
 	var associations []*fsx.DataRepositoryAssociation
 
-	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -195,14 +197,14 @@ func FindDataRepositoryAssociationByID(conn *fsx.FSx, id string) (*fsx.DataRepos
 	return associations[0], nil
 }
 
-func FindStorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
 		StorageVirtualMachineIds: []*string{aws.String(id)},
 	}
 
 	var storageVirtualMachines []*fsx.StorageVirtualMachine
 
-	err := conn.DescribeStorageVirtualMachinesPages(input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
+	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -234,14 +236,14 @@ func FindStorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtua
 	return storageVirtualMachines[0], nil
 }
 
-func FindVolumeByID(conn *fsx.FSx, id string) (*fsx.Volume, error) {
+func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	input := &fsx.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(id)},
 	}
 
 	var volumes []*fsx.Volume
 
-	err := conn.DescribeVolumesPages(input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
+	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -273,12 +275,12 @@ func FindVolumeByID(conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	return volumes[0], nil
 }
 
-func FindSnapshotByID(conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeSnapshots(input)
+	output, err := conn.DescribeSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
 		return nil, &resource.NotFoundError{
@@ -298,10 +300,10 @@ func FindSnapshotByID(conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	return output.Snapshots[0], nil
 }
 
-func FindSnapshots(conn *fsx.FSx, input *fsx.DescribeSnapshotsInput) ([]*fsx.Snapshot, error) {
+func FindSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapshotsInput) ([]*fsx.Snapshot, error) {
 	var output []*fsx.Snapshot
 
-	err := conn.DescribeSnapshotsPages(input, func(page *fsx.DescribeSnapshotsOutput, lastPage bool) bool {
+	err := conn.DescribeSnapshotsPagesWithContext(ctx, input, func(page *fsx.DescribeSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

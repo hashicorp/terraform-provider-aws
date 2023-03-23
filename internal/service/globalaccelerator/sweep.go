@@ -39,6 +39,7 @@ func init() {
 }
 
 func sweepAccelerators(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -47,7 +48,7 @@ func sweepAccelerators(region string) error {
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAcceleratorsPages(input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -72,7 +73,7 @@ func sweepAccelerators(region string) error {
 		return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Global Accelerator Accelerators (%s): %w", region, err)
@@ -82,6 +83,7 @@ func sweepAccelerators(region string) error {
 }
 
 func sweepEndpointGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -91,7 +93,7 @@ func sweepEndpointGroups(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAcceleratorsPages(input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -101,7 +103,7 @@ func sweepEndpointGroups(region string) error {
 				AcceleratorArn: v.AcceleratorArn,
 			}
 
-			err := conn.ListListenersPages(input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
+			err := conn.ListListenersPagesWithContext(ctx, input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -111,7 +113,7 @@ func sweepEndpointGroups(region string) error {
 						ListenerArn: v.ListenerArn,
 					}
 
-					err := conn.ListEndpointGroupsPages(input, func(page *globalaccelerator.ListEndpointGroupsOutput, lastPage bool) bool {
+					err := conn.ListEndpointGroupsPagesWithContext(ctx, input, func(page *globalaccelerator.ListEndpointGroupsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -160,7 +162,7 @@ func sweepEndpointGroups(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Endpoint Groups (%s): %w", region, err))
@@ -170,6 +172,7 @@ func sweepEndpointGroups(region string) error {
 }
 
 func sweepListeners(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -179,7 +182,7 @@ func sweepListeners(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAcceleratorsPages(input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -189,7 +192,7 @@ func sweepListeners(region string) error {
 				AcceleratorArn: v.AcceleratorArn,
 			}
 
-			err := conn.ListListenersPages(input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
+			err := conn.ListListenersPagesWithContext(ctx, input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -226,7 +229,7 @@ func sweepListeners(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Listeners (%s): %w", region, err))

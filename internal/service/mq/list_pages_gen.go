@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mq/mqiface"
 )
 
-func describeBrokerInstanceOptionsPages(conn *mq.MQ, input *mq.DescribeBrokerInstanceOptionsInput, fn func(*mq.DescribeBrokerInstanceOptionsOutput, bool) bool) error {
-	return describeBrokerInstanceOptionsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeBrokerInstanceOptionsPagesWithContext(ctx context.Context, conn *mq.MQ, input *mq.DescribeBrokerInstanceOptionsInput, fn func(*mq.DescribeBrokerInstanceOptionsOutput, bool) bool) error {
+func describeBrokerInstanceOptionsPages(ctx context.Context, conn mqiface.MQAPI, input *mq.DescribeBrokerInstanceOptionsInput, fn func(*mq.DescribeBrokerInstanceOptionsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeBrokerInstanceOptionsWithContext(ctx, input)
 		if err != nil {

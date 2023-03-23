@@ -35,6 +35,7 @@ func init() {
 }
 
 func sweepAPIs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -43,7 +44,7 @@ func sweepAPIs(region string) error {
 	input := &apigatewayv2.GetApisInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = getAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+	err = getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -68,7 +69,7 @@ func sweepAPIs(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 APIs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 APIs (%s): %w", region, err)
@@ -78,23 +79,24 @@ func sweepAPIs(region string) error {
 }
 
 func sweepDomainNames(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
-	input := &apigatewayv2.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = getDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
+	input := &apigatewayv2.GetDomainNamesInput{}
+	err = getDomainNamesPages(ctx, conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Items {
+		for _, domainName := range page.Items {
 			r := ResourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DomainName))
+			d.SetId(aws.StringValue(domainName.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -106,12 +108,11 @@ func sweepDomainNames(region string) error {
 		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 Domain Names (%s): %w", region, err)
@@ -121,6 +122,7 @@ func sweepDomainNames(region string) error {
 }
 
 func sweepVPCLinks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -129,7 +131,7 @@ func sweepVPCLinks(region string) error {
 	input := &apigatewayv2.GetVpcLinksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = getVPCLinksPages(conn, input, func(page *apigatewayv2.GetVpcLinksOutput, lastPage bool) bool {
+	err = getVPCLinksPages(ctx, conn, input, func(page *apigatewayv2.GetVpcLinksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -154,7 +156,7 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 VPC Links (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 VPC Links (%s): %w", region, err)

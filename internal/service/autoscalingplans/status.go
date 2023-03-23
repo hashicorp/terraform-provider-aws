@@ -1,15 +1,17 @@
 package autoscalingplans
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusScalingPlanCode(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
+func statusScalingPlanCode(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		scalingPlan, err := FindScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
+		scalingPlan, err := FindScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

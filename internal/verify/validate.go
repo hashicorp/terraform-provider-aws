@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|\d{12})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
@@ -35,39 +35,64 @@ func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func ValidARN(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
+// ValidARN validates that a string value matches a generic ARN format
+var ValidARN = ValidARNCheck()
 
-	if value == "" {
+type ARNCheckFunc func(any, string, arn.ARN) ([]string, []error)
+
+// ValidARNCheck validates that a string value matches an ARN format with additional validation on the parsed ARN value
+// It must:
+// * Be parseable as an ARN
+// * Have a valid partition
+// * Have a valid region
+// * Have either an empty or valid account ID
+// * Have a non-empty resource part
+// * Pass the supplied checks
+func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
+	return func(v any, k string) (ws []string, errors []error) {
+		value, ok := v.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return ws, errors
+		}
+
+		if value == "" {
+			return ws, errors
+		}
+
+		parsedARN, err := arn.Parse(value)
+
+		if err != nil {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+			return ws, errors
+		}
+
+		if parsedARN.Partition == "" {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing partition value", k, value))
+		} else if !partitionRegexp.MatchString(parsedARN.Partition) {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid partition value (expecting to match regular expression: %s)", k, value, partitionRegexp))
+		}
+
+		if parsedARN.Region != "" && !regionRegexp.MatchString(parsedARN.Region) {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value (expecting to match regular expression: %s)", k, value, regionRegexp))
+		}
+
+		if parsedARN.AccountID != "" && !accountIDRegexp.MatchString(parsedARN.AccountID) {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid account ID value (expecting to match regular expression: %s)", k, value, accountIDRegexp))
+		}
+
+		if parsedARN.Resource == "" {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
+		}
+
+		for _, f := range f {
+			w, e := f(v, k, parsedARN)
+			ws = append(ws, w...)
+			errors = append(errors, e...)
+		}
+
 		return ws, errors
 	}
-
-	parsedARN, err := arn.Parse(value)
-
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
-		return ws, errors
-	}
-
-	if parsedARN.Partition == "" {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing partition value", k, value))
-	} else if !partitionRegexp.MatchString(parsedARN.Partition) {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid partition value (expecting to match regular expression: %s)", k, value, partitionRegexp))
-	}
-
-	if parsedARN.Region != "" && !regionRegexp.MatchString(parsedARN.Region) {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value (expecting to match regular expression: %s)", k, value, regionRegexp))
-	}
-
-	if parsedARN.AccountID != "" && !accountIDRegexp.MatchString(parsedARN.AccountID) {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid account ID value (expecting to match regular expression: %s)", k, value, accountIDRegexp))
-	}
-
-	if parsedARN.Resource == "" {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
-	}
-
-	return ws, errors
 }
 
 func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
@@ -305,28 +330,6 @@ func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []err
 			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %s", k, err))
 		}
 	}
-	return
-}
-
-// ValidTypeStringNullableBoolean provides custom error messaging for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified).
-// This ValidateFunc returns a custom message since the message with
-// validation.StringInSlice([]string{"", "false", "true"}, false) is confusing:
-// to be one of [ false true], got 1
-func ValidTypeStringNullableBoolean(v interface{}, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	for _, str := range []string{"", "0", "1", "false", "true"} {
-		if value == str {
-			return
-		}
-	}
-
-	es = append(es, fmt.Errorf("expected %s to be one of [\"\", false, true], got %s", k, value))
 	return
 }
 

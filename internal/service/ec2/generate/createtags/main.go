@@ -95,26 +95,26 @@ if tfawserr.ErrCodeContains(err, ".NotFound") {
 	tmpl, err := template.New("createtags").Parse(templateBody)
 
 	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
+		log.Fatalf("parsing template: %s", err)
 	}
 
 	var buffer bytes.Buffer
 	err = tmpl.Execute(&buffer, templateData)
 
 	if err != nil {
-		log.Fatalf("error executing template: %s", err)
+		log.Fatalf("executing template: %s", err)
 	}
 
 	generatedFileContents, err := format.Source(buffer.Bytes())
 
 	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
+		log.Fatalf("formatting generated file: %s", err)
 	}
 
 	f, err := os.Create(filename)
 
 	if err != nil {
-		log.Fatalf("error creating file (%s): %s", filename, err)
+		log.Fatalf("creating file (%s): %s", filename, err)
 	}
 
 	defer f.Close()
@@ -122,7 +122,7 @@ if tfawserr.ErrCodeContains(err, ".NotFound") {
 	_, err = f.Write(generatedFileContents)
 
 	if err != nil {
-		log.Fatalf("error writing to file (%s): %s", filename, err)
+		log.Fatalf("writing to file (%s): %s", filename, err)
 	}
 }
 

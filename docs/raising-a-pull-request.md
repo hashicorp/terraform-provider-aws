@@ -137,7 +137,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
   }
 
   if err != nil {
-    return fmt.Errorf("error creating KMS External Key: %s", err)
+    return fmt.Errorf("creating KMS External Key: %s", err)
   }
   ```
 

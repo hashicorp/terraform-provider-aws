@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	transitGatewayPolicyTableResourceName := "aws_ec2_transit_gateway_policy_table.test"
@@ -22,15 +24,15 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPolicyTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPolicyTableAssociationExists(resourceName, &v),
+					testAccCheckTransitGatewayPolicyTableAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayPeeringResourceName, "transit_gateway_peering_attachment_id"),
@@ -47,21 +49,22 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPolicyTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPolicyTableAssociationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPolicyTableAssociation(), resourceName),
+					testAccCheckTransitGatewayPolicyTableAssociationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPolicyTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +72,7 @@ func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayPolicyTableAssociationExists(n string, v *ec2.TransitGatewayPolicyTableAssociation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPolicyTableAssociationExists(ctx context.Context, n string, v *ec2.TransitGatewayPolicyTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -88,7 +91,7 @@ func testAccCheckTransitGatewayPolicyTableAssociationExists(n string, v *ec2.Tra
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
+		output, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
@@ -100,34 +103,36 @@ func testAccCheckTransitGatewayPolicyTableAssociationExists(n string, v *ec2.Tra
 	}
 }
 
-func testAccCheckTransitGatewayPolicyTableAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+func testAccCheckTransitGatewayPolicyTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_policy_table_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_transit_gateway_policy_table_association" {
+				continue
+			}
+
+			transitGatewayPolicyTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayPolicyTableAssociationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Transit Gateway Policy Table Association %s still exists", rs.Primary.ID)
 		}
 
-		transitGatewayPolicyTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayPolicyTableAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Transit Gateway Policy Table Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTransitGatewayPolicyTableAssociationConfig_basic(rName string) string {

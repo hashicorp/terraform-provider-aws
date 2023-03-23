@@ -1,6 +1,8 @@
 package guardduty
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,9 +21,9 @@ const (
 )
 
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
-func statusAdminAccountAdmin(conn *guardduty.GuardDuty, adminAccountID string) resource.StateRefreshFunc {
+func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.GuardDuty, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := getOrganizationAdminAccount(conn, adminAccountID)
+		adminAccount, err := getOrganizationAdminAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
 			return nil, adminStatusUnknown, err
@@ -36,14 +38,14 @@ func statusAdminAccountAdmin(conn *guardduty.GuardDuty, adminAccountID string) r
 }
 
 // statusPublishingDestination fetches the PublishingDestination and its Status
-func statusPublishingDestination(conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
+func statusPublishingDestination(ctx context.Context, conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.DescribePublishingDestinationInput{
 			DetectorId:    aws.String(detectorID),
 			DestinationId: aws.String(destinationID),
 		}
 
-		output, err := conn.DescribePublishingDestination(input)
+		output, err := conn.DescribePublishingDestinationWithContext(ctx, input)
 
 		if err != nil {
 			return output, publishingStatusFailed, err
@@ -58,11 +60,11 @@ func statusPublishingDestination(conn *guardduty.GuardDuty, destinationID, detec
 }
 
 // TODO: Migrate to shared internal package guardduty
-func getOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
+func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
 	input := &guardduty.ListOrganizationAdminAccountsInput{}
 	var result *guardduty.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(input, func(page *guardduty.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *guardduty.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
