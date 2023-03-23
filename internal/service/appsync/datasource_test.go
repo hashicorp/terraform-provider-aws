@@ -39,6 +39,7 @@ func testAccDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
@@ -483,6 +484,38 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 	})
 }
 
+func testAccDataSource_Type_eventBridge(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	iamRoleResourceName := "aws_iam_role.test"
+	eventBusResourceName := "aws_cloudwatch_event_bus.test"
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_typeEventBridge(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bridge_config.0.event_bus_arn", eventBusResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_EVENTBRIDGE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccDataSource_Type_none(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
@@ -748,6 +781,54 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 `, rName, rName, rName)
+}
+
+func testAccDatasourceConfig_eventBridgeBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %q
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "appsync.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "events:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_cloudwatch_event_bus.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+`, rName, rName)
 }
 
 func testAccDataSourceConfig_description(rName, description string) string {
@@ -1099,6 +1180,26 @@ resource "aws_appsync_datasource" "test" {
 
   lambda_config {
     function_arn = aws_lambda_function.test.arn
+  }
+}
+`, rName, rName)
+}
+
+func testAccDataSourceConfig_typeEventBridge(rName string) string {
+	return testAccDatasourceConfig_eventBridgeBase(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AMAZON_EVENTBRIDGE"
+
+  event_bridge_config {
+    event_bus_arn = aws_cloudwatch_event_bus.test.arn
   }
 }
 `, rName, rName)

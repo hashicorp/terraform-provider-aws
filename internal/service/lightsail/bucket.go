@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -90,18 +89,14 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string), errors.New("No operations found for Create Bucket request"))
+	id := d.Get("name").(string)
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateBucket, ResBucket, id)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string), errors.New("Error waiting for Create Bucket request operation"))
-	}
-
-	d.SetId(d.Get("name").(string))
+	d.SetId(id)
 
 	return resourceBucketRead(ctx, d, meta)
 }
@@ -176,15 +171,10 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string), err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string), errors.New("No operations found for request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string))
 
-		op := out.Operations[0]
-
-		err = waitOperation(ctx, conn, op.Id)
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string), errors.New("Error waiting for request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -205,12 +195,10 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.CE, create.ErrActionDeleting, ResBucket, d.Id(), err)
 	}
 
-	op := out.Operations[0]
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteBucket, ResBucket, d.Id())
 
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResBucket, d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return nil

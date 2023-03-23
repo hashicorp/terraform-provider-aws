@@ -847,9 +847,9 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 		if value == nil {
 			if tc.Expected == nil {
 				continue
-			} else {
-				t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 			}
+
+			t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 		}
 
 		if tc.Expected == nil {

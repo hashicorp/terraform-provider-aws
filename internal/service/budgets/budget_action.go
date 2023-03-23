@@ -34,6 +34,11 @@ func ResourceBudgetAction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
@@ -245,7 +250,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
 	}
 
@@ -346,7 +351,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("updating Budget Action (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for Budget Action (%s) update: %s", d.Id(), err)
 	}
 
@@ -446,11 +451,7 @@ func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionI
 	}
 }
 
-const (
-	actionAvailableTimeout = 2 * time.Minute
-)
-
-func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
+func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string, timeout time.Duration) (*budgets.Action, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
@@ -462,7 +463,7 @@ func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, 
 			budgets.ActionStatusPending,
 		},
 		Refresh: statusAction(ctx, conn, accountID, actionID, budgetName),
-		Timeout: actionAvailableTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

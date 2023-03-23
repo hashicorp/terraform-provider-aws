@@ -30,11 +30,14 @@ func ExpandStringList(configured []interface{}) []*string {
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
 func ExpandStringValueList(configured []interface{}) []string {
-	vs := make([]string, 0, len(configured))
+	return ExpandStringyValueList[string](configured)
+}
+
+func ExpandStringyValueList[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
 	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, v.(string))
+		if val, ok := v.(string); ok && val != "" {
+			vs = append(vs, E(val))
 		}
 	}
 	return vs
@@ -114,6 +117,10 @@ func ExpandStringSet(configured *schema.Set) []*string {
 
 func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
+func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
+	return ExpandStringyValueList[E](configured.List())
 }
 
 func FlattenStringSet(list []*string) *schema.Set {

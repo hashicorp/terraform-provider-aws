@@ -4,37 +4,38 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.220
-	github.com/aws/aws-sdk-go-v2 v1.17.6
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.24
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.6
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.6
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.89.1
-	github.com/aws/aws-sdk-go-v2/service/fis v1.14.5
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.5
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.6
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.6
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/oam v1.1.6
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.6
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.40.6
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.6
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.6
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.5
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.5
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.6
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.5
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.5
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.1
+	github.com/aws/aws-sdk-go v1.44.226
+	github.com/aws/aws-sdk-go-v2 v1.17.7
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.3
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.7
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.5
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.6
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.6
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.6
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.7
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.1
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.7
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/oam v1.1.7
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.7
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.2
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.7
+	github.com/aws/aws-sdk-go-v2/service/rds v1.40.7
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.8
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.7
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.6
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.1
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.6
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.7
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.6
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.6
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -80,15 +81,15 @@ require (
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.12 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.30 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.25 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.19.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.24 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.24 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.12.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.18.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.19.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.25 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.12.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.18.7 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cloudflare/circl v1.3.2 // indirect

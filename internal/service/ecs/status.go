@@ -17,9 +17,6 @@ const (
 	serviceStatusPending = "tfPENDING"
 	serviceStatusStable  = "tfSTABLE"
 
-	clusterStatusError = "ERROR"
-	clusterStatusNone  = "NONE"
-
 	taskSetStatusActive   = "ACTIVE"
 	taskSetStatusDraining = "DRAINING"
 	taskSetStatusPrimary  = "PRIMARY"
@@ -101,11 +98,11 @@ func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) resource.Stat
 		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
-			return nil, clusterStatusNone, nil
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, clusterStatusError, err
+			return nil, "", err
 		}
 
 		return cluster, aws.StringValue(cluster.Status), err

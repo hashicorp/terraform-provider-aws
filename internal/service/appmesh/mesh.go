@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appmesh_mesh")
@@ -26,80 +27,74 @@ func ResourceMesh() *schema.Resource {
 		ReadWithoutTimeout:   resourceMeshRead,
 		UpdateWithoutTimeout: resourceMeshUpdate,
 		DeleteWithoutTimeout: resourceMeshDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"mesh_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"spec":            resourceMeshSpecSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
 
-			"spec": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MinItems:         0,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"egress_filter": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  appmesh.EgressFilterTypeDropAll,
-										ValidateFunc: validation.StringInSlice([]string{
-											appmesh.EgressFilterTypeAllowAll,
-											appmesh.EgressFilterTypeDropAll,
-										}, false),
-									},
-								},
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
+
+func resourceMeshSpecSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:             schema.TypeList,
+		Optional:         true,
+		MinItems:         0,
+		MaxItems:         1,
+		DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"egress_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      appmesh.EgressFilterTypeDropAll,
+								ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
 							},
 						},
 					},
 				},
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -109,20 +104,20 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	meshName := d.Get("name").(string)
-	req := &appmesh.CreateMeshInput{
-		MeshName: aws.String(meshName),
+	name := d.Get("name").(string)
+	input := &appmesh.CreateMeshInput{
+		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
-	_, err := conn.CreateMeshWithContext(ctx, req)
+	_, err := conn.CreateMeshWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Service Mesh (%s): %s", name, err)
 	}
 
-	d.SetId(meshName)
+	d.SetId(name)
 
 	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
@@ -133,75 +128,36 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeMeshInput{
-		MeshName: aws.String(d.Id()),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
+	}, d.IsNewResource())
 
-	var resp *appmesh.DescribeMeshOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.DescribeMeshWithContext(ctx, req)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeMeshWithContext(ctx, req)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.Mesh == nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: empty response")
-	}
-
-	if aws.StringValue(resp.Mesh.Status.Status) == appmesh.MeshStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh: %s after creation", aws.StringValue(resp.Mesh.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Service Mesh (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
-	d.Set("name", resp.Mesh.MeshName)
+	mesh := outputRaw.(*appmesh.MeshData)
+	arn := aws.StringValue(mesh.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.Mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
-	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
-	if err != nil {
+	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
+	d.Set("name", mesh.MeshName)
+	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh service mesh (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -223,25 +179,24 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
-		_, v := d.GetChange("spec")
-		req := &appmesh.UpdateMeshInput{
+		input := &appmesh.UpdateMeshInput{
 			MeshName: aws.String(d.Id()),
-			Spec:     expandMeshSpec(v.([]interface{})),
+			Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh service mesh: %#v", req)
-		_, err := conn.UpdateMeshWithContext(ctx, req)
+		_, err := conn.UpdateMeshWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh service mesh (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -256,12 +211,110 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	_, err := conn.DeleteMeshWithContext(ctx, &appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owner string) (*appmesh.MeshData, error) {
+	input := &appmesh.DescribeMeshInput{
+		MeshName: aws.String(name),
+	}
+	if owner != "" {
+		input.MeshOwner = aws.String(owner)
+	}
+
+	output, err := findMesh(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.MeshStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findMesh(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeMeshInput) (*appmesh.MeshData, error) {
+	output, err := conn.DescribeMeshWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Mesh == nil || output.Mesh.Metadata == nil || output.Mesh.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Mesh, nil
+}
+
+// Adapted from https://github.com/hashicorp/terraform-provider-google/google/datasource_helpers.go. Thanks!
+// TODO Move to a shared package.
+
+// dataSourceSchemaFromResourceSchema is a recursive func that
+// converts an existing Resource schema to a Datasource schema.
+// All schema elements are copied, but certain attributes are ignored or changed:
+// - all attributes have Computed = true
+// - all attributes have ForceNew, Required = false
+// - Validation funcs and attributes (e.g. MaxItems) are not copied
+func dataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
+	ds := make(map[string]*schema.Schema, len(rs))
+
+	for k, v := range rs {
+		ds[k] = dataSourcePropertyFromResourceProperty(v)
+	}
+
+	return ds
+}
+
+func dataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
+	ds := &schema.Schema{
+		Computed:    true,
+		Description: rs.Description,
+		Type:        rs.Type,
+	}
+
+	switch rs.Type {
+	case schema.TypeSet:
+		ds.Set = rs.Set
+		fallthrough
+	case schema.TypeList:
+		// List & Set types are generally used for 2 cases:
+		// - a list/set of simple primitive values (e.g. list of strings)
+		// - a sub resource
+		if elem, ok := rs.Elem.(*schema.Resource); ok {
+			// handle the case where the Element is a sub-resource
+			ds.Elem = &schema.Resource{
+				Schema: dataSourceSchemaFromResourceSchema(elem.Schema),
+			}
+		} else {
+			// handle simple primitive case
+			ds.Elem = rs.Elem
+		}
+	default:
+		// Elem of all other types are copied as-is
+		ds.Elem = rs.Elem
+	}
+
+	return ds
 }
