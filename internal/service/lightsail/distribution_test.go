@@ -360,8 +360,8 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.cached_http_methods", "GET,HEAD"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.default_ttl", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.maximum_ttl", "31536000"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.minimum_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.option", "none"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.0.cookies_allow_list.#", "0"),
@@ -388,6 +388,7 @@ func testAccDistribution_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -749,8 +750,8 @@ resource "aws_lightsail_distribution" "test" {
   name      = %[1]q
   bundle_id = "small_1_0"
   origin {
-    name            = aws_lightsail_bucket.test.name
-    region_name     = aws_lightsail_bucket.test.region
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
   }
   default_cache_behavior {
     behavior = "cache"
