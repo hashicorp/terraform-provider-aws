@@ -130,6 +130,9 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 						"arib_captions_pid":         "100",
 						"arib_captions_pid_control": "AUTO",
 						"video_pid":                 "101",
+						"fragment_time":             "1.92",
+						"program_num":               "1",
+						"segmentation_time":         "1.92",
 					}),
 				),
 			},
@@ -1081,6 +1084,9 @@ resource "aws_medialive_channel" "test" {
                 arib_captions_pid         = "100"
                 arib_captions_pid_control = "AUTO"
                 video_pid                 = "101"
+                fragment_time             = "1.92"
+                program_num               = "1"
+                segmentation_time         = "1.92"
               }
             }
           }
