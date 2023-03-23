@@ -59,38 +59,42 @@ func ResourceMesh() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MinItems:         0,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"egress_filter": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      appmesh.EgressFilterTypeDropAll,
-										ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"spec":            resourceMeshSpecSchema(),
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
+
+func resourceMeshSpecSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:             schema.TypeList,
+		Optional:         true,
+		MinItems:         0,
+		MaxItems:         1,
+		DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"egress_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      appmesh.EgressFilterTypeDropAll,
+								ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -262,4 +266,57 @@ func findMesh(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.Describ
 	}
 
 	return output.Mesh, nil
+}
+
+// Adapted from https://github.com/hashicorp/terraform-provider-google/google/datasource_helpers.go. Thanks!
+// TODO Move to a shared package.
+
+// dataSourceSchemaFromResourceSchema is a recursive func that
+// converts an existing Resource schema to a Datasource schema.
+// All schema elements are copied, but certain attributes are ignored or changed:
+// - all attributes have Computed = true
+// - all attributes have ForceNew, Required = false
+// - Validation funcs and attributes (e.g. MaxItems) are not copied
+func dataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
+	ds := make(map[string]*schema.Schema, len(rs))
+
+	for k, v := range rs {
+		ds[k] = dataSourcePropertyFromResourceProperty(v)
+	}
+
+	return ds
+}
+
+func dataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
+	ds := &schema.Schema{
+		Computed:    true,
+		ForceNew:    false,
+		Required:    false,
+		Description: rs.Description,
+		Type:        rs.Type,
+	}
+
+	switch rs.Type {
+	case schema.TypeSet:
+		ds.Set = rs.Set
+		fallthrough
+	case schema.TypeList:
+		// List & Set types are generally used for 2 cases:
+		// - a list/set of simple primitive values (e.g. list of strings)
+		// - a sub resource
+		if elem, ok := rs.Elem.(*schema.Resource); ok {
+			// handle the case where the Element is a sub-resource
+			ds.Elem = &schema.Resource{
+				Schema: dataSourceSchemaFromResourceSchema(elem.Schema),
+			}
+		} else {
+			// handle simple primitive case
+			ds.Elem = rs.Elem
+		}
+	default:
+		// Elem of all other types are copied as-is
+		ds.Elem = rs.Elem
+	}
+
+	return ds
 }

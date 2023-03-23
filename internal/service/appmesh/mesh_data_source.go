@@ -44,26 +44,7 @@ func DataSourceMesh() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"egress_filter": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"spec":         dataSourcePropertyFromResourceProperty(resourceMeshSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
