@@ -28,11 +28,11 @@ jobs:
       - id: golangci-lint-version
         working-directory: .ci/tools
         run: >-
-          echo "::set-output name=version::$(
+          echo "version=$(
             go list -m all |
             grep github.com/golangci/golangci-lint |
             awk '{print $2}'
-          )"
+          )" >> $GITHUB_OUTPUT
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -50,11 +50,11 @@ jobs:
       - id: golangci-lint-version
         working-directory: .ci/tools
         run: >-
-          echo "::set-output name=version::$(
+          echo "version=$(
             go list -m all |
             grep github.com/golangci/golangci-lint |
             awk '{print $2}'
-          )"
+          )" >> $GITHUB_OUTPUT
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
