@@ -826,7 +826,6 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 
 		if (!engineVersionPlan.IsNull() && !engineVersionPlan.IsUnknown()) && (!engineVersionState.IsNull() && !engineVersionState.IsUnknown()) {
 			if !engineVersionPlan.Equal(engineVersionState) {
-				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name_actual"), types.StringUnknown())...)
 				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("engine_version_actual"), types.StringUnknown())...)
 			}
 		}
