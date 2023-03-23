@@ -653,21 +653,22 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
 		Tags:               Tags(tags.IgnoreAWS()),
-		VirtualGatewayName: aws.String(d.Get("name").(string)),
+		VirtualGatewayName: aws.String(name),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual gateway: %s", input)
 	output, err := conn.CreateVirtualGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual gateway: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Virtual Gateway (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.VirtualGateway.Metadata.Uid))
@@ -776,24 +777,24 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("name").(string)),
 		}
+
 		if v, ok := d.GetOk("mesh_owner"); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual gateway: %s", input)
 		_, err := conn.UpdateVirtualGatewayWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual gateway (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Gateway (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual gateway (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Gateway (%s) tags: %s", arn, err)
 		}
 	}
 
