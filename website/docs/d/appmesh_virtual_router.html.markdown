@@ -34,18 +34,5 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - Creation date of the virtual router.
 * `last_updated_date` - Last update date of the virtual router.
 * `resource_owner` - Resource owner's AWS account ID.
-* `spec` - Virtual routers specification.
+* `spec` - Virtual routers specification. See the [`aws_appmesh_virtual_router`](/docs/providers/aws/r/appmesh_virtual_router.html#spec) resource for details.
 * `tags` - Map of tags.
-
-### Spec
-
-* `listener` - The listener assigned to the virtual router
-
-### Listener
-
-* `port_mapping` - The port mapping of the listener
-
-### Port_Mapping
-
-* `port` - Port number the listener is listening on.
-* `protocol` - Protocol the listener is listening for.
