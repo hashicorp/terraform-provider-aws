@@ -57,6 +57,10 @@ func ResourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 	topicArn := d.Get("arn").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+	}
+
 	input := &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(policy),
 		ResourceArn:          aws.String(topicArn),
