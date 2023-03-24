@@ -42,9 +42,8 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 			},
 			"configuration": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"resource_query"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parameters": {
@@ -83,11 +82,10 @@ func ResourceGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"resource_query": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      1,
-				MaxItems:      1,
-				ConflictsWith: []string{"configuration"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"query": {
