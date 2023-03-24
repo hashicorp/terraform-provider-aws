@@ -102,8 +102,8 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_sns_topic_data_protection_policy" "test" {
-    arn = aws_sns_topic.test.arn
-    policy = <<POLICY
+  arn = aws_sns_topic.test.arn
+  policy = <<POLICY
 {
   "Name": "__default_data_protection_policy",
   "Description": "Default data protection policy",
