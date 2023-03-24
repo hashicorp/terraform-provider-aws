@@ -196,16 +196,6 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 	}
 }
 
-func testAccCheckRuleNotRecreated(before, after *rbin.GetRuleOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Identifier), aws.ToString(after.Identifier); before != after {
-			return create.Error(names.RBin, create.ErrActionCheckingNotRecreated, tfrbin.ResNameRule, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccRuleConfig_basic(description, resourceType string) string {
 	return fmt.Sprintf(`
 resource "aws_rbin_rule" "test" {
