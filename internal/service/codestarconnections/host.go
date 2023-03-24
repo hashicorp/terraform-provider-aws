@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_codestarconnections_host")
 func ResourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,

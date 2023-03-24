@@ -17,8 +17,8 @@ import (
 // roleUpdateTags updates IAM role tags.
 // The identifier is the role name.
 func roleUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{
@@ -52,8 +52,8 @@ func roleUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTa
 // userUpdateTags updates IAM user tags.
 // The identifier is the user name.
 func userUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagUserInput{
@@ -87,8 +87,8 @@ func userUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTa
 // instanceProfileUpdateTags updates IAM Instance Profile tags.
 // The identifier is the Instance Profile name.
 func instanceProfileUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagInstanceProfileInput{
@@ -122,8 +122,8 @@ func instanceProfileUpdateTags(ctx context.Context, conn *iam.IAM, identifier st
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
 func openIDConnectProviderUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagOpenIDConnectProviderInput{
@@ -157,8 +157,8 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn *iam.IAM, identif
 // policyUpdateTags updates IAM Policy tags.
 // The identifier is the Policy ARN.
 func policyUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagPolicyInput{
@@ -192,8 +192,8 @@ func policyUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, old
 // samlProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
 func samlProviderUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagSAMLProviderInput{
@@ -227,8 +227,8 @@ func samlProviderUpdateTags(ctx context.Context, conn *iam.IAM, identifier strin
 // serverCertificateUpdateTags updates IAM Server Certificate tags.
 // The identifier is the Server Certificate name.
 func serverCertificateUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagServerCertificateInput{
@@ -262,8 +262,8 @@ func serverCertificateUpdateTags(ctx context.Context, conn *iam.IAM, identifier 
 // virtualMFAUpdateTags updates IAM Virtual MFA Device tags.
 // The identifier is the Virtual MFA Device ARN.
 func virtualMFAUpdateTags(ctx context.Context, conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagMFADeviceInput{

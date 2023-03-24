@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_inspector_rules_packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,

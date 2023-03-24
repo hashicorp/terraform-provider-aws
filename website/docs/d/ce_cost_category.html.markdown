@@ -29,6 +29,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cost category.
+* `default_value` - Default value for the cost category.
 * `effective_end` - Effective end data of your Cost Category.
 * `effective_start` - Effective state data of your Cost Category.
 * `id` - Unique ID of the cost category.
@@ -54,8 +55,8 @@ In addition to all arguments above, the following attributes are exported:
 * `and` - Return results that match both `Dimension` objects.
 * `cost_category` - Configuration block for the filter that's based on `CostCategory` values. See below.
 * `dimension` - Configuration block for the specific `Dimension` to use for `Expression`. See below.
-* `not` - Return results that match both `Dimension` object.
-* `or` - Return results that match both `Dimension` object.
+* `not` - Return results that do not match the `Dimension` object.
+* `or` - Return results that match either `Dimension` object.
 * `tags` - Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `cost_category`

@@ -977,6 +977,30 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 				mFile := vFile[0].(map[string]interface{})
 
+				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+					format := &appmesh.LoggingFormat{}
+
+					mFormat := vFormat[0].(map[string]interface{})
+
+					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+						jsonFormatRefs := []*appmesh.JsonFormatRef{}
+						for _, vJsonFormatRef := range vJsonFormatRefs {
+							mJsonFormatRef := &appmesh.JsonFormatRef{
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+							}
+							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
+						}
+						format.Json = jsonFormatRefs
+					}
+
+					if vText, ok := mFormat["text"].(string); ok && vText != "" {
+						format.Text = aws.String(vText)
+					}
+
+					file.Format = format
+				}
+
 				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
@@ -1720,11 +1744,36 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 			mAccessLog := map[string]interface{}{}
 
 			if file := accessLog.File; file != nil {
-				mAccessLog["file"] = []interface{}{
-					map[string]interface{}{
-						"path": aws.StringValue(file.Path),
-					},
+				mFile := map[string]interface{}{}
+
+				if format := file.Format; format != nil {
+					mFormat := map[string]interface{}{}
+
+					if jsons := format.Json; jsons != nil {
+						vJsons := []interface{}{}
+
+						for _, j := range format.Json {
+							mJson := map[string]interface{}{
+								"key":   aws.StringValue(j.Key),
+								"value": aws.StringValue(j.Value),
+							}
+
+							vJsons = append(vJsons, mJson)
+						}
+
+						mFormat["json"] = vJsons
+					}
+
+					if text := format.Text; text != nil {
+						mFormat["text"] = aws.StringValue(text)
+					}
+
+					mFile["format"] = []interface{}{mFormat}
 				}
+
+				mFile["path"] = aws.StringValue(file.Path)
+
+				mAccessLog["file"] = []interface{}{mFile}
 			}
 
 			mLogging["access_log"] = []interface{}{mAccessLog}

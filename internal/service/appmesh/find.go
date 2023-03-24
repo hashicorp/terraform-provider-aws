@@ -30,26 +30,3 @@ func FindGatewayRoute(ctx context.Context, conn *appmesh.AppMesh, meshName, virt
 
 	return output.GatewayRoute, nil
 }
-
-// FindVirtualGateway returns the virtual gateway corresponding to the specified mesh name, virtual gateway name and optional mesh owner.
-// Returns an error if no virtual gateway is found.
-func FindVirtualGateway(ctx context.Context, conn *appmesh.AppMesh, meshName, virtualGatewayName, meshOwner string) (*appmesh.VirtualGatewayData, error) {
-	input := &appmesh.DescribeVirtualGatewayInput{
-		MeshName:           aws.String(meshName),
-		VirtualGatewayName: aws.String(virtualGatewayName),
-	}
-	if meshOwner != "" {
-		input.MeshOwner = aws.String(meshOwner)
-	}
-
-	output, err := conn.DescribeVirtualGatewayWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.VirtualGateway, nil
-}

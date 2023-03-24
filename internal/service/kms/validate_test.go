@@ -148,6 +148,16 @@ func TestValidateKeyOrAlias(t *testing.T) {
 			valid:    true,
 		},
 		{
+			Value:    "mrk-f827515944fb43f9b902a09d2c8b554f",
+			ErrCount: 0,
+			valid:    true,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/mrk-a835af0b39c94b86a21a8fc9535df681", //lintignore:AWSAT003,AWSAT005
+			ErrCount: 0,
+			valid:    true,
+		},
+		{
 			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
 			valid:    true,
@@ -191,6 +201,10 @@ func TestValidateKeyARN(t *testing.T) {
 	}{
 		"kms key id": {
 			in:    "arn:aws:kms:us-west-2:123456789012:key/57ff7a43-341d-46b6-aee3-a450c9de6dc8", // lintignore:AWSAT003,AWSAT005
+			valid: true,
+		},
+		"kms mrk key id": {
+			in:    "arn:aws:kms:us-west-2:111122223333:key/mrk-a835af0b39c94b86a21a8fc9535df681", // lintignore:AWSAT003,AWSAT005
 			valid: true,
 		},
 		"kms non-key id": {

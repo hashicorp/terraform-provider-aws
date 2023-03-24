@@ -19,12 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePolicyImport,
 		},
@@ -48,6 +50,12 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -55,8 +63,6 @@ func ResourcePolicy() *schema.Resource {
 				Default:      organizations.PolicyTypeServiceControlPolicy,
 				ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -66,7 +72,7 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -120,19 +126,25 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
 	resp, err := conn.DescribePolicyWithContext(ctx, input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+		log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error reading Organizations Policy (%s): %w", d.Id(), err))
 	}
 
 	if resp.Policy == nil || resp.Policy.PolicySummary == nil {
-		log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
-		d.SetId("")
-		return nil
+		if !d.IsNewResource() {
+			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.FromErr(&resource.NotFoundError{})
 	}
 
 	d.Set("arn", resp.Policy.PolicySummary.Arn)
@@ -206,6 +218,11 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DeletePolicyInput{

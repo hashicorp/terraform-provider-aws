@@ -226,8 +226,6 @@ rules:
     paths:
       include:
         - internal/
-      exclude:
-        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
@@ -273,7 +271,7 @@ rules:
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
         - internal/service/**/*.go
@@ -290,11 +288,6 @@ rules:
               tags = $TAGS
               ...
               if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-          - pattern: |
-              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
-              ...
-              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
       - pattern-not: |
           tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
           ...
@@ -302,90 +295,8 @@ rules:
           tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
       - pattern-not: |
-          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
-      - pattern-not: |
-          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
-          ...
-    severity: WARNING
-
-  - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
-    languages: [go]
-    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
-    paths:
-      include:
-        - internal/service
-      exclude:
-        - internal/service/**/*_data_source.go
-        - internal/service/backup
-        - internal/service/batch
-        - internal/service/d[a-d]*
-        - internal/service/devicefarm
-        - internal/service/directconnect
-        - internal/service/dlm
-        - internal/service/dms
-        - internal/service/ds
-        - internal/service/dynamodb
-        - internal/service/ec2
-        - internal/service/ecs
-        - internal/service/efs
-        - internal/service/elasticache
-        - internal/service/elasticbeanstalk
-        - internal/service/elastictranscoder
-        - internal/service/elbv2
-        - internal/service/emr
-        - internal/service/g*
-        - internal/service/inspector
-        - internal/service/iot
-        - internal/service/kafka
-        - internal/service/kms
-        - internal/service/lambda
-        - internal/service/lexmodels
-        - internal/service/licensemanager
-        - internal/service/lightsail
-        - internal/service/logs
-        - internal/service/macie
-        - internal/service/macie2
-        - internal/service/mediastore
-        - internal/service/mq
-        - internal/service/neptune
-        - internal/service/opsworks
-        - internal/service/organizations
-        - internal/service/pinpoint
-        - internal/service/rds
-        - internal/service/resourcegroups
-        - internal/service/route53
-        - internal/service/route53resolver
-        - internal/service/s[a-df-rt]*
-        - internal/service/se[d-z]*
-        - internal/service/sec[a-t]*
-        - internal/service/securityhub
-        - internal/service/ssoadmin
-        - internal/service/swf
-        - internal/service/[t-v]*
-        - internal/service/waf
-        - internal/service/wafv2
-        - internal/service/workspaces
-        - internal/service/xray
-    patterns:
-      - pattern-either:
-          - pattern: |
-              d.SetId("")
-              ...
-              return nil
-      - pattern-not-inside: |
-          if ... {
-            if <... d.IsNewResource() ...> { ... }
-            ...
-            d.SetId("")
-            ...
-            return nil
-          }
-      - pattern-not-inside: |
-          if <... !d.IsNewResource() ...> { ... }
     severity: WARNING
 
   - id: helper-schema-resource-Retry-without-TimeoutError-check
@@ -833,21 +744,6 @@ rules:
       include:
         - internal/
     pattern: int(*$VALUE)
-    severity: WARNING
-
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: "Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)"
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code

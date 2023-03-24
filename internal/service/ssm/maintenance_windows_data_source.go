@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ssm_maintenance_windows")
 func DataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataMaintenanceWindowsRead,

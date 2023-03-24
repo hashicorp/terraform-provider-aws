@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apigatewayv2_integration")
 func ResourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,

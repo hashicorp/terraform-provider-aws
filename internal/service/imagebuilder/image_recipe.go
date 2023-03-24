@@ -15,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_imagebuilder_image_recipe")
 func ResourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
@@ -54,26 +56,18 @@ func ResourceImageRecipe() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:         schema.TypeInt,
@@ -254,7 +248,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -356,7 +350,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	tags := KeyValueTags(imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -511,14 +505,12 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.DeleteOnTermination = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.Encrypted = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+		apiObject.Encrypted = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["iops"].(int); ok && v != 0 {
