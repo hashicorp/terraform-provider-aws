@@ -1055,6 +1055,14 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				dns.Hostname = aws.String(vHostname)
 			}
 
+			if vIPPreference, ok := mDns["ip_preference"].(string); ok && vIPPreference != "" {
+				dns.IpPreference = aws.String(vIPPreference)
+			}
+
+			if vResponseType, ok := mDns["response_type"].(string); ok && vResponseType != "" {
+				dns.ResponseType = aws.String(vResponseType)
+			}
+
 			serviceDiscovery.Dns = dns
 		}
 
@@ -1804,7 +1812,9 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 		if dns := serviceDiscovery.Dns; dns != nil {
 			mServiceDiscovery["dns"] = []interface{}{
 				map[string]interface{}{
-					"hostname": aws.StringValue(dns.Hostname),
+					"hostname":      aws.StringValue(dns.Hostname),
+					"ip_preference": aws.StringValue(dns.IpPreference),
+					"response_type": aws.StringValue(dns.ResponseType),
 				},
 			}
 		}
