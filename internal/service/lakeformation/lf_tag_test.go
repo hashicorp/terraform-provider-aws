@@ -18,6 +18,55 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
+func TestReadLFTagID(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val         string
+		catalogID   string
+		tagKey      string
+		expectError bool
+	}
+
+	tests := map[string]testCase{
+		"invalid id": {
+			val:         "test",
+			expectError: true,
+		},
+		"valid_key_simple": {
+			val:       "123344556:tagKey",
+			catalogID: "123344556",
+			tagKey:    "tagKey",
+		},
+		"valid_key_complex": {
+			val:       "123344556:keyPrefix:tagKey",
+			catalogID: "123344556",
+			tagKey:    "keyPrefix:tagKey",
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			catalogID, tagKey, err := tflakeformation.ReadLFTagID(test.val)
+
+			if err == nil && test.expectError {
+				t.Fatal("expected error")
+			}
+
+			if err != nil && !test.expectError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if test.catalogID != catalogID || test.tagKey != tagKey {
+				t.Fatalf("expected catalogID (%s), tagKey (%s), got catalogID (%s), tagKey (%s)", test.catalogID, test.tagKey, catalogID, tagKey)
+			}
+		})
+	}
+}
+
 func testAccLFTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
