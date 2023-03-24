@@ -134,6 +134,7 @@ type ResourceDatum struct {
 	FactoryName             string
 	Name                    string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
 	TagsIdentifierAttribute string
+	TagsResourceType        string
 }
 
 type ServiceDatum struct {
@@ -231,6 +232,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			} else {
 				v.err = multierror.Append(v.err, fmt.Errorf("no Tags(identifierAttribute): %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				continue
+			}
+
+			if attr, ok := args.Keyword["resourceType"]; ok {
+				d.TagsResourceType = attr
 			}
 		}
 	}
