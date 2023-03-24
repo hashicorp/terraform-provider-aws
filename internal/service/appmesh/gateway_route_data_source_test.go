@@ -12,8 +12,8 @@ import (
 
 func testAccGatewayRouteDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_appmesh_route.test"
-	dataSourceName := "data.aws_appmesh_route.test"
+	resourceName := "aws_appmesh_gateway_route.test"
+	dataSourceName := "data.aws_appmesh_gateway_route.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vsName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
