@@ -519,22 +519,23 @@ func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &appmesh.CreateGatewayRouteInput{
-		GatewayRouteName:   aws.String(d.Get("name").(string)),
+		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 		Tags:               Tags(tags.IgnoreAWS()),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh gateway route: %s", input)
 	output, err := conn.CreateGatewayRouteWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh gateway route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Gateway Route (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GatewayRoute.Metadata.Uid))
@@ -645,24 +646,24 @@ func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, met
 			Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 		}
+
 		if v, ok := d.GetOk("mesh_owner"); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh gateway route: %s", input)
 		_, err := conn.UpdateGatewayRouteWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh gateway route (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Gateway Route (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh gateway route (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Gateway Route (%s) tags: %s", arn, err)
 		}
 	}
 
