@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn gameliftiface.GameLiftAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists gamelift service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GameLiftConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn gameliftiface.GameLiftAPI, identifier 
 	return nil
 }
 
+// UpdateTags updates gamelift service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).GameLiftConn(), identifier, oldTags, newTags)
 }

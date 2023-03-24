@@ -50,6 +50,8 @@ func ListTags(ctx context.Context, conn *route53domains.Client, identifier strin
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+// ListTags lists route53domains service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier)
 
@@ -148,6 +150,8 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	return nil
 }
 
+// UpdateTags updates route53domains service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(), identifier, oldTags, newTags)
 }

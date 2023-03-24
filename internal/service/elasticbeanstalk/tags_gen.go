@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAP
 	return KeyValueTags(ctx, output.ResourceTags), nil
 }
 
+// ListTags lists elasticbeanstalk service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier)
 
@@ -128,6 +130,8 @@ func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalk
 	return nil
 }
 
+// UpdateTags updates elasticbeanstalk service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkConn(), identifier, oldTags, newTags)
 }

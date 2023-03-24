@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ident
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists kinesisvideo service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KinesisVideoConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	return nil
 }
 
+// UpdateTags updates kinesisvideo service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisVideoConn(), identifier, oldTags, newTags)
 }

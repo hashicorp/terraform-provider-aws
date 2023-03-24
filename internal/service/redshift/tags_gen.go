@@ -98,6 +98,8 @@ func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier 
 	return nil
 }
 
+// UpdateTags updates redshift service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).RedshiftConn(), identifier, oldTags, newTags)
 }

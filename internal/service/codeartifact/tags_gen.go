@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, ident
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists codeartifact service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, ide
 	return nil
 }
 
+// UpdateTags updates codeartifact service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(), identifier, oldTags, newTags)
 }

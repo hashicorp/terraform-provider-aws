@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn worklinkiface.WorkLinkAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists worklink service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WorkLinkConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn worklinkiface.WorkLinkAPI, identifier 
 	return nil
 }
 
+// UpdateTags updates worklink service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).WorkLinkConn(), identifier, oldTags, newTags)
 }

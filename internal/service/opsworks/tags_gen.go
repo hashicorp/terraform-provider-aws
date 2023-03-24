@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists opsworks service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier 
 	return nil
 }
 
+// UpdateTags updates opsworks service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(), identifier, oldTags, newTags)
 }

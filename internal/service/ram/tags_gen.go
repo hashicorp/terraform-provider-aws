@@ -98,6 +98,8 @@ func UpdateTags(ctx context.Context, conn ramiface.RAMAPI, identifier string, ol
 	return nil
 }
 
+// UpdateTags updates ram service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).RAMConn(), identifier, oldTags, newTags)
 }

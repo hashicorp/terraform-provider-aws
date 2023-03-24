@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn emrserverlessiface.EMRServerlessAPI, ide
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists emrserverless service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).EMRServerlessConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn emrserverlessiface.EMRServerlessAPI, i
 	return nil
 }
 
+// UpdateTags updates emrserverless service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).EMRServerlessConn(), identifier, oldTags, newTags)
 }

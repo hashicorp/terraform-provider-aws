@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn docdbiface.DocDBAPI, identifier string) 
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+// ListTags lists docdb service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).DocDBConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn docdbiface.DocDBAPI, identifier string
 	return nil
 }
 
+// UpdateTags updates docdb service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).DocDBConn(), identifier, oldTags, newTags)
 }

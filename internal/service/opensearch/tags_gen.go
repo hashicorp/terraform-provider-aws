@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn opensearchserviceiface.OpenSearchService
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+// ListTags lists opensearch service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServi
 	return nil
 }
 
+// UpdateTags updates opensearch service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(), identifier, oldTags, newTags)
 }
