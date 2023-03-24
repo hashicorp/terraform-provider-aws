@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_appmesh_route` ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
 * **New Data Source:** `aws_appmesh_virtual_gateway` ([#27057](https://github.com/hashicorp/terraform-provider-aws/issues/27057))
+* **New Resource:** `aws_cognito_managed_user_pool_client` ([#30140](https://github.com/hashicorp/terraform-provider-aws/issues/30140))
 * **New Resource:** `aws_oam_link` ([#30125](https://github.com/hashicorp/terraform-provider-aws/issues/30125))
 * **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
 
