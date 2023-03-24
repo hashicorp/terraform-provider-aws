@@ -10,29 +10,28 @@ description: |-
 
 Provides a Cognito User Pool Client resource.
 
+To manage a User Pool Client created by another service, such as when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html),
+use the [`aws_cognito_managed_user_pool_client` resource](cognito_managed_user_pool_client.html) instead.
+
 ## Example Usage
 
 ### Create a basic user pool client
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
   user_pool_id = aws_cognito_user_pool.pool.id
+}
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
 }
 ```
 
 ### Create a user pool client with no SRP authentication
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
@@ -41,16 +40,32 @@ resource "aws_cognito_user_pool_client" "client" {
   generate_secret     = true
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
+}
 ```
 
 ### Create a user pool client with pinpoint analytics
 
 ```terraform
-data "aws_caller_identity" "current" {}
+resource "aws_cognito_user_pool_client" "test" {
+  name         = "pool_client"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  analytics_configuration {
+    application_id   = aws_pinpoint_app.test.application_id
+    external_id      = "some_id"
+    role_arn         = aws_iam_role.test.arn
+    user_data_shared = true
+  }
+}
 
 resource "aws_cognito_user_pool" "test" {
   name = "pool"
 }
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_pinpoint_app" "test" {
   name = "pinpoint"
@@ -80,7 +95,7 @@ data "aws_iam_policy_document" "test" {
 
     actions = [
       "mobiletargeting:UpdateEndpoint",
-      "mobiletargeting:PutItems",
+      "mobiletargeting:PutEvents",
     ]
 
     resources = ["arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"]
@@ -92,27 +107,11 @@ resource "aws_iam_role_policy" "test" {
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.test.json
 }
-
-resource "aws_cognito_user_pool_client" "test" {
-  name         = "pool_client"
-  user_pool_id = aws_cognito_user_pool.test.id
-
-  analytics_configuration {
-    application_id   = aws_pinpoint_app.test.application_id
-    external_id      = "some_id"
-    role_arn         = aws_iam_role.test.arn
-    user_data_shared = true
-  }
-}
 ```
 
 ### Create a user pool client with Cognito as the identity provider
 
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-
 resource "aws_cognito_user_pool_client" "userpool_client" {
   name                                 = "client"
   user_pool_id                         = aws_cognito_user_pool.pool.id
@@ -121,6 +120,10 @@ resource "aws_cognito_user_pool_client" "userpool_client" {
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_scopes                 = ["email", "openid"]
   supported_identity_providers         = ["COGNITO"]
+}
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
 }
 ```
 
