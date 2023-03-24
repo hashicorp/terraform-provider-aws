@@ -16,13 +16,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccWAFRateBasedRule_basic(t *testing.T) {
+// Serialize to avoid resource limits
+func TestAccWAFRateBasedRule_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"resource": {
+			"basic":              testAccWAFRateBasedRule_basic,
+			"changeNameForceNew": testAccWAFRateBasedRule_changeNameForceNew,
+			"disappears":         testAccWAFRateBasedRule_disappears,
+			"changePredicates":   testAccWAFRateBasedRule_changePredicates,
+			"changeRateLimit":    testAccWAFRateBasedRule_changeRateLimit,
+			"noPredicates":       testAccWAFRateBasedRule_noPredicates,
+			"Tags":               testAccWAFRateBasedRule_tags,
+		},
+		"data_source": {
+			"basic": testAccWAFRateBasedRuleDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccWAFRateBasedRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,14 +67,14 @@ func TestAccWAFRateBasedRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
+func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,13 +107,13 @@ func TestAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccWAFRateBasedRule_disappears(t *testing.T) {
+func testAccWAFRateBasedRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -111,7 +131,7 @@ func TestAccWAFRateBasedRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccWAFRateBasedRule_changePredicates(t *testing.T) {
+func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset waf.IPSet
 	var byteMatchSet waf.ByteMatchSet
@@ -120,7 +140,7 @@ func TestAccWAFRateBasedRule_changePredicates(t *testing.T) {
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,14 +182,14 @@ func TestAccWAFRateBasedRule_changePredicates(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/9659
-func TestAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
+func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset waf.IPSet
 	var before, after waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -212,13 +232,13 @@ func TestAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 	})
 }
 
-func TestAccWAFRateBasedRule_noPredicates(t *testing.T) {
+func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -241,13 +261,13 @@ func TestAccWAFRateBasedRule_noPredicates(t *testing.T) {
 	})
 }
 
-func TestAccWAFRateBasedRule_tags(t *testing.T) {
+func testAccWAFRateBasedRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -53,6 +53,38 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 	})
 }
 
+func TestAccLightsailDomainEntry_underscore(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainEntry lightsail.DomainEntry
+	resourceName := "aws_lightsail_domain_entry.test"
+	domainName := acctest.RandomDomainName()
+	domainEntryName := "_" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccLightsailDomainEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainEntry lightsail.DomainEntry

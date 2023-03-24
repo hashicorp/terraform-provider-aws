@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists cloudwatch service tags.
@@ -29,8 +30,18 @@ func ListTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifie
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -60,6 +71,25 @@ func KeyValueTags(ctx context.Context, tags []*cloudwatch.Tag) tftags.KeyValueTa
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns cloudwatch service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*cloudwatch.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets cloudwatch service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*cloudwatch.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates cloudwatch service tags.

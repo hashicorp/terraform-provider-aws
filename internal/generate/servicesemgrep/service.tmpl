@@ -33,6 +33,9 @@
             - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
             - pattern-not-regex: ^testAccSSMPatchBaseline_.+
             {{- end }}
+            {{- if eq .ServiceAlias "WAF" }}
+            - pattern-not-regex: ^testAccWAFRateBasedRule.+
+            {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
 {{- end }}
