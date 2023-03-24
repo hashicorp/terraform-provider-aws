@@ -47,6 +47,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceTopicDataProtectionPolicy,
+			TypeName: "aws_sns_topic_data_protection_policy",
+		},
+		{
 			Factory:  ResourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 		},
