@@ -217,7 +217,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1),
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
@@ -240,7 +240,65 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2),
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccDMSReplicationInstance_engineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "12.9"
+	engineVersion2 := "13.5"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
@@ -2370,11 +2428,11 @@ resource "aws_rds_cluster" "test" {
 `, identifierPrefix)
 }
 
-func testAccClusterConfig_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
+func testAccClusterConfig_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediately bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   allow_major_version_upgrade = %[1]t
-  apply_immediately           = true
+  apply_immediately           = %[5]t
   cluster_identifier          = %[2]q
   engine                      = %[3]q
   engine_version              = %[4]q
@@ -2391,6 +2449,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 # Upgrading requires a healthy primary instance
 resource "aws_rds_cluster_instance" "test" {
+  apply_immediately  = %[5]t
   cluster_identifier = aws_rds_cluster.test.id
   engine             = data.aws_rds_orderable_db_instance.test.engine
   engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
@@ -2401,7 +2460,7 @@ resource "aws_rds_cluster_instance" "test" {
     ignore_changes = [engine_version]
   }
 }
-`, allowMajorVersionUpgrade, rName, engine, engineVersion)
+`, allowMajorVersionUpgrade, rName, engine, engineVersion, applyImmediately)
 }
 
 func testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediate bool) string {
