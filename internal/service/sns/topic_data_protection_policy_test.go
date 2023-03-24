@@ -119,9 +119,9 @@ resource "aws_sns_topic_data_protection_policy" "test" {
           "Principal" = [
             "*",
           ]
-            "Sid" = %[1]q
-          },
-        ]
+          "Sid" = %[1]q
+        },
+      ]
       "Version" = "2021-06-01"
     }
   )
