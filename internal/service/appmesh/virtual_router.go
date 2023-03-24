@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appmesh_virtual_router")
@@ -38,20 +39,24 @@ func ResourceVirtualRouter() *schema.Resource {
 		MigrateState:  resourceVirtualRouterMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"mesh_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"mesh_owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -59,39 +64,55 @@ func ResourceVirtualRouter() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"spec":            resourceVirtualRouterSpecSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
 
-			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"listener": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"port_mapping": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"port": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
 
-												"protocol": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
-												},
-											},
+func resourceVirtualRouterSpecSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"listener": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"port_mapping": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"port": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										"protocol": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
 										},
 									},
 								},
@@ -100,33 +121,7 @@ func ResourceVirtualRouter() *schema.Resource {
 					},
 				},
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
