@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appmesh_virtual_node")
@@ -38,20 +39,24 @@ func ResourceVirtualNode() *schema.Resource {
 		MigrateState:  resourceVirtualNodeMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"mesh_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"mesh_owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -59,622 +64,80 @@ func ResourceVirtualNode() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
-			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"backend": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 50,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"virtual_service": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_service_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 255),
-												},
+			"spec": resourceVirtualNodeSpecSchema(),
 
-												"client_policy": VirtualNodeClientPolicySchema(),
-											},
-										},
-									},
-								},
-							},
-						},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
 
-						"backend_defaults": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_policy": VirtualNodeClientPolicySchema(),
-								},
-							},
-						},
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
 
-						"listener": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_pool": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"grpc": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"max_requests": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
+func resourceVirtualNodeSpecSchema() *schema.Schema {
+	clientPolicySchema := func() *schema.Schema {
+		return &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MinItems: 0,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"tls": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MinItems: 0,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"certificate": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"file": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"certificate_chain": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
-													},
-												},
-
-												"http": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"max_connections": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-
-															"max_pending_requests": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-														},
-													},
-												},
-
-												"http2": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"max_requests": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-														},
-													},
-												},
-
-												"tcp": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"max_connections": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
+														"private_key": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
 													},
 												},
 											},
-										},
-									},
-
-									"health_check": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"healthy_threshold": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(2, 10),
-												},
-
-												"interval_millis": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(5000, 300000),
-												},
-
-												"path": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-
-												"port": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
-
-												"protocol": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
-												},
-
-												"timeout_millis": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(2000, 60000),
-												},
-
-												"unhealthy_threshold": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(2, 10),
-												},
-											},
-										},
-									},
-
-									"outlier_detection": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"base_ejection_duration": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
-													},
-												},
-
-												"interval": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
-													},
-												},
-
-												"max_ejection_percent": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(0, 100),
-												},
-
-												"max_server_errors": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-											},
-										},
-									},
-
-									"port_mapping": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"port": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IsPortNumber,
-												},
-
-												"protocol": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
-												},
-											},
-										},
-									},
-
-									"timeout": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"grpc": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-
-															"per_request": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-
-												"http": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-
-															"per_request": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-
-												"http2": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-
-															"per_request": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-
-												"tcp": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"idle": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"unit": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-																		},
-
-																		"value": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-
-									"tls": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"certificate": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"acm": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"certificate_arn": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: verify.ValidARN,
-																		},
-																	},
-																},
-															},
-
-															"file": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"certificate_chain": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-
-																		"private_key": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																	},
-																},
-															},
-
-															"sds": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"secret_name": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-
-												"mode": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),
-												},
-
-												"validation": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"subject_alternative_names": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"match": {
-																			Type:     schema.TypeList,
-																			Required: true,
-																			MinItems: 1,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"exact": {
-																						Type:     schema.TypeSet,
-																						Required: true,
-																						Elem:     &schema.Schema{Type: schema.TypeString},
-																						Set:      schema.HashString,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-
-															"trust": {
-																Type:     schema.TypeList,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"file": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MinItems: 0,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"certificate_chain": {
-																						Type:         schema.TypeString,
-																						Required:     true,
-																						ValidateFunc: validation.StringLenBetween(1, 255),
-																					},
-																				},
-																			},
-																		},
-
-																		"sds": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MinItems: 0,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"secret_name": {
-																						Type:         schema.TypeString,
-																						Required:     true,
-																						ValidateFunc: validation.StringLenBetween(1, 255),
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
+											"sds": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"secret_name": {
+															Type:     schema.TypeString,
+															Required: true,
 														},
 													},
 												},
@@ -682,126 +145,101 @@ func ResourceVirtualNode() *schema.Resource {
 										},
 									},
 								},
-							},
-						},
-
-						"logging": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"access_log": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"file": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"format": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"json": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"key": {
-																						Type:         schema.TypeString,
-																						Required:     true,
-																						ValidateFunc: validation.StringLenBetween(1, 100),
-																					},
-																					"value": {
-																						Type:         schema.TypeString,
-																						Required:     true,
-																						ValidateFunc: validation.StringLenBetween(1, 100),
-																					},
-																				},
-																			},
-																		},
-																		"text": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 1000),
-																		},
+								"enforce": {
+									Type:     schema.TypeBool,
+									Optional: true,
+									Default:  true,
+								},
+								"ports": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeInt},
+								},
+								"validation": {
+									Type:     schema.TypeList,
+									Required: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"subject_alternative_names": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"match": {
+															Type:     schema.TypeList,
+															Required: true,
+															MinItems: 1,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"exact": {
+																		Type:     schema.TypeSet,
+																		Required: true,
+																		Elem:     &schema.Schema{Type: schema.TypeString},
 																	},
 																},
-															},
-															"path": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
 														},
 													},
 												},
 											},
-										},
-									},
-								},
-							},
-						},
-
-						"service_discovery": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"aws_cloud_map": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MinItems:      0,
-										MaxItems:      1,
-										ConflictsWith: []string{"spec.0.service_discovery.0.dns"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"attributes": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-
-												"namespace_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-
-												"service_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
-										},
-									},
-
-									"dns": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										MinItems:      0,
-										MaxItems:      1,
-										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hostname": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.NoZeroValues,
+											"trust": {
+												Type:     schema.TypeList,
+												Required: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"acm": {
+															Type:     schema.TypeList,
+															Optional: true,
+															MinItems: 0,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"certificate_authority_arns": {
+																		Type:     schema.TypeSet,
+																		Required: true,
+																		Elem:     &schema.Schema{Type: schema.TypeString},
+																	},
+																},
+															},
+														},
+														"file": {
+															Type:     schema.TypeList,
+															Optional: true,
+															MinItems: 0,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"certificate_chain": {
+																		Type:         schema.TypeString,
+																		Required:     true,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+														"sds": {
+															Type:     schema.TypeList,
+															Optional: true,
+															MinItems: 0,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"secret_name": {
+																		Type:         schema.TypeString,
+																		Required:     true,
+																		ValidateFunc: validation.StringLenBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -812,91 +250,123 @@ func ResourceVirtualNode() *schema.Resource {
 					},
 				},
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
+		}
 	}
-}
 
-// VirtualNodeClientPolicySchema returns the schema for `client_policy` attributes.
-func VirtualNodeClientPolicySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
-		Optional: true,
-		MinItems: 0,
+		Required: true,
+		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"tls": {
+				"backend": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"virtual_service": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_policy": clientPolicySchema(),
+										"virtual_service_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"backend_defaults": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 0,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"certificate": {
+							"client_policy": clientPolicySchema(),
+						},
+					},
+				},
+				"listener": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connection_pool": {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"file": {
+										"grpc": {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"certificate_chain": {
-														Type:         schema.TypeString,
+													"max_requests": {
+														Type:         schema.TypeInt,
 														Required:     true,
-														ValidateFunc: validation.StringLenBetween(1, 255),
-													},
-
-													"private_key": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringLenBetween(1, 255),
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 												},
 											},
 										},
-
-										"sds": {
+										"http": {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
-											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"secret_name": {
-														Type:     schema.TypeString,
-														Required: true,
+													"max_connections": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"max_pending_requests": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+												},
+											},
+										},
+										"http2": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"max_requests": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+												},
+											},
+										},
+										"tcp": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"max_connections": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 												},
 											},
@@ -904,46 +374,177 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 									},
 								},
 							},
-
-							"enforce": {
-								Type:     schema.TypeBool,
+							"health_check": {
+								Type:     schema.TypeList,
 								Optional: true,
-								Default:  true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"healthy_threshold": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(2, 10),
+										},
+										"interval_millis": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(5000, 300000),
+										},
+										"path": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"port": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										"protocol": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
+										},
+										"timeout_millis": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(2000, 60000),
+										},
+										"unhealthy_threshold": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(2, 10),
+										},
+									},
+								},
 							},
-
-							"ports": {
-								Type:     schema.TypeSet,
+							"outlier_detection": {
+								Type:     schema.TypeList,
 								Optional: true,
-								Elem:     &schema.Schema{Type: schema.TypeInt},
-								Set:      schema.HashInt,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"base_ejection_duration": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+													},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
+												},
+											},
+										},
+										"interval": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unit": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+													},
+													"value": {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
+												},
+											},
+										},
+										"max_ejection_percent": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 100),
+										},
+										"max_server_errors": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
 							},
-
-							"validation": {
+							"port_mapping": {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"subject_alternative_names": {
+										"port": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										"protocol": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
+										},
+									},
+								},
+							},
+							"timeout": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"grpc": {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 0,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"match": {
+													"idle": {
 														Type:     schema.TypeList,
-														Required: true,
-														MinItems: 1,
+														Optional: true,
+														MinItems: 0,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"exact": {
-																	Type:     schema.TypeSet,
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
 																	Required: true,
-																	Elem:     &schema.Schema{Type: schema.TypeString},
-																	Set:      schema.HashString,
+																},
+															},
+														},
+													},
+													"per_request": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
 																},
 															},
 														},
@@ -951,8 +552,142 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 												},
 											},
 										},
-
-										"trust": {
+										"http": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+															},
+														},
+													},
+													"per_request": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"http2": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+															},
+														},
+													},
+													"per_request": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"tcp": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"idle": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																},
+																"value": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"tls": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"certificate": {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -966,16 +701,14 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"certificate_authority_arns": {
-																	Type:     schema.TypeSet,
-																	Required: true,
-																	Elem:     &schema.Schema{Type: schema.TypeString},
-																	Set:      schema.HashString,
+																"certificate_arn": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: verify.ValidARN,
 																},
 															},
 														},
 													},
-
 													"file": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -988,10 +721,14 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
 																},
+																"private_key": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
 															},
 														},
 													},
-
 													"sds": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -1000,15 +737,214 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"secret_name": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
+																	Type:     schema.TypeString,
+																	Required: true,
 																},
 															},
 														},
 													},
 												},
 											},
+										},
+										"mode": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),
+										},
+										"validation": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"subject_alternative_names": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"match": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	MinItems: 1,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"exact": {
+																				Type:     schema.TypeSet,
+																				Required: true,
+																				Elem:     &schema.Schema{Type: schema.TypeString},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+													"trust": {
+														Type:     schema.TypeList,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"file": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 0,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"certificate_chain": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+																"sds": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 0,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"secret_name": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"logging": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_log": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"file": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"format": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"json": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"key": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 100),
+																			},
+																			"value": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 100),
+																			},
+																		},
+																	},
+																},
+																"text": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 1000),
+																},
+															},
+														},
+													},
+													"path": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"service_discovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"aws_cloud_map": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								MinItems:      0,
+								MaxItems:      1,
+								ConflictsWith: []string{"spec.0.service_discovery.0.dns"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attributes": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"namespace_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"service_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+									},
+								},
+							},
+							"dns": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								MinItems:      0,
+								MaxItems:      1,
+								ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hostname": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
