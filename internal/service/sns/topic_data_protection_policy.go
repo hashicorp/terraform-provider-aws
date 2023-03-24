@@ -35,10 +35,6 @@ func ResourceTopicDataProtectionPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
@@ -73,7 +69,7 @@ func ResourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(topicArn)
@@ -111,5 +107,25 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 }
 
 func ResourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
+
+	topicArn := d.Get("arn").(string)
+
+	input := &sns.PutDataProtectionPolicyInput{
+		DataProtectionPolicy: aws.String(""),
+		ResourceArn:          aws.String(topicArn),
+	}
+
+	output, err := conn.PutDataProtectionPolicyWithContext(ctx, input)
+
+	if output == nil {
+		return sdkdiag.AppendErrorf(diags, "Something went wrong creating the SNS Data Protection Policy")
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
