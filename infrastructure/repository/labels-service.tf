@@ -267,6 +267,7 @@ variable "service_labels" {
     "schemas",
     "secretsmanager",
     "securityhub",
+    "securitylake",
     "serverlessrepo",
     "servicecatalog",
     "servicecatalogappregistry",

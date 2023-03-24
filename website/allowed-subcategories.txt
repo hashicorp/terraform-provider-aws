@@ -282,6 +282,7 @@ SageMaker Runtime
 Savings Plans
 Secrets Manager
 Security Hub
+Security Lake
 Serverless Application Repository
 Service Catalog
 Service Catalog AppRegistry

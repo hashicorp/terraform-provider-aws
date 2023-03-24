@@ -278,6 +278,7 @@ const (
 	Schemas                      = "schemas"
 	SecretsManager               = "secretsmanager"
 	SecurityHub                  = "securityhub"
+	SecurityLake                 = "securitylake"
 	ServerlessRepo               = "serverlessrepo"
 	ServiceCatalog               = "servicecatalog"
 	ServiceCatalogAppRegistry    = "servicecatalogappregistry"

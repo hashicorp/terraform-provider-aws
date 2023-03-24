@@ -917,6 +917,9 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
+service/securitylake:
+  - 'internal/service/securitylake/**/*'
+  - 'website/**/securitylake_*'
 service/serverlessrepo:
   - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
