@@ -208,6 +208,14 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
+			{
+				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
+				),
+			},
 		},
 	})
 }

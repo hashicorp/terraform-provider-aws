@@ -172,7 +172,7 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 
 	out, err := FindFrameworkByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)

@@ -29,6 +29,7 @@ const (
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
 	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
+	IPAMPoolCIDRNotFoundChecks                 = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -2882,13 +2883,14 @@ func WaitIPAMPoolUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func WaitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIPAMPoolCIDRIdCreated(ctx context.Context, conn *ec2.EC2, poolCidrId, poolID, cidrBlock string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
-		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
-		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID),
-		Timeout: timeout,
-		Delay:   5 * time.Second,
+		Pending:        []string{ec2.IpamPoolCidrStatePendingProvision},
+		Target:         []string{ec2.IpamPoolCidrStateProvisioned},
+		Refresh:        StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID, poolCidrId),
+		Timeout:        timeout,
+		Delay:          5 * time.Second,
+		NotFoundChecks: IPAMPoolCIDRNotFoundChecks,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2904,11 +2906,11 @@ func WaitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.EC2, cidrBlock, pool
 	return nil, err
 }
 
-func WaitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID, poolCidrId string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
 		Target:  []string{},
-		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID),
+		Refresh: StatusIPAMPoolCIDRState(ctx, conn, cidrBlock, poolID, poolCidrId),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}

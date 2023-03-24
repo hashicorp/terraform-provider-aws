@@ -529,10 +529,6 @@ func resourceInstanceStateRefreshFunc(ctx context.Context, id string, conn *nept
 			return nil, "", nil
 		}
 
-		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] Neptune Cluster Instance status for instance %s: %s", id, aws.StringValue(v.DBInstanceStatus))
-		}
-
 		return v, aws.StringValue(v.DBInstanceStatus), nil
 	}
 }

@@ -339,7 +339,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			Region:      aws.String(acctest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
-		_, err = iamAsCreatedUserSession.Config.Credentials.Get()
+		_, err = iamAsCreatedUserSession.Config.Credentials.GetWithContext(ctx)
 		if err != nil {
 			return fmt.Errorf("Error getting session credentials: %s", err)
 		}

@@ -1,10 +1,10 @@
-package comprehend
+package kms
 
 import (
 	"testing"
 )
 
-func TestDiffSuppressKMSKeyId(t *testing.T) {
+func TestDiffSuppressKeyId(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -62,7 +62,7 @@ func TestDiffSuppressKMSKeyId(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := diffSuppressKMSKeyId("field", testcase.old, testcase.new, nil)
+			actual := DiffSuppressKey("field", testcase.old, testcase.new, nil)
 
 			if e := testcase.expectSuppress; actual != e {
 				t.Fatalf("expected %t, got %t", e, actual)

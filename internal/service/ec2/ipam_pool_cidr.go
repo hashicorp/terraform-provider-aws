@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,6 +35,10 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 			// Allocations release are eventually consistent with a max time of 20m.
 			Delete: schema.DefaultTimeout(32 * time.Minute),
 		},
+
+		CustomizeDiff: customdiff.All(
+			ResourceIPAMPoolCIDRCustomizeDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -66,10 +71,30 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 					},
 				},
 			},
+			// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+			// ipam_pool_cidr_id was not part of the initial feature release
+			"ipam_pool_cidr_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(0, 128),
+				ConflictsWith: []string{"cidr"},
+				// NetmaskLength is not outputted by GetIpamPoolCidrsOutput
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					if o != "0" && n == "0" {
+						return true
+					}
+					return false
+				},
 			},
 		},
 	}
@@ -88,6 +113,10 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Cidr = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("netmask_length"); ok {
+		input.NetmaskLength = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -98,12 +127,19 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
 	}
 
+	// its possible that cidr is computed based on netmask_length
 	cidrBlock := aws.StringValue(output.IpamPoolCidr.Cidr)
-	d.SetId(IPAMPoolCIDRCreateResourceID(cidrBlock, poolID))
+	poolCidrId := aws.StringValue(output.IpamPoolCidr.IpamPoolCidrId)
 
-	if _, err := WaitIPAMPoolCIDRCreated(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) create: %s", d.Id(), err)
+	ipamPoolCidr, err := WaitIPAMPoolCIDRIdCreated(ctx, conn, poolCidrId, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR with ID (%s) create: %s", poolCidrId, err)
 	}
+
+	// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+	// ipam_pool_cidr_id was not part of the initial feature release
+	d.SetId(IPAMPoolCIDRCreateResourceID(aws.StringValue(ipamPoolCidr.Cidr), poolID))
 
 	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
 }
@@ -131,6 +167,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("cidr", output.Cidr)
+	d.Set("ipam_pool_cidr_id", output.IpamPoolCidrId)
 	d.Set("ipam_pool_id", poolID)
 
 	return diags
@@ -141,6 +178,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
+	poolCidrId := d.Get("ipam_pool_cidr_id").(string)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
@@ -161,7 +199,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitIPAMPoolCIDRDeleted(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitIPAMPoolCIDRDeleted(ctx, conn, cidrBlock, poolID, poolCidrId, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
 
@@ -203,4 +241,17 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamC
 	}
 
 	return apiObject
+}
+
+func ResourceIPAMPoolCIDRCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	// cidr can be set by a value returned from IPAM or explicitly in config.
+	if diff.Id() != "" && diff.HasChange("cidr") {
+		// If netmask is set then cidr is derived from IPAM, ignore changes.
+		if diff.Get("netmask_length") != 0 {
+			return diff.Clear("cidr")
+		}
+		return diff.ForceNew("cidr")
+	}
+
+	return nil
 }

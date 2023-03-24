@@ -57,7 +57,7 @@ func DataSourceKey() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_manager": {
 				Type:     schema.TypeString,

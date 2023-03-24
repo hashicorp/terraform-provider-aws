@@ -1893,7 +1893,7 @@ func resourceBucketInternalLoggingUpdate(ctx context.Context, conn *s3.S3, d *sc
 	logging := d.Get("logging").([]interface{})
 	loggingStatus := &s3.BucketLoggingStatus{}
 
-	if len(logging) > 0 {
+	if len(logging) > 0 && logging[0] != nil {
 		c := logging[0].(map[string]interface{})
 
 		loggingEnabled := &s3.LoggingEnabled{}

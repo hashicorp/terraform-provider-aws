@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc)
 
 type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
 

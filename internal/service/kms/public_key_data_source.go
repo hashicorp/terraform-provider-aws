@@ -39,7 +39,7 @@ func DataSourcePublicKey() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_usage": {
 				Type:     schema.TypeString,
