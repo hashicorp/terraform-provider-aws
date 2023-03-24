@@ -5,6 +5,7 @@ package conns
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -131,9 +132,18 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.Region = cfg.Region
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, sdkdiag.AppendErrorf(diags, "creating AWS SDK v1 session: %s", err)
+	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
+	}
+
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
