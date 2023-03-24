@@ -86,6 +86,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"multiListenerValidation":    testAccVirtualNode_multiListenerValidation,
 			"logging":                    testAccVirtualNode_logging,
 			"tags":                       testAccVirtualNode_tags,
+			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
 		},
 		"VirtualRouter": {
 			"basic":         testAccVirtualRouter_basic,

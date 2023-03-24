@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_virtual_service")
-func DataSourceVirtualService() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_node")
+func DataSourceVirtualNode() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceVirtualServiceRead,
+		ReadWithoutTimeout: dataSourceVirtualNodeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -48,35 +48,35 @@ func DataSourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceVirtualServiceSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceVirtualNodeSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	virtualServiceName := d.Get("name").(string)
-	vs, err := FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
+	virtualNodeName := d.Get("name").(string)
+	vn, err := FindVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualNodeName)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node (%s): %s", virtualNodeName, err)
 	}
 
-	d.SetId(aws.StringValue(vs.VirtualServiceName))
-	arn := aws.StringValue(vs.Metadata.Arn)
+	d.SetId(aws.StringValue(vn.VirtualNodeName))
+	arn := aws.StringValue(vn.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", vs.MeshName)
-	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
+	d.Set("created_date", vn.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", vn.MeshName)
+	meshOwner := aws.StringValue(vn.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", vs.VirtualServiceName)
-	d.Set("resource_owner", vs.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
+	d.Set("name", vn.VirtualNodeName)
+	d.Set("resource_owner", vn.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualNodeSpec(vn.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
@@ -89,7 +89,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		tags, err = ListTags(ctx, conn, arn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Node (%s): %s", arn, err)
 		}
 	}
 
