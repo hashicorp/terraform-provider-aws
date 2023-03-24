@@ -223,6 +223,40 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v resourcegroups.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	configType := "AWS::NetworkFirewall::RuleGroup"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_resourceQueryAndConfiguration(rName, testAccResourceGroupQueryConfig, configType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckResourceGroupExists(ctx context.Context, n string, v *resourcegroups.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -424,4 +458,23 @@ resource "aws_resourcegroups_group" "test" {
   }
 }
 `, rName, configType1, configType2)
+}
+
+func testAccGroupConfig_resourceQueryAndConfiguration(rName, query, configType string) string {
+	return fmt.Sprintf(`
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  resource_query {
+    query = <<JSON
+%[2]s
+JSON
+
+  }
+
+  configuration {
+    type = %[3]q
+  }
+}
+`, rName, query, configType)
 }
