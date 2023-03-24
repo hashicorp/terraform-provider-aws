@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_router"
 description: |-
-    Provides an AWS App Mesh virtual router resource.
+    Terraform data source for managing an AWS App Mesh Virtual Router.
 ---
 
 # Data Source: aws_appmesh_virtual_router

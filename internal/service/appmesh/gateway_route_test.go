@@ -91,7 +91,7 @@ func testAccGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_GRPCRoute(t *testing.T) {
+func testAccGatewayRoute_grpcRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -167,7 +167,7 @@ func testAccGatewayRoute_GRPCRoute(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_GRPCRouteWithPort(t *testing.T) {
+func testAccGatewayRoute_grpcRouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -245,7 +245,7 @@ func testAccGatewayRoute_GRPCRouteWithPort(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_GRPCRouteTargetPort(t *testing.T) {
+func testAccGatewayRoute_grpcRouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -322,7 +322,7 @@ func testAccGatewayRoute_GRPCRouteTargetPort(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTPRoute(t *testing.T) {
+func testAccGatewayRoute_httpRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -454,7 +454,7 @@ func testAccGatewayRoute_HTTPRoute(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTPRouteTargetPort(t *testing.T) {
+func testAccGatewayRoute_httpRouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -531,7 +531,7 @@ func testAccGatewayRoute_HTTPRouteTargetPort(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTPRouteWithPort(t *testing.T) {
+func testAccGatewayRoute_httpRouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -665,7 +665,7 @@ func testAccGatewayRoute_HTTPRouteWithPort(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTP2Route(t *testing.T) {
+func testAccGatewayRoute_http2Route(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -797,7 +797,7 @@ func testAccGatewayRoute_HTTP2Route(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTP2RouteTargetPort(t *testing.T) {
+func testAccGatewayRoute_http2RouteTargetPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"
@@ -874,7 +874,7 @@ func testAccGatewayRoute_HTTP2RouteTargetPort(t *testing.T) {
 	})
 }
 
-func testAccGatewayRoute_HTTP2RouteWithPort(t *testing.T) {
+func testAccGatewayRoute_http2RouteWithPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"

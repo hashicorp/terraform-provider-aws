@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_route"
 description: |-
-    Provides an AWS App Mesh route resource.
+    Terraform data source for managing an AWS App Mesh Route.
 ---
 
 # Data Source: aws_appmesh_route
