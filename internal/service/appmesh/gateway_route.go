@@ -508,6 +508,11 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						"spec.0.http_route",
 					},
 				},
+				"priority": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
 			},
 		},
 	}
@@ -754,6 +759,10 @@ func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
 		spec.HttpRoute = expandHTTPGatewayRoute(vHttpRoute)
 	}
 
+	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+		spec.Priority = aws.Int64(int64(vPriority))
+	}
+
 	return spec
 }
 
@@ -931,6 +940,7 @@ func flattenGatewayRouteSpec(spec *appmesh.GatewayRouteSpec) []interface{} {
 		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
 		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
 		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
+		"priority":    int(aws.Int64Value(spec.Priority)),
 	}
 
 	return []interface{}{mSpec}

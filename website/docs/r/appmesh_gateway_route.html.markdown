@@ -56,6 +56,7 @@ The `spec` object supports the following:
 * `grpc_route` - (Optional) Specification of a gRPC gateway route.
 * `http_route` - (Optional) Specification of an HTTP gateway route.
 * `http2_route` - (Optional) Specification of an HTTP/2 gateway route.
+* `priority` - (Optional) Priority for the gateway route, between `0` and `1000`.
 
 The `grpc_route`, `http_route` and `http2_route` objects supports the following:
 

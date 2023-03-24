@@ -1,7 +1,11 @@
 ```release-note:enhancement
-resource/aws_appmesh_gateway_route: Add `port` to the `grpc_route.action.target`, `http_route.action.target` and `http2_route.action.target` configuration blocks to support Virtual Services with multiple listeners
+resource/aws_appmesh_gateway_route: Add `port` to the `spec.grpc_route.action.target`, `spec.http_route.action.target` and `spec.http2_route.action.target` configuration blocks to support Virtual Services with multiple listeners
 ```
 
 ```release-note:new-data-source
 aws_appmesh_gateway_route
+```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `priority` to the `spec` configuration block
 ```
