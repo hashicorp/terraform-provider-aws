@@ -14,8 +14,8 @@ The App Mesh Virtual Router data source allows details of an App Mesh Virtual Se
 
 ```hcl
 data "aws_appmesh_virtual_router" "test" {
-    name = "example-router-name"
-    mesh_name = "example-mesh-name"
+  name      = "example-router-name"
+  mesh_name = "example-mesh-name"
 }
 ```
 
