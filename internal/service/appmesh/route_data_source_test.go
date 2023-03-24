@@ -233,6 +233,10 @@ resource "aws_appmesh_route" "test" {
       }
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_appmesh_route" "test" {
@@ -333,6 +337,10 @@ resource "aws_appmesh_route" "test" {
         }
       }
     }
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 

@@ -104,7 +104,7 @@ resource "aws_appmesh_virtual_service" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
   }
 }
 
