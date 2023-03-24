@@ -963,21 +963,22 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	req := &appmesh.CreateVirtualNodeInput{
+	name := d.Get("name").(string)
+	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
 		Tags:            Tags(tags.IgnoreAWS()),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
+		VirtualNodeName: aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual node: %s", req)
-	resp, err := conn.CreateVirtualNodeWithContext(ctx, req)
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.CreateVirtualNodeWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual node: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Virtual Node (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
@@ -1083,30 +1084,29 @@ func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
-		_, v := d.GetChange("spec")
-		req := &appmesh.UpdateVirtualNodeInput{
+		input := &appmesh.UpdateVirtualNodeInput{
 			MeshName:        aws.String(d.Get("mesh_name").(string)),
+			Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
 			VirtualNodeName: aws.String(d.Get("name").(string)),
-			Spec:            expandVirtualNodeSpec(v.([]interface{})),
-		}
-		if v, ok := d.GetOk("mesh_owner"); ok {
-			req.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual node: %s", req)
-		_, err := conn.UpdateVirtualNodeWithContext(ctx, req)
+		if v, ok := d.GetOk("mesh_owner"); ok {
+			input.MeshOwner = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateVirtualNodeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual node (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Node (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual node (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Node (%s) tags: %s", arn, err)
 		}
 	}
 
