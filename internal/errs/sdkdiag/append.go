@@ -18,7 +18,7 @@ func AppendWarningf(diags diag.Diagnostics, format string, a ...any) diag.Diagno
 }
 
 func AppendErrorf(diags diag.Diagnostics, format string, a ...any) diag.Diagnostics {
-	return append(diags, diag.Errorf(format, a...)...)
+	return append(diags, diag.Errorf(format, a...)...) // nosemgrep:ci.semgrep.pluginsdk.avoid-diag_Errorf
 }
 
 func AppendFromErr(diags diag.Diagnostics, err error) diag.Diagnostics {
