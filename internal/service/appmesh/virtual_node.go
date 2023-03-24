@@ -992,77 +992,38 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeVirtualNodeInput{
-		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		VirtualNodeName: aws.String(d.Get("name").(string)),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+	}, d.IsNewResource())
 
-	var resp *appmesh.DescribeVirtualNodeOutput
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.DescribeVirtualNodeWithContext(ctx, req)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeVirtualNodeWithContext(ctx, req)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.VirtualNode == nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: empty response")
-	}
+	vn := outputRaw.(*appmesh.VirtualNodeData)
 
-	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	arn := aws.StringValue(resp.VirtualNode.Metadata.Arn)
-	d.Set("name", resp.VirtualNode.VirtualNodeName)
-	d.Set("mesh_name", resp.VirtualNode.MeshName)
-	d.Set("mesh_owner", resp.VirtualNode.Metadata.MeshOwner)
+	arn := aws.StringValue(vn.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.VirtualNode.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.VirtualNode.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenVirtualNodeSpec(resp.VirtualNode.Spec))
-	if err != nil {
+	d.Set("created_date", vn.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", vn.MeshName)
+	d.Set("mesh_owner", vn.Metadata.MeshOwner)
+	d.Set("name", vn.VirtualNodeName)
+	d.Set("resource_owner", vn.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualNodeSpec(vn.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh virtual node (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Node (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -1146,28 +1107,65 @@ func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-node-name'", d.Id())
 	}
 
-	mesh := parts[0]
-	name := parts[1]
-	log.Printf("[DEBUG] Importing App Mesh virtual node %s from mesh %s", name, mesh)
-
 	conn := meta.(*conns.AWSClient).AppMeshConn()
+	meshName := parts[0]
+	name := parts[1]
 
-	req := &appmesh.DescribeVirtualNodeInput{
-		MeshName:        aws.String(mesh),
-		VirtualNodeName: aws.String(name),
-	}
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
+	vn, err := FindVirtualNodeByThreePartKey(ctx, conn, meshName, "", name)
 
-	resp, err := conn.DescribeVirtualNodeWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
-	d.Set("name", resp.VirtualNode.VirtualNodeName)
-	d.Set("mesh_name", resp.VirtualNode.MeshName)
+	d.SetId(aws.StringValue(vn.Metadata.Uid))
+	d.Set("mesh_name", vn.MeshName)
+	d.Set("name", vn.VirtualNodeName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindVirtualNodeByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualNodeData, error) {
+	input := &appmesh.DescribeVirtualNodeInput{
+		MeshName:        aws.String(meshName),
+		VirtualNodeName: aws.String(name),
+	}
+	if meshOwner != "" {
+		input.MeshOwner = aws.String(meshOwner)
+	}
+
+	output, err := findVirtualNode(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.VirtualNodeStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVirtualNode(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeVirtualNodeInput) (*appmesh.VirtualNodeData, error) {
+	output, err := conn.DescribeVirtualNodeWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VirtualNode == nil || output.VirtualNode.Metadata == nil || output.VirtualNode.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VirtualNode, nil
 }
