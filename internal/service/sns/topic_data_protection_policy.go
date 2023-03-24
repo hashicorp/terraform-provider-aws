@@ -105,6 +105,7 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 
 	dataProtectionPolicy := output.DataProtectionPolicy
 
+	d.Set("arn", d.Id())
 	d.Set("policy", dataProtectionPolicy)
 
 	return diags
