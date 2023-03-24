@@ -1,4 +1,9 @@
 ## 4.61.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_appmesh_virtual_node` ([#27545](https://github.com/hashicorp/terraform-provider-aws/issues/27545))
+
 ## 4.60.0 (March 24, 2023)
 
 FEATURES:
