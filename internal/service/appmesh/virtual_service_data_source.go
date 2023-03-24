@@ -48,7 +48,7 @@ func DataSourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceVirualServiceSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceVirtualServiceSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
