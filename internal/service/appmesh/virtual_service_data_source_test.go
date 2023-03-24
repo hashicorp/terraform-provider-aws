@@ -21,7 +21,6 @@ func testAccVirtualServiceDataSource_virtualNode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
@@ -33,8 +32,12 @@ func testAccVirtualServiceDataSource_virtualNode(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.#", dataSourceName, "spec.0.provider.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.#", dataSourceName, "spec.0.provider.0.virtual_node.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", dataSourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.#", dataSourceName, "spec.0.provider.0.virtual_router.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
 		},
@@ -52,7 +55,6 @@ func testAccVirtualServiceDataSource_virtualRouter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
@@ -64,8 +66,12 @@ func testAccVirtualServiceDataSource_virtualRouter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.#", dataSourceName, "spec.0.provider.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.#", dataSourceName, "spec.0.provider.0.virtual_node.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.#", dataSourceName, "spec.0.provider.0.virtual_router.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", dataSourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
 		},
@@ -98,8 +104,7 @@ resource "aws_appmesh_virtual_service" "test" {
   }
 
   tags = {
-    foo  = "bar"
-    good = "bad"
+    Name = %[1]q
   }
 }
 

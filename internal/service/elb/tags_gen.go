@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb/elbiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists elb service tags.
@@ -29,8 +30,18 @@ func ListTags(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).ELBConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ELBConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -75,6 +86,25 @@ func KeyValueTags(ctx context.Context, tags []*elb.Tag) tftags.KeyValueTags {
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns elb service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*elb.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets elb service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*elb.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates elb service tags.
