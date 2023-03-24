@@ -92,10 +92,11 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
 		},
 		"VirtualRouter": {
-			"basic":         testAccVirtualRouter_basic,
-			"disappears":    testAccVirtualRouter_disappears,
-			"multiListener": testAccVirtualRouter_multiListener,
-			"tags":          testAccVirtualRouter_tags,
+			"basic":           testAccVirtualRouter_basic,
+			"disappears":      testAccVirtualRouter_disappears,
+			"multiListener":   testAccVirtualRouter_multiListener,
+			"tags":            testAccVirtualRouter_tags,
+			"dataSourceBasic": testAccVirtualRouterDataSource_basic,
 		},
 		"VirtualService": {
 			"disappears":              testAccVirtualService_disappears,
