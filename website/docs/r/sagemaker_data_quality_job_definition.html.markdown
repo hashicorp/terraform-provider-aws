@@ -140,13 +140,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
-* `name` - The name of the endpoint configuration.
+* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this data quality job definition.
+* `name` - The name of the data quality job definition.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Endpoint configurations can be imported using the `name`, e.g.,
+Data quality job definitions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
