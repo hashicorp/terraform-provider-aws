@@ -549,57 +549,21 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var gatewayRoute *appmesh.GatewayRouteData
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string))
+	}, d.IsNewResource())
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		gatewayRoute, err = FindGatewayRoute(ctx, conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		gatewayRoute, err = FindGatewayRoute(ctx, conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	if gatewayRoute == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: not found after creation")
-		}
-
-		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if aws.StringValue(gatewayRoute.Status.Status) == appmesh.GatewayRouteStatusCodeDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: %s after creation", aws.StringValue(gatewayRoute.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+	gatewayRoute := outputRaw.(*appmesh.GatewayRouteData)
 
 	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
 	d.Set("arn", arn)
@@ -609,8 +573,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set("name", gatewayRoute.GatewayRouteName)
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec))
-	if err != nil {
+	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
@@ -618,7 +581,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh gateway route (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Gateway Route (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -704,14 +667,12 @@ func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, met
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
 	}
 
-	mesh := parts[0]
-	vgName := parts[1]
-	name := parts[2]
-	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
-
 	conn := meta.(*conns.AWSClient).AppMeshConn()
+	meshName := parts[0]
+	virtualGatewayName := parts[1]
+	name := parts[2]
 
-	gatewayRoute, err := FindGatewayRoute(ctx, conn, mesh, vgName, name, "")
+	gatewayRoute, err := FindGatewayRouteByFourPartKey(ctx, conn, meshName, "", virtualGatewayName, name)
 
 	if err != nil {
 		return nil, err
@@ -723,6 +684,53 @@ func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, met
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindGatewayRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, virtualGatewayName, name string) (*appmesh.GatewayRouteData, error) {
+	input := &appmesh.DescribeGatewayRouteInput{
+		GatewayRouteName:   aws.String(name),
+		MeshName:           aws.String(meshName),
+		VirtualGatewayName: aws.String(virtualGatewayName),
+	}
+	if meshOwner != "" {
+		input.MeshOwner = aws.String(meshOwner)
+	}
+
+	output, err := findGatewayRoute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.GatewayRouteStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGatewayRoute(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeGatewayRouteInput) (*appmesh.GatewayRouteData, error) {
+	output, err := conn.DescribeGatewayRouteWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GatewayRoute == nil || output.GatewayRoute.Metadata == nil || output.GatewayRoute.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GatewayRoute, nil
 }
 
 func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
