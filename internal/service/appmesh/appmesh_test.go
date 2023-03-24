@@ -22,7 +22,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"http2Route":           testAccGatewayRoute_HTTP2Route,
 			"http2RouteTargetPort": testAccGatewayRoute_HTTP2RouteTargetPort,
 			"http2RouteWithPort":   testAccGatewayRoute_HTTP2RouteWithPort,
-			"tags":                 testAccGatewayRoute_Tags,
+			"tags":                 testAccGatewayRoute_tags,
 		},
 		"Mesh": {
 			"basic":                    testAccMesh_basic,
