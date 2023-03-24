@@ -3,6 +3,9 @@ package cognitoidp
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func validResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
@@ -243,3 +246,28 @@ func validUserPoolTemplateSMSMessage(v interface{}, k string) (ws []string, es [
 	}
 	return
 }
+
+var userPoolClientIdentityProviderValidator = []validator.String{
+	stringvalidator.LengthBetween(1, 32),
+	stringValidatorpLpMpSpNpP,
+}
+
+var userPoolClientNameValidator = []validator.String{
+	stringvalidator.LengthBetween(1, 128),
+	stringValidatorUserPoolClientName,
+}
+
+var userPoolClientURLValidator = []validator.String{
+	stringvalidator.LengthBetween(1, 1024),
+	stringValidatorpLpMpSpNpP,
+}
+
+var stringValidatorUserPoolClientName = stringvalidator.RegexMatches(
+	regexp.MustCompile(`[\w\s+=,.@-]+`),
+	`can include any letter, number, space, tab, or one of "+=,.@-"`,
+)
+
+var stringValidatorpLpMpSpNpP = stringvalidator.RegexMatches(
+	regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+	"can include any valid Unicode letter, combining character, symbol, number, or punctuation",
+)

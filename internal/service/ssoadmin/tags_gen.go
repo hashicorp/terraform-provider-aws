@@ -8,17 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssoadmin/ssoadminiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
-}
-
-func ListTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssoadmin.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
@@ -27,10 +25,24 @@ func ListTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, id
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSOAdminConn(), identifier, resourceType)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -52,25 +64,42 @@ func Tags(tags tftags.KeyValueTags) []*ssoadmin.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from ssoadmin service tags.
-func KeyValueTags(tags []*ssoadmin.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*ssoadmin.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns ssoadmin service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*ssoadmin.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ssoadmin service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*ssoadmin.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ssoadmin.UntagResourceInput{
@@ -101,4 +130,8 @@ func UpdateTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, 
 	}
 
 	return nil
+}
+
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SSOAdminConn(), identifier, resourceType, oldTags, newTags)
 }

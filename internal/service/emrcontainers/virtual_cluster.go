@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_emrcontainers_virtual_cluster")
 func ResourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,
@@ -27,7 +28,7 @@ func ResourceVirtualCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceVirtualClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -105,9 +106,9 @@ func ResourceVirtualCluster() *schema.Resource {
 }
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
@@ -135,7 +136,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -161,7 +162,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", vc.Name)
 
-	tags := KeyValueTags(vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -176,12 +177,12 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating EMR Containers Virtual Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -190,7 +191,7 @@ func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
 	_, err := conn.DeleteVirtualClusterWithContext(ctx, &emrcontainers.DeleteVirtualClusterInput{

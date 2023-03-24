@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_memorydb_snapshot")
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
@@ -102,7 +103,7 @@ func DataSourceSnapshot() *schema.Resource {
 }
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -124,7 +125,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", snapshot.Name)
 	d.Set("source", snapshot.Source)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)

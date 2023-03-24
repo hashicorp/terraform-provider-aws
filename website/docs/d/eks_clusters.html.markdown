@@ -6,7 +6,7 @@ description: |-
   Retrieve EKS Clusters list
 ---
 
-# Data Source: aws_eks_cluster
+# Data Source: aws_eks_clusters
 
 Retrieve EKS Clusters list
 

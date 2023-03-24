@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidFunctionName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
@@ -37,6 +39,8 @@ func TestValidFunctionName(t *testing.T) {
 }
 
 func TestValidPermissionAction(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"lambda:*",
 		"lambda:InvokeFunction",
@@ -64,6 +68,8 @@ func TestValidPermissionAction(t *testing.T) {
 }
 
 func TestValidPermissionEventSourceToken(t *testing.T) {
+	t.Parallel()
+
 	validTokens := []string{
 		"amzn1.ask.skill.80c92c86-e6dd-4c4b-8d0d-000000000000",
 		"test-event-source-token",
@@ -90,6 +96,8 @@ func TestValidPermissionEventSourceToken(t *testing.T) {
 }
 
 func TestValidQualifier(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"123",
 		"prod",
@@ -123,6 +131,8 @@ func TestValidQualifier(t *testing.T) {
 }
 
 func TestValidPolicyStatementID(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"YadaHereAndThere",
 		"Valid-5tatement_Id",

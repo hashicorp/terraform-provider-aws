@@ -1,15 +1,17 @@
 package kinesisanalytics
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 )
 
 // Custom Kinesisanalytics listing functions using similar formatting as other service generated code.
 
-func ListApplicationsPages(conn *kinesisanalytics.KinesisAnalytics, input *kinesisanalytics.ListApplicationsInput, fn func(*kinesisanalytics.ListApplicationsOutput, bool) bool) error {
+func ListApplicationsPages(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, input *kinesisanalytics.ListApplicationsInput, fn func(*kinesisanalytics.ListApplicationsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListApplications(input)
+		output, err := conn.ListApplicationsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}

@@ -1173,6 +1173,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Athena"
     severity: WARNING
+  - id: auditmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in func name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-test-name
+    languages:
+      - go
+    message: Include "AuditManager" in test name
+    paths:
+      include:
+        - internal/service/auditmanager/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAuditManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in const name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
+  - id: auditmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in var name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
   - id: autoscaling-in-func-name
     languages:
       - go
@@ -1520,6 +1578,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
+            - pattern-not-regex: ServicePackage
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ce-in-test-name
@@ -1564,6 +1623,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: ServicePackage
     severity: WARNING
   - id: chime-in-func-name
     languages:
@@ -2346,6 +2406,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
     severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in func name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in const name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
+    severity: WARNING
+  - id: cloudwatchobservabilityaccessmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchobservabilityaccessmanager" in var name inside oam package
+    paths:
+      include:
+        - internal/service/oam
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
+    severity: WARNING
   - id: cloudwatchrum-in-func-name
     languages:
       - go
@@ -2605,6 +2708,64 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)codedeploy"
+    severity: WARNING
+  - id: codegurureviewer-in-func-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in func name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-test-name
+    languages:
+      - go
+    message: Include "CodeGuruReviewer" in test name
+    paths:
+      include:
+        - internal/service/codegurureviewer/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCodeGuruReviewer"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-const-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in const name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+    severity: WARNING
+  - id: codegurureviewer-in-var-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in var name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
     severity: WARNING
   - id: codepipeline-in-func-name
     languages:

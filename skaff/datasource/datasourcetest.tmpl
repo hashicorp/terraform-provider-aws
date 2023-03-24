@@ -157,6 +157,7 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 // Acceptance test access AWS and cost money to run.
 {{- end }}
 func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
     {{- if .IncludeComments }}
     // TIP: This is a long-running test guard for tests that run longer than
     // 300s (5 min) generally.
@@ -171,9 +172,9 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		{{- if .AWSGoSDKV2 }}
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
@@ -181,12 +182,12 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy,
+		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .DataSource }}Exists(dataSourceName, &{{ .DataSourceLower }}),
+					testAccCheck{{ .DataSource }}Exists(ctx, dataSourceName, &{{ .DataSourceLower }}),
 					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{

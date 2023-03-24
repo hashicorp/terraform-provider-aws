@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_accessanalyzer_archive_rule")
 func ResourceArchiveRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveRuleCreate,
@@ -82,7 +83,7 @@ func ResourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
@@ -109,7 +110,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName, ruleName, err := DecodeRuleID(d.Id())
 	if err != nil {
@@ -136,7 +137,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	analyzerName, ruleName, err := DecodeRuleID(d.Id())
 	if err != nil {
@@ -163,7 +164,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	log.Printf("[INFO] Deleting AccessAnalyzer ArchiveRule %s", d.Id())
 
