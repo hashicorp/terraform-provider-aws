@@ -110,7 +110,7 @@ resource "aws_sns_topic_data_protection_policy" "test" {
   "Version": "2021-06-01",
   "Statement": [
     {
-      "Sid": "__deny_statement_b46dbec1",
+      "Sid":  %[1]q,
       "DataDirection": "Inbound",
       "Principal": [
         "*"
