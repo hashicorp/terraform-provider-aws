@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -41,15 +42,6 @@ func ResourceDocument() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-					validation.StringLenBetween(3, 128),
-				),
 			},
 			"attachments_source": {
 				Type:     schema.TypeList,
@@ -86,21 +78,6 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"document_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ssm.DocumentFormatJson,
-				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
-			},
-			"document_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ssm.DocumentType_Values(), false),
-			},
-			"schema_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -112,6 +89,17 @@ func ResourceDocument() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"document_format": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
+			},
+			"document_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentType_Values(), false),
 			},
 			"document_version": {
 				Type:     schema.TypeString,
@@ -129,33 +117,33 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringLenBetween(3, 128),
+				),
+			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"parameter": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"default_value": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -173,8 +161,21 @@ func ResourceDocument() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"platform_types": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"schema_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
