@@ -343,6 +343,34 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 									},
 								},
+								"query_parameter": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 10,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"match": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:     schema.TypeString,
+															Optional: true,
+														},
+													},
+												},
+											},
+											"name": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -896,6 +924,34 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		routeMatch.Path = pathMatch
 	}
 
+	if vQueryParameters, ok := mRouteMatch["query_parameter"].(*schema.Set); ok && vQueryParameters.Len() > 0 {
+		queryParameters := []*appmesh.HttpQueryParameter{}
+
+		for _, vQueryParameter := range vQueryParameters.List() {
+			queryParameter := &appmesh.HttpQueryParameter{}
+
+			mQueryParameter := vQueryParameter.(map[string]interface{})
+
+			if vName, ok := mQueryParameter["name"].(string); ok && vName != "" {
+				queryParameter.Name = aws.String(vName)
+			}
+
+			if vMatch, ok := mQueryParameter["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				queryParameter.Match = &appmesh.QueryParameterMatch{}
+
+				mMatch := vMatch[0].(map[string]interface{})
+
+				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					queryParameter.Match.Exact = aws.String(vExact)
+				}
+			}
+
+			queryParameters = append(queryParameters, queryParameter)
+		}
+
+		routeMatch.QueryParameters = queryParameters
+	}
+
 	return routeMatch
 }
 
@@ -1068,6 +1124,26 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 		mRouteMatch["path"] = []interface{}{mPath}
 	}
+
+	vQueryParameters := []interface{}{}
+
+	for _, queryParameter := range routeMatch.QueryParameters {
+		mQueryParameter := map[string]interface{}{
+			"name": aws.StringValue(queryParameter.Name),
+		}
+
+		if match := queryParameter.Match; match != nil {
+			mMatch := map[string]interface{}{
+				"exact": aws.StringValue(match.Exact),
+			}
+
+			mQueryParameter["match"] = []interface{}{mMatch}
+		}
+
+		vQueryParameters = append(vQueryParameters, mQueryParameter)
+	}
+
+	mRouteMatch["query_parameter"] = vQueryParameters
 
 	return []interface{}{mRouteMatch}
 }

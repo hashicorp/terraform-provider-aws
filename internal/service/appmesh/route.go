@@ -269,7 +269,6 @@ func resourceRouteSpecSchema() *schema.Schema {
 										},
 									},
 								},
-
 								"scheme": {
 									Type:         schema.TypeString,
 									Optional:     true,
