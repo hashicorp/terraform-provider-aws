@@ -157,12 +157,13 @@ type TemplateData struct {
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
-	ConnsPkg        bool
-	FmtPkg          bool
-	HelperSchemaPkg bool
-	SkipTypesImp    bool
-	StrConvPkg      bool
-	TfResourcePkg   bool
+	ConnsPkg         bool
+	FmtPkg           bool
+	HelperSchemaPkg  bool
+	InternalTypesPkg bool
+	SkipTypesImp     bool
+	StrConvPkg       bool
+	TfResourcePkg    bool
 }
 
 func main() {
@@ -227,12 +228,13 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:        *listTags || *updateTags,
-		FmtPkg:          *updateTags,
-		HelperSchemaPkg: awsPkg == "autoscaling",
-		SkipTypesImp:    *skipTypesImp,
-		StrConvPkg:      awsPkg == "autoscaling",
-		TfResourcePkg:   *getTag,
+		ConnsPkg:         *listTags || *updateTags,
+		FmtPkg:           *updateTags,
+		HelperSchemaPkg:  awsPkg == "autoscaling",
+		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		SkipTypesImp:     *skipTypesImp,
+		StrConvPkg:       awsPkg == "autoscaling",
+		TfResourcePkg:    *getTag,
 
 		GetTagFunc:              *getTagFunc,
 		ListTagsFunc:            *listTagsFunc,

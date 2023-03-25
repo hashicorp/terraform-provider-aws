@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway/storagegatewayiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists storagegateway service tags.
@@ -29,8 +30,18 @@ func ListTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, i
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -60,6 +71,25 @@ func KeyValueTags(ctx context.Context, tags []*storagegateway.Tag) tftags.KeyVal
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns storagegateway service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*storagegateway.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets storagegateway service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*storagegateway.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates storagegateway service tags.

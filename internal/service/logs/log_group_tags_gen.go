@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListLogGroupTags lists logs service tags.
@@ -29,8 +30,18 @@ func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLo
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // UpdateLogGroupTags updates logs service tags.

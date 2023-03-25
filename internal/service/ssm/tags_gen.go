@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists ssm service tags.
@@ -30,8 +31,18 @@ func ListTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceTyp
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).SSMConn(), identifier, resourceType)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSMConn(), identifier, resourceType)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -61,6 +72,25 @@ func KeyValueTags(ctx context.Context, tags []*ssm.Tag) tftags.KeyValueTags {
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns ssm service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*ssm.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ssm service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*ssm.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates ssm service tags.

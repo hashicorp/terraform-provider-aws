@@ -23,11 +23,13 @@ func TestAccAppMesh_serial(t *testing.T) {
 		},
 		"Mesh": {
 			"basic":                    testAccMesh_basic,
+			"disappears":               testAccMesh_disappears,
 			"egressFilter":             testAccMesh_egressFilter,
 			"tags":                     testAccMesh_tags,
 			"dataSourceBasic":          testAccMeshDataSource_basic,
 			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
 			"dataSourceSpecAndTagsSet": testAccMeshDataSource_specAndTagsSet,
+			"dataSourceShared":         testAccMeshDataSource_shared,
 		},
 		"Route": {
 			"disappears":              testAccRoute_disappears,
@@ -48,6 +50,10 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tcpRouteWithPortMatch":   testAccRoute_tcpRouteWithPortMatch,
 			"tcpRouteTimeout":         testAccRoute_tcpRouteTimeout,
 			"tags":                    testAccRoute_tags,
+			"dataSourceHTTP2Route":    testAccRouteDataSource_http2Route,
+			"dataSourceHTTPRoute":     testAccRouteDataSource_httpRoute,
+			"dataSourceGRPCRoute":     testAccRouteDataSource_grpcRoute,
+			"dataSourceTCPRoute":      testAccRouteDataSource_tcpRoute,
 		},
 		"VirtualGateway": {
 			"basic":                      testAccVirtualGateway_basic,
@@ -61,6 +67,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"multiListenerValidation":    testAccVirtualGateway_MultiListenerValidation,
 			"logging":                    testAccVirtualGateway_Logging,
 			"tags":                       testAccVirtualGateway_Tags,
+			"dataSourceBasic":            testAccVirtualGatewayDataSource_basic,
 		},
 		"VirtualNode": {
 			"basic":                      testAccVirtualNode_basic,
@@ -79,6 +86,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"multiListenerValidation":    testAccVirtualNode_multiListenerValidation,
 			"logging":                    testAccVirtualNode_logging,
 			"tags":                       testAccVirtualNode_tags,
+			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
 		},
 		"VirtualRouter": {
 			"basic":         testAccVirtualRouter_basic,

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker/sagemakeriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists sagemaker service tags.
@@ -29,8 +30,18 @@ func ListTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).SageMakerConn(), identifier)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SageMakerConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -60,6 +71,25 @@ func KeyValueTags(ctx context.Context, tags []*sagemaker.Tag) tftags.KeyValueTag
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns sagemaker service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*sagemaker.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets sagemaker service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*sagemaker.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates sagemaker service tags.
