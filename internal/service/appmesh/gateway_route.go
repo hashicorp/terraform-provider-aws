@@ -204,6 +204,74 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
+								"header": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 10,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"invert": {
+												Type:     schema.TypeBool,
+												Optional: true,
+												Default:  false,
+											},
+											"match": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"prefix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"range": {
+															Type:     schema.TypeList,
+															Optional: true,
+															MinItems: 0,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"end": {
+																		Type:     schema.TypeInt,
+																		Required: true,
+																	},
+																	"start": {
+																		Type:     schema.TypeInt,
+																		Required: true,
+																	},
+																},
+															},
+														},
+														"regex": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"suffix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+											},
+											"name": {
+												Type:         schema.TypeString,
+												Required:     true,
+												ValidateFunc: validation.StringLenBetween(1, 50),
+											},
+										},
+									},
+								},
 								"hostname": {
 									Type:     schema.TypeList,
 									Optional: true,
@@ -710,26 +778,80 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 
 	mRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
 
+	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		routeMatch.Port = aws.Int64(int64(vPort))
+	}
+
 	if vPrefix, ok := mRouteMatch["prefix"].(string); ok && vPrefix != "" {
 		routeMatch.Prefix = aws.String(vPrefix)
 	}
 
-	if vHostnameMatch, ok := mRouteMatch["hostname"].([]interface{}); ok && len(vHostnameMatch) > 0 && vHostnameMatch[0] != nil {
+	if vHeaders, ok := mRouteMatch["header"].(*schema.Set); ok && vHeaders.Len() > 0 {
+		headers := []*appmesh.HttpGatewayRouteHeader{}
+
+		for _, vHeader := range vHeaders.List() {
+			header := &appmesh.HttpGatewayRouteHeader{}
+
+			mHeader := vHeader.(map[string]interface{})
+
+			if vInvert, ok := mHeader["invert"].(bool); ok {
+				header.Invert = aws.Bool(vInvert)
+			}
+			if vName, ok := mHeader["name"].(string); ok && vName != "" {
+				header.Name = aws.String(vName)
+			}
+
+			if vMatch, ok := mHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				header.Match = &appmesh.HeaderMatchMethod{}
+
+				mMatch := vMatch[0].(map[string]interface{})
+
+				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					header.Match.Exact = aws.String(vExact)
+				}
+				if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+					header.Match.Prefix = aws.String(vPrefix)
+				}
+				if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+					header.Match.Regex = aws.String(vRegex)
+				}
+				if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+					header.Match.Suffix = aws.String(vSuffix)
+				}
+
+				if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+					header.Match.Range = &appmesh.MatchRange{}
+
+					mRange := vRange[0].(map[string]interface{})
+
+					if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+						header.Match.Range.End = aws.Int64(int64(vEnd))
+					}
+					if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+						header.Match.Range.Start = aws.Int64(int64(vStart))
+					}
+				}
+			}
+
+			headers = append(headers, header)
+		}
+
+		routeMatch.Headers = headers
+	}
+
+	if vHostname, ok := mRouteMatch["hostname"].([]interface{}); ok && len(vHostname) > 0 && vHostname[0] != nil {
 		hostnameMatch := &appmesh.GatewayRouteHostnameMatch{}
 
-		mHostnameMatch := vHostnameMatch[0].(map[string]interface{})
-		if vExact, ok := mHostnameMatch["exact"].(string); ok && vExact != "" {
+		mHostname := vHostname[0].(map[string]interface{})
+
+		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
 			hostnameMatch.Exact = aws.String(vExact)
 		}
-		if vSuffix, ok := mHostnameMatch["suffix"].(string); ok && vSuffix != "" {
+		if vSuffix, ok := mHostname["suffix"].(string); ok && vSuffix != "" {
 			hostnameMatch.Suffix = aws.String(vSuffix)
 		}
 
 		routeMatch.Hostname = hostnameMatch
-	}
-
-	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
-		routeMatch.Port = aws.Int64(int64(vPort))
 	}
 
 	return routeMatch
@@ -838,24 +960,58 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 	mRouteMatch := map[string]interface{}{}
 
+	if routeMatch.Port != nil {
+		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+	}
+
 	if routeMatch.Prefix != nil {
 		mRouteMatch["prefix"] = aws.StringValue(routeMatch.Prefix)
 	}
 
-	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
-		mHostnameMatch := map[string]interface{}{}
-		if hostnameMatch.Exact != nil {
-			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
-		}
-		if hostnameMatch.Suffix != nil {
-			mHostnameMatch["suffix"] = aws.StringValue(hostnameMatch.Suffix)
+	vHeaders := []interface{}{}
+
+	for _, header := range routeMatch.Headers {
+		mHeader := map[string]interface{}{
+			"invert": aws.BoolValue(header.Invert),
+			"name":   aws.StringValue(header.Name),
 		}
 
-		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
+		if match := header.Match; match != nil {
+			mMatch := map[string]interface{}{
+				"exact":  aws.StringValue(match.Exact),
+				"prefix": aws.StringValue(match.Prefix),
+				"regex":  aws.StringValue(match.Regex),
+				"suffix": aws.StringValue(match.Suffix),
+			}
+
+			if r := match.Range; r != nil {
+				mRange := map[string]interface{}{
+					"end":   int(aws.Int64Value(r.End)),
+					"start": int(aws.Int64Value(r.Start)),
+				}
+
+				mMatch["range"] = []interface{}{mRange}
+			}
+
+			mHeader["match"] = []interface{}{mMatch}
+		}
+
+		vHeaders = append(vHeaders, mHeader)
 	}
 
-	if routeMatch.Port != nil {
-		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+	mRouteMatch["header"] = vHeaders
+
+	if hostname := routeMatch.Hostname; hostname != nil {
+		mHostname := map[string]interface{}{}
+
+		if hostname.Exact != nil {
+			mHostname["exact"] = aws.StringValue(hostname.Exact)
+		}
+		if hostname.Suffix != nil {
+			mHostname["suffix"] = aws.StringValue(hostname.Suffix)
+		}
+
+		mRouteMatch["hostname"] = []interface{}{mHostname}
 	}
 
 	return []interface{}{mRouteMatch}

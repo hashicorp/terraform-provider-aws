@@ -46,6 +46,9 @@ func testAccGatewayRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
@@ -357,6 +360,9 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -382,6 +388,9 @@ func testAccGatewayRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.hostname.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -699,6 +708,14 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs1ResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
+						"invert":  "false",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
@@ -724,6 +741,22 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vs2ResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
+						"invert":  "true",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
+						"invert":                "false",
+						"match.#":               "1",
+						"match.0.range.#":       "1",
+						"match.0.range.0.end":   "7",
+						"match.0.range.0.start": "2",
+						"name":                  "X-Testing2",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.hostname.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
@@ -1614,6 +1647,10 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/"
+
+        header {
+          name = "X-Testing1"
+        }
       }
     }
   }
@@ -1640,6 +1677,23 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/users"
+
+        header {
+          name   = "X-Testing1"
+          invert = true
+        }
+
+        header {
+          name   = "X-Testing2"
+          invert = false
+
+          match {
+            range {
+              start = 2
+              end   = 7
+            }
+          }
+        }
       }
     }
   }

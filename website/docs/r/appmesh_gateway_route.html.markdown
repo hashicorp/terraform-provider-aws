@@ -101,9 +101,30 @@ The `grpc_route`'s `match` object supports the following:
 
 The `http_route` and `http2_route`'s `match` object supports the following:
 
+* `header` - (Optional) Client request headers to match on.
 * `hostname` - (Optional) Host name to match on.
 * `prefix` - (Required) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
 * `port` - (Optional) The port number to match from the request.
+
+The `header` object supports the following:
+
+* `name` - (Required) Name for the HTTP header in the client request that will be matched on.
+* `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
+* `match` - (Optional) Method and value to match the header value sent with a request. Specify one match method.
+
+The `header`'s `match` object supports the following:
+
+* `exact` - (Optional) Header value sent by the client must match the specified value exactly.
+* `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
+* `port`- (Optional) The port number to match from the request.
+* `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
+* `regex` - (Optional) Header value sent by the client must include the specified characters.
+* `suffix` - (Optional) Header value sent by the client must end with the specified characters.
+
+The `range` object supports the following:
+
+* `end` - (Required) End of the range.
+* `start` - (Requited) Start of the range.
 
 The `hostname` object supports the following:
 
