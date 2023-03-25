@@ -103,8 +103,9 @@ The `http_route` and `http2_route`'s `match` object supports the following:
 
 * `header` - (Optional) Client request headers to match on.
 * `hostname` - (Optional) Host name to match on.
-* `prefix` - (Required) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
+* `path` - (Optional) Client request path to match on.
 * `port` - (Optional) The port number to match from the request.
+* `prefix` - (Optional) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
 
 The `header` object supports the following:
 
@@ -130,6 +131,11 @@ The `hostname` object supports the following:
 
 * `exact` - (Optional) Exact host name to match on.
 * `suffix` - (Optional) Specified ending characters of the host name to match on.
+
+The `path` object supports the following:
+
+* `exact` - (Optional) The exact path to match on.
+* `regex` - (Optional) The regex used to match the path.
 
 ## Attributes Reference
 

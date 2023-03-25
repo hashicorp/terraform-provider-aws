@@ -298,8 +298,34 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										},
 									},
 									AtLeastOneOf: []string{
-										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+									},
+								},
+								"path": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"exact": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+											"regex": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+										},
+									},
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
 								"port": {
@@ -314,6 +340,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									AtLeastOneOf: []string{
 										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 									},
 								},
 							},
@@ -854,6 +881,21 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		routeMatch.Hostname = hostnameMatch
 	}
 
+	if vPath, ok := mRouteMatch["path"].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
+		pathMatch := &appmesh.HttpPathMatch{}
+
+		mHostname := vPath[0].(map[string]interface{})
+
+		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
+			pathMatch.Exact = aws.String(vExact)
+		}
+		if vRegex, ok := mHostname["regex"].(string); ok && vRegex != "" {
+			pathMatch.Regex = aws.String(vRegex)
+		}
+
+		routeMatch.Path = pathMatch
+	}
+
 	return routeMatch
 }
 
@@ -1012,6 +1054,19 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		}
 
 		mRouteMatch["hostname"] = []interface{}{mHostname}
+	}
+
+	if path := routeMatch.Path; path != nil {
+		mPath := map[string]interface{}{}
+
+		if path.Exact != nil {
+			mPath["exact"] = aws.StringValue(path.Exact)
+		}
+		if path.Regex != nil {
+			mPath["regex"] = aws.StringValue(path.Regex)
+		}
+
+		mRouteMatch["path"] = []interface{}{mPath}
 	}
 
 	return []interface{}{mRouteMatch}

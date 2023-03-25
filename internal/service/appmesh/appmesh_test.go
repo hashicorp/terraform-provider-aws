@@ -18,6 +18,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"grpcRouteWithPort":    testAccGatewayRoute_grpcRouteWithPort,
 			"httpRoute":            testAccGatewayRoute_httpRoute,
 			"httpRouteTargetPort":  testAccGatewayRoute_httpRouteTargetPort,
+			"httpRouteWithPath":    testAccGatewayRoute_httpRouteWithPath,
 			"httpRouteWithPort":    testAccGatewayRoute_httpRouteWithPort,
 			"http2Route":           testAccGatewayRoute_http2Route,
 			"http2RouteTargetPort": testAccGatewayRoute_http2RouteTargetPort,
