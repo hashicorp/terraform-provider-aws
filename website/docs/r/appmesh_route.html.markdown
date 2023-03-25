@@ -237,7 +237,17 @@ This parameter must always start with /, which by itself matches all requests to
 * `port`- (Optional) The port number to match from the request.
 * `header` - (Optional) Client request headers to match on.
 * `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+* `query_parameter` - (Optional) Client request query parameters to match on.
 * `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
+
+The `match`'s `query_parameter` object supports the following:
+
+* `name` - (Required) Name for the query parameter that will be matched on.
+* `match` - (Optional) The query parameter to match on.
+
+The `query_parameter`'s `match` object supports the following:
+
+* `exact` - (Optional) The exact query parameter to match on.
 
 The `http2_route` and `http_route`'s `retry_policy` object supports the following:
 

@@ -221,6 +221,35 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Required:     true,
 									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
 								},
+								"query_parameter": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 10,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"match": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:     schema.TypeString,
+															Optional: true,
+														},
+													},
+												},
+											},
+											"name": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+										},
+									},
+								},
+
 								"scheme": {
 									Type:         schema.TypeString,
 									Optional:     true,
