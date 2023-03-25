@@ -42,6 +42,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"grpcRouteEmptyMatch":              testAccRoute_grpcRouteEmptyMatch,
 			"grpcRouteTimeout":                 testAccRoute_grpcRouteTimeout,
 			"http2Route":                       testAccRoute_http2Route,
+			"http2RouteWithPathMatch":          testAccRoute_http2RouteWithPathMatch,
 			"http2RouteWithPortMatch":          testAccRoute_http2RouteWithPortMatch,
 			"http2RouteTimeout":                testAccRoute_http2RouteTimeout,
 			"httpHeader":                       testAccRoute_httpHeader,

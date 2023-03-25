@@ -643,7 +643,10 @@ func testAccRoute_http2Route(t *testing.T) {
 						"name":    "X-Testing1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.scheme", "http"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.http_retry_events.#", "1"),
@@ -704,6 +707,73 @@ func testAccRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.*", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccRoute_http2RouteWithPathMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteConfig_http2RouteWithPathMatch(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.weighted_target.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.scheme", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.0.exact", "/test"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.path.0.regex", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.query_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.http_retry_events.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.http_retry_events.*", "server-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.max_retries", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "15"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
@@ -983,6 +1053,8 @@ func testAccRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.query_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
@@ -2681,6 +2753,50 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.test1.name
           weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccRouteConfig_http2RouteWithPathMatch(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return acctest.ConfigCompose(testAccRouteConfig_base(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
+
+  spec {
+    http2_route {
+      match {
+        method = "POST"
+        scheme = "http"
+
+        path {
+          exact = "/test"
+		}
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = aws_appmesh_virtual_node.test1.name
+          weight       = 100
+          port         = 8080
         }
       }
     }

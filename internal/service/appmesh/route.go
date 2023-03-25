@@ -211,6 +211,26 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
 								},
+								"path": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"exact": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+											"regex": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+										},
+									},
+								},
 								"port": {
 									Type:         schema.TypeInt,
 									Optional:     true,
@@ -218,7 +238,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								},
 								"prefix": {
 									Type:         schema.TypeString,
-									Required:     true,
+									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
 								},
 								"query_parameter": {

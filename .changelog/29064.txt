@@ -15,5 +15,9 @@ resource/aws_appmesh_virtual_node: Add `ip_preference` and `response_type` to th
 ```
 
 ```release-note:enhancement
-resource/aws_appmesh_gateway_route: Add `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks
+resource/aws_appmesh_gateway_route: Add `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: `spec.http_route.match.prefix` and `spec.http2_route.match.prefix` are Optional
 ```

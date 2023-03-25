@@ -381,15 +381,14 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		if vMethod, ok := mHttpRouteMatch["method"].(string); ok && vMethod != "" {
 			httpRouteMatch.Method = aws.String(vMethod)
 		}
+		if vPort, ok := mHttpRouteMatch["port"].(int); ok && vPort > 0 {
+			httpRouteMatch.Port = aws.Int64(int64(vPort))
+		}
 		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
 			httpRouteMatch.Prefix = aws.String(vPrefix)
 		}
 		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
 			httpRouteMatch.Scheme = aws.String(vScheme)
-		}
-
-		if vPort, ok := mHttpRouteMatch["port"].(int); ok && vPort > 0 {
-			httpRouteMatch.Port = aws.Int64(int64(vPort))
 		}
 
 		if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
@@ -443,6 +442,21 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			}
 
 			httpRouteMatch.Headers = httpRouteHeaders
+		}
+
+		if vHttpRoutePath, ok := mHttpRouteMatch["path"].([]interface{}); ok && len(vHttpRoutePath) > 0 && vHttpRoutePath[0] != nil {
+			httpRoutePath := &appmesh.HttpPathMatch{}
+
+			mHttpRoutePath := vHttpRoutePath[0].(map[string]interface{})
+
+			if vExact, ok := mHttpRoutePath["exact"].(string); ok && vExact != "" {
+				httpRoutePath.Exact = aws.String(vExact)
+			}
+			if vRegex, ok := mHttpRoutePath["regex"].(string); ok && vRegex != "" {
+				httpRoutePath.Regex = aws.String(vRegex)
+			}
+
+			httpRouteMatch.Path = httpRoutePath
 		}
 
 		if vHttpRouteQueryParameters, ok := mHttpRouteMatch["query_parameter"].(*schema.Set); ok && vHttpRouteQueryParameters.Len() > 0 {
@@ -1442,6 +1456,17 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 			vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
 		}
 
+		vHttpRoutePath := []interface{}{}
+
+		if httpRoutePath := httpRouteMatch.Path; httpRoutePath != nil {
+			mHttpRoutePath := map[string]interface{}{
+				"exact": aws.StringValue(httpRoutePath.Exact),
+				"regex": aws.StringValue(httpRoutePath.Regex),
+			}
+
+			vHttpRoutePath = []interface{}{mHttpRoutePath}
+		}
+
 		vHttpRouteQueryParameters := []interface{}{}
 
 		for _, httpRouteQueryParameter := range httpRouteMatch.QueryParameters {
@@ -1464,10 +1489,11 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 			map[string]interface{}{
 				"header":          vHttpRouteHeaders,
 				"method":          aws.StringValue(httpRouteMatch.Method),
-				"prefix":          aws.StringValue(httpRouteMatch.Prefix),
-				"scheme":          aws.StringValue(httpRouteMatch.Scheme),
+				"path":            vHttpRoutePath,
 				"port":            int(aws.Int64Value(httpRouteMatch.Port)),
+				"prefix":          aws.StringValue(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
+				"scheme":          aws.StringValue(httpRouteMatch.Scheme),
 			},
 		}
 	}
