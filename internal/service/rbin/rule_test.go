@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -52,10 +51,9 @@ func TestAccRBinRule_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -96,9 +94,8 @@ func TestAccRBinRule_tags(t *testing.T) {
 	}
 
 	var rule rbin.GetRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rbin_rule.test"
 	resourceType := "EBS_SNAPSHOT"
+	resourceName := "aws_rbin_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -110,7 +107,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(rName, resourceType),
+				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -123,7 +120,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleConfigTags2(resourceType, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -132,7 +129,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleConfig_basic(rName, resourceType),
+				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -211,16 +208,33 @@ resource "aws_rbin_rule" "test" {
     retention_period_value = 10
     retention_period_unit  = "DAYS"
   }
-
-  tags = {
-    "key1" = "value1"
-  }
-
 }
 `, description, resourceType)
 }
 
-func testAccConfigTags2(resourceType, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccRuleConfigTags1(resourceType, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_rbin_rule" "test" {
+  resource_type = %[1]q
+
+  resource_tags {
+    resource_tag_key   = "some_tag"
+    resource_tag_value = ""
+  }
+
+  retention_period {
+    retention_period_value = 10
+    retention_period_unit  = "DAYS"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, resourceType, tag1Key, tag1Value)
+}
+
+func testAccRuleConfigTags2(resourceType, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_rbin_rule" "test" {
   resource_type = %[1]q
@@ -239,7 +253,6 @@ resource "aws_rbin_rule" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
-
 }
 `, resourceType, tag1Key, tag1Value, tag2Key, tag2Value)
 }

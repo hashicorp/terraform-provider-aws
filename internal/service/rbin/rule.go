@@ -49,7 +49,7 @@ func ResourceRule() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			"identifier": {
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,6 @@ func ResourceRule() *schema.Resource {
 			"retention_period": {
 				Type:     schema.TypeList,
 				Required: true,
-				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -98,6 +97,42 @@ func ResourceRule() *schema.Resource {
 						},
 					},
 				},
+			},
+			"lock_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"unlock_delay": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unlock_delay_unit": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(0, 127),
+									},
+									"unlock_delay_value": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 365),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"lock_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"lock_end_time": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -119,9 +154,12 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).RBinClient()
 
 	in := &rbin.CreateRuleInput{
-		Description:     aws.String(d.Get("description").(string)),
 		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
-		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").(*schema.Set).List()),
+		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+	}
+
+	if _, ok := d.GetOk("description"); ok {
+		in.Description = aws.String(d.Get("description").(string))
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
@@ -137,11 +175,11 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("identifier").(string), err)
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("identifier").(string), errors.New("empty output"))
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Identifier))
@@ -159,7 +197,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	out, err := findRuleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RBin RBinRule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] RBin Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -169,7 +207,6 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("description", out.Description)
-	d.Set("identifier", out.Identifier)
 	d.Set("resource_type", string(out.ResourceType))
 	d.Set("status", string(out.Status))
 
@@ -229,8 +266,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("retention_period") {
-		tfMap := d.Get("retention_period").(*schema.Set).List()
-		in.RetentionPeriod = expandRetentionPeriod(tfMap)
+		in.RetentionPeriod = expandRetentionPeriod(d.Get("retention_period").([]interface{}))
 		update = true
 	}
 
@@ -238,7 +274,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	log.Printf("[DEBUG] Updating RBin RBinRule (%s): %#v", d.Id(), in)
+	log.Printf("[DEBUG] Updating RBin Rule (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateRule(ctx, in)
 	if err != nil {
 		return create.DiagError(names.RBin, create.ErrActionUpdating, ResNameRule, d.Id(), err)
@@ -252,7 +288,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO] Deleting RBin RBinRule %s", d.Id())
+	log.Printf("[INFO] Deleting RBin Rule %s", d.Id())
 
 	conn := meta.(*conns.AWSClient).RBinClient()
 
@@ -266,7 +302,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return create.DiagError(names.Comprehend, create.ErrActionDeleting, ResNameRule, d.Id(), err)
+		return create.DiagError(names.RBin, create.ErrActionDeleting, ResNameRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
