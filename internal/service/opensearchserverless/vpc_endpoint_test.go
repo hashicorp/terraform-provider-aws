@@ -23,16 +23,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	ctx := acctest.Context(t)
 	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,16 +59,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	ctx := acctest.Context(t)
 	var vpcendpoint1, vpcendpoint2, vpcendpoint3 opensearchserverless.BatchGetVpcEndpointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -113,16 +113,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	ctx := acctest.Context(t)
 	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -132,7 +132,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearchserverless.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceVPCEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,9 +193,8 @@ func testAccCheckVPCEndpointExists(name string, vpcendpoint *opensearchserverles
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
 
 	input := &opensearchserverless.ListVpcEndpointsInput{}
 	_, err := conn.ListVpcEndpoints(ctx, input)
