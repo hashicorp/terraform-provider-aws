@@ -26,7 +26,7 @@ func TestAccSNSTopicDataProtectionPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
@@ -55,13 +55,13 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +88,7 @@ func testAccCheckTopicDataProtectionPolicyDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			return fmt.Errorf("SNS Topic Policy %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SNS Data Protection Topic Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
