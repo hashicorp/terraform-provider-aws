@@ -2776,7 +2776,7 @@ resource "aws_appmesh_route" "test" {
 
         path {
           exact = "/test"
-		}
+        }
       }
 
       retry_policy {
