@@ -18,29 +18,29 @@ resource "aws_sns_topic" "example" {
 }
 
 resource "aws_sns_topic_data_protection_policy" "example" {
-    arn = aws_sns_topic.example.arn
-    policy = <<POLICY
-{
-  "Name": "__default_data_protection_policy",
-  "Description": "Default data protection policy",
-  "Version": "2021-06-01",
-  "Statement": [
+  arn = aws_sns_topic.example.arn
+  policy = jsonencode(
     {
-      "Sid": "__deny_statement_11ba9d96",
-      "DataDirection": "Inbound",
-      "Principal": [
-        "*"
-      ],
-      "DataIdentifier": [
-        "arn:aws:dataprotection::aws:data-identifier/EmailAddress"
-      ],
-      "Operation": {
-        "Deny": {}
-      }
+      "Description" = "Example data protection policy"
+      "Name"        = "__example_data_protection_policy"
+      "Statement" = [
+        {
+          "DataDirection" = "Inbound"
+          "DataIdentifier" = [
+            "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+          ]
+          "Operation" = {
+            "Deny" = {}
+          }
+          "Principal" = [
+            "*",
+          ]
+          "Sid" = "__deny_statement_11ba9d96"
+        },
+      ]
+      "Version" = "2021-06-01"
     }
-  ]
-}
-POLICY
+  )
 }
 ```
 
