@@ -87,6 +87,180 @@ func ResourceGatewayRoute() *schema.Resource {
 }
 
 func resourceGatewayRouteSpecSchema() *schema.Schema {
+	// httpRouteSchema returns the schema for `http_route` and `http2_route` attributes.
+	httpRouteSchema := func(attrName string) *schema.Schema {
+		return &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MinItems: 0,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"action": {
+						Type:     schema.TypeList,
+						Required: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"target": {
+									Type:     schema.TypeList,
+									Required: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"port": {
+												Type:         schema.TypeInt,
+												Optional:     true,
+												ValidateFunc: validation.IsPortNumber,
+											},
+											"virtual_service": {
+												Type:     schema.TypeList,
+												Required: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"virtual_service_name": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+								"rewrite": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"hostname": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_target_hostname": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+												},
+											},
+											"prefix": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_prefix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+														"value": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"match": {
+						Type:     schema.TypeList,
+						Required: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"hostname": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"exact": {
+												Type:     schema.TypeString,
+												Optional: true,
+												ExactlyOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.exact", attrName),
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.suffix", attrName),
+												},
+											},
+											"suffix": {
+												Type:     schema.TypeString,
+												Optional: true,
+												ExactlyOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.exact", attrName),
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.suffix", attrName),
+												},
+											},
+										},
+									},
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+									},
+								},
+								"port": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									ValidateFunc: validation.IsPortNumber,
+								},
+								"prefix": {
+									Type:         schema.TypeString,
+									Optional:     true,
+									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			ExactlyOneOf: []string{
+				"spec.0.grpc_route",
+				"spec.0.http2_route",
+				"spec.0.http_route",
+			},
+		}
+	}
+
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -168,346 +342,8 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						"spec.0.http_route",
 					},
 				},
-				"http_route": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 0,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"action": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"target": {
-											Type:     schema.TypeList,
-											Required: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"port": {
-														Type:         schema.TypeInt,
-														Optional:     true,
-														ValidateFunc: validation.IsPortNumber,
-													},
-													"virtual_service": {
-														Type:     schema.TypeList,
-														Required: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"virtual_service_name": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-										"rewrite": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"hostname": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"default_target_hostname": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																},
-															},
-														},
-														AtLeastOneOf: []string{
-															"spec.0.http_route.0.action.0.rewrite.0.prefix",
-															"spec.0.http_route.0.action.0.rewrite.0.hostname",
-														},
-													},
-													"prefix": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"default_prefix": {
-																	Type:         schema.TypeString,
-																	Optional:     true,
-																	ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																	ExactlyOneOf: []string{
-																		"spec.0.http_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																		"spec.0.http_route.0.action.0.rewrite.0.prefix.0.value",
-																	},
-																},
-																"value": {
-																	Type:         schema.TypeString,
-																	Optional:     true,
-																	ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-																	ExactlyOneOf: []string{
-																		"spec.0.http_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																		"spec.0.http_route.0.action.0.rewrite.0.prefix.0.value",
-																	},
-																},
-															},
-														},
-														AtLeastOneOf: []string{
-															"spec.0.http_route.0.action.0.rewrite.0.prefix",
-															"spec.0.http_route.0.action.0.rewrite.0.hostname",
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							"match": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"hostname": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"exact": {
-														Type:     schema.TypeString,
-														Optional: true,
-														ExactlyOneOf: []string{
-															"spec.0.http_route.0.match.0.hostname.0.exact",
-															"spec.0.http_route.0.match.0.hostname.0.suffix",
-														},
-													},
-													"suffix": {
-														Type:     schema.TypeString,
-														Optional: true,
-														ExactlyOneOf: []string{
-															"spec.0.http_route.0.match.0.hostname.0.exact",
-															"spec.0.http_route.0.match.0.hostname.0.suffix",
-														},
-													},
-												},
-											},
-											AtLeastOneOf: []string{
-												"spec.0.http_route.0.match.0.prefix",
-												"spec.0.http_route.0.match.0.hostname",
-											},
-										},
-										"port": {
-											Type:         schema.TypeInt,
-											Optional:     true,
-											ValidateFunc: validation.IsPortNumber,
-										},
-										"prefix": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-											AtLeastOneOf: []string{
-												"spec.0.http_route.0.match.0.prefix",
-												"spec.0.http_route.0.match.0.hostname",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					ExactlyOneOf: []string{
-						"spec.0.grpc_route",
-						"spec.0.http2_route",
-						"spec.0.http_route",
-					},
-				},
-				"http2_route": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 0,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"action": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"target": {
-											Type:     schema.TypeList,
-											Required: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"port": {
-														Type:         schema.TypeInt,
-														Optional:     true,
-														ValidateFunc: validation.IsPortNumber,
-													},
-													"virtual_service": {
-														Type:     schema.TypeList,
-														Required: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"virtual_service_name": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringLenBetween(1, 255),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-										"rewrite": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"hostname": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"default_target_hostname": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																},
-															},
-														},
-														AtLeastOneOf: []string{
-															"spec.0.http2_route.0.action.0.rewrite.0.prefix",
-															"spec.0.http2_route.0.action.0.rewrite.0.hostname",
-														},
-													},
-													"prefix": {
-														Type:     schema.TypeList,
-														Optional: true,
-														MinItems: 1,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"default_prefix": {
-																	Type:         schema.TypeString,
-																	Optional:     true,
-																	ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																	ExactlyOneOf: []string{
-																		"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																		"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.value",
-																	},
-																},
-																"value": {
-																	Type:         schema.TypeString,
-																	Optional:     true,
-																	ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-																	ExactlyOneOf: []string{
-																		"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																		"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.value",
-																	},
-																},
-															},
-														},
-														AtLeastOneOf: []string{
-															"spec.0.http2_route.0.action.0.rewrite.0.prefix",
-															"spec.0.http2_route.0.action.0.rewrite.0.hostname",
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							"match": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"prefix": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-											AtLeastOneOf: []string{
-												"spec.0.http2_route.0.match.0.prefix",
-												"spec.0.http2_route.0.match.0.hostname",
-											},
-										},
-										"hostname": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MinItems: 1,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"exact": {
-														Type:     schema.TypeString,
-														Optional: true,
-														ExactlyOneOf: []string{
-															"spec.0.http2_route.0.match.0.hostname.0.exact",
-															"spec.0.http2_route.0.match.0.hostname.0.suffix",
-														},
-													},
-													"suffix": {
-														Type:     schema.TypeString,
-														Optional: true,
-														ExactlyOneOf: []string{
-															"spec.0.http2_route.0.match.0.hostname.0.exact",
-															"spec.0.http2_route.0.match.0.hostname.0.suffix",
-														},
-													},
-												},
-											},
-											AtLeastOneOf: []string{
-												"spec.0.http2_route.0.match.0.prefix",
-												"spec.0.http2_route.0.match.0.hostname",
-											},
-										},
-										"port": {
-											Type:         schema.TypeInt,
-											Optional:     true,
-											ValidateFunc: validation.IsPortNumber,
-										},
-									},
-								},
-							},
-						},
-					},
-					ExactlyOneOf: []string{
-						"spec.0.grpc_route",
-						"spec.0.http2_route",
-						"spec.0.http_route",
-					},
-				},
+				"http_route":  httpRouteSchema("http_route"),
+				"http2_route": httpRouteSchema("http2_route"),
 				"priority": {
 					Type:         schema.TypeInt,
 					Optional:     true,
