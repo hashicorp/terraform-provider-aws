@@ -93,8 +93,8 @@ func resourceVirtualRouterSpecSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"listener": {
 					Type:     schema.TypeList,
-					Required: true,
-					MinItems: 1,
+					Optional: true,
+					MinItems: 0,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"port_mapping": {

@@ -25,3 +25,7 @@ resource/aws_appmesh_route: `spec.http_route.match.prefix` and `spec.http2_route
 ```release-note:enhancement
 resource/aws_appmesh_gateway_route: Add `header`, `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks
 ```
+
+```release-note:bug
+resource/aws_appmesh_virtual_router: `spec.listener` is Optional
+```
