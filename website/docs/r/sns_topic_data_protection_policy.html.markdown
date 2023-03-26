@@ -14,7 +14,7 @@ Provides an SNS data protection topic policy resource
 
 ```terraform
 resource "aws_sns_topic" "example" {
-    name = "example"
+  name = "example"
 }
 
 resource "aws_sns_topic_data_protection_policy" "example" {
