@@ -97,6 +97,8 @@ func testAccCheckTopicDataProtectionPolicyDestroy(ctx context.Context) resource.
 
 func testAccTopicDataProtectionPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -111,7 +113,7 @@ resource "aws_sns_topic_data_protection_policy" "test" {
         {
           "DataDirection" = "Inbound"
           "DataIdentifier" = [
-            "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+            "arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress",
           ]
           "Operation" = {
             "Deny" = {}
