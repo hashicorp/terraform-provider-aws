@@ -261,6 +261,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"enable_ssm_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -372,6 +377,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 									},
 								},
 							},
+						},
+						"enable_ssm_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
 						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
@@ -641,6 +651,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
 		}
 
+		if v, ok := data["enable_ssm_access"].(bool); ok {
+			l.EnableSSMAccess = aws.Bool(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -684,6 +698,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.CoreDumpConfig != nil {
 			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
+		}
+
+		if i.EnableSSMAccess != nil {
+			l["enable_ssm_access"] = aws.BoolValue(i.EnableSSMAccess)
 		}
 
 		result = append(result, l)
