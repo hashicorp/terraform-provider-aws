@@ -20,7 +20,7 @@ func DataSourceSink() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -29,6 +29,10 @@ func DataSourceSink() *schema.Resource {
 			"sink_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"sink_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
@@ -42,11 +46,11 @@ const (
 func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
 
-	arn := d.Get("arn").(string)
+	sinkIdentifier := d.Get("sink_identifier").(string)
 
-	out, err := findSinkByID(ctx, conn, arn)
+	out, err := findSinkByID(ctx, conn, sinkIdentifier)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, arn, err)
+		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, sinkIdentifier, err)
 	}
 
 	d.SetId(aws.ToString(out.Arn))

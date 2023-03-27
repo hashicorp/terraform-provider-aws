@@ -16,7 +16,7 @@ Terraform data source for managing an AWS CloudWatch Observability Access Manage
 
 ```terraform
 data "aws_oam_sink" "example" {
-  arn = "arn:aws:oam:us-west-1:111111111111:sink/abcd1234-a123-456a-a12b-a123b456c789"
+  sink_identifier = "arn:aws:oam:us-west-1:111111111111:sink/abcd1234-a123-456a-a12b-a123b456c789"
 }
 ```
 
@@ -24,12 +24,13 @@ data "aws_oam_sink" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) ARN of the sink.
+* `sink_identifier` - (Required) ARN of the sink.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - ARN of the sink.
 * `name` - Name of the sink.
 * `sink_id` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.

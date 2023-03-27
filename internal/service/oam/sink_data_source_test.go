@@ -35,8 +35,10 @@ func TestAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 				Config: testAccSinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, dataSourceName, &sink),
+					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sink_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "sink_identifier"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
@@ -57,7 +59,7 @@ resource aws_oam_sink "test" {
 }
 
 data aws_oam_sink "test" {
-  arn = aws_oam_sink.test.arn
+  sink_identifier = aws_oam_sink.test.arn
 }
 `, rName)
 }
