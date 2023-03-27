@@ -339,32 +339,42 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("target_type", doc.TargetType)
 	d.Set("version_name", doc.VersionName)
 
-	content, err := findDocumentContentByThreePartKey(ctx, conn, d.Id(), "$LATEST", aws.StringValue(doc.DocumentFormat))
+	{
+		input := &ssm.GetDocumentInput{
+			DocumentFormat:  aws.String(d.Get("document_format").(string)),
+			DocumentVersion: aws.String("$LATEST"),
+			Name:            aws.String(d.Id()),
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
+		output, err := conn.GetDocumentWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
+		}
+
+		d.Set("content", output.Content)
 	}
 
-	d.Set("content", content)
+	{
+		input := &ssm.DescribeDocumentPermissionInput{
+			Name:           aws.String(d.Id()),
+			PermissionType: aws.String(ssm.DocumentPermissionTypeShare),
+		}
 
-	input := &ssm.DescribeDocumentPermissionInput{
-		Name:           aws.String(d.Id()),
-		PermissionType: aws.String(ssm.DocumentPermissionTypeShare),
-	}
+		output, err := conn.DescribeDocumentPermissionWithContext(ctx, input)
 
-	output, err := conn.DescribeDocumentPermissionWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
-	}
-
-	if accountsIDs := aws.StringValueSlice(output.AccountIds); len(accountsIDs) > 0 {
-		d.Set("permissions", map[string]string{
-			"account_ids": strings.Join(accountsIDs, ","),
-			"type":        ssm.DocumentPermissionTypeShare,
-		})
-	} else {
-		d.Set("permissions", nil)
+		if accountsIDs := aws.StringValueSlice(output.AccountIds); len(accountsIDs) > 0 {
+			d.Set("permissions", map[string]string{
+				"account_ids": strings.Join(accountsIDs, ","),
+				"type":        ssm.DocumentPermissionTypeShare,
+			})
+		} else {
+			d.Set("permissions", nil)
+		}
 	}
 
 	tags := KeyValueTags(ctx, doc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -565,33 +575,6 @@ func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.D
 	}
 
 	return output.Document, nil
-}
-
-func findDocumentContentByThreePartKey(ctx context.Context, conn *ssm.SSM, name, version, format string) (string, error) {
-	input := &ssm.GetDocumentInput{
-		DocumentFormat:  aws.String(format),
-		DocumentVersion: aws.String(version),
-		Name:            aws.String(name),
-	}
-
-	output, err := conn.GetDocumentWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
-		return "", &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	if output == nil || output.Content == nil {
-		return "", tfresource.NewEmptyResultError(input)
-	}
-
-	return aws.StringValue(output.Content), nil
 }
 
 func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
