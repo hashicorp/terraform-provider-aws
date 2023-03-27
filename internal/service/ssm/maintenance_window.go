@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_maintenance_window")
@@ -23,70 +24,61 @@ func ResourceMaintenanceWindow() *schema.Resource {
 		ReadWithoutTimeout:   resourceMaintenanceWindowRead,
 		UpdateWithoutTimeout: resourceMaintenanceWindowUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"schedule": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"duration": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-
-			"cutoff": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-
 			"allow_unassociated_targets": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
+			"cutoff": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"duration": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"end_date": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"schedule_timezone": {
+			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
-
+			"schedule": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"schedule_offset": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 6),
 			},
-
+			"schedule_timezone": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"start_date": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
