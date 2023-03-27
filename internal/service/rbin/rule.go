@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKResource("aws_rbin_rule")
+// @Tags(identifierAttribute="arn")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -43,6 +44,10 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -206,6 +211,15 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
 	}
 
+	ruleArn := awsarn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   rbin.ServiceID,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("rule/%s", aws.ToString(out.Identifier)),
+	}.String()
+	d.Set("arn", ruleArn)
+
 	d.Set("description", out.Description)
 	d.Set("resource_type", string(out.ResourceType))
 	d.Set("status", string(out.Status))
@@ -215,31 +229,6 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
-	}
-
-	c := meta.(*conns.AWSClient)
-	ARN := awsarn.ARN{
-		Partition: c.Partition,
-		Service:   rbin.ServiceID,
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("rule/%s", d.Id()),
-	}
-	tags, err := ListTags(ctx, conn, ARN.String())
-	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 

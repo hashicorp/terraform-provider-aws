@@ -89,15 +89,11 @@ func TestAccRBinRule_disappears(t *testing.T) {
 
 func TestAccRBinRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var rule rbin.GetRuleOutput
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RBin)
