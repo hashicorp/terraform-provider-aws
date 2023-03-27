@@ -6,16 +6,17 @@ on:
   pull_request_target:
     types: [closed]
 
-env:
-  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   RemoveNeedsTriageFromMaintainers:
-    if: github.event.action == 'opened'
+    needs: community_check
+    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer
     runs-on: ubuntu-latest
     steps:
       - name: Remove needs-triage label from member's Issues
-        if: fromJSON(env.IN_MAINTAINER_LIST)
         uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0
         with:
           labels: |
