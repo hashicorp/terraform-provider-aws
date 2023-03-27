@@ -978,7 +978,7 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "ssm_role" {
-  name =%[1]q
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
