@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists cloud9 service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier)
 
@@ -77,7 +79,7 @@ func KeyValueTags(ctx context.Context, tags []*cloud9.Tag) tftags.KeyValueTags {
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*cloud9.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier stri
 	return nil
 }
 
+// UpdateTags updates cloud9 service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).Cloud9Conn(), identifier, oldTags, newTags)
 }

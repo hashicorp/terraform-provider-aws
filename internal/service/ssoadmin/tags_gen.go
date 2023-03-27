@@ -31,6 +31,8 @@ func ListTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier, r
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists ssoadmin service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSOAdminConn(), identifier, resourceType)
 
@@ -78,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []*ssoadmin.Tag) tftags.KeyValueTags
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*ssoadmin.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -132,6 +134,8 @@ func UpdateTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier,
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags, newTags any) error {
+// UpdateTags updates ssoadmin service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).SSOAdminConn(), identifier, resourceType, oldTags, newTags)
 }
