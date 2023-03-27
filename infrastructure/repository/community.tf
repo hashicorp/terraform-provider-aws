@@ -10,7 +10,7 @@ resource "github_actions_secret" "maintainer_list" {
 
 variable "community_list_repo" {
   type        = string
-  description = "The name of the repository containing the lists of users."
+  description = "The name of the repository containing the lists of users. Value set in TFC."
 }
 
 // Core Contributors
