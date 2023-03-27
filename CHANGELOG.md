@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_appmesh_gateway_route` ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * **New Data Source:** `aws_appmesh_virtual_node` ([#27545](https://github.com/hashicorp/terraform-provider-aws/issues/27545))
+* **New Data Source:** `aws_appmesh_virtual_router` ([#26908](https://github.com/hashicorp/terraform-provider-aws/issues/26908))
 * **New Resource:** `aws_sns_topic_data_protection_policy` ([#30008](https://github.com/hashicorp/terraform-provider-aws/issues/30008))
 
 ENHANCEMENTS:
