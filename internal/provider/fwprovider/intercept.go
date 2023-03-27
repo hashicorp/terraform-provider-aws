@@ -304,12 +304,12 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		// Remove system tags.
 		tags = tags.IgnoreAWS()
 
-		tagsInContext.TagsIn = tags
+		tagsInContext.TagsIn = types.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
