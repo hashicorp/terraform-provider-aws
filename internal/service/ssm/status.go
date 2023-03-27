@@ -9,10 +9,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	documentStatusUnknown = "Unknown"
-)
-
 func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAssociationById(ctx, conn, id)

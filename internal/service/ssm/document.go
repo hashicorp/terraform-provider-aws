@@ -2,6 +2,7 @@ package ssm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -262,13 +264,26 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.DocumentDescription.Name))
 
-	if v, ok := d.GetOk("permissions"); ok && v != nil {
-		diags = append(diags, sdkdiag.WrapDiagsf(setDocumentPermissions(ctx, d, meta), "creating SSM document: setting permissions")...)
-		if diags.HasError() {
-			return diags
+	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+
+		if v, ok := tfMap["account_ids"]; ok && v != "" {
+			chunks := slices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
+
+			for _, chunk := range chunks {
+				input := &ssm.ModifyDocumentPermissionInput{
+					AccountIdsToAdd: aws.StringSlice(chunk),
+					Name:            aws.String(d.Id()),
+					PermissionType:  aws.String(ssm.DocumentPermissionTypeShare),
+				}
+
+				_, err := conn.ModifyDocumentPermissionWithContext(ctx, input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "modifying SSM Document (%s) permissions: %s", d.Id(), err)
+				}
+			}
 		}
-	} else {
-		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
 	}
 
 	if _, err := waitDocumentActive(ctx, conn, d.Id()); err != nil {
@@ -284,110 +299,72 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
+	doc, err := FindDocumentByName(ctx, conn, d.Id())
 
-	describeDocumentInput := &ssm.DescribeDocumentInput{
-		Name: aws.String(d.Id()),
-	}
-
-	describeDocumentOutput, err := conn.DescribeDocumentWithContext(ctx, describeDocumentInput)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
-		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Document %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing SSM Document (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
 
-	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
-		return sdkdiag.AppendErrorf(diags, "describing SSM Document (%s): empty result", d.Id())
-	}
-
-	getDocumentInput := &ssm.GetDocumentInput{
-		DocumentFormat:  describeDocumentOutput.Document.DocumentFormat,
-		DocumentVersion: aws.String("$LATEST"),
-		Name:            describeDocumentOutput.Document.Name,
-	}
-
-	getDocumentOutput, err := conn.GetDocumentWithContext(ctx, getDocumentInput)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument, ssm.ErrCodeInvalidDocumentVersion) {
-		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting SSM Document (%s): %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && getDocumentOutput == nil {
-		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	doc := describeDocumentOutput.Document
-
-	d.Set("content", getDocumentOutput.Content)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ssm",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("document/%s", aws.StringValue(doc.Name)),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
-	d.Set("schema_version", doc.SchemaVersion)
 	d.Set("document_format", doc.DocumentFormat)
 	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set("version_name", doc.VersionName)
 	d.Set("name", doc.Name)
 	d.Set("owner", doc.Owner)
-	d.Set("platform_types", flex.FlattenStringList(doc.PlatformTypes))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("document/%s", *doc.Name),
-	}.String()
-	if err := d.Set("arn", arn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting arn error: %#v", err)
+	if err := d.Set("parameter", flattenDocumentParameters(doc.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
-
+	d.Set("platform_types", aws.StringValueSlice(doc.PlatformTypes))
+	d.Set("schema_version", doc.SchemaVersion)
 	d.Set("status", doc.Status)
+	d.Set("target_type", doc.TargetType)
+	d.Set("version_name", doc.VersionName)
 
-	gp, err := getDocumentPermissions(ctx, d, meta)
+	content, err := findDocumentContentByThreePartKey(ctx, conn, d.Id(), "$LATEST", aws.StringValue(doc.DocumentFormat))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM document permissions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
 	}
 
-	d.Set("permissions", gp)
+	d.Set("content", content)
 
-	params := make([]map[string]interface{}, 0)
-	for i := 0; i < len(doc.Parameters); i++ {
-		dp := doc.Parameters[i]
-		param := make(map[string]interface{})
-
-		if dp.DefaultValue != nil {
-			param["default_value"] = aws.StringValue(dp.DefaultValue)
-		}
-		if dp.Description != nil {
-			param["description"] = aws.StringValue(dp.Description)
-		}
-		if dp.Name != nil {
-			param["name"] = aws.StringValue(dp.Name)
-		}
-		if dp.Type != nil {
-			param["type"] = aws.StringValue(dp.Type)
-		}
-		params = append(params, param)
+	input := &ssm.DescribeDocumentPermissionInput{
+		Name:           aws.String(d.Id()),
+		PermissionType: aws.String(ssm.DocumentPermissionTypeShare),
 	}
 
-	if err := d.Set("parameter", params); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	output, err := conn.DescribeDocumentPermissionWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
+	}
+
+	if accountsIDs := aws.StringValueSlice(output.AccountIds); len(accountsIDs) > 0 {
+		d.Set("permissions", map[string]string{
+			"account_ids": strings.Join(accountsIDs, ","),
+			"type":        ssm.DocumentPermissionTypeShare,
+		})
+	} else {
+		d.Set("permissions", nil)
 	}
 
 	tags := KeyValueTags(ctx, doc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -399,10 +376,6 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	if err := d.Set("target_type", doc.TargetType); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target type: %s", err)
 	}
 
 	return diags
@@ -497,48 +470,74 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-// FindDocumentByName returns the Document corresponding to the specified name.
 func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
 	input := &ssm.DescribeDocumentInput{
 		Name: aws.String(name),
 	}
 
 	output, err := conn.DescribeDocumentWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || output.Document == nil {
-		return nil, fmt.Errorf("error describing SSM Document (%s): empty result", name)
-	}
-
-	doc := output.Document
-
-	if aws.StringValue(doc.Status) == ssm.DocumentStatusFailed {
-		return nil, fmt.Errorf("Document is in a failed state: %s", aws.StringValue(doc.StatusInformation))
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Document, nil
 }
 
-// statusDocument fetches the Document and its Status
+func findDocumentContentByThreePartKey(ctx context.Context, conn *ssm.SSM, name, version, format string) (string, error) {
+	input := &ssm.GetDocumentInput{
+		DocumentFormat:  aws.String(format),
+		DocumentVersion: aws.String(version),
+		Name:            aws.String(name),
+	}
+
+	output, err := conn.GetDocumentWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
+		return "", &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.Content == nil {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(output.Content), nil
+}
+
 func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDocumentByName(ctx, conn, name)
 
-		if err != nil {
-			return nil, ssm.DocumentStatusFailed, err
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		if output == nil {
-			return output, documentStatusUnknown, nil
+		if err != nil {
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-// waitDocumentActive waits for an Document to return Active
 func waitDocumentActive(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) { //nolint:unparam
 	const (
 		timeout = 2 * time.Minute
@@ -553,13 +552,14 @@ func waitDocumentActive(ctx context.Context, conn *ssm.SSM, name string) (*ssm.D
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusInformation)))
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-// waitDocumentDeleted waits for an Document to return Deleted
 func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
 	const (
 		timeout = 2 * time.Minute
@@ -574,34 +574,12 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusInformation)))
+
 		return output, err
 	}
 
 	return nil, err
-}
-
-func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
-	if len(a) == 0 {
-		return nil
-	}
-
-	results := make([]*ssm.AttachmentsSource, 0)
-	for _, raw := range a {
-		at := raw.(map[string]interface{})
-		s := &ssm.AttachmentsSource{}
-		if val, ok := at["key"]; ok {
-			s.Key = aws.String(val.(string))
-		}
-		if val, ok := at["name"]; ok && val != "" {
-			s.Name = aws.String(val.(string))
-		}
-		if val, ok := at["values"]; ok {
-			s.Values = flex.ExpandStringList(val.([]interface{}))
-		}
-
-		results = append(results, s)
-	}
-	return results
 }
 
 func setDocumentPermissions(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -825,4 +803,96 @@ func updateDocument(ctx context.Context, d *schema.ResourceData, meta interface{
 		return sdkdiag.AppendErrorf(diags, "updating the default document version to that of the updated document: %s", err)
 	}
 	return diags
+}
+
+func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ssm.AttachmentsSource{}
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Values = flex.ExpandStringList(v)
+	}
+
+	return apiObject
+}
+
+func expandAttachmentsSources(tfList []interface{}) []*ssm.AttachmentsSource {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ssm.AttachmentsSource
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandAttachmentsSource(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenDocumentParameter(apiObject *ssm.DocumentParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DefaultValue; v != nil {
+		tfMap["default_value"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenDocumentParameters(apiObjects []*ssm.DocumentParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenDocumentParameter(apiObject))
+	}
+
+	return tfList
 }
