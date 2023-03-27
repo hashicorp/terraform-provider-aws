@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_route")
-func DataSourceRoute() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_router")
+func DataSourceVirtualRouter() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceRouteRead,
+		ReadWithoutTimeout: dataSourceVirtualRouterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -48,42 +48,37 @@ func DataSourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"virtual_router_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 		},
 	}
 }
 
-func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeName := d.Get("name").(string)
-	route, err := FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
+	virtualRouterName := d.Get("name").(string)
+	vr, err := FindVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualRouterName)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Router (%s): %s", virtualRouterName, err)
 	}
 
-	d.SetId(aws.StringValue(route.RouteName))
-	arn := aws.StringValue(route.Metadata.Arn)
+	d.SetId(aws.StringValue(vr.VirtualRouterName))
+	arn := aws.StringValue(vr.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", route.MeshName)
-	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
+	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", vr.MeshName)
+	meshOwner := aws.StringValue(vr.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
+	d.Set("name", vr.VirtualRouterName)
+	d.Set("resource_owner", vr.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
-	d.Set("virtual_router_name", route.VirtualRouterName)
 
 	// https://docs.aws.amazon.com/app-mesh/latest/userguide/sharing.html#sharing-permissions
 	// Owners and consumers can list tags and can tag/untag resources in a mesh that the account created.
@@ -94,7 +89,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 		tags, err = ListTags(ctx, conn, arn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Router (%s): %s", arn, err)
 		}
 	}
 

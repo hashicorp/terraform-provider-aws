@@ -83,7 +83,7 @@ func testAccMeshDataSource_specAndTagsSet(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_specAndTagsSet(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
@@ -117,7 +117,7 @@ func testAccMeshDataSource_shared(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_shared(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),

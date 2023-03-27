@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_route")
-func DataSourceRoute() *schema.Resource {
+// @SDKDataSource("aws_appmesh_gateway_route")
+func DataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceRouteRead,
+		ReadWithoutTimeout: dataSourceGatewayRouteRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -48,9 +48,9 @@ func DataSourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"virtual_router_name": {
+			"virtual_gateway_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,32 +58,32 @@ func DataSourceRoute() *schema.Resource {
 	}
 }
 
-func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeName := d.Get("name").(string)
-	route, err := FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
+	gatewayRouteName := d.Get("name").(string)
+	gatewayRoute, err := FindGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", gatewayRouteName, err)
 	}
 
-	d.SetId(aws.StringValue(route.RouteName))
-	arn := aws.StringValue(route.Metadata.Arn)
+	d.SetId(aws.StringValue(gatewayRoute.GatewayRouteName))
+	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("mesh_name", route.MeshName)
-	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
+	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", gatewayRoute.MeshName)
+	meshOwner := aws.StringValue(gatewayRoute.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
-	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
+	d.Set("name", gatewayRoute.GatewayRouteName)
+	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
-	d.Set("virtual_router_name", route.VirtualRouterName)
+	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
 	// https://docs.aws.amazon.com/app-mesh/latest/userguide/sharing.html#sharing-permissions
 	// Owners and consumers can list tags and can tag/untag resources in a mesh that the account created.
@@ -94,7 +94,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 		tags, err = ListTags(ctx, conn, arn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Route (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Gateway Route (%s): %s", arn, err)
 		}
 	}
 

@@ -946,6 +946,16 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.NoZeroValues,
 										},
+										"ip_preference": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.IpPreference_Values(), false),
+										},
+										"response_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DnsResponseType_Values(), false),
+										},
 									},
 								},
 							},
