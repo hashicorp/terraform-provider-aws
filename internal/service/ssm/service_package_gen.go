@@ -65,6 +65,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDocument,
 			TypeName: "aws_ssm_document",
+			Name:     "Document",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Document",
+			},
 		},
 		{
 			Factory:  ResourceMaintenanceWindow,

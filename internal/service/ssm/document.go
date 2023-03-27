@@ -32,7 +32,8 @@ const (
 	documentPermissionsBatchLimit = 20
 )
 
-// @SDKResource("aws_ssm_document")
+// @SDKResource("aws_ssm_document", name="Document")
+// @Tags(identifierAttribute="id", resourceType="Document")
 func ResourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,
@@ -247,8 +248,6 @@ func ResourceDocument() *schema.Resource {
 func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateDocumentInput{
@@ -256,10 +255,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 		Name:           aws.String(name),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
@@ -314,8 +310,6 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	doc, err := FindDocumentByName(ctx, conn, d.Id())
 
@@ -395,16 +389,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	tags := KeyValueTags(ctx, doc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, doc.Tags)
 
 	return diags
 }
@@ -510,14 +495,6 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if _, err := waitDocumentActive(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Document (%s) tags: %s", d.Id(), err)
 		}
 	}
 
