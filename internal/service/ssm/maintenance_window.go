@@ -91,44 +91,46 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &ssm.CreateMaintenanceWindowInput{
+	name := d.Get("name").(string)
+	input := &ssm.CreateMaintenanceWindowInput{
 		AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
 		Cutoff:                   aws.Int64(int64(d.Get("cutoff").(int))),
 		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
-		Name:                     aws.String(d.Get("name").(string)),
+		Name:                     aws.String(name),
 		Schedule:                 aws.String(d.Get("schedule").(string)),
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("end_date"); ok {
-		params.EndDate = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("schedule_timezone"); ok {
-		params.ScheduleTimezone = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("schedule_offset"); ok {
-		params.ScheduleOffset = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("start_date"); ok {
-		params.StartDate = aws.String(v.(string))
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateMaintenanceWindowWithContext(ctx, params)
+	if v, ok := d.GetOk("end_date"); ok {
+		input.EndDate = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedule_offset"); ok {
+		input.ScheduleOffset = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("schedule_timezone"); ok {
+		input.ScheduleTimezone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("start_date"); ok {
+		input.StartDate = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateMaintenanceWindowWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSM Maintenance Window: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM Maintenance Window (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.WindowId))
+	d.SetId(aws.StringValue(output.WindowId))
 
 	if !d.Get("enabled").(bool) {
 		input := &ssm.UpdateMaintenanceWindowInput{
@@ -137,6 +139,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		_, err := conn.UpdateMaintenanceWindowWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling SSM Maintenance Window (%s): %s", d.Id(), err)
 		}
