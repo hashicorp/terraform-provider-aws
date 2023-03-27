@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identifie
 	return KeyValueTags(ctx, output.Tags.Items), nil
 }
 
+// ListTags lists cloudfront service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 	return nil
 }
 
+// UpdateTags updates cloudfront service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier, oldTags, newTags)
 }

@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn glueiface.GlueAPI, identifier string) (t
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists glue service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GlueConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn glueiface.GlueAPI, identifier string, 
 	return nil
 }
 
+// UpdateTags updates glue service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).GlueConn(), identifier, oldTags, newTags)
 }

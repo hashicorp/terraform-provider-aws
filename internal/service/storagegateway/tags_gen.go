@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, i
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists storagegateway service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI,
 	return nil
 }
 
+// UpdateTags updates storagegateway service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier, oldTags, newTags)
 }

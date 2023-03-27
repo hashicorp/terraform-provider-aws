@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn amplifyiface.AmplifyAPI, identifier stri
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists amplify service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AmplifyConn(), identifier)
 
@@ -112,6 +114,8 @@ func UpdateTags(ctx context.Context, conn amplifyiface.AmplifyAPI, identifier st
 	return nil
 }
 
+// UpdateTags updates amplify service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).AmplifyConn(), identifier, oldTags, newTags)
 }

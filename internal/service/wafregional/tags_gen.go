@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identif
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
 }
 
+// ListTags lists wafregional service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, ident
 	return nil
 }
 
+// UpdateTags updates wafregional service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(), identifier, oldTags, newTags)
 }

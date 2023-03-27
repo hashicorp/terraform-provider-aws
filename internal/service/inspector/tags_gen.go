@@ -29,6 +29,8 @@ func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier 
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists inspector service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier)
 

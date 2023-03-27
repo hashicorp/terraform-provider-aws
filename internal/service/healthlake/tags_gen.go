@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn *healthlake.Client, identifier string) (
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists healthlake service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).HealthLakeClient(), identifier)
 
@@ -128,6 +130,8 @@ func UpdateTags(ctx context.Context, conn *healthlake.Client, identifier string,
 	return nil
 }
 
+// UpdateTags updates healthlake service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).HealthLakeClient(), identifier, oldTags, newTags)
 }

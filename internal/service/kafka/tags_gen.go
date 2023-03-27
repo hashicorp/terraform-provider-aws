@@ -81,6 +81,8 @@ func UpdateTags(ctx context.Context, conn kafkaiface.KafkaAPI, identifier string
 	return nil
 }
 
+// UpdateTags updates kafka service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).KafkaConn(), identifier, oldTags, newTags)
 }

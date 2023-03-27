@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, ident
 	return KeyValueTags(ctx, output.ResourceTags), nil
 }
 
+// ListTags lists ce service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CEConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, ide
 	return nil
 }
 
+// UpdateTags updates ce service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).CEConn(), identifier, oldTags, newTags)
 }

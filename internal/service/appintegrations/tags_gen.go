@@ -81,6 +81,8 @@ func UpdateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 	return nil
 }
 
+// UpdateTags updates appintegrations service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).AppIntegrationsConn(), identifier, oldTags, newTags)
 }

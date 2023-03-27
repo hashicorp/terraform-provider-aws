@@ -29,6 +29,8 @@ func ListTags(ctx context.Context, conn *fis.Client, identifier string) (tftags.
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists fis service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).FISClient(), identifier)
 
@@ -110,6 +112,8 @@ func UpdateTags(ctx context.Context, conn *fis.Client, identifier string, oldTag
 	return nil
 }
 
+// UpdateTags updates fis service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).FISClient(), identifier, oldTags, newTags)
 }

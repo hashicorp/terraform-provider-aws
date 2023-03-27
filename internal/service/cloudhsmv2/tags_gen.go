@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identifie
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+// ListTags lists cloudhsmv2 service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudHSMV2Conn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identif
 	return nil
 }
 
+// UpdateTags updates cloudhsmv2 service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudHSMV2Conn(), identifier, oldTags, newTags)
 }

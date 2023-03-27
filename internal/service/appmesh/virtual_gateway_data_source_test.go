@@ -60,6 +60,10 @@ resource "aws_appmesh_virtual_gateway" "test" {
       }
     }
   }
+
+  tags = {
+    Name = %[2]q
+  }
 }
 
 data "aws_appmesh_virtual_gateway" "test" {

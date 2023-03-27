@@ -1175,7 +1175,7 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName))
 }
 
-func testAccManagedUserPoolClientConfig_analyticsARN(rName string) string { //nolint: unused // used in a skipped test
+func testAccManagedUserPoolClientConfig_analyticsARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientAnalyticsBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1194,7 +1194,7 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName))
 }
 
-func testAccManagedUserPoolClientConfig_analyticsARNShareData(rName string, share bool) string { //nolint: unused // used in a skipped test
+func testAccManagedUserPoolClientConfig_analyticsARNShareData(rName string, share bool) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientAnalyticsBaseConfig(rName),
 		fmt.Sprintf(`

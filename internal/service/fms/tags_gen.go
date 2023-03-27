@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
+// ListTags lists fms service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).FMSConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string, ol
 	return nil
 }
 
+// UpdateTags updates fms service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).FMSConn(), identifier, oldTags, newTags)
 }

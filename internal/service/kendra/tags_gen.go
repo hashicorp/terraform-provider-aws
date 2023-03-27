@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn *kendra.Client, identifier string) (tfta
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists kendra service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KendraClient(), identifier)
 
@@ -128,6 +130,8 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 	return nil
 }
 
+// UpdateTags updates kendra service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).KendraClient(), identifier, oldTags, newTags)
 }

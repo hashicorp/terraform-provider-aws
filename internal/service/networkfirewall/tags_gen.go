@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn networkfirewalliface.NetworkFirewallAPI,
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists networkfirewall service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).NetworkFirewallConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn networkfirewalliface.NetworkFirewallAP
 	return nil
 }
 
+// UpdateTags updates networkfirewall service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).NetworkFirewallConn(), identifier, oldTags, newTags)
 }

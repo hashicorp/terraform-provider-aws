@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAP
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists ds service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).DSConn(), identifier)
 
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	return nil
 }
 
+// UpdateTags updates ds service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).DSConn(), identifier, oldTags, newTags)
 }

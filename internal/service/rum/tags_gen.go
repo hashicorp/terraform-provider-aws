@@ -81,6 +81,8 @@ func UpdateTags(ctx context.Context, conn cloudwatchrumiface.CloudWatchRUMAPI, i
 	return nil
 }
 
+// UpdateTags updates rum service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).RUMConn(), identifier, oldTags, newTags)
 }
