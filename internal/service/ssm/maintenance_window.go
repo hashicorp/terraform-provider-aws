@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssm_maintenance_window")
+// @SDKResource("aws_ssm_maintenance_window", name="Maintenance Window")
+// @Tags(identifierAttribute="id", resourceType="MaintenanceWindow")
 func ResourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowCreate,
@@ -90,8 +91,6 @@ func ResourceMaintenanceWindow() *schema.Resource {
 func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateMaintenanceWindowInput{
@@ -100,10 +99,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
 		Name:                     aws.String(name),
 		Schedule:                 aws.String(d.Get("schedule").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -153,8 +149,6 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindMaintenanceWindowsByID(ctx, conn, d.Id())
 
@@ -179,23 +173,6 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("schedule_offset", output.ScheduleOffset)
 	d.Set("schedule_timezone", output.ScheduleTimezone)
 	d.Set("start_date", output.StartDate)
-
-	tags, err := ListTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -242,14 +219,6 @@ func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
 		}
 	}
 
