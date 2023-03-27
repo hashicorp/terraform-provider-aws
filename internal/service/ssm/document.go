@@ -142,19 +142,19 @@ func ResourceDocument() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"default_value": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"description": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"type": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -217,6 +217,24 @@ func ResourceDocument() *schema.Resource {
 
 					if _, ok := tfMap["account_ids"]; !ok {
 						return fmt.Errorf("%q: \"account_ids\" must be defined", "permissions")
+					}
+				}
+
+				if d.HasChange("content") {
+					if err := d.SetNewComputed("default_version"); err != nil {
+						return err
+					}
+					if err := d.SetNewComputed("document_version"); err != nil {
+						return err
+					}
+					if err := d.SetNewComputed("hash"); err != nil {
+						return err
+					}
+					if err := d.SetNewComputed("latest_version"); err != nil {
+						return err
+					}
+					if err := d.SetNewComputed("parameter"); err != nil {
+						return err
 					}
 				}
 
