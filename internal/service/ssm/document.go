@@ -244,7 +244,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	if v, ok := d.GetOk("attachments_source"); ok {
+	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
 		input.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
@@ -385,39 +385,111 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 
+	if d.HasChange("permissions") {
+		var oldAccountIDs, newAccountIDs flex.Set[string]
+		o, n := d.GetChange("permissions")
+
+		if v := o.(map[string]interface{}); len(v) > 0 {
+			tfMap := flex.ExpandStringValueMap(v)
+
+			if v, ok := tfMap["account_ids"]; ok && v != "" {
+				oldAccountIDs = strings.Split(v, ",")
+			}
+		}
+
+		if v := n.(map[string]interface{}); len(v) > 0 {
+			tfMap := flex.ExpandStringValueMap(v)
+
+			if v, ok := tfMap["account_ids"]; ok && v != "" {
+				newAccountIDs = strings.Split(v, ",")
+			}
+		}
+
+		for _, chunk := range slices.Chunks(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
+			input := &ssm.ModifyDocumentPermissionInput{
+				AccountIdsToAdd: aws.StringSlice(chunk),
+				Name:            aws.String(d.Id()),
+				PermissionType:  aws.String(ssm.DocumentPermissionTypeShare),
+			}
+
+			_, err := conn.ModifyDocumentPermissionWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying SSM Document (%s) permissions: %s", d.Id(), err)
+			}
+		}
+
+		for _, chunk := range slices.Chunks(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
+			input := &ssm.ModifyDocumentPermissionInput{
+				AccountIdsToRemove: aws.StringSlice(chunk),
+				Name:               aws.String(d.Id()),
+				PermissionType:     aws.String(ssm.DocumentPermissionTypeShare),
+			}
+
+			_, err := conn.ModifyDocumentPermissionWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying SSM Document (%s) permissions: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+		// Update for schema version 1.x is not allowed.
+		isSchemaVersion1, _ := regexp.MatchString(`^1[.][0-9]$`, d.Get("schema_version").(string))
+
+		if d.HasChange("content") || !isSchemaVersion1 {
+			input := &ssm.UpdateDocumentInput{
+				Content:         aws.String(d.Get("content").(string)),
+				DocumentFormat:  aws.String(d.Get("document_format").(string)),
+				DocumentVersion: aws.String(d.Get("default_version").(string)),
+				Name:            aws.String(d.Id()),
+			}
+
+			if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
+				input.Attachments = expandAttachmentsSources(v.([]interface{}))
+			}
+
+			if v, ok := d.GetOk("target_type"); ok {
+				input.TargetType = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("version_name"); ok {
+				input.VersionName = aws.String(v.(string))
+			}
+
+			defaultVersion := d.Get("default_version").(string)
+
+			output, err := conn.UpdateDocumentWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {
+				defaultVersion = d.Get("latest_version").(string)
+			} else if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating SSM Document (%s): %s", d.Id(), err)
+			} else {
+				defaultVersion = aws.StringValue(output.DocumentDescription.DocumentVersion)
+			}
+
+			_, err = conn.UpdateDocumentDefaultVersionWithContext(ctx, &ssm.UpdateDocumentDefaultVersionInput{
+				DocumentVersion: aws.String(defaultVersion),
+				Name:            aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating SSM Document (%s) default version: %s", d.Id(), err)
+			}
+
+			if _, err := waitDocumentActive(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) update: %s", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SSM Document (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("permissions") {
-		diags = append(diags, sdkdiag.WrapDiagsf(setDocumentPermissions(ctx, d, meta), "updating SSM Document (%s): setting permissions", d.Id())...)
-		if diags.HasError() {
-			return diags
-		}
-	} else {
-		log.Printf("[DEBUG] Not setting document permissions on %q", d.Id())
-	}
-
-	// update for schema version 1.x is not allowed
-	isSchemaVersion1, _ := regexp.MatchString("^1[.][0-9]$", d.Get("schema_version").(string))
-
-	if !d.HasChange("content") && isSchemaVersion1 {
-		return diags
-	}
-
-	if d.HasChangesExcept("tags", "tags_all", "permissions") {
-		diags = append(diags, sdkdiag.WrapDiagsf(updateDocument(ctx, d, meta), "updating SSM Document (%s)", d.Id())...)
-		if diags.HasError() {
-			return diags
-		}
-
-		_, err := waitDocumentActive(ctx, conn, d.Id())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) to be Active: %s", d.Id(), err)
 		}
 	}
 
@@ -580,229 +652,6 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.
 	}
 
 	return nil, err
-}
-
-func setDocumentPermissions(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
-
-	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
-
-	if d.HasChange("permissions") {
-		o, n := d.GetChange("permissions")
-		oldPermissions := o.(map[string]interface{})
-		newPermissions := n.(map[string]interface{})
-		oldPermissionsAccountIds := make([]interface{}, 0)
-		if v, ok := oldPermissions["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			oldPermissionsAccountIds = make([]interface{}, len(parts))
-			for i, v := range parts {
-				oldPermissionsAccountIds[i] = v
-			}
-		}
-		newPermissionsAccountIds := make([]interface{}, 0)
-		if v, ok := newPermissions["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			newPermissionsAccountIds = make([]interface{}, len(parts))
-			for i, v := range parts {
-				newPermissionsAccountIds[i] = v
-			}
-		}
-
-		// Since AccountIdsToRemove has higher priority than AccountIdsToAdd,
-		// we filter out accounts from both lists
-		accountIdsToRemove := make([]interface{}, 0)
-		for _, oldPermissionsAccountId := range oldPermissionsAccountIds {
-			if _, contains := verify.SliceContainsString(newPermissionsAccountIds, oldPermissionsAccountId.(string)); !contains {
-				accountIdsToRemove = append(accountIdsToRemove, oldPermissionsAccountId.(string))
-			}
-		}
-		accountIdsToAdd := make([]interface{}, 0)
-		for _, newPermissionsAccountId := range newPermissionsAccountIds {
-			if _, contains := verify.SliceContainsString(oldPermissionsAccountIds, newPermissionsAccountId.(string)); !contains {
-				accountIdsToAdd = append(accountIdsToAdd, newPermissionsAccountId.(string))
-			}
-		}
-
-		if err := modifyDocumentPermissions(ctx, conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	return diags
-}
-
-func getDocumentPermissions(ctx context.Context, d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*conns.AWSClient).SSMConn()
-
-	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
-
-	//How to get from nested scheme resource?
-	permissionType := "Share"
-
-	permInput := &ssm.DescribeDocumentPermissionInput{
-		Name:           aws.String(d.Get("name").(string)),
-		PermissionType: aws.String(permissionType),
-	}
-
-	resp, err := conn.DescribeDocumentPermissionWithContext(ctx, permInput)
-
-	if err != nil {
-		return nil, fmt.Errorf("Error setting permissions for SSM document: %s", err)
-	}
-
-	ids := ""
-	accountIds := aws.StringValueSlice(resp.AccountIds)
-
-	if len(accountIds) == 1 {
-		ids = accountIds[0]
-	} else if len(accountIds) > 1 {
-		ids = strings.Join(accountIds, ",")
-	}
-
-	if ids == "" {
-		return nil, nil
-	}
-
-	perms := make(map[string]interface{})
-	perms["type"] = permissionType
-	perms["account_ids"] = ids
-
-	return perms, nil
-}
-
-func deleteDocumentPermissions(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
-
-	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
-
-	permission := d.Get("permissions").(map[string]interface{})
-
-	accountIdsToRemove := make([]interface{}, 0)
-
-	if permission["account_ids"] != nil {
-		if v, ok := permission["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			accountIdsToRemove = make([]interface{}, len(parts))
-			for i, v := range parts {
-				accountIdsToRemove[i] = v
-			}
-		}
-
-		if err := modifyDocumentPermissions(ctx, conn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing SSM document permissions: %s", err)
-		}
-	}
-
-	return diags
-}
-
-func modifyDocumentPermissions(ctx context.Context, conn *ssm.SSM, name string, accountIdsToAdd []interface{}, accountIdstoRemove []interface{}) error {
-	if accountIdsToAdd != nil {
-		accountIdsToAddBatch := make([]string, 0, documentPermissionsBatchLimit)
-		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/documentPermissionsBatchLimit+1)
-		for _, accountId := range accountIdsToAdd {
-			if len(accountIdsToAddBatch) == documentPermissionsBatchLimit {
-				accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
-				accountIdsToAddBatch = make([]string, 0, documentPermissionsBatchLimit)
-			}
-			accountIdsToAddBatch = append(accountIdsToAddBatch, accountId.(string))
-		}
-		accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
-
-		for _, accountIdsToAdd := range accountIdsToAddBatches {
-			_, err := conn.ModifyDocumentPermissionWithContext(ctx, &ssm.ModifyDocumentPermissionInput{
-				Name:            aws.String(name),
-				PermissionType:  aws.String("Share"),
-				AccountIdsToAdd: aws.StringSlice(accountIdsToAdd),
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if accountIdstoRemove != nil {
-		accountIdsToRemoveBatch := make([]string, 0, documentPermissionsBatchLimit)
-		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/documentPermissionsBatchLimit+1)
-		for _, accountId := range accountIdstoRemove {
-			if len(accountIdsToRemoveBatch) == documentPermissionsBatchLimit {
-				accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
-				accountIdsToRemoveBatch = make([]string, 0, documentPermissionsBatchLimit)
-			}
-			accountIdsToRemoveBatch = append(accountIdsToRemoveBatch, accountId.(string))
-		}
-		accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
-
-		for _, accountIdsToRemove := range accountIdsToRemoveBatches {
-			_, err := conn.ModifyDocumentPermissionWithContext(ctx, &ssm.ModifyDocumentPermissionInput{
-				Name:               aws.String(name),
-				PermissionType:     aws.String("Share"),
-				AccountIdsToRemove: aws.StringSlice(accountIdsToRemove),
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func updateDocument(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[INFO] Updating SSM Document: %s", d.Id())
-
-	name := d.Get("name").(string)
-
-	updateDocInput := &ssm.UpdateDocumentInput{
-		Name:            aws.String(name),
-		Content:         aws.String(d.Get("content").(string)),
-		DocumentFormat:  aws.String(d.Get("document_format").(string)),
-		DocumentVersion: aws.String(d.Get("default_version").(string)),
-	}
-
-	if v, ok := d.GetOk("target_type"); ok {
-		updateDocInput.TargetType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("version_name"); ok {
-		updateDocInput.VersionName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("attachments_source"); ok {
-		updateDocInput.Attachments = expandAttachmentsSources(v.([]interface{}))
-	}
-
-	newDefaultVersion := d.Get("default_version").(string)
-
-	conn := meta.(*conns.AWSClient).SSMConn()
-	updated, err := conn.UpdateDocumentWithContext(ctx, updateDocInput)
-
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {
-		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
-		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
-
-		newDefaultVersion = d.Get("latest_version").(string)
-	} else if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SSM document: %s", err)
-	} else {
-		log.Printf("[INFO] Updating the default version to the new version %s: %s", newDefaultVersion, d.Id())
-		newDefaultVersion = aws.StringValue(updated.DocumentDescription.DocumentVersion)
-	}
-
-	updateDefaultInput := &ssm.UpdateDocumentDefaultVersionInput{
-		Name:            aws.String(name),
-		DocumentVersion: aws.String(newDefaultVersion),
-	}
-
-	_, err = conn.UpdateDocumentDefaultVersionWithContext(ctx, updateDefaultInput)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating the default document version to that of the updated document: %s", err)
-	}
-	return diags
 }
 
 func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSource {
