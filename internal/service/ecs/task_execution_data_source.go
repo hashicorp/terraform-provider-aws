@@ -450,7 +450,7 @@ func expandTaskEnvironment(tfSet *schema.Set) []*ecs.KeyValuePair {
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		te := &ecs.KeyValuePair{
-			Name:  aws.String(tfMap["name"].(string)),
+			Name:  aws.String(tfMap["key"].(string)),
 			Value: aws.String(tfMap["value"].(string)),
 		}
 		apiObject = append(apiObject, te)
