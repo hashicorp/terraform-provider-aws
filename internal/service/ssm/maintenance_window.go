@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -154,31 +156,29 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &ssm.GetMaintenanceWindowInput{
-		WindowId: aws.String(d.Id()),
+	output, err := FindMaintenanceWindowsByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Maintenance Window %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.GetMaintenanceWindowWithContext(ctx, params)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allow_unassociated_targets", resp.AllowUnassociatedTargets)
-	d.Set("cutoff", resp.Cutoff)
-	d.Set("duration", resp.Duration)
-	d.Set("enabled", resp.Enabled)
-	d.Set("end_date", resp.EndDate)
-	d.Set("name", resp.Name)
-	d.Set("schedule_timezone", resp.ScheduleTimezone)
-	d.Set("schedule_offset", resp.ScheduleOffset)
-	d.Set("schedule", resp.Schedule)
-	d.Set("start_date", resp.StartDate)
-	d.Set("description", resp.Description)
+	d.Set("allow_unassociated_targets", output.AllowUnassociatedTargets)
+	d.Set("cutoff", output.Cutoff)
+	d.Set("description", output.Description)
+	d.Set("duration", output.Duration)
+	d.Set("enabled", output.Enabled)
+	d.Set("end_date", output.EndDate)
+	d.Set("name", output.Name)
+	d.Set("schedule", output.Schedule)
+	d.Set("schedule_offset", output.ScheduleOffset)
+	d.Set("schedule_timezone", output.ScheduleTimezone)
+	d.Set("start_date", output.StartDate)
 
 	tags, err := ListTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
 
@@ -270,4 +270,29 @@ func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func FindMaintenanceWindowsByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetMaintenanceWindowOutput, error) {
+	input := &ssm.GetMaintenanceWindowInput{
+		WindowId: aws.String(id),
+	}
+
+	output, err := conn.GetMaintenanceWindowWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
