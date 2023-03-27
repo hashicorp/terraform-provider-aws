@@ -99,6 +99,30 @@ func testAccLFTag_basic(t *testing.T) {
 	})
 }
 
+func testAccLFTag_TagKey_complex(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lakeformation_lf_tag.test"
+	rName := fmt.Sprintf("%s:%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "subKey")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLFTagConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLFTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", rName),
+					resource.TestCheckResourceAttr(resourceName, "values.0", "value"),
+					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccLFTag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
@@ -157,14 +181,6 @@ func testAccLFTag_values(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "values.1", "value3"),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
-				),
-			},
-			{
-				Config:  testAccLFTagConfig_values(rName+":Colon", []string{"value1", "value2"}),
-				Destroy: false,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", rName+":Colon"),
 				),
 			},
 		},
