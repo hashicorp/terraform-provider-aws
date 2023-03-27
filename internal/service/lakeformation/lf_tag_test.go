@@ -111,7 +111,7 @@ func testAccLFTag_values(t *testing.T) {
 				Config:  testAccLFTagConfig_values(rName+":Colon", []string{"value1", "value2"}),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(resourceName),
+					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", rName+":Colon"),
 				),
 			},
