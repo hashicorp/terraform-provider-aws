@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -363,10 +362,8 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 		return nil
 	}
 
-	log.Printf("[DEBUG] Task Override: %+v", tfList)
 	apiObject := &ecs.TaskOverride{}
 	tfMap := tfList[0].(map[string]interface{})
-	log.Printf("[DEBUG] tfMap: %+v", tfMap)
 
 	if v, ok := tfMap["cpu"]; ok {
 		apiObject.Cpu = aws.String(v.(string))
@@ -381,11 +378,9 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 		apiObject.TaskRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["inference_accelerator_overrides"]; ok {
-		log.Printf("[DEBUG] Inference accelerator: %+v", v)
 		apiObject.InferenceAcceleratorOverrides = expandInferenceAcceleratorOverrides(v.(*schema.Set))
 	}
 	if v, ok := tfMap["container_overrides"]; ok {
-		log.Printf("[DEBUG] Container overrides: %+v", v)
 		apiObject.ContainerOverrides = expandContainerOverride(v.([]interface{}))
 	}
 
