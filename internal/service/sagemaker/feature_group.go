@@ -478,6 +478,10 @@ func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineSto
 		config.DisableGlueTableCreation = aws.Bool(v)
 	}
 
+	if v, ok := m["table_format"].(string); ok {
+		config.TableFormat = aws.String(v)
+	}
+
 	return config
 }
 
@@ -488,6 +492,7 @@ func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig)
 
 	m := map[string]interface{}{
 		"disable_glue_table_creation": aws.BoolValue(config.DisableGlueTableCreation),
+		"table_format":                aws.StringValue(config.TableFormat),
 	}
 
 	if config.DataCatalogConfig != nil {

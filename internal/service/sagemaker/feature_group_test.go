@@ -267,7 +267,7 @@ func testAccFeatureGroup_offlineConfig_format(t *testing.T) {
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "0"),
@@ -630,7 +630,7 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   offline_store_config {
-    disable_glue_table_creation = true
+    disable_glue_table_creation = false
     table_format                = %[2]q
 
     s3_storage_config {
