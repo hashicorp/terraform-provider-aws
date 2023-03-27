@@ -17,7 +17,7 @@ jobs:
     name: Check community lists for username
     runs-on: ubuntu-latest
     outputs:
-      is_contributor: ${{ steps.determination.outputs.is_contributor }}
+      is_core_contributor: ${{ steps.determination.outputs.is_core_contributor }}
       is_maintainer: ${{ steps.determination.outputs.is_maintainer }}
       is_partner: ${{ steps.determination.outputs.is_partner }}
     steps:
