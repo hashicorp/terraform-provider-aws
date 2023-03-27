@@ -13,11 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -194,7 +197,30 @@ func ResourceDocument() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+					// Validates permissions keys, if set, to be type and account_ids
+					// since ValidateFunc validates only the value not the key.
+					tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+
+					if v, ok := tfMap["type"]; ok {
+						if v != ssm.DocumentPermissionTypeShare {
+							return fmt.Errorf("%q: only %s \"type\" supported", "permissions", ssm.DocumentPermissionTypeShare)
+						}
+					} else {
+						return fmt.Errorf("%q: \"type\" must be defined", "permissions")
+					}
+
+					if _, ok := tfMap["account_ids"]; !ok {
+						return fmt.Errorf("%q: \"account_ids\" must be defined", "permissions")
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -204,45 +230,37 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	// Validates permissions keys, if set, to be type and account_ids
-	// since ValidateFunc validates only the value not the key.
-	if v, ok := d.GetOk("permissions"); ok {
-		if errors := ValidDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
-			return sdkdiag.AppendErrorf(diags, "validating Permissions: %v", errors)
-		}
-	}
-
-	log.Printf("[INFO] Creating SSM Document: %s", d.Get("name").(string))
-
-	docInput := &ssm.CreateDocumentInput{
-		Name:           aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &ssm.CreateDocumentInput{
 		Content:        aws.String(d.Get("content").(string)),
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		DocumentType:   aws.String(d.Get("document_type").(string)),
+		Name:           aws.String(name),
 	}
 
 	if len(tags) > 0 {
-		docInput.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
-		docInput.Attachments = expandAttachmentsSources(v.([]interface{}))
+		input.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
-		docInput.TargetType = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("version_name"); ok {
-		docInput.VersionName = aws.String(v.(string))
+		input.TargetType = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateDocumentWithContext(ctx, docInput)
+	if v, ok := d.GetOk("version_name"); ok {
+		input.VersionName = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateDocumentWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSM document: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM Document (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DocumentDescription.Name))
+	d.SetId(aws.StringValue(output.DocumentDescription.Name))
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
 		diags = append(diags, sdkdiag.WrapDiagsf(setDocumentPermissions(ctx, d, meta), "creating SSM document: setting permissions")...)
@@ -253,9 +271,8 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
 	}
 
-	_, err = waitDocumentActive(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) to be Active: %s", d.Id(), err)
+	if _, err := waitDocumentActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDocumentRead(ctx, d, meta)...)
@@ -395,14 +412,6 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 
-	// Validates permissions keys, if set, to be type and account_ids
-	// since ValidateFunc validates only the value not the key.
-	if v, ok := d.GetOk("permissions"); ok {
-		if errors := ValidDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
-			return sdkdiag.AppendErrorf(diags, "validating Permissions: %v", errors)
-		}
-	}
-
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -446,31 +455,129 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 
-	diags = append(diags, sdkdiag.WrapDiagsf(deleteDocumentPermissions(ctx, d, meta), "deleting SSM Document (%s): deleting permissions", d.Id())...)
-	if diags.HasError() {
-		return diags
+	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+
+		if v, ok := tfMap["account_ids"]; ok && v != "" {
+			chunks := slices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
+
+			for _, chunk := range chunks {
+				input := &ssm.ModifyDocumentPermissionInput{
+					AccountIdsToRemove: aws.StringSlice(chunk),
+					Name:               aws.String(d.Id()),
+					PermissionType:     aws.String(ssm.DocumentPermissionTypeShare),
+				}
+
+				_, err := conn.ModifyDocumentPermissionWithContext(ctx, input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "modifying SSM Document (%s) permissions: %s", d.Id(), err)
+				}
+			}
+		}
 	}
 
 	log.Printf("[INFO] Deleting SSM Document: %s", d.Id())
-
-	params := &ssm.DeleteDocumentInput{
+	_, err := conn.DeleteDocumentWithContext(ctx, &ssm.DeleteDocumentInput{
 		Name: aws.String(d.Get("name").(string)),
-	}
+	})
 
-	_, err := conn.DeleteDocumentWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSM Document (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitDocumentDeleted(ctx, conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) to be Deleted: %s", d.Id(), err)
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
+		return diags
+	}
+
+	if _, err := waitDocumentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SSM Document (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+// FindDocumentByName returns the Document corresponding to the specified name.
+func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
+	input := &ssm.DescribeDocumentInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeDocumentWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Document == nil {
+		return nil, fmt.Errorf("error describing SSM Document (%s): empty result", name)
+	}
+
+	doc := output.Document
+
+	if aws.StringValue(doc.Status) == ssm.DocumentStatusFailed {
+		return nil, fmt.Errorf("Document is in a failed state: %s", aws.StringValue(doc.StatusInformation))
+	}
+
+	return output.Document, nil
+}
+
+// statusDocument fetches the Document and its Status
+func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDocumentByName(ctx, conn, name)
+
+		if err != nil {
+			return nil, ssm.DocumentStatusFailed, err
+		}
+
+		if output == nil {
+			return output, documentStatusUnknown, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// waitDocumentActive waits for an Document to return Active
+func waitDocumentActive(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) { //nolint:unparam
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ssm.DocumentStatusCreating, ssm.DocumentStatusUpdating},
+		Target:  []string{ssm.DocumentStatusActive},
+		Refresh: statusDocument(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitDocumentDeleted waits for an Document to return Deleted
+func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ssm.DocumentStatusDeleting},
+		Target:  []string{},
+		Refresh: statusDocument(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
@@ -718,24 +825,4 @@ func updateDocument(ctx context.Context, d *schema.ResourceData, meta interface{
 		return sdkdiag.AppendErrorf(diags, "updating the default document version to that of the updated document: %s", err)
 	}
 	return diags
-}
-
-// Validates that type and account_ids are defined
-func ValidDocumentPermissions(v map[string]interface{}) (errors []error) {
-	k := "permissions"
-	t, hasType := v["type"].(string)
-	_, hasAccountIds := v["account_ids"].(string)
-
-	if hasType {
-		if t != ssm.DocumentPermissionTypeShare {
-			errors = append(errors, fmt.Errorf("%q: only %s \"type\" supported", k, ssm.DocumentPermissionTypeShare))
-		}
-	} else {
-		errors = append(errors, fmt.Errorf("%q: \"type\" must be defined", k))
-	}
-	if !hasAccountIds {
-		errors = append(errors, fmt.Errorf("%q: \"account_ids\" must be defined", k))
-	}
-
-	return
 }

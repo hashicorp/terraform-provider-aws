@@ -35,23 +35,6 @@ func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.S
 	}
 }
 
-// statusDocument fetches the Document and its Status
-func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDocumentByName(ctx, conn, name)
-
-		if err != nil {
-			return nil, ssm.DocumentStatusFailed, err
-		}
-
-		if output == nil {
-			return output, documentStatusUnknown, nil
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindServiceSettingByID(ctx, conn, id)

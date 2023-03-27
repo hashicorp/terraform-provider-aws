@@ -589,48 +589,6 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 	})
 }
 
-func TestValidateDocumentPermissions(t *testing.T) {
-	t.Parallel()
-
-	validValues := []map[string]interface{}{
-		{
-			"type":        "Share",
-			"account_ids": "123456789012,123456789014",
-		},
-		{
-			"type":        "Share",
-			"account_ids": "all",
-		},
-	}
-
-	for _, s := range validValues {
-		errors := tfssm.ValidDocumentPermissions(s)
-		if len(errors) > 0 {
-			t.Fatalf("%q should be valid SSM Document Permissions: %v", s, errors)
-		}
-	}
-
-	invalidValues := []map[string]interface{}{
-		{},
-		{"type": ""},
-		{"type": "Share"},
-		{"account_ids": ""},
-		{"account_ids": "all"},
-		{"type": "", "account_ids": ""},
-		{"type": "", "account_ids": "all"},
-		{"type": "share", "account_ids": ""},
-		{"type": "share", "account_ids": "all"},
-		{"type": "private", "account_ids": "all"},
-	}
-
-	for _, s := range invalidValues {
-		errors := tfssm.ValidDocumentPermissions(s)
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be valid SSM Document Permissions: %v", s, errors)
-		}
-	}
-}
-
 func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
