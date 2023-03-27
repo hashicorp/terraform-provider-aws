@@ -28,6 +28,14 @@ func (o Option[T]) IsSome() bool {
 	return o != nil
 }
 
+// MustUnwrap returns the contained value or panics.
+func (o Option[T]) MustUnwrap() T {
+	if o.IsNone() {
+		panic("missing value")
+	}
+	return o[value]
+}
+
 // UnwrapOr returns the contained value or the specified default.
 func (o Option[T]) UnwrapOr(v T) T {
 	return o.UnwrapOrElse(func() T {
