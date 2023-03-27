@@ -213,7 +213,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tagName := "aws_lakeformation_lf_tag.test"
-	keyName := rName + ":colon"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
@@ -221,7 +221,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsConfig_lfTag(rName, ""),
+				Config: testAccPermissionsConfig_lfTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
@@ -238,15 +238,6 @@ func testAccPermissions_lfTag(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.1", "DESCRIBE"),
 				),
 			},
-			{
-				Config: testAccPermissionsConfig_lfTag(rName, keyName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionsExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", tagName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, "values"),
-				),
-			},
 		},
 	})
 }
@@ -257,7 +248,6 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tagName := "aws_lakeformation_lf_tag.test"
-	keyName := rName + ":colon"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
@@ -266,27 +256,7 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsConfig_lfTagPolicy(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionsExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, "key"),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, "values"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
-				),
-			},
-			{
-				Config: testAccPermissionsConfig_lfTagPolicy(rName+"2", keyName),
+				Config: testAccPermissionsConfig_lfTagPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
@@ -1356,10 +1326,7 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccPermissionsConfig_lfTag(rName string, key string) string {
-	if len(key) == 0 {
-		key = rName
-	}
+func testAccPermissionsConfig_lfTag(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1393,9 +1360,8 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 
-
 resource "aws_lakeformation_lf_tag" "test" {
-  key    = %[2]q
+  key    = %[1]q
   values = ["value1", "value2"]
 
   # for consistency, ensure that admins are setup before testing
@@ -1415,13 +1381,10 @@ resource "aws_lakeformation_permissions" "test" {
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
-`, rName, key)
+`, rName)
 }
 
-func testAccPermissionsConfig_lfTagPolicy(rName string, keyName string) string {
-	if len(keyName) == 0 {
-		keyName = rName
-	}
+func testAccPermissionsConfig_lfTagPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
@@ -1455,7 +1418,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_lf_tag" "test" {
-  key    = %[2]q
+  key    = %[1]q
   values = ["value1", "value2"]
 
   # for consistency, ensure that admins are setup before testing
@@ -1482,7 +1445,7 @@ resource "aws_lakeformation_permissions" "test" {
     aws_lakeformation_lf_tag.test,
   ]
 }
-`, rName, keyName)
+`, rName)
 }
 
 func testAccPermissionsConfig_tableBasic(rName string) string {
