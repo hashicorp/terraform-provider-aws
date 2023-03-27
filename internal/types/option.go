@@ -30,19 +30,17 @@ func (o Option[T]) IsSome() bool {
 
 // UnwrapOr returns the contained value or the specified default.
 func (o Option[T]) UnwrapOr(v T) T {
-	if o.IsNone() {
+	return o.UnwrapOrElse(func() T {
 		return v
-	}
-	return o[value]
+	})
 }
 
 // UnwrapOrDefault returns the contained value or the default value for T.
 func (o Option[T]) UnwrapOrDefault() T {
-	if o.IsNone() {
+	return o.UnwrapOrElse(func() T {
 		var v T
 		return v
-	}
-	return o[value]
+	})
 }
 
 // UnwrapOrElse returns the contained value or computes a value from f.
