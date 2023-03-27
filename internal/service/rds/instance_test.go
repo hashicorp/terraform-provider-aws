@@ -6152,7 +6152,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_baseS3Import(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccInstanceConfig_baseS3Import(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -6237,7 +6237,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_S3Import_basic(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccInstanceConfig_S3Import_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseS3Import(rName),
 		fmt.Sprintf(`
@@ -8154,7 +8154,7 @@ resource "aws_db_instance" "test" {
 `, rName, mySQLPreferredInstanceClasses))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName string, deletionProtection bool) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName string, deletionProtection bool) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -9593,7 +9593,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotID_tagsRemove(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccInstanceConfig_SnapshotID_tagsRemove(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
