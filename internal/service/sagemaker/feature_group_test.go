@@ -270,7 +270,7 @@ func testAccFeatureGroup_offlineConfig_format(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.table_format", "Iceberg"),
 				),
 			},
