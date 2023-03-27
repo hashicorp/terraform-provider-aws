@@ -79,7 +79,7 @@ func KeyValueTags(ctx context.Context, tags []*kinesisanalytics.Tag) tftags.KeyV
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*kinesisanalytics.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
