@@ -19,10 +19,10 @@ import (
 // @SDKResource("aws_sns_topic_data_protection_policy")
 func ResourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceTopicDataProtectionPolicyUpsert,
-		ReadWithoutTimeout:   ResourceTopicDataProtectionPolicyRead,
-		UpdateWithoutTimeout: ResourceTopicDataProtectionPolicyUpsert,
-		DeleteWithoutTimeout: ResourceTopicDataProtectionPolicyDelete,
+		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,
+		ReadWithoutTimeout:   resourceTopicDataProtectionPolicyRead,
+		UpdateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,
+		DeleteWithoutTimeout: resourceTopicDataProtectionPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -50,7 +50,7 @@ func ResourceTopicDataProtectionPolicy() *schema.Resource {
 	}
 }
 
-func ResourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 
@@ -66,22 +66,20 @@ func ResourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 		ResourceArn:          aws.String(topicArn),
 	}
 
-	output, err := conn.PutDataProtectionPolicyWithContext(ctx, input)
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "Something went wrong creating the SNS Data Protection Policy")
-	}
+	_, err = conn.PutDataProtectionPolicyWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(topicArn)
+	if d.IsNewResource() {
+		d.SetId(topicArn)
+	}
 
-	return ResourceTopicDataProtectionPolicyRead(ctx, d, meta)
+	return resourceTopicDataProtectionPolicyRead(ctx, d, meta)
 }
 
-func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 
@@ -111,25 +109,17 @@ func ResourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func ResourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 
-	topicArn := d.Get("arn").(string)
-
-	input := &sns.PutDataProtectionPolicyInput{
+	_, err := conn.PutDataProtectionPolicyWithContext(ctx, &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(""),
-		ResourceArn:          aws.String(topicArn),
-	}
-
-	output, err := conn.PutDataProtectionPolicyWithContext(ctx, input)
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "Something went wrong creating the SNS Data Protection Policy")
-	}
+		ResourceArn:          aws.String(d.Get("arn").(string)),
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SNS Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
