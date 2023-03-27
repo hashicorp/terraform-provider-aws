@@ -1,6 +1,7 @@
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,20 +18,21 @@ import (
 )
 
 func testAccPhoneNumber_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "country_code", "US"),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
@@ -50,21 +52,22 @@ func testAccPhoneNumber_basic(t *testing.T) {
 }
 
 func testAccPhoneNumber_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "example description"
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -78,21 +81,22 @@ func testAccPhoneNumber_description(t *testing.T) {
 }
 
 func testAccPhoneNumber_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	prefix := "+1"
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_prefix(rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestMatchResourceAttr(resourceName, "phone_number", regexp.MustCompile(fmt.Sprintf("\\%s[0-9]{0,10}", prefix))),
 					resource.TestCheckResourceAttr(resourceName, "prefix", prefix),
@@ -109,21 +113,22 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 }
 
 func testAccPhoneNumber_targetARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", "arn"),
 				),
 			},
@@ -135,7 +140,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test2", "arn"),
 				),
 			},
@@ -144,20 +149,21 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 }
 
 func testAccPhoneNumber_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -170,7 +176,7 @@ func testAccPhoneNumber_tags(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -179,7 +185,7 @@ func testAccPhoneNumber_tags(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -189,21 +195,22 @@ func testAccPhoneNumber_tags(t *testing.T) {
 }
 
 func testAccPhoneNumber_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourcePhoneNumber(), resourceName),
+					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourcePhoneNumber(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,7 +218,7 @@ func testAccPhoneNumber_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPhoneNumberExists(resourceName string, function *connect.DescribePhoneNumberOutput) resource.TestCheckFunc {
+func testAccCheckPhoneNumberExists(ctx context.Context, resourceName string, function *connect.DescribePhoneNumberOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -222,13 +229,13 @@ func testAccCheckPhoneNumberExists(resourceName string, function *connect.Descri
 			return fmt.Errorf("Connect Phone Number ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(rs.Primary.ID),
 		}
 
-		getFunction, err := conn.DescribePhoneNumber(params)
+		getFunction, err := conn.DescribePhoneNumberWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -239,30 +246,32 @@ func testAccCheckPhoneNumberExists(resourceName string, function *connect.Descri
 	}
 }
 
-func testAccCheckPhoneNumberDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_phone_number" {
-			continue
+func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_phone_number" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+
+			params := &connect.DescribePhoneNumberInput{
+				PhoneNumberId: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.DescribePhoneNumberWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		params := &connect.DescribePhoneNumberInput{
-			PhoneNumberId: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribePhoneNumber(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccPhoneNumberConfig_base(rName string) string {

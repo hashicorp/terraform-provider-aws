@@ -118,13 +118,13 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *
 	return version, nil
 }
 
-func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
+func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
-	output, err := conn.DescribeFargateProfile(input)
+	output, err := conn.DescribeFargateProfileWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -147,13 +147,13 @@ func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, cluster
 	return output.FargateProfile, nil
 }
 
-func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
+func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
 	input := &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	}
 
-	output, err := conn.DescribeNodegroup(input)
+	output, err := conn.DescribeNodegroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -176,14 +176,14 @@ func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, node
 	return output.Nodegroup, nil
 }
 
-func FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
+func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 		UpdateId:      aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(input)
+	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{

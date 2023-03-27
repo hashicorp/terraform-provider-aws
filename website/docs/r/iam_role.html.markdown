@@ -47,7 +47,7 @@ resource "aws_iam_role" "test_role" {
 ### Example of Using Data Source for Assume Role Policy
 
 ```terraform
-data "aws_iam_policy_document" "instance-assume-role-policy" {
+data "aws_iam_policy_document" "instance_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 resource "aws_iam_role" "instance" {
   name               = "instance_role"
   path               = "/system/"
-  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
 }
 ```
 

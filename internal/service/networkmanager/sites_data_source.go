@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_sites")
 func DataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,
@@ -31,9 +32,9 @@ func DataSourceSites() *schema.Resource {
 }
 
 func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	output, err := FindSites(ctx, conn, &networkmanager.GetSitesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -47,7 +48,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(v.Tags).ContainsAll(tagsToMatch) {
+			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

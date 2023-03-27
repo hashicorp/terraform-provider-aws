@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_connect_attachment")
 func ResourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,
@@ -29,7 +30,7 @@ func ResourceConnectAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceConnectAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -124,9 +125,9 @@ func ResourceConnectAttachment() *schema.Resource {
 }
 
 func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	edgeLocation := d.Get("edge_location").(string)
@@ -147,7 +148,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateConnectAttachmentWithContext(ctx, input)
 		},
@@ -169,7 +170,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 			//   Message_: "Incorrect input.",
 			//   Reason: "FieldValidationFailed"
 			// }
-			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
+			if validationExceptionFieldsMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
 				return true, err
 			}
 
@@ -190,7 +191,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -233,7 +234,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -248,12 +249,12 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("updating Network Manager Connect Attachment (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
@@ -262,7 +263,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	// If ResourceAttachmentAccepter is used, then Connect Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails

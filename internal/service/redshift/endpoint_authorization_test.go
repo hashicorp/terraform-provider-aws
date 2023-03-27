@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,23 +16,24 @@ import (
 )
 
 func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "true"),
@@ -50,23 +52,24 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 }
 
 func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
@@ -80,7 +83,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
@@ -88,7 +91,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
@@ -98,24 +101,25 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 }
 
 func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceEndpointAuthorization(), resourceName),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceEndpointAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,24 +128,25 @@ func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 }
 
 func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAuthorizationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
+					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,31 +154,33 @@ func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointAuthorizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_endpoint_authorization" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_endpoint_authorization" {
+				continue
+			}
+
+			_, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Endpoint Authorization %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfredshift.FindEndpointAuthorizationById(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Endpoint Authorization %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEndpointAuthorizationExists(n string, v *redshift.EndpointAuthorization) resource.TestCheckFunc {
+func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *redshift.EndpointAuthorization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,9 +191,9 @@ func testAccCheckEndpointAuthorizationExists(n string, v *redshift.EndpointAutho
 			return fmt.Errorf("No Redshift Endpoint Authorization ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		output, err := tfredshift.FindEndpointAuthorizationById(conn, rs.Primary.ID)
+		output, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

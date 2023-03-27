@@ -16,20 +16,21 @@ import (
 )
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityFeedbackAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityFeedbackAttributesExist(emailIdentityName, false),
+					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, false),
 					resource.TestCheckResourceAttrPair(resourceName, "email_identity", emailIdentityName, "email_identity"),
 				),
 			},
@@ -43,21 +44,22 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
 }
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityFeedbackAttributesExist(emailIdentityName, true),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentityFeedbackAttributes(), resourceName),
+					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentityFeedbackAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,20 +68,21 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 }
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityFeedbackAttributesExist(emailIdentityName, true),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
+					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,20 +91,21 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *tes
 }
 
 func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityFeedbackAttributesExist(emailIdentityName, true),
+					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
 					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "true"),
 				),
 			},
@@ -113,7 +117,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 			{
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityFeedbackAttributesExist(emailIdentityName, false),
+					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, false),
 					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "false"),
 				),
 			},
@@ -123,7 +127,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 
 // testAccCheckEmailIdentityFeedbackAttributesExist verifies that both the email identity exists,
 // and that the email forwarding enabled setting is correct
-func testAccCheckEmailIdentityFeedbackAttributesExist(name string, emailForwardingEnabled bool) resource.TestCheckFunc {
+func testAccCheckEmailIdentityFeedbackAttributesExist(ctx context.Context, name string, emailForwardingEnabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -134,9 +138,9 @@ func testAccCheckEmailIdentityFeedbackAttributesExist(name string, emailForwardi
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 
-		out, err := tfsesv2.FindEmailIdentityByID(context.Background(), conn, rs.Primary.ID)
+		out, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, err)
 		}

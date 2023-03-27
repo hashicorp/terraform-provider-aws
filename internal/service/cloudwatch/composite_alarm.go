@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_composite_alarm")
 func ResourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCompositeAlarmCreate,
-		ReadContext:   resourceCompositeAlarmRead,
-		UpdateContext: resourceCompositeAlarmUpdate,
-		DeleteContext: resourceCompositeAlarmDelete,
+		CreateWithoutTimeout: resourceCompositeAlarmCreate,
+		ReadWithoutTimeout:   resourceCompositeAlarmRead,
+		UpdateWithoutTimeout: resourceCompositeAlarmUpdate,
+		DeleteWithoutTimeout: resourceCompositeAlarmDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -94,10 +95,10 @@ func ResourceCompositeAlarm() *schema.Resource {
 }
 
 func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	name := d.Get("alarm_name").(string)
 
-	input := expandPutCompositeAlarmInput(d, meta)
+	input := expandPutCompositeAlarmInput(ctx, d, meta)
 
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 
@@ -116,7 +117,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(name)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
@@ -126,7 +127,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 			return diag.Errorf("error reading CloudWatch Composite Alarm (%s): %s", name, err)
 		}
 
-		err = UpdateTags(conn, aws.StringValue(alarm.AlarmArn), nil, tags)
+		err = UpdateTags(ctx, conn, aws.StringValue(alarm.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -143,7 +144,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Id()
@@ -188,7 +189,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error setting ok_actions: %s", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(alarm.AlarmArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(alarm.AlarmArn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -215,10 +216,10 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	name := d.Id()
 
-	input := expandPutCompositeAlarmInput(d, meta)
+	input := expandPutCompositeAlarmInput(ctx, d, meta)
 
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 	if err != nil {
@@ -229,7 +230,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, arn, o, n)
+		err := UpdateTags(ctx, conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -246,27 +247,27 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
-	name := d.Id()
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
-	input := cloudwatch.DeleteAlarmsInput{
-		AlarmNames: aws.StringSlice([]string{name}),
+	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
+	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{
+		AlarmNames: aws.StringSlice([]string{d.Id()}),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
+		return nil
 	}
 
-	_, err := conn.DeleteAlarmsWithContext(ctx, &input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
-			return nil
-		}
-		return diag.Errorf("error deleting CloudWatch Composite Alarm (%s): %s", name, err)
+		return diag.Errorf("deleting CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandPutCompositeAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
+func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	out := cloudwatch.PutCompositeAlarmInput{
 		ActionsEnabled: aws.Bool(d.Get("actions_enabled").(bool)),

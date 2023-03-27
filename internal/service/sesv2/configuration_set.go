@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_configuration_set")
 func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -131,6 +132,43 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
+			"vdm_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dashboard_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"engagement_metrics": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.FeatureStatus](),
+									},
+								},
+							},
+						},
+						"guardian_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"optimized_shared_delivery": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.FeatureStatus](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -142,7 +180,7 @@ const (
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
@@ -168,8 +206,12 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		in.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -190,7 +232,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
 
@@ -255,6 +297,14 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("tracking_options", nil)
 	}
 
+	if out.VdmOptions != nil {
+		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(out.VdmOptions)}); err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+		}
+	} else {
+		d.Set("vdm_options", nil)
+	}
+
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
@@ -276,7 +326,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	if d.HasChanges("delivery_options") {
 		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
@@ -382,6 +432,22 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChanges("vdm_options") {
+		in := &sesv2.PutConfigurationSetVdmOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet VdmOptions (%s): %#v", d.Id(), in)
+		_, err := conn.PutConfigurationSetVdmOptions(ctx, in)
+		if err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+		}
+	}
+
 	if d.HasChanges("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -394,7 +460,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
 
@@ -520,6 +586,48 @@ func flattenTrackingOptions(apiObject *types.TrackingOptions) map[string]interfa
 	return m
 }
 
+func flattenVDMOptions(apiObject *types.VdmOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.DashboardOptions; v != nil {
+		m["dashboard_options"] = []interface{}{flattenDashboardOptions(v)}
+	}
+
+	if v := apiObject.GuardianOptions; v != nil {
+		m["guardian_options"] = []interface{}{flattenGuardianOptions(v)}
+	}
+
+	return m
+}
+
+func flattenDashboardOptions(apiObject *types.DashboardOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"engagement_metrics": string(apiObject.EngagementMetrics),
+	}
+
+	return m
+}
+
+func flattenGuardianOptions(apiObject *types.GuardianOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"optimized_shared_delivery": string(apiObject.OptimizedSharedDelivery),
+	}
+
+	return m
+}
+
 func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions {
 	if tfMap == nil {
 		return nil
@@ -601,6 +709,52 @@ func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions 
 
 	if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
 		a.CustomRedirectDomain = aws.String(v)
+	}
+
+	return a
+}
+
+func expandVDMOptions(tfMap map[string]interface{}) *types.VdmOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.VdmOptions{}
+
+	if v, ok := tfMap["dashboard_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.DashboardOptions = expandDashboardOptions(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["guardian_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.GuardianOptions = expandGuardianOptions(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandDashboardOptions(tfMap map[string]interface{}) *types.DashboardOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.DashboardOptions{}
+
+	if v, ok := tfMap["engagement_metrics"].(string); ok && v != "" {
+		a.EngagementMetrics = types.FeatureStatus(v)
+	}
+
+	return a
+}
+
+func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.GuardianOptions{}
+
+	if v, ok := tfMap["optimized_shared_delivery"].(string); ok && v != "" {
+		a.OptimizedSharedDelivery = types.FeatureStatus(v)
 	}
 
 	return a

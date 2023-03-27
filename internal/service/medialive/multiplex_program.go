@@ -28,10 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	registerFrameworkResourceFactory(newResourceMultiplexProgram)
-}
-
+// @FrameworkResource
 func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &multiplexProgram{}, nil
 }
@@ -186,7 +183,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -244,7 +241,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -266,7 +263,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 	out, err := FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)
@@ -309,7 +306,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -374,7 +371,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)

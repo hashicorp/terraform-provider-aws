@@ -1,6 +1,8 @@
 package directconnect
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+func FindConnectionByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
 	input := &directconnect.DescribeConnectionsInput{
 		ConnectionId: aws.String(id),
 	}
 
-	output, err := conn.DescribeConnections(input)
+	output, err := conn.DescribeConnectionsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
 		return nil, &resource.NotFoundError{
@@ -46,8 +48,8 @@ func FindConnectionByID(conn *directconnect.DirectConnect, id string) (*directco
 	return connection, nil
 }
 
-func FindConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID, lagID string) error {
-	connection, err := FindConnectionByID(conn, connectionID)
+func FindConnectionAssociationExists(ctx context.Context, conn *directconnect.DirectConnect, connectionID, lagID string) error {
+	connection, err := FindConnectionByID(ctx, conn, connectionID)
 
 	if err != nil {
 		return err
@@ -60,12 +62,12 @@ func FindConnectionAssociationExists(conn *directconnect.DirectConnect, connecti
 	return nil
 }
 
-func FindGatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
+func FindGatewayByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
 		DirectConnectGatewayId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDirectConnectGateways(input)
+	output, err := conn.DescribeDirectConnectGatewaysWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -91,34 +93,34 @@ func FindGatewayByID(conn *directconnect.DirectConnect, id string) (*directconne
 	return gateway, nil
 }
 
-func FindGatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociationId: aws.String(id),
 	}
 
-	return FindGatewayAssociation(conn, input)
+	return FindGatewayAssociation(ctx, conn, input)
 }
 
-func FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx context.Context, conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociatedGatewayId:    aws.String(associatedGatewayID),
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
 	}
 
-	return FindGatewayAssociation(conn, input)
+	return FindGatewayAssociation(ctx, conn, input)
 }
 
-func FindGatewayAssociationByGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx context.Context, conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
 		VirtualGatewayId:       aws.String(virtualGatewayID),
 	}
 
-	return FindGatewayAssociation(conn, input)
+	return FindGatewayAssociation(ctx, conn, input)
 }
 
-func FindGatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.GatewayAssociation, error) {
-	output, err := conn.DescribeDirectConnectGatewayAssociations(input)
+func FindGatewayAssociation(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.GatewayAssociation, error) {
+	output, err := conn.DescribeDirectConnectGatewayAssociationsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -151,12 +153,12 @@ func FindGatewayAssociation(conn *directconnect.DirectConnect, input *directconn
 	return association, nil
 }
 
-func FindGatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociationProposal, error) {
+func FindGatewayAssociationProposalByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociationProposal, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
 		ProposalId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDirectConnectGatewayAssociationProposals(input)
+	output, err := conn.DescribeDirectConnectGatewayAssociationProposalsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -189,12 +191,12 @@ func FindGatewayAssociationProposalByID(conn *directconnect.DirectConnect, id st
 	return proposal, nil
 }
 
-func FindHostedConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+func FindHostedConnectionByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
 	input := &directconnect.DescribeHostedConnectionsInput{
 		ConnectionId: aws.String(id),
 	}
 
-	output, err := conn.DescribeHostedConnections(input)
+	output, err := conn.DescribeHostedConnectionsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
 		return nil, &resource.NotFoundError{
@@ -227,12 +229,12 @@ func FindHostedConnectionByID(conn *directconnect.DirectConnect, id string) (*di
 	return connection, nil
 }
 
-func FindLagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
+func FindLagByID(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
 	input := &directconnect.DescribeLagsInput{
 		LagId: aws.String(id),
 	}
 
-	output, err := conn.DescribeLags(input)
+	output, err := conn.DescribeLagsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Lag with ID") {
 		return nil, &resource.NotFoundError{
@@ -265,10 +267,10 @@ func FindLagByID(conn *directconnect.DirectConnect, id string) (*directconnect.L
 	return lag, nil
 }
 
-func FindLocationByCode(conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
+func FindLocationByCode(ctx context.Context, conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
 	input := &directconnect.DescribeLocationsInput{}
 
-	locations, err := FindLocations(conn, input)
+	locations, err := FindLocations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -283,8 +285,8 @@ func FindLocationByCode(conn *directconnect.DirectConnect, code string) (*direct
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func FindLocations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
-	output, err := conn.DescribeLocations(input)
+func FindLocations(ctx context.Context, conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
+	output, err := conn.DescribeLocationsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

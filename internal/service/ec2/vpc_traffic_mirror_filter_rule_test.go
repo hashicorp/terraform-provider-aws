@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
@@ -31,18 +33,18 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTrafficMirrorFilterRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTrafficMirrorFilterRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", ec2.ServiceName, regexp.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
@@ -60,7 +62,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 			{
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -81,7 +83,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 			{
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -105,6 +107,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 }
 
 func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
@@ -114,18 +117,18 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTrafficMirrorFilterRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTrafficMirrorFilterRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
+					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,10 +136,10 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccPreCheckTrafficMirrorFilterRule(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	_, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{})
+	_, err := conn.DescribeTrafficMirrorFiltersWithContext(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror filter rule acceprance test: ", err)
@@ -147,28 +150,30 @@ func testAccPreCheckTrafficMirrorFilterRule(t *testing.T) {
 	}
 }
 
-func testAccCheckTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckTrafficMirrorFilterRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_traffic_mirror_filter_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_traffic_mirror_filter_rule" {
+				continue
+			}
+
+			_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Traffic Mirror Filter Rule %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Traffic Mirror Filter Rule %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTrafficMirrorFilterRuleImportStateIdFunc(n string) resource.ImportStateIdFunc {
@@ -182,7 +187,7 @@ func testAccTrafficMirrorFilterRuleImportStateIdFunc(n string) resource.ImportSt
 	}
 }
 
-func testAccCheckTrafficMirrorFilterRuleExists(n string) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorFilterRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,9 +198,9 @@ func testAccCheckTrafficMirrorFilterRuleExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("No EC2 Traffic Mirror Filter Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
+		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
 
 		return err
 	}

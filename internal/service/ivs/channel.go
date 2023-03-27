@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivs_channel")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -93,7 +94,7 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	in := &ivs.CreateChannelInput{}
 
@@ -114,7 +115,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -143,7 +144,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -166,7 +167,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("recording_configuration_arn", out.RecordingConfigurationArn)
 	d.Set("type", out.Type)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
@@ -187,7 +188,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	update := false
 
@@ -224,7 +225,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 	}
@@ -248,7 +249,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
 

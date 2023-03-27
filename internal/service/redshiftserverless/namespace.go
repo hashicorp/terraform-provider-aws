@@ -1,31 +1,34 @@
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_namespace")
 func ResourceNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNamespaceCreate,
-		Read:   resourceNamespaceRead,
-		Update: resourceNamespaceUpdate,
-		Delete: resourceNamespaceDelete,
+		CreateWithoutTimeout: resourceNamespaceCreate,
+		ReadWithoutTimeout:   resourceNamespaceRead,
+		UpdateWithoutTimeout: resourceNamespaceUpdate,
+		DeleteWithoutTimeout: resourceNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -75,7 +78,7 @@ func ResourceNamespace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"userlog", "connectionlog", "useractivitylog"}, false),
+					ValidateFunc: validation.StringInSlice(redshiftserverless.LogExport_Values(), false),
 				},
 			},
 			"namespace_id": {
@@ -95,10 +98,11 @@ func ResourceNamespace() *schema.Resource {
 	}
 }
 
-func resourceNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
@@ -134,32 +138,33 @@ func resourceNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.LogExports = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateNamespace(input)
+	output, err := conn.CreateNamespaceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift Serverless Namespace (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Namespace (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Namespace.NamespaceName))
 
-	return resourceNamespaceRead(d, meta)
+	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindNamespaceByName(conn, d.Id())
+	output, err := FindNamespaceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Namespace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Serverless Namespace (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Namespace (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.NamespaceArn)
@@ -173,32 +178,33 @@ func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Redshift Serverless Namespace (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Redshift Serverless Namespace (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateNamespaceInput{
@@ -226,35 +232,36 @@ func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.LogExports = flex.ExpandStringSet(d.Get("log_exports").(*schema.Set))
 		}
 
-		_, err := conn.UpdateNamespace(input)
+		_, err := conn.UpdateNamespaceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating Redshift Serverless Namespace (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Namespace (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitNamespaceUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for Redshift Serverless Namespace (%s) update: %w", d.Id(), err)
+		if _, err := waitNamespaceUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Namespace (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Serverless Namespace (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Namespace (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceNamespaceRead(d, meta)
+	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
 		func() (interface{}, error) {
-			return conn.DeleteNamespace(&redshiftserverless.DeleteNamespaceInput{
+			return conn.DeleteNamespaceWithContext(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})
 		},
@@ -262,16 +269,16 @@ func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 		redshiftserverless.ErrCodeConflictException, "operation running")
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Redshift Serverless Namespace (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Namespace (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitNamespaceDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Redshift Serverless Namespace (%s) delete: %w", d.Id(), err)
+	if _, err := waitNamespaceDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Namespace (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivschat_logging_configuration")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -143,7 +144,7 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
@@ -154,7 +155,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -179,7 +180,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
@@ -223,7 +224,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	update := false
 
@@ -267,7 +268,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
 

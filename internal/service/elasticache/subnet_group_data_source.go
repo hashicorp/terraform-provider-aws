@@ -1,18 +1,21 @@
 package elasticache
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_elasticache_subnet_group")
 func DataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubnetGroupRead,
+		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,16 +40,17 @@ func DataSourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 
-	group, err := FindCacheSubnetGroupByName(conn, name)
+	group, err := FindCacheSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("reading ElastiCache Subnet Group (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(group.CacheSubnetGroupName))
@@ -61,15 +65,15 @@ func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
 	d.Set("name", group.CacheSubnetGroupName)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for ElastiCache Subnet Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

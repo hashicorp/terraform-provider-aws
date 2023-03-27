@@ -11,20 +11,21 @@ import (
 )
 
 func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -37,20 +38,21 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
+	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_url(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -63,20 +65,21 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 }
 
 func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_tags(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),

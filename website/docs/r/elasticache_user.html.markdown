@@ -25,6 +25,33 @@ resource "aws_elasticache_user" "test" {
 }
 ```
 
+```terraform
+resource "aws_elasticache_user" "test" {
+  user_id       = "testUserId"
+  user_name     = "testUserName"
+  access_string = "on ~* +@all"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type = "iam"
+  }
+}
+```
+
+```terraform
+resource "aws_elasticache_user" "test" {
+  user_id       = "testUserId"
+  user_name     = "testUserName"
+  access_string = "on ~* +@all"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "password"
+    passwords = ["password1", "password2"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -36,9 +63,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `authentication_mode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
 * `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
+
+### authentication_mode Configuration Block
+
+* `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
+* `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
 
 ## Attributes Reference
 

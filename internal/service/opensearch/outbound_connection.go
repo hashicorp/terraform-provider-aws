@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_outbound_connection")
 func ResourceOutboundConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceOutboundConnectionCreate,
-		ReadContext:   resourceOutboundConnectionRead,
-		DeleteContext: resourceOutboundConnectionDelete,
+		CreateWithoutTimeout: resourceOutboundConnectionCreate,
+		ReadWithoutTimeout:   resourceOutboundConnectionRead,
+		DeleteWithoutTimeout: resourceOutboundConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,7 +48,7 @@ func ResourceOutboundConnection() *schema.Resource {
 }
 
 func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	// Create the Outbound Connection
 	createOpts := &opensearchservice.CreateOutboundConnectionInput{
@@ -76,7 +77,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	ccscRaw, statusCode, err := outboundConnectionRefreshState(ctx, conn, d.Id())()
 
@@ -102,7 +103,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	req := &opensearchservice.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
@@ -180,7 +181,7 @@ func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchs
 		Refresh: outboundConnectionRefreshState(ctx, conn, id),
 		Timeout: timeout,
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 		return fmt.Errorf("Error waiting for Outbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
@@ -201,7 +202,7 @@ func waitForOutboundConnectionDeletion(ctx context.Context, conn *opensearchserv
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

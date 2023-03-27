@@ -38,6 +38,7 @@ resource "aws_securityhub_organization_configuration" "example" {
 The following arguments are supported:
 
 * `auto_enable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
+* `auto_enable_standards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
 
 ## Attributes Reference
 

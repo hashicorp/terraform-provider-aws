@@ -1,6 +1,7 @@
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -13,23 +14,24 @@ import (
 )
 
 func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_ses_active_receipt_rule_set.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy,
+		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActiveReceiptRuleSetExists(resourceName),
+					testAccCheckActiveReceiptRuleSetExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
@@ -38,11 +40,12 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 }
 
 func testAccActiveReceiptRuleSetDataSource_noActiveRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckUnsetActiveRuleSet(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckUnsetActiveRuleSet(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,10 +80,10 @@ data "aws_ses_active_receipt_rule_set" "test" {}
 `
 }
 
-func testAccPreCheckUnsetActiveRuleSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccPreCheckUnsetActiveRuleSet(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
-	output, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
+	output, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -91,7 +94,7 @@ func testAccPreCheckUnsetActiveRuleSet(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	_, err = conn.SetActiveReceiptRuleSet(&ses.SetActiveReceiptRuleSetInput{
+	_, err = conn.SetActiveReceiptRuleSetWithContext(ctx, &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,
 	})
 	if acctest.PreCheckSkipError(err) {

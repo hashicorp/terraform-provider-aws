@@ -24,11 +24,12 @@ const (
 	ResNameGroupMembership = "GroupMembership"
 )
 
+// @SDKResource("aws_identitystore_group_membership")
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGroupMembershipCreate,
-		ReadContext:   resourceGroupMembershipRead,
-		DeleteContext: resourceGroupMembershipDelete,
+		CreateWithoutTimeout: resourceGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceGroupMembershipRead,
+		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -65,7 +66,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
@@ -95,7 +96,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId, groupMembershipId, err := resourceGroupMembershipParseID(d.Id())
 
@@ -131,7 +132,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	log.Printf("[INFO] Deleting IdentityStore GroupMembership %s", d.Id())
 

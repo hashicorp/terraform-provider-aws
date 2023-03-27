@@ -21,23 +21,24 @@ import (
 )
 
 func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var loggingconfiguration ivschat.GetLoggingConfigurationOutput
 	resourceName := "aws_ivschat_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_basic_cloudwatch(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &loggingconfiguration),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -54,6 +55,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 }
 
 func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -64,18 +66,18 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_basic_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &loggingconfiguration),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -92,24 +94,25 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 }
 
 func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var loggingconfiguration ivschat.GetLoggingConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivschat_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &loggingconfiguration),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
@@ -126,24 +129,25 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 }
 
 func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 ivschat.GetLoggingConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivschat_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &v1),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v1),
 				),
 			},
 			{
@@ -154,7 +158,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 			{
 				Config: testAccLoggingConfigurationConfig_update_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &v2),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckLoggingConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -164,24 +168,25 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 }
 
 func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 ivschat.GetLoggingConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivschat_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &v1),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -194,7 +199,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccLoggingConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &v2),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckLoggingConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -204,7 +209,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccLoggingConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &v3),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v3),
 					testAccCheckLoggingConfigurationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -215,15 +220,16 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 }
 
 func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_s3(),
@@ -250,6 +256,7 @@ func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T)
 }
 
 func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -260,19 +267,19 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingConfigurationDestroy,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingConfigurationExists(resourceName, &loggingconfiguration),
-					acctest.CheckResourceDisappears(acctest.Provider, tfivschat.ResourceLoggingConfiguration(), resourceName),
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -280,33 +287,34 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLoggingConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
-	ctx := context.Background()
+func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ivschat_logging_configuration" {
-			continue
-		}
-
-		_, err := conn.GetLoggingConfiguration(ctx, &ivschat.GetLoggingConfigurationInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ivschat_logging_configuration" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetLoggingConfiguration(ctx, &ivschat.GetLoggingConfigurationInput{
+				Identifier: aws.String(rs.Primary.ID),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.IVSChat, create.ErrActionCheckingDestroyed, tfivschat.ResNameLoggingConfiguration, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.IVSChat, create.ErrActionCheckingDestroyed, tfivschat.ResNameLoggingConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLoggingConfigurationExists(name string, loggingconfiguration *ivschat.GetLoggingConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckLoggingConfigurationExists(ctx context.Context, name string, loggingconfiguration *ivschat.GetLoggingConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -317,8 +325,8 @@ func testAccCheckLoggingConfigurationExists(name string, loggingconfiguration *i
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameLoggingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+
 		resp, err := conn.GetLoggingConfiguration(ctx, &ivschat.GetLoggingConfigurationInput{
 			Identifier: aws.String(rs.Primary.ID),
 		})
@@ -333,9 +341,8 @@ func testAccCheckLoggingConfigurationExists(name string, loggingconfiguration *i
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
-	ctx := context.Background()
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
 
 	input := &ivschat.ListLoggingConfigurationsInput{}
 	_, err := conn.ListLoggingConfigurations(ctx, input)

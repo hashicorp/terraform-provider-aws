@@ -1,6 +1,7 @@
 package appstream_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,20 +17,21 @@ import (
 )
 
 func TestAccAppStreamStack_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
@@ -57,21 +59,22 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 }
 
 func TestAccAppStreamStack_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,6 +83,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 }
 
 func TestAccAppStreamStack_complete(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,15 +91,15 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -110,7 +114,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -118,7 +122,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 			{
 				Config: testAccStackConfig_complete(rName, descriptionUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -137,6 +141,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 }
 
 func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,15 +149,15 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 	settingsGroupUpdated := "group-updated"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
@@ -166,7 +171,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroupUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroupUpdated),
@@ -180,7 +185,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettings(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
@@ -196,21 +201,22 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 }
 
 func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	settingsGroup := "group"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
@@ -219,7 +225,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettingsRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
@@ -235,20 +241,21 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 }
 
 func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettingsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
@@ -263,6 +270,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) 
 }
 
 func TestAccAppStreamStack_withTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -270,15 +278,15 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -287,7 +295,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags(rName, descriptionUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -306,15 +314,15 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	})
 }
 
-func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, resourceName string, appStreamStack *appstream.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
-		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
 			return fmt.Errorf("problem checking for AppStream Stack existence: %w", err)
@@ -330,30 +338,32 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 	}
 }
 
-func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appstream_stack" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appstream_stack" {
+				continue
+			}
+
+			resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
+
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("problem while checking AppStream Stack was destroyed: %w", err)
+			}
+
+			if resp != nil && len(resp.Stacks) > 0 {
+				return fmt.Errorf("appstream stack %q still exists", rs.Primary.ID)
+			}
 		}
 
-		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
-
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("problem while checking AppStream Stack was destroyed: %w", err)
-		}
-
-		if resp != nil && len(resp.Stacks) > 0 {
-			return fmt.Errorf("appstream stack %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccStackConfig_basic(name string) string {
@@ -380,19 +390,28 @@ resource "aws_appstream_stack" "test" {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
+  user_settings {
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
+    permission = "DISABLED"
+  }
+  user_settings {
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
+  }
   user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "FILE_DOWNLOAD"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 
@@ -451,29 +470,28 @@ resource "aws_appstream_stack" "test" {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "FILE_UPLOAD"
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
     permission = "DISABLED"
   }
-
   user_settings {
     action     = "FILE_DOWNLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "PRINTING_TO_LOCAL_DEVICE"
+    action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "DOMAIN_PASSWORD_SIGNIN"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 

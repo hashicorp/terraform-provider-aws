@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_controltower_controls")
 func DataSourceControls() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceControlsRead,
@@ -31,7 +32,7 @@ func DataSourceControls() *schema.Resource {
 }
 
 func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn
+	conn := meta.(*conns.AWSClient).ControlTowerConn()
 
 	targetIdentifier := d.Get("target_identifier").(string)
 	input := &controltower.ListEnabledControlsInput{

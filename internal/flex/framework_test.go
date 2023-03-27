@@ -11,6 +11,104 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+func TestExpandFrameworkStringList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.List
+		expected []*string
+	}
+	tests := map[string]testCase{
+		"null": {
+			input:    types.ListNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.ListUnknown(types.StringType),
+			expected: nil,
+		},
+		"two elements": {
+			input: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+			expected: []*string{aws.String("GET"), aws.String("HEAD")},
+		},
+		"zero elements": {
+			input:    types.ListValueMust(types.StringType, []attr.Value{}),
+			expected: []*string{},
+		},
+		"invalid element type": {
+			input: types.ListValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(42),
+			}),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ExpandFrameworkStringList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandFrameworkStringValueList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.List
+		expected []string
+	}
+	tests := map[string]testCase{
+		"null": {
+			input:    types.ListNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.ListUnknown(types.StringType),
+			expected: nil,
+		},
+		"two elements": {
+			input: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+			expected: []string{"GET", "HEAD"},
+		},
+		"zero elements": {
+			input:    types.ListValueMust(types.StringType, []attr.Value{}),
+			expected: []string{},
+		},
+		"invalid element type": {
+			input: types.ListValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(42),
+			}),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ExpandFrameworkStringValueList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestExpandFrameworkStringSet(t *testing.T) {
 	t.Parallel()
 
@@ -19,6 +117,14 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 		expected []*string
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.SetNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
@@ -41,6 +147,8 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -55,9 +163,17 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 
 	type testCase struct {
 		input    types.Set
-		expected []string
+		expected Set[string]
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.SetNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
@@ -80,6 +196,8 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringValueSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -97,6 +215,14 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 		expected map[string]string
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.MapNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.MapUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.MapValueMust(types.StringType, map[string]attr.Value{
 				"one": types.StringValue("GET"),
@@ -122,6 +248,8 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringValueMap(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -132,6 +260,45 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 }
 
 func TestFlattenFrameworkStringList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.ListNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.ListNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -159,7 +326,9 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FlattenFrameworkStringList(context.Background(), test.input)
+			t.Parallel()
+
+			got := FlattenFrameworkStringListLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -169,6 +338,45 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 }
 
 func TestFlattenFrameworkStringValueList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []string{"GET", "HEAD"},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: types.ListNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.ListNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringValueListLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -196,7 +404,9 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FlattenFrameworkStringValueList(context.Background(), test.input)
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueListLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -206,6 +416,45 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 }
 
 func TestFlattenFrameworkStringValueSet(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []string{"GET", "HEAD"},
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: types.SetNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueSet(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -233,7 +482,9 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FlattenFrameworkStringValueSet(context.Background(), test.input)
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueSetLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -242,7 +493,7 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringValueMap(t *testing.T) {
+func TestFlattenFrameworkStringValueMapLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -273,7 +524,9 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FlattenFrameworkStringValueMap(context.Background(), test.input)
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueMapLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -307,6 +560,8 @@ func TestBoolFromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -345,6 +600,8 @@ func TestInt64FromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64FromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -383,6 +640,8 @@ func TestStringFromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -413,6 +672,8 @@ func TestBoolToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -443,6 +704,8 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -477,6 +740,8 @@ func TestInt64ToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64ToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -511,6 +776,8 @@ func TestInt64ToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64ToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -545,6 +812,8 @@ func TestStringToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -579,6 +848,8 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -613,8 +884,201 @@ func TestStringToFrameworkWithTransform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFrameworkWithTransform(context.Background(), test.input, strings.ToLower)
 
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringValueToFramework(t *testing.T) {
+	t.Parallel()
+
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
+	type testCase struct {
+		input    custom
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    "",
+			expected: types.StringNull(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := StringValueToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringValueToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
+	type testCase struct {
+		input    custom
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    "",
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := StringValueToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFloat64ToFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *float64
+		expected types.Float64
+	}
+	tests := map[string]testCase{
+		"valid float64": {
+			input:    aws.Float64(42.1),
+			expected: types.Float64Value(42.1),
+		},
+		"zero float64": {
+			input:    aws.Float64(0),
+			expected: types.Float64Value(0),
+		},
+		"nil float64": {
+			input:    nil,
+			expected: types.Float64Null(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Float64ToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFloat64ToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *float64
+		expected types.Float64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Float64(42.1),
+			expected: types.Float64Value(42.1),
+		},
+		"zero int64": {
+			input:    aws.Float64(0),
+			expected: types.Float64Value(0),
+		},
+		"nil int64": {
+			input:    nil,
+			expected: types.Float64Value(0),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Float64ToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestSet_Difference_strings(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		original Set[string]
+		new      Set[string]
+		expected Set[string]
+	}
+	tests := map[string]testCase{
+		"nil": {
+			original: nil,
+			new:      nil,
+			expected: nil,
+		},
+		"equal": {
+			original: Set[string]{"one"},
+			new:      Set[string]{"one"},
+			expected: nil,
+		},
+		"difference": {
+			original: Set[string]{"one", "two", "four"},
+			new:      Set[string]{"one", "two", "three"},
+			expected: Set[string]{"four"},
+		},
+		"difference_remove": {
+			original: Set[string]{"one", "two"},
+			new:      Set[string]{"one"},
+			expected: Set[string]{"two"},
+		},
+		"difference_add": {
+			original: Set[string]{"one"},
+			new:      Set[string]{"one", "two"},
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := test.original.Difference(test.new)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
