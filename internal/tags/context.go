@@ -21,6 +21,7 @@ func NewContext(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig 
 	v := InContext{
 		DefaultConfig: defaultConfig,
 		IgnoreConfig:  ignoreConfig,
+		TagsOut:       types.None[KeyValueTags](),
 	}
 
 	return context.WithValue(ctx, tagKey, &v)
