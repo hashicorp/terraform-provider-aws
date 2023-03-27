@@ -224,7 +224,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			// Remove system tags.
 			tags = tags.IgnoreAWS()
 
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = tags
 		case Update:
 			// If the service package has a generic resource update tags methods, call it.
 			if v, ok := sp.(interface {
