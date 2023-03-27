@@ -22,6 +22,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceGatewayRoute,
+			TypeName: "aws_appmesh_gateway_route",
+		},
+		{
 			Factory:  DataSourceMesh,
 			TypeName: "aws_appmesh_mesh",
 		},
@@ -36,6 +40,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
+		},
+		{
+			Factory:  DataSourceVirtualRouter,
+			TypeName: "aws_appmesh_virtual_router",
 		},
 		{
 			Factory:  DataSourceVirtualService,

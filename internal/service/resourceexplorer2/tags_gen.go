@@ -29,6 +29,8 @@ func ListTags(ctx context.Context, conn *resourceexplorer2.Client, identifier st
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists resourceexplorer2 service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(), identifier)
 
@@ -59,7 +61,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -110,6 +112,8 @@ func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier 
 	return nil
 }
 
+// UpdateTags updates resourceexplorer2 service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(), identifier, oldTags, newTags)
 }

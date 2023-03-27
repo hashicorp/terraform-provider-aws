@@ -539,6 +539,8 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.ip_preference", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.response_type", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
@@ -574,6 +576,8 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.ip_preference", "IPv4_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.response_type", "ENDPOINTS"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
@@ -1890,7 +1894,9 @@ resource "aws_appmesh_virtual_node" "test" {
 
     service_discovery {
       dns {
-        hostname = "serviceb.simpleapp.local"
+        hostname      = "serviceb.simpleapp.local"
+        ip_preference = "IPv4_ONLY"
+        response_type = "ENDPOINTS"
       }
     }
   }
