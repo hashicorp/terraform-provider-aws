@@ -148,59 +148,6 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
-
-	// Replace must be set otherwise its not possible to remove optional attributes, e.g.
-	// ValidationException: 1 validation error detected: Value '' at 'startDate' failed to satisfy constraint: Member must have length greater than or equal to 1
-	params := &ssm.UpdateMaintenanceWindowInput{
-		AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
-		Cutoff:                   aws.Int64(int64(d.Get("cutoff").(int))),
-		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
-		Enabled:                  aws.Bool(d.Get("enabled").(bool)),
-		Name:                     aws.String(d.Get("name").(string)),
-		Replace:                  aws.Bool(true),
-		Schedule:                 aws.String(d.Get("schedule").(string)),
-		WindowId:                 aws.String(d.Id()),
-	}
-
-	if v, ok := d.GetOk("end_date"); ok {
-		params.EndDate = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("schedule_timezone"); ok {
-		params.ScheduleTimezone = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("schedule_offset"); ok {
-		params.ScheduleOffset = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("start_date"); ok {
-		params.StartDate = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
-	}
-
-	_, err := conn.UpdateMaintenanceWindowWithContext(ctx, params)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
-}
-
 func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
@@ -253,17 +200,71 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
+func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		// Replace must be set otherwise its not possible to remove optional attributes, e.g.
+		// ValidationException: 1 validation error detected: Value '' at 'startDate' failed to satisfy constraint: Member must have length greater than or equal to 1
+		input := &ssm.UpdateMaintenanceWindowInput{
+			AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
+			Cutoff:                   aws.Int64(int64(d.Get("cutoff").(int))),
+			Duration:                 aws.Int64(int64(d.Get("duration").(int))),
+			Enabled:                  aws.Bool(d.Get("enabled").(bool)),
+			Name:                     aws.String(d.Get("name").(string)),
+			Replace:                  aws.Bool(true),
+			Schedule:                 aws.String(d.Get("schedule").(string)),
+			WindowId:                 aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("end_date"); ok {
+			input.EndDate = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("schedule_offset"); ok {
+			input.ScheduleOffset = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("schedule_timezone"); ok {
+			input.ScheduleTimezone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("start_date"); ok {
+			input.StartDate = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateMaintenanceWindowWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
+}
+
 func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())
-
-	params := &ssm.DeleteMaintenanceWindowInput{
+	_, err := conn.DeleteMaintenanceWindowWithContext(ctx, &ssm.DeleteMaintenanceWindowInput{
 		WindowId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteMaintenanceWindowWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
