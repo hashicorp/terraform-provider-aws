@@ -72,7 +72,7 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(resourceName, &securityconfig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityConfig(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

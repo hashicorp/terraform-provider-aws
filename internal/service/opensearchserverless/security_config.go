@@ -4,206 +4,340 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSecurityConfig() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceSecurityConfigCreate,
-		ReadWithoutTimeout:   resourceSecurityConfigRead,
-		UpdateWithoutTimeout: resourceSecurityConfigUpdate,
-		DeleteWithoutTimeout: resourceSecurityConfigDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				const idSeparator = "/"
-				parts := strings.Split(d.Id(), idSeparator)
-				if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", d.Id())
-				}
-
-				d.SetId(d.Id())
-				d.Set("name", parts[2])
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(3, 32),
-				ForceNew:     true,
-			},
-			"config_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"saml_options": {
-				Type:     schema.TypeList,
-				Required: true, // API docs suggest this is optional, but it returns an error if not provided
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"group_attribute": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"metadata": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 20480),
-						},
-						"session_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(5, 1440),
-						},
-						"user_attribute": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-					},
-				},
-			},
-			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SecurityConfigType]()},
-		},
-	}
+// @FrameworkResource
+func newResourceSecurityConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceSecurityConfig{}, nil
 }
 
 const (
 	ResNameSecurityConfig = "Security Config"
+	idSeparator           = "/"
 )
 
-func resourceSecurityConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
+type resourceSecurityConfig struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceSecurityConfig) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_opensearchserverless_security_config"
+}
+
+func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": framework.IDAttribute(),
+			"config_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1000),
+				},
+			},
+			"name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 32),
+				},
+			},
+			"type": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.SecurityConfigType](),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"saml_options": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
+						},
+						"metadata": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 20480),
+							},
+						},
+						"session_timeout": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.Int64{
+								int64validator.Between(5, 1540),
+							},
+						},
+						"user_attribute": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceSecurityConfigData
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().OpenSearchServerlessClient()
 
 	in := &opensearchserverless.CreateSecurityConfigInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
-		Type:        types.SecurityConfigType(d.Get("type").(string)),
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Name:        flex.StringFromFramework(ctx, plan.Name),
+		Type:        awstypes.SecurityConfigType(*flex.StringFromFramework(ctx, plan.Type)),
+		SamlOptions: expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("saml_options"); ok {
-		in.SamlOptions = expandSAMLOptions(v.([]interface{}))
+	if !plan.Description.IsNull() {
+		in.Description = flex.StringFromFramework(ctx, plan.Description)
 	}
 
 	out, err := conn.CreateSecurityConfig(ctx, in)
 	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, d.Get("name").(string), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 
 	if out == nil || out.SecurityConfigDetail == nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, d.Get("name").(string), errors.New("empty output"))
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(out.SecurityConfigDetail.Id))
-
-	return resourceSecurityConfigRead(ctx, d, meta)
+	state := plan
+	state.refreshFromOutput(ctx, out.SecurityConfigDetail, &resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceSecurityConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
-	out, err := findSecurityConfigByID(ctx, conn, d.Id())
+func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] OpenSearchServerless Security Config (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	var state resourceSecurityConfigData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityConfig, d.Id(), err)
+	out, err := findSecurityConfigByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
-	d.Set("description", out.Description)
-	d.Set("type", "saml") // GetSecurityConfig doesn't return this field so hard-code it for now
-	d.Set("saml_options", flattenSAMLOptions(out.SamlOptions))
-	return nil
+	state.refreshFromOutput(ctx, out, &resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceSecurityConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
+func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
+
+	var plan, state resourceSecurityConfigData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	update := false
 
-	in := &opensearchserverless.UpdateSecurityConfigInput{
-		ClientToken:   aws.String(resource.UniqueId()),
-		Id:            aws.String(d.Id()),
-		ConfigVersion: aws.String(d.Get("config_version").(string)),
+	input := &opensearchserverless.UpdateSecurityConfigInput{
+		ClientToken:   aws.String(sdkid.UniqueId()),
+		ConfigVersion: flex.StringFromFramework(ctx, plan.ConfigVersion),
+		Id:            flex.StringFromFramework(ctx, plan.ID),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if !plan.Description.Equal(state.Description) {
+		input.Description = aws.String(plan.Description.ValueString())
 		update = true
 	}
 
-	if d.HasChanges("saml_options") {
-		in.SamlOptions = expandSAMLOptions(d.Get("saml_options").([]interface{}))
+	if !plan.SamlOptions.Equal(state.SamlOptions) {
+		input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
 		update = true
 	}
 
 	if !update {
+		return
+	}
+
+	out, err := conn.UpdateSecurityConfig(ctx, input)
+
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+		return
+	}
+	state.refreshFromOutput(ctx, out.SecurityConfigDetail, &resp.Diagnostics)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceSecurityConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().OpenSearchServerlessClient()
+
+	var state resourceSecurityConfigData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.DeleteSecurityConfig(ctx, &opensearchserverless.DeleteSecurityConfigInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Id:          flex.StringFromFramework(ctx, state.ID),
+	})
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityConfig, state.Name.String(), nil),
+			err.Error(),
+		)
+	}
+}
+
+func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts := strings.Split(req.ID, idSeparator)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", req.ID)
+		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), parts[2])...)
+}
+
+type resourceSecurityConfigData struct {
+	ID            types.String `tfsdk:"id"`
+	ConfigVersion types.String `tfsdk:"config_version"`
+	Description   types.String `tfsdk:"description"`
+	Name          types.String `tfsdk:"name"`
+	SamlOptions   types.List   `tfsdk:"saml_options"`
+	Type          types.String `tfsdk:"type"`
+}
+
+// refreshFromOutput writes state data from an AWS response object
+func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityConfigDetail, diags *diag.Diagnostics) {
+	if out == nil {
+		return
+	}
+
+	rd.ID = flex.StringToFramework(ctx, out.Id)
+	rd.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
+	rd.Description = flex.StringToFramework(ctx, out.Description)
+	rd.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions, diags)
+	rd.Type = flex.StringValueToFramework(ctx, out.Type)
+}
+
+type samlOptions struct {
+	GroupAttribute types.String `tfsdk:"group_attribute"`
+	Metadata       types.String `tfsdk:"metadata"`
+	SessionTimeout types.Int64  `tfsdk:"session_timeout"`
+	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+func (so *samlOptions) expand(ctx context.Context) *awstypes.SamlConfigOptions {
+	if so == nil {
 		return nil
 	}
 
-	log.Printf("[DEBUG] Updating OpenSearchServerless Security Config (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateSecurityConfig(ctx, in)
-	if err != nil {
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionUpdating, ResNameSecurityConfig, d.Id(), err)
+	result := &awstypes.SamlConfigOptions{
+		Metadata:       flex.StringFromFramework(ctx, so.Metadata),
+		GroupAttribute: flex.StringFromFramework(ctx, so.GroupAttribute),
+		UserAttribute:  flex.StringFromFramework(ctx, so.UserAttribute),
 	}
 
-	return resourceSecurityConfigRead(ctx, d, meta)
+	if so.SessionTimeout.ValueInt64() != 0 {
+		result.SessionTimeout = aws.Int32(int32(so.SessionTimeout.ValueInt64()))
+	}
+
+	return result
 }
 
-func resourceSecurityConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
-
-	log.Printf("[INFO] Deleting OpenSearchServerless Security Config %s", d.Id())
-
-	_, err := conn.DeleteSecurityConfig(ctx, &opensearchserverless.DeleteSecurityConfigInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		Id:          aws.String(d.Id()),
-	})
-
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityConfig, d.Id(), err)
+func expandSAMLOptions(ctx context.Context, list types.List, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
+	var options []samlOptions
+	diags.Append(list.ElementsAs(ctx, &options, false)...)
+	if diags.HasError() {
+		return nil
 	}
 
+	if len(options) == 1 {
+		return options[0].expand(ctx)
+	}
 	return nil
+}
+
+func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions, diags *diag.Diagnostics) types.List {
+	attributeTypes := framework.AttributeTypesMust[samlOptions](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
+
+	if so == nil {
+		return types.ListNull(elemType)
+	}
+
+	attrs := map[string]attr.Value{}
+	attrs["group_attribute"] = flex.StringToFramework(ctx, so.GroupAttribute)
+	attrs["metadata"] = flex.StringToFramework(ctx, so.Metadata)
+	timeout := int64(*so.SessionTimeout)
+	attrs["session_timeout"] = flex.Int64ToFramework(ctx, &timeout)
+	attrs["user_attribute"] = flex.StringToFramework(ctx, so.UserAttribute)
+
+	val := types.ObjectValueMust(attributeTypes, attrs)
+
+	return types.ListValueMust(elemType, []attr.Value{val})
 }
