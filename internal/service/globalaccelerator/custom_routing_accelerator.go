@@ -26,6 +26,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 		Read:   resourceCustomRoutingAcceleratorRead,
 		Update: resourceCustomRoutingAcceleratorUpdate,
 		Delete: resourceCustomRoutingAcceleratorDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,34 +62,24 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			"dns_name": {
 				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			"ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      globalaccelerator.IpAddressTypeIpv4,
-				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
+				Computed: true,
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      globalaccelerator.IpAddressTypeIpv4,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
 			},
 			"ip_sets": {
 				Type:     schema.TypeList,
@@ -107,8 +98,17 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
+			},
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
