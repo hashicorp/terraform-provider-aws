@@ -189,84 +189,87 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	healthCheckType := d.Get("type").(string)
-	healthConfig := &route53.HealthCheckConfig{
+	healthCheckConfig := &route53.HealthCheckConfig{
 		Type: aws.String(healthCheckType),
 	}
 
-	if v, ok := d.GetOk("request_interval"); ok {
-		healthConfig.RequestInterval = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("failure_threshold"); ok {
-		healthConfig.FailureThreshold = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("fqdn"); ok {
-		healthConfig.FullyQualifiedDomainName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("search_string"); ok {
-		healthConfig.SearchString = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ip_address"); ok {
-		healthConfig.IPAddress = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		healthConfig.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("resource_path"); ok {
-		healthConfig.ResourcePath = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("invert_healthcheck"); ok {
-		healthConfig.Inverted = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("disabled"); ok {
+		healthCheckConfig.Disabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("enable_sni"); ok {
-		healthConfig.EnableSNI = aws.Bool(v.(bool))
+		healthCheckConfig.EnableSNI = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("failure_threshold"); ok {
+		healthCheckConfig.FailureThreshold = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("fqdn"); ok {
+		healthCheckConfig.FullyQualifiedDomainName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("invert_healthcheck"); ok {
+		healthCheckConfig.Inverted = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("ip_address"); ok {
+		healthCheckConfig.IPAddress = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("port"); ok {
+		healthCheckConfig.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("request_interval"); ok {
+		healthCheckConfig.RequestInterval = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("resource_path"); ok {
+		healthCheckConfig.ResourcePath = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("search_string"); ok {
+		healthCheckConfig.SearchString = aws.String(v.(string))
 	}
 
 	switch healthCheckType {
 	case route53.HealthCheckTypeCalculated:
-		if v, ok := d.GetOk("child_healthchecks"); ok {
-			healthConfig.ChildHealthChecks = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("child_health_threshold"); ok {
+			healthCheckConfig.HealthThreshold = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("child_health_threshold"); ok {
-			healthConfig.HealthThreshold = aws.Int64(int64(v.(int)))
+		if v, ok := d.GetOk("child_healthchecks"); ok {
+			healthCheckConfig.ChildHealthChecks = flex.ExpandStringSet(v.(*schema.Set))
 		}
 	case route53.HealthCheckTypeCloudwatchMetric:
-		cloudwatchAlarmIdentifier := &route53.AlarmIdentifier{}
+		alarmIdentifier := &route53.AlarmIdentifier{}
 
 		if v, ok := d.GetOk("cloudwatch_alarm_name"); ok {
-			cloudwatchAlarmIdentifier.Name = aws.String(v.(string))
+			alarmIdentifier.Name = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("cloudwatch_alarm_region"); ok {
-			cloudwatchAlarmIdentifier.Region = aws.String(v.(string))
+			alarmIdentifier.Region = aws.String(v.(string))
 		}
 
-		healthConfig.AlarmIdentifier = cloudwatchAlarmIdentifier
+		healthCheckConfig.AlarmIdentifier = alarmIdentifier
 
 		if v, ok := d.GetOk("insufficient_data_health_status"); ok {
-			healthConfig.InsufficientDataHealthStatus = aws.String(v.(string))
+			healthCheckConfig.InsufficientDataHealthStatus = aws.String(v.(string))
 		}
 	case route53.HealthCheckTypeRecoveryControl:
 		if v, ok := d.GetOk("routing_control_arn"); ok {
-			healthConfig.RoutingControlArn = aws.String(v.(string))
+			healthCheckConfig.RoutingControlArn = aws.String(v.(string))
 		}
 		fallthrough
 	default:
 		if v, ok := d.GetOk("measure_latency"); ok {
-			healthConfig.MeasureLatency = aws.Bool(v.(bool))
+			healthCheckConfig.MeasureLatency = aws.Bool(v.(bool))
 		}
 	}
 
-	if v, ok := d.GetOk("regions"); ok {
-		healthConfig.Regions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("regions"); ok && v.(*schema.Set).Len() > 0 {
+		healthCheckConfig.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	callerRef := resource.UniqueId()
@@ -274,22 +277,18 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}
 
-	if v, ok := d.GetOk("disabled"); ok {
-		healthConfig.Disabled = aws.Bool(v.(bool))
-	}
-
 	input := &route53.CreateHealthCheckInput{
 		CallerReference:   aws.String(callerRef),
-		HealthCheckConfig: healthConfig,
+		HealthCheckConfig: healthCheckConfig,
 	}
 
-	resp, err := conn.CreateHealthCheckWithContext(ctx, input)
+	output, err := conn.CreateHealthCheckWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route53 Health Check (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Health Check: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.HealthCheck.Id))
+	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
 	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
