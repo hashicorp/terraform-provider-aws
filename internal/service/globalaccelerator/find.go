@@ -10,64 +10,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
-	input := &globalaccelerator.DescribeAcceleratorInput{
-		AcceleratorArn: aws.String(arn),
-	}
-
-	return FindAccelerator(ctx, conn, input)
-}
-
-func FindAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
-	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Accelerator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Accelerator, nil
-}
-
-func FindAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
-	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
-		AcceleratorArn: aws.String(arn),
-	}
-
-	return FindAcceleratorAttributes(ctx, conn, input)
-}
-
-func FindAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
-	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AcceleratorAttributes, nil
-}
-
 func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
 	input := &globalaccelerator.DescribeEndpointGroupInput{
 		EndpointGroupArn: aws.String(arn),
