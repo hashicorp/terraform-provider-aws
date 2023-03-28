@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -662,7 +663,7 @@ func ListDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.
 }
 
 func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -683,7 +684,7 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -701,7 +702,7 @@ func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
 		Refresh:        statusDocumentClassifier(ctx, conn, id),
@@ -719,7 +720,7 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 	return nil, err
 }
 
-func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
+func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDocumentClassifierByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

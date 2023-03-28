@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -658,7 +659,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.StateRefreshFunc {
+func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBrokerByID(ctx, conn, id)
 
@@ -675,7 +676,7 @@ func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.Sta
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
@@ -691,7 +692,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
 			mq.BrokerStateDeletionInProgress,
@@ -712,7 +713,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,

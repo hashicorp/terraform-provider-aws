@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -871,7 +872,7 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.ACM, arn string)
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		certificate, err := FindCertificateByARN(ctx, conn, arn)
 
@@ -910,7 +911,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 }
 
 func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
 		Timeout: timeout,
@@ -925,7 +926,7 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.AC
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
@@ -942,7 +943,7 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) re
 }
 
 func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.RenewalSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{acm.RenewalStatusPendingAutoRenewal},
 		Target:  []string{acm.RenewalStatusSuccess},
 		Refresh: statusCertificateRenewal(ctx, conn, arn),

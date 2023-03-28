@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -219,7 +220,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.ControlTow
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) resource.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
@@ -236,7 +237,7 @@ func statusControlOperation(ctx context.Context, conn *controltower.ControlTower
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.ControlTower, id string, timeout time.Duration) (*controltower.ControlOperation, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{controltower.ControlOperationStatusInProgress},
 		Target:  []string{controltower.ControlOperationStatusSucceeded},
 		Refresh: statusControlOperation(ctx, conn, id),

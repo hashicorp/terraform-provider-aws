@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2422,7 +2423,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2465,7 +2466,7 @@ func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, i
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2508,7 +2509,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusAvailable,
 			InstanceStatusBackingUp,
@@ -2539,7 +2540,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 	return nil, err
 }
 
-func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
 
@@ -2555,7 +2556,7 @@ func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resour
 	}
 }
 
-func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
 
@@ -2612,7 +2613,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Clien
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2638,7 +2639,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2668,7 +2669,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2685,7 +2686,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 	return nil, err
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

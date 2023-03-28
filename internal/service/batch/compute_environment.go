@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -543,7 +544,7 @@ func findComputeEnvironmentDetail(ctx context.Context, conn *batch.Batch, input 
 	return output.ComputeEnvironments[0], nil
 }
 
-func statusComputeEnvironment(ctx context.Context, conn *batch.Batch, name string) resource.StateRefreshFunc {
+func statusComputeEnvironment(ctx context.Context, conn *batch.Batch, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		computeEnvironmentDetail, err := FindComputeEnvironmentDetailByName(ctx, conn, name)
 
@@ -560,7 +561,7 @@ func statusComputeEnvironment(ctx context.Context, conn *batch.Batch, name strin
 }
 
 func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusCreating},
 		Target:  []string{batch.CEStatusValid},
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -581,7 +582,7 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Batch, name 
 }
 
 func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusDeleting},
 		Target:  []string{},
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -602,7 +603,7 @@ func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Batch, name 
 }
 
 func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -623,7 +624,7 @@ func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name
 }
 
 func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
 		Refresh: statusComputeEnvironment(ctx, conn, name),

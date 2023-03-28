@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -410,7 +411,7 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 	return confMap
 }
 
-func statusConnectPeerState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusConnectPeerState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectPeerByID(ctx, conn, id)
 
@@ -427,7 +428,7 @@ func statusConnectPeerState(ctx context.Context, conn *networkmanager.NetworkMan
 }
 
 func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectPeer, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectPeerStateCreating},
 		Target:  []string{networkmanager.ConnectPeerStateAvailable},
 		Timeout: timeout,
@@ -444,7 +445,7 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.NetworkMan
 }
 
 func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectPeer, error) {
-	stateconf := &resource.StateChangeConf{
+	stateconf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.ConnectPeerStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,

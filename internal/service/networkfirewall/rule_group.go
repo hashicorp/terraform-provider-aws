@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -654,7 +655,7 @@ func FindRuleGroupByARN(ctx context.Context, conn *networkfirewall.NetworkFirewa
 	return output, nil
 }
 
-func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRuleGroupByARN(ctx, conn, arn)
 
@@ -671,7 +672,7 @@ func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 }
 
 func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.RuleGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
 		Target:  []string{},
 		Refresh: statusRuleGroup(ctx, conn, arn),

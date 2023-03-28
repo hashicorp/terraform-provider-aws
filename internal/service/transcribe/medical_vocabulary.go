@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -218,7 +219,7 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -237,7 +238,7 @@ func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -256,7 +257,7 @@ func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusMedicalVocabulary(ctx, conn, id),
@@ -272,7 +273,7 @@ func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, 
 	return nil, err
 }
 
-func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) resource.StateRefreshFunc {
+func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindMedicalVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {

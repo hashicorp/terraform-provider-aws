@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +19,7 @@ const (
 
 // UpgradeSucceeded waits for an Upgrade to return Success
 func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elasticsearch.UpgradeStatusInProgress},
 		Target:     []string{elasticsearch.UpgradeStatusSucceeded},
 		Refresh:    statusUpgradeStatus(ctx, conn, name),
@@ -130,7 +131,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchS
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
 		Target:                    []string{ConfigStatusNotFound},
 		Refresh:                   domainConfigStatus(ctx, conn, domainName),

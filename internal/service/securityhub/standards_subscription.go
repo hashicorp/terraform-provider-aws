@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -192,7 +193,7 @@ const (
 	standardsSubscriptionDeleteTimeout = 3 * time.Minute
 )
 
-func statusStandardsSubscription(ctx context.Context, conn *securityhub.SecurityHub, arn string) resource.StateRefreshFunc {
+func statusStandardsSubscription(ctx context.Context, conn *securityhub.SecurityHub, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStandardsSubscriptionByARN(ctx, conn, arn)
 
@@ -211,7 +212,7 @@ func statusStandardsSubscription(ctx context.Context, conn *securityhub.Security
 }
 
 func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{securityhub.StandardsStatusPending},
 		Target:  []string{securityhub.StandardsStatusReady, securityhub.StandardsStatusIncomplete},
 		Refresh: statusStandardsSubscription(ctx, conn, arn),
@@ -228,7 +229,7 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Sec
 }
 
 func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{securityhub.StandardsStatusDeleting},
 		Target:  []string{standardsStatusNotFound, securityhub.StandardsStatusIncomplete},
 		Refresh: statusStandardsSubscription(ctx, conn, arn),

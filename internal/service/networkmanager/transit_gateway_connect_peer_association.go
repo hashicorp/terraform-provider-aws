@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -243,7 +244,7 @@ func FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 	return output, nil
 }
 
-func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string) resource.StateRefreshFunc {
+func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
@@ -260,7 +261,7 @@ func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *
 }
 
 func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.TransitGatewayConnectPeerAssociationStatePending},
 		Target:  []string{networkmanager.TransitGatewayConnectPeerAssociationStateAvailable},
 		Timeout: timeout,
@@ -277,7 +278,7 @@ func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *
 }
 
 func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.TransitGatewayConnectPeerAssociationStateAvailable, networkmanager.TransitGatewayConnectPeerAssociationStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,

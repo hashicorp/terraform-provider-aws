@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -412,7 +413,7 @@ func FindDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkMan
 	return output, nil
 }
 
-func statusDeviceState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) resource.StateRefreshFunc {
+func statusDeviceState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
@@ -429,7 +430,7 @@ func statusDeviceState(ctx context.Context, conn *networkmanager.NetworkManager,
 }
 
 func waitDeviceCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.DeviceStatePending},
 		Target:  []string{networkmanager.DeviceStateAvailable},
 		Timeout: timeout,
@@ -446,7 +447,7 @@ func waitDeviceCreated(ctx context.Context, conn *networkmanager.NetworkManager,
 }
 
 func waitDeviceDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.DeviceStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,
@@ -463,7 +464,7 @@ func waitDeviceDeleted(ctx context.Context, conn *networkmanager.NetworkManager,
 }
 
 func waitDeviceUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.DeviceStateUpdating},
 		Target:  []string{networkmanager.DeviceStateAvailable},
 		Timeout: timeout,

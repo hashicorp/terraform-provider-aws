@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{EventSubscriptionStatusCreating},
 		Target:     []string{EventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, id),
@@ -34,7 +34,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string,
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{EventSubscriptionStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEventSubscription(ctx, conn, id),
@@ -53,7 +53,7 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.RDS, id string,
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{EventSubscriptionStatusModifying},
 		Target:                    []string{EventSubscriptionStatusActive},
 		Refresh:                   statusEventSubscription(ctx, conn, id),
@@ -74,7 +74,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.RDS, id string,
 
 // waitDBProxyEndpointAvailable waits for a DBProxyEndpoint to return Available
 func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			rds.DBProxyEndpointStatusCreating,
 			rds.DBProxyEndpointStatusModifying,
@@ -95,7 +95,7 @@ func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.RDS, id string,
 
 // waitDBProxyEndpointDeleted waits for a DBProxyEndpoint to return Deleted
 func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{rds.DBProxyEndpointStatusDeleting},
 		Target:  []string{},
 		Refresh: statusDBProxyEndpoint(ctx, conn, id),
@@ -112,7 +112,7 @@ func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, t
 }
 
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ClusterRoleStatusPending},
 		Target:  []string{ClusterRoleStatusActive},
 		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
@@ -129,7 +129,7 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbC
 }
 
 func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
 		Target:  []string{},
 		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
@@ -146,7 +146,7 @@ func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbC
 }
 
 func waitDBClusterInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -179,7 +179,7 @@ func waitDBClusterInstanceCreated(ctx context.Context, conn *rds.RDS, id string,
 }
 
 func waitDBClusterInstanceUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -212,7 +212,7 @@ func waitDBClusterInstanceUpdated(ctx context.Context, conn *rds.RDS, id string,
 }
 
 func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusConfiguringLogExports,
 			InstanceStatusDeleting,
@@ -235,7 +235,7 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 }
 
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{InstanceAutomatedBackupStatusPending},
 		Target:  []string{InstanceAutomatedBackupStatusReplicating},
 		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),
@@ -254,7 +254,7 @@ func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.RDS, ar
 // waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
 // The connection must be valid for the database instance's Region.
 func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{strconv.FormatBool(true)},
 		Target:  []string{strconv.FormatBool(false)},
 		Refresh: statusDBInstanceHasAutomatedBackup(ctx, conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
@@ -271,7 +271,7 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.RDS, db
 }
 
 func waitDBProxyCreated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusCreating},
 		Target:  []string{rds.DBProxyStatusAvailable},
 		Refresh: statusDBProxy(ctx, conn, name),
@@ -288,7 +288,7 @@ func waitDBProxyCreated(ctx context.Context, conn *rds.RDS, name string, timeout
 }
 
 func waitDBProxyDeleted(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusDeleting},
 		Target:  []string{},
 		Refresh: statusDBProxy(ctx, conn, name),
@@ -305,7 +305,7 @@ func waitDBProxyDeleted(ctx context.Context, conn *rds.RDS, name string, timeout
 }
 
 func waitDBProxyUpdated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusModifying},
 		Target:  []string{rds.DBProxyStatusAvailable},
 		Refresh: statusDBProxy(ctx, conn, name),
@@ -322,7 +322,7 @@ func waitDBProxyUpdated(ctx context.Context, conn *rds.RDS, name string, timeout
 }
 
 func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ReservedInstanceStatePaymentPending,
 		},
@@ -340,7 +340,7 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, 
 }
 
 func waitDBSnapshotCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{DBSnapshotCreating},
 		Target:     []string{DBSnapshotAvailable},
 		Refresh:    statusDBSnapshot(ctx, conn, id),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -224,7 +225,7 @@ func findVPCConnector(ctx context.Context, conn *apprunner.AppRunner, input *app
 	return output.VpcConnector, nil
 }
 
-func statusVPCConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func statusVPCConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVPCConnectorByARN(ctx, conn, arn)
 
@@ -246,7 +247,7 @@ const (
 )
 
 func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{apprunner.VpcConnectorStatusActive},
 		Refresh: statusVPCConnector(ctx, conn, arn),
 		Timeout: vpcConnectorCreateTimeout,
@@ -258,7 +259,7 @@ func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.AppRunner, arn
 }
 
 func waitVPCConnectorDeleted(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apprunner.VpcConnectorStatusActive},
 		Target:  []string{},
 		Refresh: statusVPCConnector(ctx, conn, arn),

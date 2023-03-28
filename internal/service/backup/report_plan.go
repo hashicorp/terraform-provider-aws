@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -378,7 +379,7 @@ func FindReportPlanByName(ctx context.Context, conn *backup.Backup, name string)
 	return output.ReportPlan, nil
 }
 
-func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name string) resource.StateRefreshFunc {
+func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReportPlanByName(ctx, conn, name)
 
@@ -395,7 +396,7 @@ func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name s
 }
 
 func waitReportPlanCreated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
@@ -412,7 +413,7 @@ func waitReportPlanCreated(ctx context.Context, conn *backup.Backup, name string
 }
 
 func waitReportPlanDeleted(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusDeleteInProgress},
 		Target:  []string{},
 		Timeout: timeout,
@@ -429,7 +430,7 @@ func waitReportPlanDeleted(ctx context.Context, conn *backup.Backup, name string
 }
 
 func waitReportPlanUpdated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusUpdateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -237,7 +238,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
 	// reuse db_instance refresh func
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -414,7 +415,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		// reuse db_instance refresh func
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
 			Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -453,7 +454,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	// re-uses db_instance refresh func
 	log.Println("[INFO] Waiting for DocDB Cluster Instance to be destroyed")
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -469,7 +470,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := resourceInstanceRetrieve(ctx, conn, id)
 

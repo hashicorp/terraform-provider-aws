@@ -7,12 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitStatementFinished(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			redshiftdataapiservice.StatusStringPicked,
 			redshiftdataapiservice.StatusStringStarted,

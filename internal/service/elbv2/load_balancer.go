@@ -18,6 +18,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -754,7 +755,7 @@ func FindLoadBalancer(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	return output[0], nil
 }
 
-func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
+func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLoadBalancerByARN(ctx, conn, arn)
 
@@ -771,7 +772,7 @@ func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string)
 }
 
 func waitLoadBalancerActive(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
 		Target:     []string{elbv2.LoadBalancerStateEnumActive},
 		Refresh:    statusLoadBalancerState(ctx, conn, arn),

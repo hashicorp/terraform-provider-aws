@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -331,7 +332,7 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -351,7 +352,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -371,7 +372,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
@@ -388,7 +389,7 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {

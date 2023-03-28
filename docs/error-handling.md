@@ -115,7 +115,11 @@ tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException)
 The Terraform Plugin SDK includes some error types which are used in certain operations and typically preferred over implementing new types:
 
 * [`resource.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#NotFoundError)
-* [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError): Returned from [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry), [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext), [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForState), and [`(resource.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForStateContext)
+* [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError):
+  Returned from [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry),
+  [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext),
+  [`(retry.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForState), and
+  [`(retry.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext)
 
 The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/internal/tfresource` package:
 

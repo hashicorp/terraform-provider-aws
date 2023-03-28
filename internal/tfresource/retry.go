@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -125,13 +126,13 @@ func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f 
 
 type Options struct {
 	Delay                     time.Duration // Wait this time before starting checks
-	MinPollInterval           time.Duration // Smallest time to wait before refreshes (MinTimeout in resource.StateChangeConf)
+	MinPollInterval           time.Duration // Smallest time to wait before refreshes (MinTimeout in retry.StateChangeConf)
 	PollInterval              time.Duration // Override MinPollInterval/backoff and only poll this often
 	NotFoundChecks            int           // Number of times to allow not found (nil result from Refresh)
 	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
-func (o Options) Apply(c *resource.StateChangeConf) {
+func (o Options) Apply(c *retry.StateChangeConf) {
 	if o.Delay > 0 {
 		c.Delay = o.Delay
 	}
@@ -206,7 +207,7 @@ func Retry(ctx context.Context, timeout time.Duration, f resource.RetryFunc, opt
 		fn(&options)
 	}
 
-	c := &resource.StateChangeConf{
+	c := &retry.StateChangeConf{
 		Pending:    []string{"retryableerror"},
 		Target:     []string{"success"},
 		Timeout:    timeout,

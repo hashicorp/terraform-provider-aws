@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1609,7 +1610,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusCreating,
@@ -1636,7 +1637,7 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusConfiguringIAMDatabaseAuth,
@@ -1662,7 +1663,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusAvailable,
 			ClusterStatusBackingUp,
@@ -1685,7 +1686,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	return nil, err
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterByID(ctx, conn, id)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -365,7 +366,7 @@ func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Neptune, a
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGlobalClusterByID(ctx, conn, id)
 
@@ -382,7 +383,7 @@ func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) 
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{GlobalClusterStatusCreating},
 		Target:  []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -399,7 +400,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id str
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
 		Target:  []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -417,7 +418,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id str
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{GlobalClusterStatusAvailable, GlobalClusterStatusDeleting},
 		Target:         []string{},
 		Refresh:        statusGlobalCluster(ctx, conn, id),

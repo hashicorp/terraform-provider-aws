@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -476,7 +477,7 @@ func DescribeGlobalClusterFromClusterARN(ctx context.Context, conn *rds.RDS, dbC
 	return globalCluster, err
 }
 
-func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterID string) resource.StateRefreshFunc {
+func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := DescribeGlobalCluster(ctx, conn, globalClusterID)
 
@@ -497,7 +498,7 @@ func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterI
 }
 
 func waitForGlobalClusterCreation(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"creating"},
 		Target:  []string{"available"},
 		Refresh: globalClusterRefreshFunc(ctx, conn, globalClusterID),
@@ -511,7 +512,7 @@ func waitForGlobalClusterCreation(ctx context.Context, conn *rds.RDS, globalClus
 }
 
 func waitForGlobalClusterUpdate(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"modifying", "upgrading"},
 		Target:  []string{"available"},
 		Refresh: globalClusterRefreshFunc(ctx, conn, globalClusterID),
@@ -526,7 +527,7 @@ func waitForGlobalClusterUpdate(ctx context.Context, conn *rds.RDS, globalCluste
 }
 
 func WaitForGlobalClusterDeletion(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"available",
 			"deleting",
@@ -813,7 +814,7 @@ var resourceClusterUpdatePendingStates = []string{
 }
 
 func WaitForClusterUpdate(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, id),
@@ -826,7 +827,7 @@ func WaitForClusterUpdate(ctx context.Context, conn *rds.RDS, id string, timeout
 	return err
 }
 
-func resourceClusterStateRefreshFunc(ctx context.Context, conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(ctx context.Context, conn *rds.RDS, dbClusterIdentifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &rds.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),

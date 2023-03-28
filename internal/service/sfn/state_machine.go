@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -347,7 +348,7 @@ func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
+func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStateMachineByARN(ctx, conn, stateMachineArn)
 
@@ -370,7 +371,7 @@ const (
 )
 
 func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
 		Refresh: statusStateMachine(ctx, conn, stateMachineArn),

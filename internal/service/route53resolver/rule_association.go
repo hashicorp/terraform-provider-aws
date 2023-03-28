@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -154,7 +155,7 @@ func FindResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	return output.ResolverRuleAssociation, nil
 }
 
-func statusRuleAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusRuleAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverRuleAssociationByID(ctx, conn, id)
 
@@ -171,7 +172,7 @@ func statusRuleAssociation(ctx context.Context, conn *route53resolver.Route53Res
 }
 
 func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRuleAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverRuleAssociationStatusCreating},
 		Target:     []string{route53resolver.ResolverRuleAssociationStatusComplete},
 		Refresh:    statusRuleAssociation(ctx, conn, id),
@@ -192,7 +193,7 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Route
 }
 
 func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRuleAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverRuleAssociationStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusRuleAssociation(ctx, conn, id),

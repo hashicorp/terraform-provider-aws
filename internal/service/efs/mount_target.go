@@ -13,6 +13,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -269,7 +270,7 @@ func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Mo
 	return output.MountTargets[0], nil
 }
 
-func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id string) resource.StateRefreshFunc {
+func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindMountTargetByID(ctx, conn, id)
 
@@ -286,7 +287,7 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id stri
 }
 
 func waitMountTargetCreated(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.MountTargetDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating},
 		Target:     []string{efs.LifeCycleStateAvailable},
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
@@ -305,7 +306,7 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.EFS, id string, timeo
 }
 
 func waitMountTargetDeleted(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.MountTargetDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
 		Target:     []string{},
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),

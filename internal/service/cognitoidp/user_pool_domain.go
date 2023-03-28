@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -230,7 +231,7 @@ func FindUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Cogni
 	return output.DomainDescription, nil
 }
 
-func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
+func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindUserPoolDomain(ctx, conn, domain)
 
@@ -247,7 +248,7 @@ func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Cog
 }
 
 func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cognitoidentityprovider.DomainStatusTypeCreating, cognitoidentityprovider.DomainStatusTypeUpdating},
 		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
@@ -264,7 +265,7 @@ func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cognitoidentityprovider.DomainStatusTypeUpdating},
 		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
@@ -281,7 +282,7 @@ func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cognitoidentityprovider.DomainStatusTypeUpdating, cognitoidentityprovider.DomainStatusTypeDeleting},
 		Target:  []string{},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),

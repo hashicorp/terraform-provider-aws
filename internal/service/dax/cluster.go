@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -282,7 +283,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(strings.ToLower(*resp.Cluster.ClusterName))
 
 	pending := []string{"creating", "modifying"}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -475,7 +476,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if awaitUpdate {
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
 		pending := []string{"modifying"}
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -549,7 +550,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
@@ -566,7 +567,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(clusterID)},

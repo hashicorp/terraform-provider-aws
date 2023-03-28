@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -297,7 +298,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 			return err
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"DELETING"},
 			Target:     []string{"DELETED"},
 			Refresh:    tfworklink.FleetStateRefresh(ctx, conn, rs.Primary.ID),

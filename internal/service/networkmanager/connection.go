@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -318,7 +319,7 @@ func FindConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Networ
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) resource.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
@@ -335,7 +336,7 @@ func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStatePending},
 		Target:  []string{networkmanager.ConnectionStateAvailable},
 		Timeout: timeout,
@@ -352,7 +353,7 @@ func waitConnectionCreated(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,
@@ -369,7 +370,7 @@ func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStateUpdating},
 		Target:  []string{networkmanager.ConnectionStateAvailable},
 		Timeout: timeout,

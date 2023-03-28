@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -378,7 +379,7 @@ func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Cli
 	return output.ProgressEvent, nil
 }
 
-func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) resource.StateRefreshFunc {
+func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
@@ -395,7 +396,7 @@ func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client
 }
 
 func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrol.Client, requestToken string, timeout time.Duration) (*types.ProgressEvent, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OperationStatusInProgress, types.OperationStatusPending),
 		Target:  enum.Slice(types.OperationStatusSuccess),
 		Refresh: statusProgressEventOperation(ctx, conn, requestToken),

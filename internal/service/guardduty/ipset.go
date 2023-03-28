@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -101,7 +101,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get("name").(string), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{guardduty.IpSetStatusActivating, guardduty.IpSetStatusDeactivating},
 		Target:     []string{guardduty.IpSetStatusActive, guardduty.IpSetStatusInactive},
 		Refresh:    ipsetRefreshStatusFunc(ctx, conn, *resp.IpSetId, detectorID),
@@ -233,7 +233,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			guardduty.IpSetStatusActive,
 			guardduty.IpSetStatusActivating,
@@ -255,7 +255,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.GuardDuty, ipSetID, detectorID string) resource.StateRefreshFunc {
+func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.GuardDuty, ipSetID, detectorID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetIPSetInput{
 			DetectorId: aws.String(detectorID),

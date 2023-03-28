@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -261,7 +262,7 @@ func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.
 	return output, nil
 }
 
-func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) resource.StateRefreshFunc {
+func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLedgerByName(ctx, conn, name)
 
@@ -278,7 +279,7 @@ func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) resour
 }
 
 func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{qldb.LedgerStateCreating},
 		Target:     []string{qldb.LedgerStateActive},
 		Refresh:    statusLedgerState(ctx, conn, name),
@@ -296,7 +297,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, timeout time.Durati
 }
 
 func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{qldb.LedgerStateActive, qldb.LedgerStateDeleting},
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),

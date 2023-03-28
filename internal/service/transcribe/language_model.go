@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -239,7 +240,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
@@ -256,7 +257,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) resource.StateRefreshFunc {
+func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
 		if tfresource.NotFound(err) {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -176,7 +177,7 @@ func GetResourceShareAssociation(ctx context.Context, conn *ram.RAM, resourceSha
 	}
 }
 
-func resourceAssociationStateRefreshFunc(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
+func resourceAssociationStateRefreshFunc(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resourceShareAssociation, err := GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
 		if tfresource.NotFound(err) {
@@ -196,7 +197,7 @@ func resourceAssociationStateRefreshFunc(ctx context.Context, conn *ram.RAM, res
 }
 
 func waitForResourceShareResourceAssociation(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociating},
 		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
 		Refresh: resourceAssociationStateRefreshFunc(ctx, conn, resourceShareARN, resourceARN),
@@ -209,7 +210,7 @@ func waitForResourceShareResourceAssociation(ctx context.Context, conn *ram.RAM,
 }
 
 func WaitForResourceShareResourceDisassociation(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated},
 		Refresh: resourceAssociationStateRefreshFunc(ctx, conn, resourceShareARN, resourceARN),

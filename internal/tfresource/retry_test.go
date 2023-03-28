@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -399,17 +400,17 @@ func TestOptionsApply(t *testing.T) {
 
 	testCases := map[string]struct {
 		options  tfresource.Options
-		expected resource.StateChangeConf
+		expected retry.StateChangeConf
 	}{
 		"Nothing": {
 			options:  tfresource.Options{},
-			expected: resource.StateChangeConf{},
+			expected: retry.StateChangeConf{},
 		},
 		"Delay": {
 			options: tfresource.Options{
 				Delay: 1 * time.Minute,
 			},
-			expected: resource.StateChangeConf{
+			expected: retry.StateChangeConf{
 				Delay: 1 * time.Minute,
 			},
 		},
@@ -417,7 +418,7 @@ func TestOptionsApply(t *testing.T) {
 			options: tfresource.Options{
 				MinPollInterval: 1 * time.Minute,
 			},
-			expected: resource.StateChangeConf{
+			expected: retry.StateChangeConf{
 				MinTimeout: 1 * time.Minute,
 			},
 		},
@@ -425,7 +426,7 @@ func TestOptionsApply(t *testing.T) {
 			options: tfresource.Options{
 				PollInterval: 1 * time.Minute,
 			},
-			expected: resource.StateChangeConf{
+			expected: retry.StateChangeConf{
 				PollInterval: 1 * time.Minute,
 			},
 		},
@@ -433,7 +434,7 @@ func TestOptionsApply(t *testing.T) {
 			options: tfresource.Options{
 				NotFoundChecks: 10,
 			},
-			expected: resource.StateChangeConf{
+			expected: retry.StateChangeConf{
 				NotFoundChecks: 10,
 			},
 		},
@@ -441,7 +442,7 @@ func TestOptionsApply(t *testing.T) {
 			options: tfresource.Options{
 				ContinuousTargetOccurence: 3,
 			},
-			expected: resource.StateChangeConf{
+			expected: retry.StateChangeConf{
 				ContinuousTargetOccurence: 3,
 			},
 		},
@@ -452,7 +453,7 @@ func TestOptionsApply(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			conf := resource.StateChangeConf{}
+			conf := retry.StateChangeConf{}
 
 			testCase.options.Apply(&conf)
 

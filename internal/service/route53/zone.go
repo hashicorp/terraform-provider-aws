@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -681,7 +682,7 @@ func hostedZoneVPCHash(v interface{}) int {
 func waitForChangeSynchronization(ctx context.Context, conn *route53.Route53, changeID string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	conf := resource.StateChangeConf{
+	conf := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(zoneChangeSyncMaxDelay-zoneChangeSyncMinDelay)+zoneChangeSyncMinDelay) * time.Second,

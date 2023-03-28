@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -75,7 +76,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(resp.Container.Name))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{mediastore.ContainerStatusCreating},
 		Target:     []string{mediastore.ContainerStatusActive},
 		Refresh:    containerRefreshStatusFunc(ctx, conn, d.Id()),
@@ -190,7 +191,7 @@ func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
+func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.MediaStore, cn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(cn),

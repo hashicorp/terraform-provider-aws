@@ -20,6 +20,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2151,7 +2152,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 	return output, nil
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error) resource.StateRefreshFunc {
+func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Check for fatal error in activity logs.
 		scalingActivities, err := findScalingActivitiesByName(ctx, conn, name)
@@ -2250,7 +2251,7 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elb
 	}
 }
 
-func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
+func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.AutoScaling, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGroupByName(ctx, conn, name)
 
@@ -2266,7 +2267,7 @@ func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.AutoScaling
 	}
 }
 
-func statusInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, name, id string) resource.StateRefreshFunc {
+func statusInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, name, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: aws.String(name),
@@ -2287,7 +2288,7 @@ func statusInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, n
 	}
 }
 
-func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, states ...string) resource.StateRefreshFunc {
+func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, states ...string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findLoadBalancerStates(ctx, conn, name)
 
@@ -2314,7 +2315,7 @@ func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.AutoS
 	}
 }
 
-func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, states ...string) resource.StateRefreshFunc {
+func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, states ...string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findLoadBalancerTargetGroupStates(ctx, conn, name)
 
@@ -2341,7 +2342,7 @@ func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autosc
 	}
 }
 
-func statusWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
+func statusWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findWarmPool(ctx, conn, name)
 
@@ -2357,7 +2358,7 @@ func statusWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 	}
 }
 
-func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
+func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.AutoScaling, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findWarmPool(ctx, conn, name)
 
@@ -2374,7 +2375,7 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.AutoScal
 }
 
 func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
 		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb),
 		Timeout: timeout,
@@ -2390,7 +2391,7 @@ func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScali
 }
 
 func waitGroupDrained(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) (*autoscaling.Group, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusGroupInstanceCount(ctx, conn, name),
 		Timeout: timeout,
@@ -2406,7 +2407,7 @@ func waitGroupDrained(ctx context.Context, conn *autoscaling.AutoScaling, name s
 }
 
 func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerState, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateAdding),
 		Timeout: timeout,
@@ -2422,7 +2423,7 @@ func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.AutoScaling, 
 }
 
 func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerState, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateRemoving),
 		Timeout: timeout,
@@ -2438,7 +2439,7 @@ func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.AutoScaling
 }
 
 func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerTargetGroupState, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateAdding),
 		Timeout: timeout,
@@ -2454,7 +2455,7 @@ func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.Au
 }
 
 func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) ([]*autoscaling.LoadBalancerTargetGroupState, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateRemoving),
 		Timeout: timeout,
@@ -2480,7 +2481,7 @@ const (
 )
 
 func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.AutoScaling, name, id string, timeout time.Duration) (*autoscaling.InstanceRefresh, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			autoscaling.InstanceRefreshStatusCancelling,
 			autoscaling.InstanceRefreshStatusInProgress,
@@ -2505,7 +2506,7 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.AutoSca
 }
 
 func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) (*autoscaling.WarmPoolConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{autoscaling.WarmPoolStatusPendingDelete},
 		Target:  []string{},
 		Refresh: statusWarmPool(ctx, conn, name),
@@ -2522,7 +2523,7 @@ func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.AutoScaling, nam
 }
 
 func waitWarmPoolDrained(ctx context.Context, conn *autoscaling.AutoScaling, name string, timeout time.Duration) (*autoscaling.DescribeWarmPoolOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
 		Refresh: statusWarmPoolInstanceCount(ctx, conn, name),
 		Timeout: timeout,

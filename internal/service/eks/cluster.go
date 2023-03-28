@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -635,7 +636,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	return output.Update, nil
 }
 
-func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *eks.EKS, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByName(ctx, conn, name)
 
@@ -651,7 +652,7 @@ func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.Sta
 	}
 }
 
-func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) resource.StateRefreshFunc {
+func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
@@ -668,7 +669,7 @@ func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) re
 }
 
 func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusPending, eks.ClusterStatusCreating},
 		Target:  []string{eks.ClusterStatusActive},
 		Refresh: statusCluster(ctx, conn, name),
@@ -685,7 +686,7 @@ func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, name),
@@ -702,7 +703,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusClusterUpdate(ctx, conn, name, id),

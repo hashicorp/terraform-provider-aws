@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -477,7 +478,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	log.Println(
 		"[INFO] Waiting for DocDB Cluster to be available")
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
@@ -823,7 +824,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "DocDB Cluster cannot be deleted: %s", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterDeletePendingStates,
 		Target:     []string{"destroyed"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
@@ -841,7 +842,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
@@ -899,7 +900,7 @@ var resourceClusterUpdatePendingStates = []string{
 }
 
 func waitForClusterUpdate(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, id),

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1152,7 +1153,7 @@ func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) resource.StateRefreshFunc {
+func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFunctionByName(ctx, conn, name)
 
@@ -1168,7 +1169,7 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) resource.StateRefreshFunc {
+func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFunctionByName(ctx, conn, name)
 
@@ -1185,7 +1186,7 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*types.FunctionConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StatePending),
 		Target:  enum.Slice(types.StateActive),
 		Refresh: statusFunctionState(ctx, conn, name),
@@ -1205,7 +1206,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) (*types.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LastUpdateStatusInProgress),
 		Target:  enum.Slice(types.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionLastUpdateStatus(ctx, conn, functionName),

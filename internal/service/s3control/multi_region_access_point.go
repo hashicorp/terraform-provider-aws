@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -327,7 +328,7 @@ func findMultiRegionAccessPointOperationByAccountIDAndTokenARN(ctx context.Conte
 	return output.AsyncOperation, nil
 }
 
-func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenARN string) resource.StateRefreshFunc {
+func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findMultiRegionAccessPointOperationByAccountIDAndTokenARN(ctx, conn, accountID, requestTokenARN)
 
@@ -359,7 +360,7 @@ const (
 )
 
 func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{RequestStatusSucceeded},
 		Timeout:    timeout,
 		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenArn),

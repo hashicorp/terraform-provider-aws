@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +20,7 @@ const (
 
 // waitApplicationDeleted waits for an Application to return Deleted
 func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
@@ -37,7 +38,7 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.KinesisA
 
 // waitApplicationStarted waits for an Application to start
 func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusStarting},
 		Target:  []string{kinesisanalytics.ApplicationStatusRunning},
 		Refresh: statusApplication(ctx, conn, name),
@@ -55,7 +56,7 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.KinesisA
 
 // waitApplicationStopped waits for an Application to stop
 func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusStopping},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady},
 		Refresh: statusApplication(ctx, conn, name),
@@ -73,7 +74,7 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.KinesisA
 
 // waitApplicationUpdated waits for an Application to update
 func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusUpdating},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady, kinesisanalytics.ApplicationStatusRunning},
 		Refresh: statusApplication(ctx, conn, name),

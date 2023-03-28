@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -443,7 +444,7 @@ func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.Network
 	return output.CoreNetworkPolicy, nil
 }
 
-func statusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCoreNetworkByID(ctx, conn, id)
 
@@ -460,7 +461,7 @@ func statusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkMan
 }
 
 func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.CoreNetworkStateCreating, coreNetworkStatePending},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
 		Timeout: timeout,
@@ -477,7 +478,7 @@ func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkMan
 }
 
 func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.CoreNetworkStateUpdating},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
 		Timeout: timeout,
@@ -494,7 +495,7 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 }
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.CoreNetworkStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -165,7 +166,7 @@ func autodefinedReverseFlag_Values() []string {
 	}
 }
 
-func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverConfigByID(ctx, conn, id)
 
@@ -194,7 +195,7 @@ func waitAutodefinedReverseUpdated(ctx context.Context, conn *route53resolver.Ro
 }
 
 func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverAutodefinedReverseStatusEnabling},
 		Target:  []string{route53resolver.ResolverAutodefinedReverseStatusEnabled},
 		Refresh: statusAutodefinedReverse(ctx, conn, id),
@@ -211,7 +212,7 @@ func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Ro
 }
 
 func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverAutodefinedReverseStatusDisabling},
 		Target:  []string{route53resolver.ResolverAutodefinedReverseStatusDisabled},
 		Refresh: statusAutodefinedReverse(ctx, conn, id),

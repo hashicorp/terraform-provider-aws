@@ -16,6 +16,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -749,7 +750,7 @@ func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 	return output.ConfigurationSettings[0], nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string) resource.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEnvironmentByID(ctx, conn, id)
 
@@ -766,7 +767,7 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanst
 }
 
 func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{elasticbeanstalk.EnvironmentStatusLaunching, elasticbeanstalk.EnvironmentStatusUpdating},
 		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
 		Refresh:      statusEnvironment(ctx, conn, id),
@@ -786,7 +787,7 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBea
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{elasticbeanstalk.EnvironmentStatusTerminating},
 		Target:       []string{},
 		Refresh:      statusEnvironment(ctx, conn, id),

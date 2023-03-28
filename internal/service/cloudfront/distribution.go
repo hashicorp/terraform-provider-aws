@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1155,7 +1156,7 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
 func DistributionWaitUntilDeployed(ctx context.Context, id string, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceWebDistributionStateRefreshFunc(ctx, id, meta),
@@ -1169,7 +1170,7 @@ func DistributionWaitUntilDeployed(ctx context.Context, id string, meta interfac
 }
 
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
-func resourceWebDistributionStateRefreshFunc(ctx context.Context, id string, meta interface{}) resource.StateRefreshFunc {
+func resourceWebDistributionStateRefreshFunc(ctx context.Context, id string, meta interface{}) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).CloudFrontConn()
 		params := &cloudfront.GetDistributionInput{

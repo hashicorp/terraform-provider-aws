@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -235,7 +236,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
-		spotStateConf := &resource.StateChangeConf{
+		spotStateConf := &retry.StateChangeConf{
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html
 			Pending:    []string{"start", "pending-evaluation", "pending-fulfillment"},
 			Target:     []string{"fulfilled"},
@@ -427,9 +428,9 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-// SpotInstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// SpotInstanceStateRefreshFunc returns a retry.StateRefreshFunc that is used to watch
 // an EC2 spot instance request
-func SpotInstanceStateRefreshFunc(ctx context.Context, conn *ec2.EC2, sir *ec2.SpotInstanceRequest) resource.StateRefreshFunc {
+func SpotInstanceStateRefreshFunc(ctx context.Context, conn *ec2.EC2, sir *ec2.SpotInstanceRequest) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeSpotInstanceRequestsWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},

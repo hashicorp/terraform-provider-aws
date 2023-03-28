@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -195,7 +196,7 @@ func DescribeDBInstanceRole(ctx context.Context, conn *rds.RDS, dbInstanceIdenti
 }
 
 func waitForDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
 		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleArn),
@@ -209,7 +210,7 @@ func waitForDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInst
 }
 
 func WaitForDBInstanceRoleDisassociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceRoleStatusActive,
 			dbInstanceRoleStatusPending,
@@ -225,7 +226,7 @@ func WaitForDBInstanceRoleDisassociation(ctx context.Context, conn *rds.RDS, dbI
 	return err
 }
 
-func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
+func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dbInstanceRole, err := DescribeDBInstanceRole(ctx, conn, dbInstanceIdentifier, roleArn)
 

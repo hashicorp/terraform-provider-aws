@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -405,7 +406,7 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Organi
 	return output.CreateAccountStatus, nil
 }
 
-func statusCreateAccountState(ctx context.Context, conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+func statusCreateAccountState(ctx context.Context, conn *organizations.Organizations, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
@@ -422,7 +423,7 @@ func statusCreateAccountState(ctx context.Context, conn *organizations.Organizat
 }
 
 func waitAccountCreated(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{organizations.CreateAccountStateInProgress},
 		Target:       []string{organizations.CreateAccountStateSucceeded},
 		Refresh:      statusCreateAccountState(ctx, conn, id),
@@ -443,7 +444,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Organizations, 
 	return nil, err
 }
 
-func statusAccountStatus(ctx context.Context, conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+func statusAccountStatus(ctx context.Context, conn *organizations.Organizations, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAccountByID(ctx, conn, id)
 
@@ -460,7 +461,7 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Organizations,
 }
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.Account, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{organizations.AccountStatusPendingClosure, organizations.AccountStatusActive},
 		Target:       []string{},
 		Refresh:      statusAccountStatus(ctx, conn, id),

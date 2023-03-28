@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -98,7 +98,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "%s %q", err, name)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
@@ -202,7 +202,7 @@ func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Queue (%s): %s", d.Get("name").(string), err)
 		}
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
 			Target:     []string{batch.JQStatusValid},
 			Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
@@ -266,7 +266,7 @@ func DeleteJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) err
 		return err
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
@@ -288,7 +288,7 @@ func DisableJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) er
 		return err
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
@@ -321,7 +321,7 @@ func GetJobQueue(ctx context.Context, conn *batch.Batch, sn string) (*batch.JobQ
 	return nil, nil
 }
 
-func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := GetJobQueue(ctx, conn, sn)
 		if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -397,7 +398,7 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 }
 
 func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewer.CodeGuruReviewer, id string, timeout time.Duration) (*codegurureviewer.RepositoryAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{codegurureviewer.RepositoryAssociationStateAssociating},
 		Target:                    []string{codegurureviewer.RepositoryAssociationStateAssociated},
 		Refresh:                   statusRepositoryAssociation(ctx, conn, id),
@@ -415,7 +416,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 }
 
 func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewer.CodeGuruReviewer, id string, timeout time.Duration) (*codegurureviewer.RepositoryAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{codegurureviewer.RepositoryAssociationStateDisassociating, codegurureviewer.RepositoryAssociationStateAssociated},
 		Target:  []string{},
 		Refresh: statusRepositoryAssociation(ctx, conn, id),
@@ -430,7 +431,7 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	return nil, err
 }
 
-func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.CodeGuruReviewer, id string) resource.StateRefreshFunc {
+func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.CodeGuruReviewer, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findRepositoryAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

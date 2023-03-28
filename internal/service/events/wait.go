@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 func waitConnectionCreated(ctx context.Context, conn *eventbridge.EventBridge, id string) (*eventbridge.DescribeConnectionOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventbridge.ConnectionStateCreating, eventbridge.ConnectionStateAuthorizing},
 		Target:  []string{eventbridge.ConnectionStateAuthorized, eventbridge.ConnectionStateDeauthorized},
 		Refresh: statusConnectionState(ctx, conn, id),
@@ -32,7 +32,7 @@ func waitConnectionCreated(ctx context.Context, conn *eventbridge.EventBridge, i
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *eventbridge.EventBridge, id string) (*eventbridge.DescribeConnectionOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventbridge.ConnectionStateDeleting},
 		Target:  []string{},
 		Refresh: statusConnectionState(ctx, conn, id),
@@ -49,7 +49,7 @@ func waitConnectionDeleted(ctx context.Context, conn *eventbridge.EventBridge, i
 }
 
 func waitConnectionUpdated(ctx context.Context, conn *eventbridge.EventBridge, id string) (*eventbridge.DescribeConnectionOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventbridge.ConnectionStateUpdating, eventbridge.ConnectionStateAuthorizing, eventbridge.ConnectionStateDeauthorizing},
 		Target:  []string{eventbridge.ConnectionStateAuthorized, eventbridge.ConnectionStateDeauthorized},
 		Refresh: statusConnectionState(ctx, conn, id),

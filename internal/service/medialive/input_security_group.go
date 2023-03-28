@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -207,7 +208,7 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -225,7 +226,7 @@ func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputSecurityGroupStateUpdating),
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -243,7 +244,7 @@ func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.InputSecurityGroupStateDeleted),
 		Refresh: statusInputSecurityGroup(ctx, conn, id),
@@ -258,7 +259,7 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	return nil, err
 }
 
-func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) resource.StateRefreshFunc {
+func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindInputSecurityGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

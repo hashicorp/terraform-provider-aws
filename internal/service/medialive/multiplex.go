@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -290,7 +291,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.MultiplexStateCreating),
 		Target:                    enum.Slice(types.MultiplexStateIdle),
 		Refresh:                   statusMultiplex(ctx, conn, id),
@@ -309,7 +310,7 @@ func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.MultiplexStateIdle),
 		Refresh:                   statusMultiplex(ctx, conn, id),
@@ -328,7 +329,7 @@ func waitMultiplexUpdated(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateDeleting),
 		Target:  enum.Slice(types.MultiplexStateDeleted),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -344,7 +345,7 @@ func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStarting),
 		Target:  enum.Slice(types.MultiplexStateRunning),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -360,7 +361,7 @@ func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStopping),
 		Target:  enum.Slice(types.MultiplexStateIdle),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -375,7 +376,7 @@ func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string
 	return nil, err
 }
 
-func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) resource.StateRefreshFunc {
+func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindMultiplexByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

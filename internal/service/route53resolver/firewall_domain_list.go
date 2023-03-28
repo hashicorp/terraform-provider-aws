@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -255,7 +256,7 @@ func FindFirewallDomainListByID(ctx context.Context, conn *route53resolver.Route
 	return output.FirewallDomainList, nil
 }
 
-func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallDomainListByID(ctx, conn, id)
 
@@ -277,7 +278,7 @@ const (
 )
 
 func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusUpdating, route53resolver.FirewallDomainListStatusImporting},
 		Target: []string{route53resolver.FirewallDomainListStatusComplete,
 			route53resolver.FirewallDomainListStatusCompleteImportFailed,
@@ -300,7 +301,7 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Ro
 }
 
 func waitFirewallDomainListDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFirewallDomainList(ctx, conn, id),

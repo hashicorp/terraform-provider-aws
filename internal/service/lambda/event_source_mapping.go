@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1134,7 +1135,7 @@ func FindEventSourceMappingConfigurationByID(ctx context.Context, conn *lambda.L
 	return findEventSourceMappingConfiguration(ctx, conn, input)
 }
 
-func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) resource.StateRefreshFunc {
+func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, id)
 
@@ -1158,7 +1159,7 @@ const (
 )
 
 func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
@@ -1177,7 +1178,7 @@ func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id s
 }
 
 func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
@@ -1196,7 +1197,7 @@ func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id s
 }
 
 func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),

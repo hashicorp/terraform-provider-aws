@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -235,7 +236,7 @@ func FindFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	return output.FirewallRuleGroupAssociation, nil
 }
 
-func statusFirewallRuleGroupAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusFirewallRuleGroupAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallRuleGroupAssociationByID(ctx, conn, id)
 
@@ -258,7 +259,7 @@ const (
 )
 
 func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroupAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusUpdating},
 		Target:  []string{route53resolver.FirewallRuleGroupAssociationStatusComplete},
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
@@ -277,7 +278,7 @@ func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53r
 }
 
 func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroupAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusUpdating},
 		Target:  []string{route53resolver.FirewallRuleGroupAssociationStatusComplete},
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
@@ -296,7 +297,7 @@ func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53r
 }
 
 func waitFirewallRuleGroupAssociationDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroupAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),

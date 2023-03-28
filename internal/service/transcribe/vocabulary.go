@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -243,7 +244,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -265,7 +266,7 @@ func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -287,7 +288,7 @@ func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: vocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, id),
@@ -306,7 +307,7 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 	return nil, err
 }
 
-func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) resource.StateRefreshFunc {
+func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {

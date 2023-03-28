@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -690,7 +691,7 @@ func ListEntityRecognizerVersionsByName(ctx context.Context, conn *comprehend.Cl
 }
 
 func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
 		Refresh:      statusEntityRecognizer(ctx, conn, id),
@@ -711,7 +712,7 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 }
 
 func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
 		Refresh:      statusEntityRecognizer(ctx, conn, id),
@@ -729,7 +730,7 @@ func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, i
 }
 
 func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
 		Refresh:        statusEntityRecognizer(ctx, conn, id),
@@ -747,7 +748,7 @@ func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, i
 	return nil, err
 }
 
-func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
+func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindEntityRecognizerByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

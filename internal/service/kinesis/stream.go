@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -589,7 +590,7 @@ func FindStreamByName(ctx context.Context, conn *kinesis.Kinesis, name string) (
 	return output.StreamDescriptionSummary, nil
 }
 
-func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) resource.StateRefreshFunc {
+func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStreamByName(ctx, conn, name)
 
@@ -606,7 +607,7 @@ func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) resou
 }
 
 func waitStreamCreated(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusCreating},
 		Target:     []string{kinesis.StreamStatusActive},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -625,7 +626,7 @@ func waitStreamCreated(ctx context.Context, conn *kinesis.Kinesis, name string, 
 }
 
 func waitStreamDeleted(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusDeleting},
 		Target:     []string{},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -644,7 +645,7 @@ func waitStreamDeleted(ctx context.Context, conn *kinesis.Kinesis, name string, 
 }
 
 func waitStreamUpdated(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusUpdating},
 		Target:     []string{kinesis.StreamStatusActive},
 		Refresh:    streamStatus(ctx, conn, name),

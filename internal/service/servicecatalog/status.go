@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) resource.StateRefreshFunc {
+func StatusProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(productID),
@@ -47,7 +48,7 @@ func StatusProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acc
 	}
 }
 
-func StatusTagOption(ctx context.Context, conn *servicecatalog.ServiceCatalog, id string) resource.StateRefreshFunc {
+func StatusTagOption(ctx context.Context, conn *servicecatalog.ServiceCatalog, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(id),
@@ -71,7 +72,7 @@ func StatusTagOption(ctx context.Context, conn *servicecatalog.ServiceCatalog, i
 	}
 }
 
-func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.ServiceCatalog, token string) resource.StateRefreshFunc {
+func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.ServiceCatalog, token string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribePortfolioShareStatusInput{
 			PortfolioShareToken: aws.String(token),
@@ -94,7 +95,7 @@ func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Ser
 	}
 }
 
-func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) resource.StateRefreshFunc {
+func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
 
@@ -114,7 +115,7 @@ func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.ServiceCatal
 	}
 }
 
-func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.ServiceCatalog) resource.StateRefreshFunc {
+func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.ServiceCatalog) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.GetAWSOrganizationsAccessStatusInput{}
 
@@ -136,7 +137,7 @@ func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Service
 	}
 }
 
-func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
+func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(id),
@@ -168,7 +169,7 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, 
 	}
 }
 
-func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
+func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
 
@@ -192,7 +193,7 @@ func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 	}
 }
 
-func StatusServiceAction(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
+func StatusServiceAction(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(id),
@@ -220,7 +221,7 @@ func StatusServiceAction(ctx context.Context, conn *servicecatalog.ServiceCatalo
 	}
 }
 
-func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) resource.StateRefreshFunc {
+func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
 
@@ -244,7 +245,7 @@ func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.S
 	}
 }
 
-func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) resource.StateRefreshFunc {
+func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
 
@@ -268,7 +269,7 @@ func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 	}
 }
 
-func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.ServiceCatalog, id, productID string) resource.StateRefreshFunc {
+func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.ServiceCatalog, id, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProvisioningArtifactId: aws.String(id),
@@ -293,7 +294,7 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Servic
 	}
 }
 
-func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) resource.StateRefreshFunc {
+func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID)
 
@@ -313,7 +314,7 @@ func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatal
 	}
 }
 
-func StatusLaunchPaths(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) resource.StateRefreshFunc {
+func StatusLaunchPaths(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListLaunchPathsInput{
 			AcceptLanguage: aws.String(acceptLanguage),
@@ -350,7 +351,7 @@ func StatusLaunchPaths(ctx context.Context, conn *servicecatalog.ServiceCatalog,
 	}
 }
 
-func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string) resource.StateRefreshFunc {
+func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProvisionedProductInput{}
 
@@ -383,7 +384,7 @@ func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.ServiceC
 	}
 }
 
-func StatusPortfolioConstraints(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
+func StatusPortfolioConstraints(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{
 			PortfolioId: aws.String(portfolioID),
