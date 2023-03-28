@@ -1,6 +1,8 @@
 package storagegateway
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindLocalDiskByDiskID(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
+func FindLocalDiskByDiskID(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	output, err := conn.ListLocalDisks(input)
+	output, err := conn.ListLocalDisksWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -32,12 +34,12 @@ func FindLocalDiskByDiskID(conn *storagegateway.StorageGateway, gatewayARN strin
 	return nil, nil
 }
 
-func FindLocalDiskByDiskPath(conn *storagegateway.StorageGateway, gatewayARN string, diskPath string) (*storagegateway.Disk, error) {
+func FindLocalDiskByDiskPath(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskPath string) (*storagegateway.Disk, error) {
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	output, err := conn.ListLocalDisks(input)
+	output, err := conn.ListLocalDisksWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -56,14 +58,14 @@ func FindLocalDiskByDiskPath(conn *storagegateway.StorageGateway, gatewayARN str
 	return nil, nil
 }
 
-func FindUploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*string, error) {
+func FindUploadBufferDisk(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*string, error) {
 	input := &storagegateway.DescribeUploadBufferInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
 	var result *string
 
-	output, err := conn.DescribeUploadBuffer(input)
+	output, err := conn.DescribeUploadBufferWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -83,12 +85,12 @@ func FindUploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string
 	return result, err
 }
 
-func FindGatewayByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.DescribeGatewayInformationOutput, error) {
+func FindGatewayByARN(ctx context.Context, conn *storagegateway.StorageGateway, arn string) (*storagegateway.DescribeGatewayInformationOutput, error) {
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeGatewayInformation(input)
+	output, err := conn.DescribeGatewayInformationWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeGatewayNotFound || tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
 		return nil, &resource.NotFoundError{
@@ -108,12 +110,12 @@ func FindGatewayByARN(conn *storagegateway.StorageGateway, arn string) (*storage
 	return output, nil
 }
 
-func FindNFSFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.NFSFileShareInfo, error) {
+func FindNFSFileShareByARN(ctx context.Context, conn *storagegateway.StorageGateway, arn string) (*storagegateway.NFSFileShareInfo, error) {
 	input := &storagegateway.DescribeNFSFileSharesInput{
 		FileShareARNList: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := conn.DescribeNFSFileShares(input)
+	output, err := conn.DescribeNFSFileSharesWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
 		return nil, &resource.NotFoundError{
@@ -137,12 +139,12 @@ func FindNFSFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*st
 	return output.NFSFileShareInfoList[0], nil
 }
 
-func FindSMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
+func FindSMBFileShareByARN(ctx context.Context, conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := conn.DescribeSMBFileShares(input)
+	output, err := conn.DescribeSMBFileSharesWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
 		return nil, &resource.NotFoundError{
@@ -166,12 +168,12 @@ func FindSMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*st
 	return output.SMBFileShareInfoList[0], nil
 }
 
-func FindFileSystemAssociationByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.FileSystemAssociationInfo, error) {
+func FindFileSystemAssociationByARN(ctx context.Context, conn *storagegateway.StorageGateway, arn string) (*storagegateway.FileSystemAssociationInfo, error) {
 	input := &storagegateway.DescribeFileSystemAssociationsInput{
 		FileSystemAssociationARNList: []*string{aws.String(arn)},
 	}
 
-	output, err := conn.DescribeFileSystemAssociations(input)
+	output, err := conn.DescribeFileSystemAssociationsWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
 		return nil, &resource.NotFoundError{

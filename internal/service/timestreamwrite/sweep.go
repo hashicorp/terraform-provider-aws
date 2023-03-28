@@ -28,6 +28,7 @@ func init() {
 }
 
 func sweepDatabases(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -36,7 +37,7 @@ func sweepDatabases(region string) error {
 	conn := client.(*conns.AWSClient).TimestreamWriteConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDatabasesPages(input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
+	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -61,7 +62,7 @@ func sweepDatabases(region string) error {
 		return fmt.Errorf("error listing Timestream Databases (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Timestream Databases (%s): %w", region, err)
@@ -71,6 +72,7 @@ func sweepDatabases(region string) error {
 }
 
 func sweepTables(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -79,7 +81,7 @@ func sweepTables(region string) error {
 	conn := client.(*conns.AWSClient).TimestreamWriteConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTablesPages(input, func(page *timestreamwrite.ListTablesOutput, lastPage bool) bool {
+	err = conn.ListTablesPagesWithContext(ctx, input, func(page *timestreamwrite.ListTablesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -104,7 +106,7 @@ func sweepTables(region string) error {
 		return fmt.Errorf("error listing Timestream Tables (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Timestream Tables (%s): %w", region, err)

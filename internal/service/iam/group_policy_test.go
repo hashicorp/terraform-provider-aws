@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -17,20 +18,20 @@ import (
 )
 
 func TestAccIAMGroupPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyDestroy,
+		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.group",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.group",
 						"aws_iam_group_policy.foo",
 						&groupPolicy1,
 					),
@@ -44,8 +45,7 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 			{
 				Config: testAccGroupPolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.group",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.group",
 						"aws_iam_group_policy.bar",
 						&groupPolicy2,
 					),
@@ -62,24 +62,24 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 }
 
 func TestAccIAMGroupPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.GetGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyDestroy,
+		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.group",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.group",
 						"aws_iam_group_policy.foo",
 						&out,
 					),
-					testAccCheckGroupPolicyDisappears(&out),
+					testAccCheckGroupPolicyDisappears(ctx, &out),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,20 +88,20 @@ func TestAccIAMGroupPolicy_disappears(t *testing.T) {
 }
 
 func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyDestroy,
+		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyConfig_namePrefix(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.test",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.test",
 						"aws_iam_group_policy.test",
 						&groupPolicy1,
 					),
@@ -110,8 +110,7 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 			{
 				Config: testAccGroupPolicyConfig_namePrefix(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.test",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.test",
 						"aws_iam_group_policy.test",
 						&groupPolicy2,
 					),
@@ -129,20 +128,20 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 }
 
 func TestAccIAMGroupPolicy_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyDestroy,
+		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyConfig_generatedName(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.test",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.test",
 						"aws_iam_group_policy.test",
 						&groupPolicy1,
 					),
@@ -151,8 +150,7 @@ func TestAccIAMGroupPolicy_generatedName(t *testing.T) {
 			{
 				Config: testAccGroupPolicyConfig_generatedName(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(
-						"aws_iam_group.test",
+					testAccCheckGroupPolicyExists(ctx, "aws_iam_group.test",
 						"aws_iam_group_policy.test",
 						&groupPolicy2,
 					),
@@ -174,21 +172,22 @@ func TestAccIAMGroupPolicy_generatedName(t *testing.T) {
 // a JSON policy. This test checks to make sure nothing goes wrong
 // during that step.
 func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var gp iam.GetGroupPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy.test"
 	groupName := "aws_iam_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyDestroy,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyConfig_unknowns(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyExists(groupName, resourceName, &gp),
+					testAccCheckGroupPolicyExists(ctx, groupName, resourceName, &gp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -196,42 +195,44 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_group_policy" {
-			continue
-		}
-
-		group, name, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		request := &iam.GetGroupPolicyInput{
-			PolicyName: aws.String(name),
-			GroupName:  aws.String(group),
-		}
-
-		getResp, err := conn.GetGroupPolicy(request)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-				// none found, that's good
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_group_policy" {
 				continue
 			}
-			return fmt.Errorf("Error reading IAM policy %s from group %s: %s", name, group, err)
+
+			group, name, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			request := &iam.GetGroupPolicyInput{
+				PolicyName: aws.String(name),
+				GroupName:  aws.String(group),
+			}
+
+			getResp, err := conn.GetGroupPolicyWithContext(ctx, request)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+					// none found, that's good
+					continue
+				}
+				return fmt.Errorf("Error reading IAM policy %s from group %s: %s", name, group, err)
+			}
+
+			if getResp != nil {
+				return fmt.Errorf("Found IAM group policy, expected none: %s", getResp)
+			}
 		}
 
-		if getResp != nil {
-			return fmt.Errorf("Found IAM group policy, expected none: %s", getResp)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
+func testAccCheckGroupPolicyDisappears(ctx context.Context, out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
@@ -240,12 +241,12 @@ func testAccCheckGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.T
 			GroupName:  out.GroupName,
 		}
 
-		_, err := conn.DeleteGroupPolicy(params)
+		_, err := conn.DeleteGroupPolicyWithContext(ctx, params)
 		return err
 	}
 }
 
-func testAccCheckGroupPolicyExists(
+func testAccCheckGroupPolicyExists(ctx context.Context,
 	iamGroupResource string,
 	iamGroupPolicyResource string,
 	groupPolicy *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
@@ -270,7 +271,7 @@ func testAccCheckGroupPolicyExists(
 			return err
 		}
 
-		output, err := conn.GetGroupPolicy(&iam.GetGroupPolicyInput{
+		output, err := conn.GetGroupPolicyWithContext(ctx, &iam.GetGroupPolicyInput{
 			GroupName:  aws.String(group),
 			PolicyName: aws.String(name),
 		})

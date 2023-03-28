@@ -1,6 +1,7 @@
 package globalaccelerator
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_globalaccelerator_custom_routing_accelerator")
 func ResourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCustomRoutingAcceleratorCreate,
@@ -117,7 +119,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(context.TODO(), d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateCustomRoutingAcceleratorInput{
@@ -198,7 +200,7 @@ func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(context.TODO(), conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
 	}
@@ -279,7 +281,7 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(context.TODO(), conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Global Accelerator Custom Routing Accelerator (%s) tags: %w", d.Id(), err)
 		}
 	}

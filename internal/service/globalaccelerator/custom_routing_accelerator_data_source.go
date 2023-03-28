@@ -1,6 +1,7 @@
 package globalaccelerator
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_globalaccelerator_custom_routing_accelerator")
 func DataSourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCustomRoutingAcceleratorRead,
@@ -141,7 +143,7 @@ func dataSourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(context.TODO(), conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
 	}

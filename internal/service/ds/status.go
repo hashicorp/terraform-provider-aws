@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +25,9 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 	}
 }
 
-func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id stri
 	}
 }
 
-func statusDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
+func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainController(conn, directoryID, domainControllerID)
+		output, err := FindDomainController(ctx, conn, directoryID, domainControllerID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +57,9 @@ func statusDomainController(conn *directoryservice.DirectoryService, directoryID
 	}
 }
 
-func statusRadius(_ context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
+func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, directoryID)
+		output, err := FindDirectoryByID(ctx, conn, directoryID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

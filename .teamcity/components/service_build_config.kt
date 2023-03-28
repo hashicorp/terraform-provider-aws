@@ -10,6 +10,7 @@ data class ServiceSpec(
     val patternOverride: String? = null,
     val vpcLock: Boolean = false,
     val parallelismOverride: Int? = null,
+    val regionOverride: String? = null,
 )
 
 class Service(name: String, spec: ServiceSpec) {
@@ -35,6 +36,11 @@ class Service(name: String, spec: ServiceSpec) {
             if (spec.parallelismOverride != null) {
                 params {
                     text("ACCTEST_PARALLELISM", spec.parallelismOverride.toString(), display = ParameterDisplay.HIDDEN)
+                }
+            }
+            if (spec.regionOverride != null) {
+                params {
+                    text("env.AWS_DEFAULT_REGION", spec.regionOverride, display = ParameterDisplay.HIDDEN)
                 }
             }
 

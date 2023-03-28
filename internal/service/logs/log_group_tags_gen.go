@@ -8,17 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListLogGroupTags lists logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListLogGroupTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListLogGroupTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(identifier),
 	}
@@ -26,21 +24,35 @@ func ListLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.C
 	output, err := conn.ListTagsLogGroupWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListLogGroupTags lists logs service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // UpdateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateLogGroupTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateLogGroupTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatchlogs.UntagLogGroupInput{
@@ -69,4 +81,10 @@ func UpdateLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface
 	}
 
 	return nil
+}
+
+// UpdateLogGroupTags updates logs service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateLogGroupTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier, oldTags, newTags)
 }

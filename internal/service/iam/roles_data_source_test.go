@@ -13,10 +13,11 @@ import (
 )
 
 func TestAccIAMRolesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -31,12 +32,13 @@ func TestAccIAMRolesDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMRolesDataSource_nameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -52,13 +54,14 @@ func TestAccIAMRolesDataSource_nameRegex(t *testing.T) {
 }
 
 func TestAccIAMRolesDataSource_pathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -74,10 +77,11 @@ func TestAccIAMRolesDataSource_pathPrefix(t *testing.T) {
 }
 
 func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -93,13 +97,14 @@ func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 }
 
 func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

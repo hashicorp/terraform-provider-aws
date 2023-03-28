@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_customer_gateway_association")
 func ResourceCustomerGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayAssociationCreate,
@@ -25,7 +26,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomerGatewayAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -76,7 +77,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Customer Gateway Association: %s", input)
-	_, err := tfresource.RetryWhenContext(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateCustomerGatewayWithContext(ctx, input)
 		},

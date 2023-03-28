@@ -1,6 +1,7 @@
 package redshiftdata_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,12 +15,13 @@ import (
 )
 
 func TestAccRedshiftDataStatement_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshiftdataapiservice.DescribeStatementOutput
 	resourceName := "aws_redshiftdata_statement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -27,7 +29,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 			{
 				Config: testAccStatementConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStatementExists(resourceName, &v),
+					testAccCheckStatementExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
@@ -45,12 +47,13 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 }
 
 func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshiftdataapiservice.DescribeStatementOutput
 	resourceName := "aws_redshiftdata_statement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -58,7 +61,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 			{
 				Config: testAccStatementConfig_workgroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStatementExists(resourceName, &v),
+					testAccCheckStatementExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
@@ -75,7 +78,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 	})
 }
 
-func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeStatementOutput) resource.TestCheckFunc {
+func testAccCheckStatementExists(ctx context.Context, n string, v *redshiftdataapiservice.DescribeStatementOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -88,7 +91,7 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn()
 
-		output, err := tfredshiftdata.FindStatementByID(conn, rs.Primary.ID)
+		output, err := tfredshiftdata.FindStatementByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,11 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -34,14 +37,15 @@ const (
 	cacheClusterCreatedTimeout = 40 * time.Minute
 )
 
+// @SDKResource("aws_elasticache_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -340,13 +344,14 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-		return errors.New(`with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
 	}
 
 	req := &elasticache.CreateCacheClusterInput{}
@@ -464,54 +469,55 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.NetworkType = aws.String(v.(string))
 	}
 
-	id, arn, err := createCacheCluster(conn, req)
+	id, arn, err := createCacheCluster(ctx, conn, req)
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Cache Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Cache Cluster: %s", err)
 	}
 
 	d.SetId(id)
 
-	_, err = waitCacheClusterAvailable(conn, d.Id(), cacheClusterCreatedTimeout)
+	_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), cacheClusterCreatedTimeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be created: %s", d.Id(), err)
 	}
 
 	// Only post-create tagging supported in some partitions
 	if req.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, arn, nil, tags)
+		err := UpdateTags(ctx, conn, arn, nil, tags)
 
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("failed adding tags after create for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[WARN] failed adding tags after create for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	c, err := FindCacheClusterWithNodeInfoByID(conn, d.Id())
+	c, err := FindCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_id", c.CacheClusterId)
 
 	if err := setFromCacheCluster(d, c); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
@@ -543,7 +549,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setCacheNodeData(d, c); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", c.ARN)
@@ -552,10 +558,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("network_type", c.NetworkType)
 	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
 
-	tags, err := ListTags(conn, aws.StringValue(c.ARN))
+	tags, err := ListTags(ctx, conn, aws.StringValue(c.ARN))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return fmt.Errorf("error listing tags for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err != nil {
@@ -567,15 +573,15 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
@@ -584,7 +590,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("engine", c.Engine)
 	if aws.StringValue(c.Engine) == engineRedis {
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
@@ -593,10 +599,10 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_names: %w", err)
+		return fmt.Errorf("setting security_group_names: %w", err)
 	}
 	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_ids: %w", err)
+		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 
 	if c.CacheParameterGroup != nil {
@@ -608,7 +614,8 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	return nil
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	req := &elasticache.ModifyCacheClusterInput{
@@ -727,7 +734,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
 				// Here we check the list length to prevent a potential panic :)
 				if len(v.([]interface{})) != n {
-					return fmt.Errorf("length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
+					return sdkdiag.AppendErrorf(diags, "length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
 				}
 				req.NewAvailabilityZones = flex.ExpandStringList(v.([]interface{})[o:])
 			}
@@ -739,27 +746,27 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if requestUpdate {
 		log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%s", d.Id(), req)
-		_, err := conn.ModifyCacheCluster(req)
+		_, err := conn.ModifyCacheClusterWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("Error updating ElastiCache cluster (%s), error: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ElastiCache cluster (%s), error: %s", d.Id(), err)
 		}
 
-		_, err = waitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
+		_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), CacheClusterUpdatedTimeout)
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to update: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
 
 		// ISO partitions may not support tagging, giving error
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("failed updating ElastiCache Cache Cluster (%s) tags: %w", d.Get("arn").(string), err)
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Cache Cluster (%s) tags: %s", d.Get("arn").(string), err)
 			}
 
 			// no non-default tags and iso-unsupported error
@@ -767,7 +774,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
@@ -812,35 +819,36 @@ func (b byCacheNodeId) Less(i, j int) bool {
 		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)
+	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
-	_, err = WaitCacheClusterDeleted(conn, d.Id(), CacheClusterDeletedTimeout)
+	_, err = WaitCacheClusterDeleted(ctx, conn, d.Id(), CacheClusterDeletedTimeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func createCacheCluster(conn *elasticache.ElastiCache, input *elasticache.CreateCacheClusterInput) (string, string, error) {
+func createCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.CreateCacheClusterInput) (string, string, error) {
 	log.Printf("[DEBUG] Creating ElastiCache Cache Cluster: %s", input)
-	output, err := conn.CreateCacheCluster(input)
+	output, err := conn.CreateCacheClusterWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Cache Cluster with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
-		output, err = conn.CreateCacheCluster(input)
+		output, err = conn.CreateCacheClusterWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -856,7 +864,7 @@ func createCacheCluster(conn *elasticache.ElastiCache, input *elasticache.Create
 	return strings.ToLower(aws.StringValue(output.CacheCluster.CacheClusterId)), aws.StringValue(output.CacheCluster.ARN), nil
 }
 
-func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
+func DeleteCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
@@ -865,8 +873,8 @@ func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, fi
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", input)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheCluster(input)
+	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheClusterWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
 				return resource.NonRetryableError(err)
@@ -883,7 +891,7 @@ func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, fi
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheCluster(input)
+		_, err = conn.DeleteCacheClusterWithContext(ctx, input)
 	}
 
 	return err

@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,22 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_service_linked_role")
 func ResourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceLinkedRoleCreate,
-		Read:   resourceServiceLinkedRoleRead,
-		Update: resourceServiceLinkedRoleUpdate,
-		Delete: resourceServiceLinkedRoleDelete,
+		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
+		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
+		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
+		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -78,10 +82,11 @@ func ResourceServiceLinkedRole() *schema.Resource {
 	}
 }
 
-func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("aws_service_name").(string)
 	input := &iam.CreateServiceLinkedRoleInput{
@@ -96,11 +101,10 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating IAM Service Linked Role: %s", input)
-	output, err := conn.CreateServiceLinkedRole(input)
+	output, err := conn.CreateServiceLinkedRoleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating IAM Service Linked Role (%s): %w", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}
 
 	d.SetId(aws.StringValue(output.Role.Arn))
@@ -109,26 +113,27 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 		}
 
-		err = roleUpdateTags(conn, roleName, nil, tags)
+		err = roleUpdateTags(ctx, conn, roleName, nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Service Linked Role (%s): %s", d.Id(), err)
-			return resourceServiceLinkedRoleRead(d, meta)
+			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for IAM Service Linked Role (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): adding tags: %s", serviceName, err)
 		}
 	}
 
-	return resourceServiceLinkedRoleRead(d, meta)
+	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -136,21 +141,21 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindRoleByName(conn, roleName)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Service Linked Role (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Service Linked Role (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
 	role := outputRaw.(*iam.Role)
@@ -164,27 +169,28 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -194,67 +200,68 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		log.Printf("[DEBUG] Updating IAM Service Linked Role: %s", input)
-		_, err = conn.UpdateRole(input)
+		_, err = conn.UpdateRoleWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := roleUpdateTags(conn, roleName, o, n)
+		err := roleUpdateTags(ctx, conn, roleName, o, n)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Service Linked Role (%s): %s", d.Id(), err)
-			return resourceServiceLinkedRoleRead(d, meta)
+			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for IAM Service Linked Role (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): updating tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceServiceLinkedRoleRead(d, meta)
+	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IAM Service Linked Role: (%s)", d.Id())
-	output, err := conn.DeleteServiceLinkedRole(&iam.DeleteServiceLinkedRoleInput{
+	output, err := conn.DeleteServiceLinkedRoleWithContext(ctx, &iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	})
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
 
 	deletionTaskID := aws.StringValue(output.DeletionTaskId)
 
 	if deletionTaskID == "" {
-		return nil
+		return diags
 	}
 
-	err = waitDeleteServiceLinkedRole(conn, deletionTaskID)
+	err = waitDeleteServiceLinkedRole(ctx, conn, deletionTaskID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for IAM Service Linked Role (%s) delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Service Linked Role (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {

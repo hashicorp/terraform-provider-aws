@@ -1,6 +1,7 @@
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccDMSReplicationTask_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -29,15 +31,15 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
 			},
@@ -55,7 +57,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, updatedTags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 				),
 			},
 		},
@@ -63,19 +65,20 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 }
 
 func TestAccDMSReplicationTask_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
@@ -85,7 +88,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"EMBRZ")),
@@ -99,7 +102,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1248")),
@@ -109,7 +112,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"ZedsDead")),
@@ -123,7 +126,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1248")),
@@ -133,7 +136,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"EMBRZ")),
@@ -149,19 +152,20 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 }
 
 func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", "mysql-bin-changelog.000024:373"),
 				),
 			},
@@ -176,6 +180,7 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 }
 
 func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -184,15 +189,15 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 	resourceName := "aws_dms_replication_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "testrule"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
 				),
 			},
@@ -205,14 +210,14 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "changedtestrule"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
 				),
 			},
 			{
 				Config: testAccReplicationTaskConfig_start(rName, false, "changedtestrule"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
 				),
 			},
@@ -221,21 +226,22 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 }
 
 func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
 	//https://github.com/hashicorp/terraform-provider-aws/issues/28277
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_s3ToRDS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
 			},
@@ -249,6 +255,7 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 }
 
 func TestAccDMSReplicationTask_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -257,16 +264,16 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -274,7 +281,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationTaskExists(n string) resource.TestCheckFunc {
+func testAccCheckReplicationTaskExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -287,34 +294,36 @@ func testAccCheckReplicationTaskExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
-		_, err := tfdms.FindReplicationTaskByID(conn, rs.Primary.ID)
+		_, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckReplicationTaskDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dms_replication_task" {
-			continue
+func testAccCheckReplicationTaskDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dms_replication_task" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+
+			_, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DMS replication task (%s) still exists", rs.Primary.ID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
-
-		_, err := tfdms.FindReplicationTaskByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DMS replication task (%s) still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func replicationTaskConfigBase(rName string) string {

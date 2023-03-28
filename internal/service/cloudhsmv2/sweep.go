@@ -28,6 +28,7 @@ func init() {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -36,7 +37,7 @@ func sweepClusters(region string) error {
 	input := &cloudhsmv2.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err = conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -64,7 +65,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 Clusters (%s): %w", region, err)
@@ -74,6 +75,7 @@ func sweepClusters(region string) error {
 }
 
 func sweepHSMs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -82,7 +84,7 @@ func sweepHSMs(region string) error {
 	input := &cloudhsmv2.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err = conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -113,7 +115,7 @@ func sweepHSMs(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 HSMs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 HSMs (%s): %w", region, err)

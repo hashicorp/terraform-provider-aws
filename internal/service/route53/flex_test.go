@@ -24,7 +24,7 @@ func TestFlattenResourceRecords(t *testing.T) {
 		`abc" "`,
 	}
 
-	var wrapped []*route53.ResourceRecord = nil
+	var wrapped []*route53.ResourceRecord
 	for _, original := range original {
 		wrapped = append(wrapped, &route53.ResourceRecord{Value: aws.String(original)})
 	}
