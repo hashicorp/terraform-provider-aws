@@ -586,20 +586,6 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 	})
 }
 
-// TODO:
-// Issues:
-// DataQualityAppSpecification
-//   container_arguments
-//   container_entrypoint
-// DataQualityBaselineConfig optional
-//   baselining_job_name
-
-// TO ADD:
-// NetworkConfig required
-// NetworkConfig optional
-//   enable_inter_container_traffic_encryption
-//   enable_network_isolation
-
 func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
