@@ -223,7 +223,7 @@ func FindDelegatedAdminAccountStatusID(ctx context.Context, conn *inspector2.Cli
 		}
 	}
 
-	return "", "", &resource.NotFoundError{
+	return "", "", &retry.NotFoundError{
 		Message: fmt.Sprintf("delegated admin account not found for %s", accountID),
 	}
 }

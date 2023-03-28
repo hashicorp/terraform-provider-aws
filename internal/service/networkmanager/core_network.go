@@ -402,7 +402,7 @@ func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManage
 	output, err := conn.GetCoreNetworkWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -427,7 +427,7 @@ func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.Network
 	output, err := conn.GetCoreNetworkPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

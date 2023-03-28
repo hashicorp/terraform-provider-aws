@@ -157,7 +157,7 @@ func GetResourceShareAssociation(ctx context.Context, conn *ram.RAM, resourceSha
 	output, err := conn.GetResourceShareAssociationsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -795,7 +795,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 	output, err := conn.DescribeLoadBalancersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -815,7 +815,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 
 	// Eventual consistency check.
 	if aws.StringValue(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

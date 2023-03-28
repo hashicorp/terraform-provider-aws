@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -197,7 +198,7 @@ func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Aut
 		}
 	}
 
-	return &resource.NotFoundError{
+	return &retry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
 	}
 }
@@ -215,7 +216,7 @@ func FindAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.AutoS
 		}
 	}
 
-	return &resource.NotFoundError{
+	return &retry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
 	}
 }

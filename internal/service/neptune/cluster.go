@@ -836,7 +836,7 @@ func FindClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*ne
 	output, err := conn.DescribeDBClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -854,7 +854,7 @@ func FindClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*ne
 
 	// Eventual consistency check.
 	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -891,7 +891,7 @@ func findClusterByARN(ctx context.Context, conn *neptune.Neptune, arn string) (*
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

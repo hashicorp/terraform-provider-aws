@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -148,7 +147,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:      fmt.Sprintf("Policy for EventBridge Bus (%s) not found", *output.Name),
 			LastResponse: output,
 		}

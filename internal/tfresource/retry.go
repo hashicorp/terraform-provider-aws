@@ -87,7 +87,7 @@ func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.
 
 var ErrFoundResource = errors.New(`found resource`)
 
-// RetryUntilNotFound retries the specified function until it returns a resource.NotFoundError.
+// RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
 func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
@@ -102,7 +102,7 @@ func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (in
 	})
 }
 
-// RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
+// RetryWhenNotFound retries the specified function when it returns a retry.NotFoundError.
 func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
@@ -113,7 +113,7 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (int
 	})
 }
 
-// RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
+// RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if isNewResource && NotFound(err) {

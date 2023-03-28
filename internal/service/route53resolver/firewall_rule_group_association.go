@@ -219,7 +219,7 @@ func FindFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	output, err := conn.GetFirewallRuleGroupAssociationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

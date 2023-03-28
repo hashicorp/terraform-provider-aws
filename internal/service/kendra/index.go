@@ -645,7 +645,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 		var resourceNotFoundException *types.ResourceNotFoundException
 
 		if errors.As(err, &resourceNotFoundException) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

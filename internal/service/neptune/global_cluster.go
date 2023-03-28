@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -292,7 +291,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 	output, err := conn.DescribeGlobalClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -309,7 +308,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 	globalCluster := output.GlobalClusters[0]
 
 	if status := aws.StringValue(globalCluster.Status); status == GlobalClusterStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -317,7 +316,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 
 	// Eventual consistency check.
 	if aws.StringValue(globalCluster.GlobalClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -360,7 +359,7 @@ func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Neptune, a
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

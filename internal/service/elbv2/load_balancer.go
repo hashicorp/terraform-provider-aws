@@ -698,7 +698,7 @@ func FindLoadBalancerByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (
 
 	// Eventual consistency check.
 	if aws.StringValue(output.LoadBalancerArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -724,7 +724,7 @@ func FindLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Desc
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -318,7 +317,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, 
 	output, err := conn.DescribeVirtualClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -347,7 +346,7 @@ func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContaine
 	}
 
 	if state := aws.StringValue(output.State); state == emrcontainers.VirtualClusterStateTerminated {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}

@@ -331,7 +331,7 @@ func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn
 	output, err := conn.DescribeStateMachineWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeStateMachineDoesNotExist) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1942,7 +1942,7 @@ func FindGroupByName(ctx context.Context, conn *autoscaling.AutoScaling, name st
 
 	// Eventual consistency check.
 	if aws.StringValue(output.AutoScalingGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1988,7 +1988,7 @@ func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.AutoScaling, i
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2024,7 +2024,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.AutoScaling, 
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2060,7 +2060,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2093,7 +2093,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2135,7 +2135,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -97,7 +97,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 			return nil
 		}
 
-		return diag.FromErr(&resource.NotFoundError{})
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("admin_account_id", res.AccountId)

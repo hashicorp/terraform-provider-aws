@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -76,7 +76,7 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	for _, associatedRole := range dbCluster.AssociatedRoles {
 		if aws.StringValue(associatedRole.RoleArn) == roleARN {
 			if status := aws.StringValue(associatedRole.Status); status == ClusterRoleStatusDeleted {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					Message: status,
 				}
 			}
@@ -85,7 +85,7 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
@@ -96,7 +96,7 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -118,7 +118,7 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -134,7 +134,7 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 	output, err := conn.DescribeDBProxiesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -156,7 +156,7 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 
 	// Eventual consistency check.
 	if aws.StringValue(dbProxy.DBProxyName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -172,7 +172,7 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -194,7 +194,7 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 
 	// Eventual consistency check.
 	if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -210,7 +210,7 @@ func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*
 	output, err := conn.DescribeDBSubnetGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSubnetGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -232,7 +232,7 @@ func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(dbSubnetGroup.DBSubnetGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -248,7 +248,7 @@ func FindEventSubscriptionByID(ctx context.Context, conn *rds.RDS, id string) (*
 	output, err := conn.DescribeEventSubscriptionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeSubscriptionNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -282,7 +282,7 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 
 	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
 		// If the automated backup is retained, the replication is stopped.
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -290,7 +290,7 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 
 	// Eventual consistency check.
 	if aws.StringValue(output.DBInstanceAutomatedBackupsArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -334,7 +334,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.RDS, input *r
 	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -363,7 +363,7 @@ func FindGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.RDS, dbClust
 		}
 	}
 
-	return nil, &resource.NotFoundError{LastRequest: dbClusterARN}
+	return nil, &retry.NotFoundError{LastRequest: dbClusterARN}
 }
 
 func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
@@ -379,7 +379,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.
 
 	// Eventual consistency check.
 	if aws.StringValue(output.GlobalClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -423,7 +423,7 @@ func findGlobalClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeG
 	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -444,7 +444,7 @@ func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (
 	output, err := conn.DescribeReservedDBInstancesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeReservedDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

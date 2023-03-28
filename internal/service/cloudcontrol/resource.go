@@ -328,7 +328,7 @@ func FindResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, ty
 	output, err := conn.GetResource(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -337,7 +337,7 @@ func FindResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, ty
 	// Some CloudFormation Resources do not correctly re-map "not found" errors, instead returning a HandlerFailureException.
 	// These should be reported and fixed upstream over time, but for now work around the issue.
 	if errs.Contains(err, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -362,7 +362,7 @@ func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Cli
 	output, err := conn.GetResourceRequestStatus(ctx, input)
 
 	if errs.IsA[*types.RequestTokenNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

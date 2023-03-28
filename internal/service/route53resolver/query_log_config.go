@@ -183,7 +183,7 @@ func FindResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.R
 	output, err := conn.GetResolverQueryLogConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

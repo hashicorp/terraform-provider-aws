@@ -15,7 +15,6 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -572,7 +571,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 	err := retry.RetryContext(ctx, readyTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteGlobalReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
-			return retry.NonRetryableError(&resource.NotFoundError{
+			return retry.NonRetryableError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			})

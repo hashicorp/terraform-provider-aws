@@ -1124,7 +1124,7 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -1140,7 +1140,7 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	// Channel can still be found with a state of DELETED.
 	// Set result as not found when the state is deleted.
 	if out.State == types.ChannelStateDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastResponse: string(types.ChannelStateDeleted),
 			LastRequest:  in,
 		}

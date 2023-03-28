@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,7 +20,7 @@ func FindPlatformApplicationAttributesByARN(ctx context.Context, conn *sns.SNS, 
 	output, err := conn.GetPlatformApplicationAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -73,7 +72,7 @@ func GetTopicAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (ma
 	output, err := conn.GetTopicAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

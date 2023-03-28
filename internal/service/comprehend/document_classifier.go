@@ -626,7 +626,7 @@ func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

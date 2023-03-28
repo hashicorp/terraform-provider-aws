@@ -114,15 +114,15 @@ tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException)
 
 The Terraform Plugin SDK includes some error types which are used in certain operations and typically preferred over implementing new types:
 
-* [`resource.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#NotFoundError)
-* [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError):
+* [`retry.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#NotFoundError)
+* [`retry.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#TimeoutError):
   Returned from [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext) and
   [`(retry.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext)
 
 The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/internal/tfresource` package:
 
-- `tfresource.NotFound(err)`: Returns true if the error is a `resource.NotFoundError`.
-- `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
+- `tfresource.NotFound(err)`: Returns true if the error is a `retry.NotFoundError`.
+- `tfresource.TimedOut(err)`: Returns true if the error is a `retry.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
 
 ## Resource Lifecycle Guidelines
 

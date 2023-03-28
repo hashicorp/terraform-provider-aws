@@ -916,7 +916,7 @@ func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -937,7 +937,7 @@ func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) 
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -963,7 +963,7 @@ func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

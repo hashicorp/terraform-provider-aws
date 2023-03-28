@@ -362,7 +362,7 @@ func FindReportPlanByName(ctx context.Context, conn *backup.Backup, name string)
 	output, err := conn.DescribeReportPlanWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

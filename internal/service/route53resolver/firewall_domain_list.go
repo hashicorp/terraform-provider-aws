@@ -239,7 +239,7 @@ func FindFirewallDomainListByID(ctx context.Context, conn *route53resolver.Route
 	output, err := conn.GetFirewallDomainListWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

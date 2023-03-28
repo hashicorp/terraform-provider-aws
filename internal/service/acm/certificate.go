@@ -820,7 +820,7 @@ func findCertificate(ctx context.Context, conn *acm.ACM, input *acm.DescribeCert
 	output, err := conn.DescribeCertificateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -849,7 +849,7 @@ func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.
 	}
 
 	if status := aws.StringValue(output.Status); status == acm.CertificateStatusValidationTimedOut {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}

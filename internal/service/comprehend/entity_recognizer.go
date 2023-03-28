@@ -654,7 +654,7 @@ func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id s
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

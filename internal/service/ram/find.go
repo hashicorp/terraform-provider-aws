@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -54,7 +53,7 @@ func FindResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context,
 		}
 
 		if invitation == nil {
-			return retry.RetryableError(&resource.NotFoundError{})
+			return retry.RetryableError(&retry.NotFoundError{})
 		}
 
 		return nil
@@ -90,7 +89,7 @@ func FindResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, arn st
 		}
 
 		if invitation == nil {
-			retry.RetryableError(&resource.NotFoundError{})
+			retry.RetryableError(&retry.NotFoundError{})
 		}
 
 		return nil
@@ -128,7 +127,7 @@ func resourceShare(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSha
 		}
 
 		if len(shares.ResourceShares) == 0 {
-			return retry.RetryableError(&resource.NotFoundError{})
+			return retry.RetryableError(&retry.NotFoundError{})
 		}
 
 		return nil

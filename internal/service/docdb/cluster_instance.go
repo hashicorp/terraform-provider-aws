@@ -495,7 +495,7 @@ func resourceInstanceRetrieve(ctx context.Context, conn *docdb.DocDB, id string)
 	}
 	out, err := conn.DescribeDBInstancesWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

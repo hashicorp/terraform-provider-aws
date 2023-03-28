@@ -85,7 +85,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.IsNewResource() && !hasPolicyAttachment {
-			return retry.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&retry.NotFoundError{
 				LastError: fmt.Errorf("IAM Role Managed Policy Attachment (%s) not found", id),
 			})
 		}

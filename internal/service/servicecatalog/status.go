@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -150,7 +149,7 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, 
 		output, err := conn.DescribeConstraintWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
 			}
 		}
@@ -160,7 +159,7 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.ServiceCatalog, 
 		}
 
 		if output == nil || output.ConstraintDetail == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("describing constraint (accept language %s, ID: %s): empty response", acceptLanguage, id),
 			}
 		}
@@ -174,7 +173,7 @@ func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 		output, err := FindProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("product portfolio association not found (%s): %s", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
@@ -184,7 +183,7 @@ func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
 			}
 		}
@@ -226,7 +225,7 @@ func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.S
 		output, err := FindBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("tag option resource association not found (%s): %s", BudgetResourceAssociationID(budgetName, resourceID), err),
 			}
 		}
@@ -236,7 +235,7 @@ func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.S
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", BudgetResourceAssociationID(budgetName, resourceID)),
 			}
 		}
@@ -250,7 +249,7 @@ func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 		output, err := FindTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("tag option resource association not found (%s): %s", TagOptionResourceAssociationID(tagOptionID, resourceID), err),
 			}
 		}
@@ -260,7 +259,7 @@ func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
+			return nil, StatusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", TagOptionResourceAssociationID(tagOptionID, resourceID)),
 			}
 		}

@@ -85,7 +85,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.IsNewResource() && attachedPolicy == nil {
-			return retry.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&retry.NotFoundError{
 				LastError: fmt.Errorf("IAM User Managed Policy Attachment (%s) not found", id),
 			})
 		}

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -135,7 +134,7 @@ func FindStreamConsumerByARN(ctx context.Context, conn *kinesis.Kinesis, arn str
 	output, err := conn.DescribeStreamConsumerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

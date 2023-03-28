@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -278,7 +277,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 		return nil, err
 	}
 	if out == nil || len(out.ExportTasks) == 0 {
-		return nil, &sdkv2resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: in,
 		}
 	}

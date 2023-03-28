@@ -291,7 +291,7 @@ func FindResolverEndpointByID(ctx context.Context, conn *route53resolver.Route53
 	output, err := conn.GetResolverEndpointWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

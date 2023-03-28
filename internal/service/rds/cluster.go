@@ -1573,7 +1573,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	output, err := conn.DescribeDBClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1596,12 +1596,12 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.StringValue(dbCluster.DBClusterArn) != id {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastRequest: input,
 			}
 		}
 	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

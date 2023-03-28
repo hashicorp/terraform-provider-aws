@@ -642,7 +642,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	output, err := conn.DescribeBrokerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

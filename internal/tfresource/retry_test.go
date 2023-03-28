@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -198,14 +197,14 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 		{
 			Name: "retryable NotFoundError not new resource",
 			F: func() (interface{}, error) {
-				return nil, &resource.NotFoundError{}
+				return nil, &retry.NotFoundError{}
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "retryable NotFoundError new resource timeout",
 			F: func() (interface{}, error) {
-				return nil, &resource.NotFoundError{}
+				return nil, &retry.NotFoundError{}
 			},
 			NewResource: true,
 			ExpectError: true,
@@ -214,7 +213,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 			Name: "retryable NotFoundError success new resource",
 			F: func() (interface{}, error) {
 				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
-					return nil, &resource.NotFoundError{}
+					return nil, &retry.NotFoundError{}
 				}
 
 				return nil, nil
@@ -273,7 +272,7 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 		{
 			Name: "retryable NotFoundError timeout",
 			F: func() (interface{}, error) {
-				return nil, &resource.NotFoundError{}
+				return nil, &retry.NotFoundError{}
 			},
 			ExpectError: true,
 		},
@@ -281,7 +280,7 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 			Name: "retryable NotFoundError success",
 			F: func() (interface{}, error) {
 				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
-					return nil, &resource.NotFoundError{}
+					return nil, &retry.NotFoundError{}
 				}
 
 				return nil, nil
@@ -340,7 +339,7 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 		{
 			Name: "NotFoundError",
 			F: func() (interface{}, error) {
-				return nil, &resource.NotFoundError{}
+				return nil, &retry.NotFoundError{}
 			},
 		},
 		{
@@ -350,7 +349,7 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 					return nil, nil
 				}
 
-				return nil, &resource.NotFoundError{}
+				return nil, &retry.NotFoundError{}
 			},
 		},
 	}

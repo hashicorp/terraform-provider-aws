@@ -570,7 +570,7 @@ func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn
 	output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -585,7 +585,7 @@ func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn
 	}
 
 	if status := aws.StringValue(output.CertificateAuthority.Status); status == acmpca.CertificateAuthorityStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -593,7 +593,7 @@ func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn
 
 	// Eventual consistency check.
 	if aws.StringValue(output.CertificateAuthority.Arn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

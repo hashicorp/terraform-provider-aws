@@ -15,7 +15,6 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -666,7 +665,7 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.ElasticBean
 	environment := output.Environments[0]
 
 	if status := aws.StringValue(environment.Status); status == elasticbeanstalk.EnvironmentStatusTerminated {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -674,7 +673,7 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.ElasticBean
 
 	// Eventual consistency check.
 	if aws.StringValue(environment.EnvironmentId) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

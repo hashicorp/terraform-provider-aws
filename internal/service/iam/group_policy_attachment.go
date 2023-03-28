@@ -85,7 +85,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.IsNewResource() && attachedPolicy == nil {
-			return retry.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&retry.NotFoundError{
 				LastError: fmt.Errorf("IAM Group Managed Policy Attachment (%s) not found", id),
 			})
 		}

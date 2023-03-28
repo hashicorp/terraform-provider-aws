@@ -411,7 +411,7 @@ func FindClusterInstanceByID(ctx context.Context, conn *neptune.Neptune, id stri
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -429,7 +429,7 @@ func FindClusterInstanceByID(ctx context.Context, conn *neptune.Neptune, id stri
 
 	// Eventual consistency check.
 	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -454,7 +454,7 @@ func FindClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func statusClusterInstance(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {

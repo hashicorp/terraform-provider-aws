@@ -400,7 +400,7 @@ rules:
 
   - id: is-not-found-error
     languages: [go]
-    message: Check for resource.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with tfresource.NotFound()
     paths:
       include:
         - internal/
@@ -408,18 +408,18 @@ rules:
       - pattern-either:
           - patterns:
               - pattern: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
               - pattern-not-inside: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
                   ...
                   $CAST.$FIELD
           - patterns:
               - pattern: |
-                  $X, $Y := $ERR.(*resource.NotFoundError)
+                  $X, $Y := $ERR.(*retry.NotFoundError)
     severity: WARNING
 
   - id: time-equality

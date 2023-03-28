@@ -263,7 +263,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	output, err := conn.GetIndex(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -278,7 +278,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}

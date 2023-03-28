@@ -286,7 +286,7 @@ func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Reso
 	output, err := conn.GetResolverRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
