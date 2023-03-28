@@ -11,31 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
-	input := &route53.GetHostedZoneInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetHostedZoneWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.HostedZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
