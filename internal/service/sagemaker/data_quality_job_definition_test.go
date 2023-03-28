@@ -631,23 +631,6 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 
 func testAccDataQualityJobDefinitionConfig_batchTransformBase(rName string) string {
 	return fmt.Sprintf(`
-
-provider "aws" {
-  region = "us-west-2"
-
-  default_tags {
-    tags = {
-      "adsk:moniker" = "AMPSDEMO-C-UW2"
-    }
-  }
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_policy" "boundary" {
-  arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/ADSK-Boundary"
-}
-
 data "aws_iam_policy_document" "access" {
   statement {
     effect = "Allow"
@@ -686,7 +669,6 @@ resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
-  permissions_boundary = data.aws_iam_policy.boundary.arn
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -712,23 +694,6 @@ data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
 
 func testAccDataQualityJobDefinitionConfig_endpointBase(rName string) string {
 	return fmt.Sprintf(`
-
-provider "aws" {
-  region = "us-west-2"
-
-  default_tags {
-    tags = {
-      "adsk:moniker" = "AMPSDEMO-C-UW2"
-    }
-  }
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_policy" "boundary" {
-  arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/ADSK-Boundary"
-}
-
 data "aws_iam_policy_document" "access" {
   statement {
     effect = "Allow"
@@ -767,7 +732,6 @@ resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
-  permissions_boundary = data.aws_iam_policy.boundary.arn
 }
 
 resource "aws_iam_role_policy" "test" {
