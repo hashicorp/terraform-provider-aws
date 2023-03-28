@@ -109,7 +109,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateActivationWithContext(ctx, input)
-	}, "ValidationException", "Not existing role")
+	}, "ValidationException", "Nonexistent role")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Activation (%s): %s", name, err)
