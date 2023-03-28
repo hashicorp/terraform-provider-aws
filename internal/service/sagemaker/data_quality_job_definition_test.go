@@ -687,7 +687,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
   repository_name = "sagemaker-model-monitor-analyzer"
-  image_tag       = ""
+  image_tag       = "latest"
 }
 `, rName)
 }
@@ -801,7 +801,7 @@ resource "aws_sagemaker_endpoint" "test" {
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
   repository_name = "sagemaker-model-monitor-analyzer"
-  image_tag       = ""
+  image_tag       = "latest"
 }
 `, rName)
 }

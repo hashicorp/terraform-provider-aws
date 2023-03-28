@@ -264,7 +264,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
   repository_name = "sagemaker-model-monitor-analyzer"
-  image_tag       = ""
+  image_tag       = "latest"
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {

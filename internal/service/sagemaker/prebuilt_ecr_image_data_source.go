@@ -475,9 +475,5 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func PrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {
-	if imageTag == "" {
-		return fmt.Sprintf("%s.dkr.ecr.%s.%s/%s", id, region, suffix, repo)
-	}
-
 	return fmt.Sprintf("%s.dkr.ecr.%s.%s/%s:%s", id, region, suffix, repo, imageTag)
 }
