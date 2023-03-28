@@ -179,12 +179,14 @@ func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
+func ReadLFTagID(id string) (string, string, error) {
+	catalogID, tagKey, found := strings.Cut(id, ":")
+
+	if !found {
 		return "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
 	}
-	return idParts[0], idParts[1], nil
+
+	return catalogID, tagKey, nil
 }
 
 func validateLFTagValues() schema.SchemaValidateFunc {

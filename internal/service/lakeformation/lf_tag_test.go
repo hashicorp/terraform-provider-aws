@@ -18,6 +18,58 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
+func TestReadLFTagID(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val         string
+		catalogID   string
+		tagKey      string
+		expectError bool
+	}
+
+	tests := map[string]testCase{
+		"empty_string": {
+			expectError: true,
+		},
+		"invalid_id": {
+			val:         "test",
+			expectError: true,
+		},
+		"valid_key_simple": {
+			val:       "123344556:tagKey",
+			catalogID: "123344556",
+			tagKey:    "tagKey",
+		},
+		"valid_key_complex": {
+			val:       "123344556:keyPrefix:tagKey",
+			catalogID: "123344556",
+			tagKey:    "keyPrefix:tagKey",
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			catalogID, tagKey, err := tflakeformation.ReadLFTagID(test.val)
+
+			if err == nil && test.expectError {
+				t.Fatal("expected error")
+			}
+
+			if err != nil && !test.expectError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if test.catalogID != catalogID || test.tagKey != tagKey {
+				t.Fatalf("expected catalogID (%s), tagKey (%s), got catalogID (%s), tagKey (%s)", test.catalogID, test.tagKey, catalogID, tagKey)
+			}
+		})
+	}
+}
+
 func testAccLFTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
@@ -42,6 +94,30 @@ func testAccLFTag_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccLFTag_TagKey_complex(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lakeformation_lf_tag.test"
+	rName := fmt.Sprintf("%s:%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "subKey")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLFTagConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLFTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", rName),
+					resource.TestCheckResourceAttr(resourceName, "values.0", "value"),
+					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
+				),
 			},
 		},
 	})
