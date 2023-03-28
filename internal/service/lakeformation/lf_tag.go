@@ -68,7 +68,6 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
-	tagValuesLen := tagValues.Len()
 
 	var catalogID string
 	if v, ok := d.GetOk("catalog_id"); ok {
@@ -77,16 +76,12 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		catalogID = meta.(*conns.AWSClient).AccountID
 	}
 
-	end := lfTagsValuesMaxBatchSize
-	if end > tagValuesLen {
-		end = tagValuesLen
-	}
+	tagValueChunks := splitLFTagValues(tagValues.List(), lfTagsValuesMaxBatchSize)
 
-	valuesSubset := schema.NewSet(tagValues.F, tagValues.List()[0:end])
 	input := &lakeformation.CreateLFTagInput{
 		CatalogId: aws.String(catalogID),
 		TagKey:    aws.String(tagKey),
-		TagValues: flex.ExpandStringSet(valuesSubset),
+		TagValues: flex.ExpandStringList(tagValueChunks[0]),
 	}
 
 	_, err := conn.CreateLFTagWithContext(ctx, input)
@@ -94,25 +89,20 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
 	}
 
-	// If there are more than 50 values, create them in batches of 50 using UpdateLFTag API
-	for i := lfTagsValuesMaxBatchSize; i < tagValuesLen; i += lfTagsValuesMaxBatchSize {
-		end := i + lfTagsValuesMaxBatchSize
+	if len(tagValueChunks) > 1 {
+		tagValueChunks = tagValueChunks[1:]
 
-		if end > tagValuesLen {
-			end = tagValuesLen
-		}
+		for _, v := range tagValueChunks {
+			in := &lakeformation.UpdateLFTagInput{
+				CatalogId:      aws.String(catalogID),
+				TagKey:         aws.String(tagKey),
+				TagValuesToAdd: flex.ExpandStringList(v),
+			}
 
-		subset := schema.NewSet(tagValues.F, tagValues.List()[i:end])
-
-		input := &lakeformation.UpdateLFTagInput{
-			CatalogId:      aws.String(catalogID),
-			TagKey:         aws.String(tagKey),
-			TagValuesToAdd: flex.ExpandStringSet(subset),
-		}
-
-		_, err := conn.UpdateLFTag(input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "error creating Lake Formation LF-Tag (batch: %d to %d): %w", i, end, err)
+			_, err := conn.UpdateLFTag(in)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
+			}
 		}
 	}
 
@@ -200,7 +190,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		_, err := conn.UpdateLFTag(input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s) (batch %d): %w", d.Id(), i, err)
+			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s) (batch %d): %s", d.Id(), i, err)
 		}
 
 		_, err = conn.UpdateLFTagWithContext(ctx, input)
@@ -257,4 +247,22 @@ func Max(x, y int) int {
 		return x
 	}
 	return y
+}
+
+func splitLFTagValues(in []interface{}, size int) [][]interface{} {
+	var out [][]interface{}
+
+	for {
+		if len(in) == 0 {
+			break
+		}
+
+		if len(in) < size {
+			size = len(in)
+		}
+
+		out = append(out, in[0:size])
+		in = in[size:]
+	}
+	return out
 }
