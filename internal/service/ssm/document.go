@@ -471,7 +471,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.VersionName = aws.String(v.(string))
 			}
 
-			defaultVersion := d.Get("default_version").(string)
+			var defaultVersion string
 
 			output, err := conn.UpdateDocumentWithContext(ctx, input)
 
