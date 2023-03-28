@@ -532,12 +532,12 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 		Name: aws.String(d.Get("name").(string)),
 	})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSM Document (%s): %s", d.Id(), err)
-	}
-
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Document (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDocumentDeleted(ctx, conn, d.Id()); err != nil {
