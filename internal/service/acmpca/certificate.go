@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -133,14 +134,14 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err = resource.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.IssueCertificateWithContext(ctx, input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

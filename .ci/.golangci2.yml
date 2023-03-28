@@ -81,9 +81,10 @@ linters-settings:
           - request.WithWaiterMaxAttempts
           # AWS Provider
           - nullable.*
+          - tfresource.Retry*
           - tfresource.With*
           # Terraform Plugin SDK
-          - resource.Retry
+          - retry.RetryContext
           - schema.DefaultTimeout
           - validation.*
           # Terraform Plugin Framework

@@ -421,7 +421,7 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := tfresource.Retry(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, 3*time.Minute, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSECWithContext(ctx, input)
@@ -429,10 +429,10 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
 				log.Printf("[DEBUG] Retrying to get DNS SEC for zone %s: %s", hostedZoneID, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -477,7 +477,7 @@ func disableDNSSECForHostedZone(ctx context.Context, conn *route53.Route53, host
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = tfresource.Retry(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = tfresource.Retry(ctx, 5*time.Minute, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSECWithContext(ctx, input)
@@ -485,10 +485,10 @@ func disableDNSSECForHostedZone(ctx context.Context, conn *route53.Route53, host
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, route53.ErrCodeKeySigningKeyInParentDSRecord) {
 				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying... (%s)", hostedZoneID, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

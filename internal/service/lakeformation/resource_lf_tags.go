@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -250,18 +250,18 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := resource.RetryContext(ctx, IAMPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -397,18 +397,18 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		var err error
 		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})

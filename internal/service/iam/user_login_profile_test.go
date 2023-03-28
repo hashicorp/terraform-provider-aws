@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -344,11 +345,11 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			return fmt.Errorf("Error getting session credentials: %s", err)
 		}
 
-		return resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
 			newPassword, err := tfiam.GeneratePassword(20)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			_, err = iamAsCreatedUser.ChangePasswordWithContext(ctx, &iam.ChangePasswordInput{
 				OldPassword: aws.String(decryptedPassword.String()),
@@ -357,13 +358,13 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			if err != nil {
 				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 				if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, "InvalidClientTokenId") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("Error changing decrypted password: %s", err))
+				return retry.NonRetryableError(fmt.Errorf("Error changing decrypted password: %s", err))
 			}
 
 			return nil

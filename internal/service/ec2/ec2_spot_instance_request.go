@@ -202,21 +202,21 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 	// Make the spot instance request
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		resp, err = conn.RequestSpotInstancesWithContext(ctx, spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Printf("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		// IAM roles can also take time to propagate in AWS:
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

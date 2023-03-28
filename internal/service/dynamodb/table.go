@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1170,23 +1170,23 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			}
 		}
 
-		err := resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *retry.RetryError {
 			_, err := conn.UpdateTableWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, "ValidationException", "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -1305,14 +1305,14 @@ func updatePITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, 
 		conn = dynamodb.New(session)
 	}
 
-	err := resource.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateContinuousBackupsWithContext(ctx, input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1599,28 +1599,28 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				},
 			}
 
-			err := resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 				_, err := conn.UpdateTableWithContext(ctx, input)
 				notFoundRetries := 0
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 						notFoundRetries++
 						if notFoundRetries > 3 {
-							return resource.NonRetryableError(err)
+							return retry.NonRetryableError(err)
 						}
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})

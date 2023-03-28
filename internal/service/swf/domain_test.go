@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -210,7 +211,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Retrying as Read after Delete is not always consistent.
-			err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 				_, err := tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 				if tfresource.NotFound(err) {
@@ -218,10 +219,10 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				}
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
-				return resource.RetryableError(fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID))
+				return retry.RetryableError(fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID))
 			})
 
 			return err

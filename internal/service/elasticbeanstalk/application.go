@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -230,19 +230,19 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var app *elasticbeanstalk.ApplicationDescription
-	err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		var err error
 		app, err = getApplication(ctx, d.Id(), conn)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if app == nil {
 			err = fmt.Errorf("Elastic Beanstalk Application %q not found", d.Id())
 			if d.IsNewResource() {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -299,14 +299,14 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var app *elasticbeanstalk.ApplicationDescription
-	err = resource.RetryContext(ctx, 10*time.Second, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 10*time.Second, func() *retry.RetryError {
 		app, err = getApplication(ctx, d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if app != nil {
-			return resource.RetryableError(
+			return retry.RetryableError(
 				fmt.Errorf("Beanstalk Application (%s) still exists: %s", d.Id(), err))
 		}
 		return nil

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -171,15 +170,15 @@ func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta i
 	dcinput := &mediastore.DescribeContainerInput{
 		ContainerName: aws.String(d.Id()),
 	}
-	err = resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DescribeContainerWithContext(ctx, dcinput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeContainerWithContext(ctx, dcinput)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -70,21 +71,21 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		attachedPolicy, err = FindUserAttachedPolicy(ctx, conn, user, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if d.IsNewResource() && attachedPolicy == nil {
-			return resource.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&resource.NotFoundError{
 				LastError: fmt.Errorf("IAM User Managed Policy Attachment (%s) not found", id),
 			})
 		}

@@ -451,23 +451,23 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -673,15 +673,15 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := resource.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -712,15 +712,15 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

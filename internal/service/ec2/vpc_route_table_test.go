@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1193,7 +1194,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 
 		plId := aws.StringValue(resp.PrefixLists[0].PrefixListId)
 
-		err = resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
 			resp, err := conn.DescribeRouteTablesWithContext(ctx, &ec2.DescribeRouteTablesInput{
 				RouteTableIds: []*string{routeTable.RouteTableId},
 			})
@@ -1210,7 +1211,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 				}
 			}
 
-			return resource.RetryableError(fmt.Errorf("Route not found"))
+			return retry.RetryableError(fmt.Errorf("Route not found"))
 		})
 
 		return err

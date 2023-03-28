@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -301,24 +301,24 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		var response *http.Response
-		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 			response, err = client.Do(request)
 
 			if err != nil {
 				if errs.IsA[net.Error](err) {
 					errMessage := fmt.Errorf("making HTTP request: %s", err)
 					log.Printf("[DEBUG] retryable %s", errMessage)
-					return resource.RetryableError(errMessage)
+					return retry.RetryableError(errMessage)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			for _, retryableStatusCode := range []int{504} {
 				if response.StatusCode == retryableStatusCode {
 					errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
 					log.Printf("[DEBUG] retryable %s", errMessage)
-					return resource.RetryableError(errMessage)
+					return retry.RetryableError(errMessage)
 				}
 			}
 

@@ -376,8 +376,8 @@ func TestRetryContext_error(t *testing.T) {
 	t.Parallel()
 
 	expected := fmt.Errorf("nope")
-	f := func() *resource.RetryError {
-		return resource.NonRetryableError(expected)
+	f := func() *retry.RetryError {
+		return retry.NonRetryableError(expected)
 	}
 
 	errCh := make(chan error)

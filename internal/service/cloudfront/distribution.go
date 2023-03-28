@@ -843,18 +843,18 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var resp *cloudfront.CreateDistributionWithTagsOutput
 	// Handle eventual consistency issues
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, params)
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -948,17 +948,17 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Handle eventual consistency issues
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		_, err := conn.UpdateDistributionWithContext(ctx, params)
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

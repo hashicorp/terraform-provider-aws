@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -257,15 +256,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateClusterWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -532,13 +531,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteClusterWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, dax.ErrCodeInvalidClusterStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

@@ -357,13 +357,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] DocDB Cluster restore from snapshot configuration: %s", opts)
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshotWithContext(ctx, &opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -450,14 +450,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		var resp *docdb.CreateDBClusterOutput
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			var err error
 			resp, err = conn.CreateDBClusterWithContext(ctx, createOpts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -719,22 +719,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if requestUpdate {
-		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			_, err := conn.ModifyDBClusterWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -801,19 +801,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] DocDB Cluster delete options: %s", deleteOpts)
 
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

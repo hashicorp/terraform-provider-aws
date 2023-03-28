@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -316,26 +317,26 @@ func FindGrantByTwoPartKey(ctx context.Context, conn *kms.KMS, keyID, grantID st
 func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, grantID string, timeout time.Duration) (*kms.GrantListEntry, error) {
 	var output *kms.GrantListEntry
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		grant, err := FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 
 		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
 			if !arn.IsARN(principal) {
-				return resource.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
+				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
 			if !arn.IsARN(principal) {
-				return resource.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
+				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 

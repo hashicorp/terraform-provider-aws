@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -186,17 +187,17 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.RetryContext(ctx, PropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateSecretWithContext(ctx, input)
 		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
 		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -220,14 +221,14 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.RetryContext(ctx, PropagationTimeout, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 			_, err := conn.PutResourcePolicyWithContext(ctx, input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -247,14 +248,14 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			_, err := conn.RotateSecretWithContext(ctx, input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -302,23 +303,23 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.Retry(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
 		policy, err = conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if policy.ResourcePolicy != nil {
 			valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.StringValue(policy.ResourcePolicy))
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			if !valid {
 				log.Printf("[DEBUG] Retrying because of invalid principals")
-				return resource.RetryableError(errors.New("contains invalid principals"))
+				return retry.RetryableError(errors.New("contains invalid principals"))
 			}
 		}
 
@@ -448,14 +449,14 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				_, err := conn.RotateSecretWithContext(ctx, input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})

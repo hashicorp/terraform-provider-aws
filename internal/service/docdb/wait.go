@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -77,17 +76,17 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	var globalCluster *docdb.GlobalCluster
 	stillExistsErr := fmt.Errorf("DocDB Cluster still exists in DocDB Global Cluster")
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 
 		globalCluster, err = findGlobalClusterByARN(ctx, conn, dbClusterIdentifier)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if globalCluster != nil {
-			return resource.RetryableError(stillExistsErr)
+			return retry.RetryableError(stillExistsErr)
 		}
 
 		return nil

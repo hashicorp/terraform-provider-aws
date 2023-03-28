@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -257,7 +258,7 @@ func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway cached iSCSI volume: %s", input)
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteVolumeWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
@@ -266,9 +267,9 @@ func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 			// InvalidGatewayRequestException: The specified gateway is not connected.
 			// Can occur during concurrent DeleteVolume operations
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

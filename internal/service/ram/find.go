@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -44,16 +45,16 @@ func FindResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context,
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.RetryContext(ctx, FindInvitationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, FindInvitationTimeout, func() *retry.RetryError {
 		i, err := resourceShareInvitationByResourceShareARNAndStatus(ctx, conn, resourceShareArn, status)
 		invitation = i
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if invitation == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
+			return retry.RetryableError(&resource.NotFoundError{})
 		}
 
 		return nil
@@ -80,16 +81,16 @@ func FindResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, arn st
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.RetryContext(ctx, FindInvitationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, FindInvitationTimeout, func() *retry.RetryError {
 		i, err := resourceShareInvitationByARN(ctx, conn, arn)
 		invitation = i
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if invitation == nil {
-			resource.RetryableError(&resource.NotFoundError{})
+			retry.RetryableError(&resource.NotFoundError{})
 		}
 
 		return nil
@@ -114,20 +115,20 @@ func resourceShare(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSha
 	var shares *ram.GetResourceSharesOutput
 
 	// Retry for Ram resource share eventual consistency
-	err := resource.RetryContext(ctx, FindResourceShareTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, FindResourceShareTimeout, func() *retry.RetryError {
 		ss, err := conn.GetResourceSharesWithContext(ctx, input)
 		shares = ss
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if len(shares.ResourceShares) == 0 {
-			return resource.RetryableError(&resource.NotFoundError{})
+			return retry.RetryableError(&resource.NotFoundError{})
 		}
 
 		return nil

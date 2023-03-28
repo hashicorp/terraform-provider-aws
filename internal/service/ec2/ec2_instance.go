@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1361,13 +1362,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+						err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-									return resource.RetryableError(err)
+									return retry.RetryableError(err)
 								}
-								return resource.NonRetryableError(err)
+								return retry.NonRetryableError(err)
 							}
 							return nil
 						})
@@ -1999,13 +2000,13 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.AssociateIamInstanceProfileWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -2504,16 +2505,16 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.E
 	input := &ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := resource.RetryContext(ctx, 15*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.GetPasswordDataWithContext(ctx, input)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if resp.PasswordData == nil || aws.StringValue(resp.PasswordData) == "" {
-			return resource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
 		passwordData = strings.TrimSpace(aws.StringValue(resp.PasswordData))

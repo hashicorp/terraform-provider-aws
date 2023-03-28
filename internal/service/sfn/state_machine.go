@@ -270,11 +270,11 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.RetryContext(ctx, stateMachineUpdatedTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+		err = retry.RetryContext(ctx, stateMachineUpdatedTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 			output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
@@ -282,7 +282,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
 				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
-				return resource.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
+				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
 			return nil

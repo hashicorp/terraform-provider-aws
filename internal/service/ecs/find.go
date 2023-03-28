@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -140,19 +141,19 @@ func (e *expectActiveError) Error() string {
 
 func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	var service *ecs.Service
-	// Use the resource.Retry function instead of WaitForState() because we don't want the timeout error, if any
-	err := resource.RetryContext(ctx, serviceDescribeTimeout, func() *resource.RetryError {
+	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any
+	err := retry.RetryContext(ctx, serviceDescribeTimeout, func() *retry.RetryError {
 		var err error
 		service, err = FindServiceByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if status := aws.StringValue(service.Status); status != serviceStatusActive {
-			return resource.RetryableError(newExpectActiveError(status))
+			return retry.RetryableError(newExpectActiveError(status))
 		}
 
 		return nil

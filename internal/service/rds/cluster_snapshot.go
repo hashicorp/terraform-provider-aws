@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -132,13 +131,13 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	err := resource.RetryContext(ctx, clusterSnapshotCreateTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, clusterSnapshotCreateTimeout, func() *retry.RetryError {
 		_, err := conn.CreateDBClusterSnapshotWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

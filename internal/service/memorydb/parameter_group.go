@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -263,13 +264,13 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 		ParameterNames:     parameterNames,
 	}
 
-	return resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.ResetParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, memorydb.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

@@ -217,14 +217,14 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating DocDB Instance opts: %s", createOpts)
 	var resp *docdb.CreateDBInstanceOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -397,13 +397,13 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if requestUpdate {
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.ModifyDBInstanceWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})

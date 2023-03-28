@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,7 +177,7 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				input := &s3.GetBucketInventoryConfigurationInput{
 					Bucket: aws.String(bucket),
 					Id:     aws.String(name),
@@ -190,7 +191,7 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 					return resource.NonRetryableError(err)
 				}
 				if output.InventoryConfiguration != nil {
-					return resource.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))
+					return retry.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))
 				}
 				return nil
 			})

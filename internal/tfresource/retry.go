@@ -24,19 +24,19 @@ type Retryable func(error) (bool, error)
 func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := Retry(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
-		var retry bool
+		var again bool
 
 		output, err = f()
-		retry, err = retryable(err)
+		again, err = retryable(err)
 
-		if retry {
-			return resource.RetryableError(err)
+		if again {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

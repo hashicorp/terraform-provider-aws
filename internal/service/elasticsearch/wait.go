@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -39,18 +38,18 @@ func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Elasticsearch
 
 func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", domainName))
 	})
 	if tfresource.TimedOut(err) {
@@ -68,18 +67,18 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Elasticsearc
 
 func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	})
 	if tfresource.TimedOut(err) {
@@ -97,7 +96,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchS
 
 func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
 
@@ -105,14 +104,14 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchS
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if out != nil && !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
+		return retry.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(ctx, conn, domainName)
