@@ -158,7 +158,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	}
 
 	state := plan
-	state.refreshFromOutput(ctx, out.SecurityConfigDetail, &resp.Diagnostics)
+	state.refreshFromOutput(ctx, out.SecurityConfigDetail)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -178,7 +178,7 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state.refreshFromOutput(ctx, out, &resp.Diagnostics)
+	state.refreshFromOutput(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -220,7 +220,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 		return
 	}
-	state.refreshFromOutput(ctx, out.SecurityConfigDetail, &resp.Diagnostics)
+	state.refreshFromOutput(ctx, out.SecurityConfigDetail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -272,7 +272,7 @@ type resourceSecurityConfigData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityConfigDetail, diags *diag.Diagnostics) {
+func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityConfigDetail) {
 	if out == nil {
 		return
 	}
@@ -280,7 +280,7 @@ func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out
 	rd.ID = flex.StringToFramework(ctx, out.Id)
 	rd.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
 	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions, diags)
+	rd.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions)
 	rd.Type = flex.StringValueToFramework(ctx, out.Type)
 }
 
@@ -322,7 +322,7 @@ func expandSAMLOptions(ctx context.Context, list types.List, diags *diag.Diagnos
 	return nil
 }
 
-func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions, diags *diag.Diagnostics) types.List {
+func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.List {
 	attributeTypes := framework.AttributeTypesMust[samlOptions](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
