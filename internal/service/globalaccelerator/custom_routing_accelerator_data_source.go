@@ -2,19 +2,20 @@ package globalaccelerator
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_globalaccelerator_custom_routing_accelerator")
 func DataSourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCustomRoutingAcceleratorRead,
+		ReadWithoutTimeout: dataSourceCustomRoutingAcceleratorRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -85,7 +86,8 @@ func DataSourceCustomRoutingAccelerator() *schema.Resource {
 	}
 }
 
-func dataSourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -116,39 +118,44 @@ func dataSourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interfa
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading AWS Global Custom ROuting Accelerator: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Global Accelerator Custom Routing Accelerators: %s", err)
 	}
 
-	if len(results) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+	if count := len(results); count != 1 {
+		return sdkdiag.AppendErrorf(diags, "search returned %d results, please revise so only one is returned", count)
 	}
 
 	accelerator := results[0]
 	d.SetId(aws.StringValue(accelerator.AcceleratorArn))
 	d.Set("arn", accelerator.AcceleratorArn)
-	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
+	d.Set("enabled", accelerator.Enabled)
 	d.Set("hosted_zone_id", route53ZoneID)
-	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
-	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
+	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
+	}
+	d.Set("name", accelerator.Name)
 
-	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
 	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
-		return fmt.Errorf("error setting attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
-	tags, err := ListTags(context.TODO(), conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
-	return nil
+
+	return diags
 }

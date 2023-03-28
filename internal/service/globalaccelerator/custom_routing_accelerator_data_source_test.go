@@ -19,10 +19,9 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorCustomRoutingAcceleratorDataSourceConfig(resourceName),
+				Config: testAccCustomRoutingAcceleratorDataSourceConfig_basic(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "enabled"),
@@ -49,19 +48,18 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 
 }
 
-func testAccGlobalAcceleratorCustomRoutingAcceleratorDataSourceConfig(rName string) string {
+func testAccCustomRoutingAcceleratorDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
   name = %[1]q
 }
 
-
 data "aws_globalaccelerator_custom_routing_accelerator" "test_by_arn" {
-	arn = aws_globalaccelerator_custom_routing_accelerator.test.id
-  }
+  arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+}
   
-  data "aws_globalaccelerator_custom_routing_accelerator" "test_by_name" {
-	name = aws_globalaccelerator_custom_routing_accelerator.test.name
-  }
+data "aws_globalaccelerator_custom_routing_accelerator" "test_by_name" {
+  name = aws_globalaccelerator_custom_routing_accelerator.test.name
+}
 `, rName)
 }

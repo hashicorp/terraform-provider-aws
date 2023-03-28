@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,19 +18,18 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v globalaccelerator.CustomRoutingEndpointGroup
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
-	accName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
+		CheckDestroy:             testAccCheckCustomRoutingAcceleratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorCustomRoutingEndpointGroupConfig(accName),
+				Config: testAccCustomRoutingEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(accName),
-					testAccCheckGlobalAcceleratorCustomRoutingEndpointGroupExists(resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -37,46 +37,47 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 
 }
 
-func testAccGlobalAcceleratorCustomRoutingEndpointGroupConfig(accName string) string {
+func testAccCustomRoutingEndpointGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_globalaccelerator_custom_routing_accelerator" "test_acc" {
+resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
   name = %[1]q
 }
 
-resource "aws_globalaccelerator_custom_routing_listener" "test_listener" {
-	accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test_acc.id
-	port_range = {
-		from_port = 443
-		to_port = 443
-	}
+resource "aws_globalaccelerator_custom_routing_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+
+  port_range = {
+    from_port = 443
+    to_port   = 443
+  }
 }
 
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
-	listener_arn: aws_globalaccelerator_custom_routing_listener.test_listener.id
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
 }
-`, accName)
+`, rName)
 }
 
-func testAccCheckGlobalAcceleratorCustomRoutingEndpointGroupExists(name string, v *globalaccelerator.CustomRoutingEndpointGroup) resource.TestCheckFunc {
+func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, n string, v *globalaccelerator.CustomRoutingEndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Global Accelerator endpoint group ID is set")
+			return fmt.Errorf("No Global Accelerator Custom Routing Endpoint Group ID is set")
 		}
 
-		customRoutingEndpointGroup, err := tfglobalaccelerator.FindCustomRoutingEndpointGroupByARN(conn, rs.Primary.ID)
+		output, err := tfglobalaccelerator.FindCustomRoutingEndpointGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *customRoutingEndpointGroup
+		*v = *output
 
 		return nil
 	}

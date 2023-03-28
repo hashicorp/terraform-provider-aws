@@ -1,6 +1,7 @@
 package globalaccelerator
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -133,7 +134,7 @@ func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -148,7 +149,7 @@ func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta inter
 			return err
 		}
 
-		if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 		}
 	}
@@ -214,7 +215,7 @@ func resourceCustomRoutingEndpointGroupDelete(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 

@@ -2,7 +2,6 @@ package globalaccelerator
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -10,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,13 +23,13 @@ import (
 // @SDKResource("aws_globalaccelerator_custom_routing_accelerator")
 func ResourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomRoutingAcceleratorCreate,
-		Read:   resourceCustomRoutingAcceleratorRead,
-		Update: resourceCustomRoutingAcceleratorUpdate,
-		Delete: resourceCustomRoutingAcceleratorDelete,
+		CreateWithoutTimeout: resourceCustomRoutingAcceleratorCreate,
+		ReadWithoutTimeout:   resourceCustomRoutingAcceleratorRead,
+		UpdateWithoutTimeout: resourceCustomRoutingAcceleratorUpdate,
+		DeleteWithoutTimeout: resourceCustomRoutingAcceleratorDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -116,7 +117,8 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(context.TODO(), d.Get("tags").(map[string]interface{})))
@@ -133,93 +135,93 @@ func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interfa
 		input.IpAddressType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Global Accelerator Custom Routing Accelerator: %s", input)
-	output, err := conn.CreateCustomRoutingAccelerator(input)
+	output, err := conn.CreateCustomRoutingAcceleratorWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Global Accelerator Custom Routing Accelerator (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Custom Routing Accelerator (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Accelerator.AcceleratorArn))
 
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", d.Id(), err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
-		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
-		if _, err := conn.UpdateAcceleratorAttributes(input); err != nil {
-			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
+		if _, err := conn.UpdateAcceleratorAttributesWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 		}
 
-		if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
+		if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
-	return resourceCustomRoutingAcceleratorRead(d, meta)
+	return append(diags, resourceCustomRoutingAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	accelerator, err := FindCustomRoutingAcceleratorByARN(conn, d.Id())
+	accelerator, err := FindCustomRoutingAcceleratorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Custom Routing Accelerator (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
+	d.Set("enabled", accelerator.Enabled)
 	d.Set("hosted_zone_id", route53ZoneID)
-	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
-
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
-		return fmt.Errorf("error setting ip_sets: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
+	d.Set("name", accelerator.Name)
 
-	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
 	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
-		return fmt.Errorf("error setting attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
-	tags, err := ListTags(context.TODO(), conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
@@ -233,13 +235,14 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 			input.IpAddressType = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating Global Accelerator Custom Routing Accelerator: %s", input)
-		if _, err := conn.UpdateCustomRoutingAccelerator(input); err != nil {
-			return fmt.Errorf("error updating Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
+		_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", d.Id(), err)
+		if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
@@ -256,23 +259,25 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 				if aws.BoolValue(oInput.FlowLogsEnabled) && aws.BoolValue(nInput.FlowLogsEnabled) {
 					oInput.FlowLogsEnabled = aws.Bool(false)
 
-					log.Printf("[DEBUG] Updating Global Accelerator Custom Routing Accelerator attributes: %s", oInput)
-					if _, err := conn.UpdateCustomRoutingAcceleratorAttributes(oInput); err != nil {
-						return fmt.Errorf("error updating Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
+					_, err := conn.UpdateCustomRoutingAcceleratorAttributesWithContext(ctx, oInput)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 					}
 
-					if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", d.Id(), err)
+					if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
 					}
 				}
 
-				log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", nInput)
-				if _, err := conn.UpdateCustomRoutingAcceleratorAttributes(nInput); err != nil {
-					return fmt.Errorf("error updating Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
+				_, err := conn.UpdateCustomRoutingAcceleratorAttributesWithContext(ctx, nInput)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 				}
 
-				if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", d.Id(), err)
+				if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
 				}
 			}
 		}
@@ -281,69 +286,63 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(context.TODO(), conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Global Accelerator Custom Routing Accelerator (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceCustomRoutingAcceleratorRead(d, meta)
+	return append(diags, resourceCustomRoutingAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
-	{
-		input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
-			AcceleratorArn: aws.String(d.Id()),
-			Enabled:        aws.Bool(false),
-		}
-
-		log.Printf("[DEBUG] Updating Global Accelerator Custom Routing Accelerator: %s", input)
-		_, err := conn.UpdateCustomRoutingAccelerator(input)
-
-		if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error disabling Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
-		}
-
-		if _, err := waitCustomRoutingAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", d.Id(), err)
-		}
+	input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
+		AcceleratorArn: aws.String(d.Id()),
+		Enabled:        aws.Bool(false),
 	}
 
-	{
-		input := &globalaccelerator.DeleteCustomRoutingAcceleratorInput{
-			AcceleratorArn: aws.String(d.Id()),
-		}
+	_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
 
-		log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing  Accelerator (%s)", d.Id())
-		_, err := conn.DeleteCustomRoutingAccelerator(input)
-
-		if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error deleting Global Accelerator Custom Routing Accelerator (%s): %w", d.Id(), err)
-		}
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing  Accelerator (%s)", d.Id())
+	_, err = conn.DeleteCustomRoutingAcceleratorWithContext(ctx, &globalaccelerator.DeleteCustomRoutingAcceleratorInput{
+		AcceleratorArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func FindCustomRoutingAcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAccelerator, error) {
+func FindCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAccelerator, error) {
 	input := &globalaccelerator.DescribeCustomRoutingAcceleratorInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findCustomRoutingAccelerator(conn, input)
+	return findCustomRoutingAccelerator(ctx, conn, input)
 }
 
-func findCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorInput) (*globalaccelerator.CustomRoutingAccelerator, error) {
-	output, err := conn.DescribeCustomRoutingAccelerator(input)
+func findCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorInput) (*globalaccelerator.CustomRoutingAccelerator, error) {
+	output, err := conn.DescribeCustomRoutingAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -363,16 +362,16 @@ func findCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, inp
 	return output.Accelerator, nil
 }
 
-func FindCustomRoutingAcceleratorAttributesByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
+func FindCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findCustomRoutingAcceleratorAttributes(conn, input)
+	return findCustomRoutingAcceleratorAttributes(ctx, conn, input)
 }
 
-func findCustomRoutingAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
-	output, err := conn.DescribeCustomRoutingAcceleratorAttributes(input)
+func findCustomRoutingAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
+	output, err := conn.DescribeCustomRoutingAcceleratorAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -392,9 +391,9 @@ func findCustomRoutingAcceleratorAttributes(conn *globalaccelerator.GlobalAccele
 	return output.AcceleratorAttributes, nil
 }
 
-func statusCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		accelerator, err := FindCustomRoutingAcceleratorByARN(conn, arn)
+		accelerator, err := FindCustomRoutingAcceleratorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -408,18 +407,18 @@ func statusCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, a
 	}
 }
 
-func waitCustomRoutingAcceleratorDeployed(conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.CustomRoutingAccelerator, error) { //nolint:unparam
+func waitCustomRoutingAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.CustomRoutingAccelerator, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: statusCustomRoutingAccelerator(conn, arn),
+		Refresh: statusCustomRoutingAccelerator(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*globalaccelerator.CustomRoutingAccelerator); ok {
-		return v, err
+	if output, ok := outputRaw.(*globalaccelerator.CustomRoutingAccelerator); ok {
+		return output, err
 	}
 
 	return nil, err

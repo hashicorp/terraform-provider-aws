@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -26,12 +27,12 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
+		CheckDestroy:             testAccCheckCustomRoutingAcceleratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorCustomRoutingAcceleratorConfig(rName),
+				Config: testAccCustomRoutingAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(resourceName),
+					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", dnsNameRegex),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2BJ6XQ5FK7U4H"),
@@ -53,7 +54,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 	})
 }
 
-func testAccGlobalAcceleratorCustomRoutingAcceleratorConfig(rName string) string {
+func testAccCustomRoutingAcceleratorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
   name = %[1]q
@@ -61,20 +62,20 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 `, rName)
 }
 
-func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(name string) resource.TestCheckFunc {
+func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Global Accelerator Custom Routing Accelerator ID is set")
 		}
 
-		_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -84,25 +85,27 @@ func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(name string) re
 	}
 }
 
-func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+func testAccCheckCustomRoutingAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_globalaccelerator_custom_routing_accelerator" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_globalaccelerator_custom_routing_accelerator" {
+				continue
+			}
+
+			_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Global Accelerator Custom Routing Accelerator %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Global Accelerator Accelerator %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }

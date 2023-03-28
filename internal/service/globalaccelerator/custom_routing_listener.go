@@ -1,6 +1,7 @@
 package globalaccelerator
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -83,7 +84,7 @@ func resourceCustomRoutingListenerCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -134,7 +135,7 @@ func resourceCustomRoutingListenerUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	// Updating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -161,7 +162,7 @@ func resourceCustomRoutingListenerDelete(d *schema.ResourceData, meta interface{
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
