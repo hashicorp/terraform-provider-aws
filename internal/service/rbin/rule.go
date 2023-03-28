@@ -79,10 +79,10 @@ func ResourceRule() *schema.Resource {
 				},
 			},
 			"resource_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"EBS_SNAPSHOT", "EC2_IMAGE"}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ResourceType](),
 			},
 			"retention_period": {
 				Type:     schema.TypeList,
@@ -96,9 +96,9 @@ func ResourceRule() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 365),
 						},
 						"retention_period_unit": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"DAYS"}, false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
 						},
 					},
 				},
@@ -112,18 +112,18 @@ func ResourceRule() *schema.Resource {
 						"unlock_delay": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 2,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unlock_delay_unit": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 127),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.UnlockDelayUnit](),
 									},
 									"unlock_delay_value": {
 										Type:         schema.TypeInt,
 										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 365),
+										ValidateFunc: validation.IntBetween(7, 30),
 									},
 								},
 							},

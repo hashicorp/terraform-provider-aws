@@ -17,7 +17,7 @@ Terraform resource for managing an AWS RBin Rule.
 ```terraform
 resource "aws_rbin_rule" "example" {
   description   = "example_rule"
-  resource_type = "example_resource_type"
+  resource_type = "EBS_SNAPSHOT"
 
   resource_tags {
     resource_tag_key   = tag_key
@@ -39,7 +39,7 @@ resource "aws_rbin_rule" "example" {
 
 The following arguments are required:
 
-* `resource_type` - (Required) The resource type to be retained by the retention rule.
+* `resource_type` - (Required) The resource type to be retained by the retention rule. Valid values are `EBS_SNAPSHOT` and `EC2_IMAGE`.
 * `retention_period` - (Required) Information about the retention period for which the retention rule is to retain resources. See [`retention_period`](#retention_period) below.
 
 The following arguments are optional:
@@ -47,7 +47,6 @@ The following arguments are optional:
 * `description` - (Optional) The retention rule description.
 * `resource_tags` - (Optional) Specifies the resource tags to use to identify resources that are to be retained by a tag-level retention rule. See [`resource_tags`](#resource_tags) below.
 * `lock_configuration` - (Optional) Information about the retention rule lock configuration. See [`lock_configuration`](#lock_configuration) below.
-* `lock_state` - (Optional) The lock state of the retention rules to list. Only retention rules with the specified lock state are returned. Valid values are `locked`, `pending_unlock`, `unlocked`.
 
 ### retention_period
 
@@ -85,6 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - (String) ID of the Rule.
 * `lock_end_time` - (Timestamp) The date and time at which the unlock delay is set to expire. Only returned for retention rules that have been unlocked and that are still within the unlock delay period.
+* `lock_state` - (Optional) The lock state of the retention rules to list. Only retention rules with the specified lock state are returned. Valid values are `locked`, `pending_unlock`, `unlocked`.
 * `status` - (String) The state of the retention rule. Only retention rules that are in the `available` state retain resources. Valid values include `pending` and `available`.
 
 ## Import

@@ -20,7 +20,7 @@ import (
 
 func TestAccRBinRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rbinrule rbin.GetRuleOutput
+	var rule rbin.GetRuleOutput
 	description := "my test description"
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
@@ -37,7 +37,7 @@ func TestAccRBinRule_basic(t *testing.T) {
 			{
 				Config: testAccRuleConfig_basic(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rbinrule),
+					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
@@ -136,6 +136,35 @@ func TestAccRBinRule_tags(t *testing.T) {
 	})
 }
 
+func TestAccRBinRule_lock_config(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule rbin.GetRuleOutput
+	resourceType := "EBS_SNAPSHOT"
+	resourceName := "aws_rbin_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", "7"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_unit", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_value", "7"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
 	ctx := context.Background()
@@ -206,6 +235,26 @@ resource "aws_rbin_rule" "test" {
   }
 }
 `, description, resourceType)
+}
+
+func testAccRuleConfig_lockConfig(resourceType, delay_unit1, delay_value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rbin_rule" "test" {
+  resource_type = %[1]q
+
+  retention_period {
+    retention_period_value = 10
+    retention_period_unit  = "DAYS"
+  }
+
+  lock_configuration {
+    unlock_delay {
+      unlock_delay_unit  = %[2]q
+      unlock_delay_value = %[3]q
+    }
+  }
+}
+`, resourceType, delay_unit1, delay_value1)
 }
 
 func testAccRuleConfigTags1(resourceType, tag1Key, tag1Value string) string {
