@@ -129,39 +129,26 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
+	activation, err := FindActivationByID(ctx, conn, d.Id())
 
-	params := &ssm.DescribeActivationsInput{
-		Filters: []*ssm.DescribeActivationsFilter{
-			{
-				FilterKey: aws.String("ActivationIds"),
-				FilterValues: []*string{
-					aws.String(d.Id()),
-				},
-			},
-		},
-		MaxResults: aws.Int64(1),
-	}
-
-	resp, err := conn.DescribeActivationsWithContext(ctx, params)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM activation: %s", err)
-	}
-	if !d.IsNewResource() && (resp.ActivationList == nil || len(resp.ActivationList) == 0) {
-		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Activation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
-	d.Set("name", activation.DefaultInstanceName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Activation (%s): %s", d.Id(), err)
+	}
+
 	d.Set("description", activation.Description)
 	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
-	d.Set("registration_limit", activation.RegistrationLimit)
+	d.Set("name", activation.DefaultInstanceName)
 	d.Set("registration_count", activation.RegistrationsCount)
+	d.Set("registration_limit", activation.RegistrationLimit)
+
 	tags := KeyValueTags(ctx, activation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -194,4 +181,49 @@ func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func FindActivationByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.Activation, error) {
+	input := &ssm.DescribeActivationsInput{
+		Filters: []*ssm.DescribeActivationsFilter{
+			{
+				FilterKey:    aws.String("ActivationIds"),
+				FilterValues: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	return findActivation(ctx, conn, input)
+}
+
+func findActivation(ctx context.Context, conn *ssm.SSM, input *ssm.DescribeActivationsInput) (*ssm.Activation, error) {
+	var output []*ssm.Activation
+
+	err := conn.DescribeActivationsPagesWithContext(ctx, input, func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ActivationList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
