@@ -91,10 +91,10 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"iops": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 160000),
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							// ValidateFunc: validation.IntBetween(0, 160000),
 						},
 						"mode": {
 							Type:         schema.TypeString,
@@ -271,6 +271,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
+			validateDiskConfigurationIOPS,
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				var (
 					singleAZ1ThroughputCapacityValues = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
@@ -294,6 +295,30 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			},
 		),
 	}
+}
+
+func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	deploymentType := d.Get("deployment_type").(string)
+
+	if diskConfiguration, ok := d.GetOk("disk_iops_configuration"); ok {
+		if len(diskConfiguration.([]interface{})) > 0 {
+			m := diskConfiguration.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := m["iops"].(int); ok {
+				if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz1 {
+					if v < 0 || v > 160000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 160000) when deployment_type (%s), got %d", fsx.OpenZFSDeploymentTypeSingleAz1, v)
+					}
+				} else if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz2 {
+					if v < 0 || v > 350000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 350000) when deployment_type (%s), got %d", fsx.OpenZFSDeploymentTypeSingleAz2, v)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
