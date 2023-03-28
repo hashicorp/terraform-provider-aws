@@ -23,7 +23,8 @@ const (
 	ResNameAssessmentTemplate = "Assessment Template"
 )
 
-// @SDKResource("aws_inspector_assessment_template")
+// @SDKResource("aws_inspector_assessment_template", name="Assessment Template")
+// @Tags(identifierAttribute="id")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,
@@ -90,8 +91,6 @@ func ResourceAssessmentTemplate() *schema.Resource {
 func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &inspector.CreateAssessmentTemplateInput{
@@ -109,10 +108,8 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(output.AssessmentTemplateArn))
 
-	if len(tags) > 0 {
-		if err := updateTags(ctx, conn, d.Id(), nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting Inspector Assessment Template (%s) tags: %s", d.Id(), err)
-		}
+	if err := updateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Inspector Assessment Template (%s) tags: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("event_subscription"); ok && v.(*schema.Set).Len() > 0 {
@@ -129,8 +126,6 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 		AssessmentTemplateArns: aws.StringSlice([]string{d.Id()}),
@@ -153,23 +148,6 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("name", template.Name)
 	d.Set("rules_package_arns", aws.StringValueSlice(template.RulesPackageArns))
 	d.Set("target_arn", template.AssessmentTargetArn)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Inspector Assessment Template (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
@@ -207,14 +185,6 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if err := unsubscribeFromEvents(ctx, conn, removeEventSubscriptionsInput); err != nil {
 			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := updateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Inspector Assessment Template (%s) tags: %s", d.Id(), err)
 		}
 	}
 
