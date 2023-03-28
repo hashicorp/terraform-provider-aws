@@ -71,7 +71,7 @@ func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, n string,
 			return fmt.Errorf("No Global Accelerator Custom Routing Endpoint Group ID is set")
 		}
 
-		output, err := tfglobalaccelerator.FindCustomRoutingEndpointGroupByARN(conn, rs.Primary.ID)
+		output, err := tfglobalaccelerator.FindCustomRoutingEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

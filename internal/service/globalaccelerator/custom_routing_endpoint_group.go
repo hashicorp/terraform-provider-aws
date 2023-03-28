@@ -2,17 +2,18 @@ package globalaccelerator
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,9 +22,9 @@ import (
 // @SDKResource("aws_globalaccelerator_custom_routing_endpoint_group")
 func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomRoutingEndpointGroupCreate,
-		Read:   resourceCustomRoutingEndpointGroupRead,
-		Delete: resourceCustomRoutingEndpointGroupDelete,
+		CreateWithoutTimeout: resourceCustomRoutingEndpointGroupCreate,
+		ReadWithoutTimeout:   resourceCustomRoutingEndpointGroupRead,
+		DeleteWithoutTimeout: resourceCustomRoutingEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -97,134 +98,134 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	region := meta.(*conns.AWSClient).Region
 
-	opts := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
+	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
 		EndpointGroupRegion: aws.String(region),
 		IdempotencyToken:    aws.String(resource.UniqueId()),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("destination_configuration"); ok {
-		opts.DestinationConfigurations = expandCustomRoutingDestinationConfigurations(v.(*schema.Set).List())
+		input.DestinationConfigurations = expandCustomRoutingDestinationConfigurations(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Create Global Accelerator custom routing endpoint group: %s", opts)
-
-	resp, err := conn.CreateCustomRoutingEndpointGroup(opts)
+	output, err := conn.CreateCustomRoutingEndpointGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Global Accelerator custom routing endpoint group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Custom Routing Endpoint Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.EndpointGroup.EndpointGroupArn))
+	d.SetId(aws.StringValue(output.EndpointGroup.EndpointGroupArn))
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		optsEndpoints := &globalaccelerator.AddCustomRoutingEndpointsInput{
-			EndpointGroupArn:       resp.EndpointGroup.EndpointGroupArn,
+			EndpointGroupArn:       aws.String(d.Id()),
 			EndpointConfigurations: expandCustomRoutingEndpointConfigurations(v.(*schema.Set).List()),
 		}
 
 		_, err := conn.AddCustomRoutingEndpoints(optsEndpoints)
+
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "adding Global Accelerator Custom Routing Endpoint Group (%s) endpoints: %s", d.Id(), err)
 		}
 
-		if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+		if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 		}
 	}
 
-	return resourceCustomRoutingEndpointGroupRead(d, meta)
+	return append(diags, resourceCustomRoutingEndpointGroupRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
-	endpointGroup, err := FindCustomRoutingEndpointGroupByARN(conn, d.Id())
+	endpointGroup, err := FindCustomRoutingEndpointGroupByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Global Accelerator custom routing endpoint group (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Global Accelerator Custom Routing Endpoint Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator custom routing endpoint group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Endpoint Group (%s): %s", d.Id(), err)
 	}
 
 	listenerARN, err := EndpointGroupARNToListenerARN(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", endpointGroup.EndpointGroupArn)
 	if err := d.Set("destination_configuration", flattenCustomRoutingDestinationDescriptions(endpointGroup.DestinationDescriptions)); err != nil {
-		return fmt.Errorf("error setting destination_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting destination_configuration: %s", err)
 	}
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
 	if err := d.Set("endpoint_configuration", flattenCustomRoutingEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 	d.Set("listener_arn", listenerARN)
 
-	return nil
+	return diags
 }
 
-func resourceCustomRoutingEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
-	input := &globalaccelerator.DeleteCustomRoutingEndpointGroupInput{
+	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing Endpoint Group (%s)", d.Id())
+	_, err := conn.DeleteCustomRoutingEndpointGroup(&globalaccelerator.DeleteCustomRoutingEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Global Accelerator custom routing endpoint group (%s)", d.Id())
-	_, err := conn.DeleteCustomRoutingEndpointGroup(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Global Accelerator custom routing endpoint group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Custom Routing Endpoint Group (%s): %s", d.Id(), err)
 	}
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindCustomRoutingEndpointGroupByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
+func FindCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
 	input := &globalaccelerator.DescribeCustomRoutingEndpointGroupInput{
 		EndpointGroupArn: aws.String(arn),
 	}
 
-	return findCustomRoutingEndpointGroup(conn, input)
+	return findCustomRoutingEndpointGroup(ctx, conn, input)
 }
 
-func findCustomRoutingEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingEndpointGroupInput) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
-	output, err := conn.DescribeCustomRoutingEndpointGroup(input)
+func findCustomRoutingEndpointGroup(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingEndpointGroupInput) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
+	output, err := conn.DescribeCustomRoutingEndpointGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
 		return nil, &resource.NotFoundError{
