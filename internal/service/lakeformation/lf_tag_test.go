@@ -146,7 +146,7 @@ func testAccLFTag_disappears(t *testing.T) {
 	})
 }
 
-func testAccLFTag_values(t *testing.T) {
+func testAccLFTag_Values(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -179,6 +179,7 @@ func testAccLFTag_values(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value36"),
 					testAccCheckLFTagValuesLen(ctx, resourceName, 140),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),

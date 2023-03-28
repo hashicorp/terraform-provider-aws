@@ -159,45 +159,45 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	ns := n.(*schema.Set)
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
-	toAddLen := toAdd.Len()
-	toDeleteLen := toDelete.Len()
+	//toAddLen := toAdd.Len()
+	//toDeleteLen := toDelete.Len()
 
-	for i := 0; i < Max(toAddLen, toDeleteLen); i += lfTagsValuesMaxBatchSize {
+	if len(toAdd.List()) > 0 {
+		toAddChunks := splitLFTagValues(toAdd.List(), lfTagsValuesMaxBatchSize)
+
 		input := &lakeformation.UpdateLFTagInput{
 			CatalogId: aws.String(catalogID),
 			TagKey:    aws.String(tagKey),
 		}
 
-		if i < toAddLen {
-			end := i + lfTagsValuesMaxBatchSize
-			if end > toAddLen {
-				end = toAddLen
+		for _, v := range toAddChunks {
+			input.TagValuesToAdd = flex.ExpandStringList(v)
+
+			_, err = conn.UpdateLFTagWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 			}
-
-			toAddSubset := schema.NewSet(toAdd.F, toAdd.List()[i:end])
-			input.TagValuesToAdd = flex.ExpandStringSet(toAddSubset)
 		}
 
-		if i < toDeleteLen {
-			end := i + lfTagsValuesMaxBatchSize
-			if end > toDeleteLen {
-				end = toDeleteLen
+	}
+
+	if len(toDelete.List()) > 0 {
+		toDeleteChunks := splitLFTagValues(toDelete.List(), lfTagsValuesMaxBatchSize)
+
+		input := &lakeformation.UpdateLFTagInput{
+			CatalogId: aws.String(catalogID),
+			TagKey:    aws.String(tagKey),
+		}
+
+		for _, v := range toDeleteChunks {
+			input.TagValuesToDelete = flex.ExpandStringList(v)
+
+			_, err = conn.UpdateLFTagWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 			}
-
-			toDeleteSubset := schema.NewSet(toAdd.F, toDelete.List()[i:end])
-			input.TagValuesToDelete = flex.ExpandStringSet(toDeleteSubset)
 		}
 
-		_, err := conn.UpdateLFTag(input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s) (batch %d): %s", d.Id(), i, err)
-		}
-
-		_, err = conn.UpdateLFTagWithContext(ctx, input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
-
-		}
 	}
 
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
@@ -240,13 +240,6 @@ func validateLFTagValues() schema.SchemaValidateFunc {
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
 	)
-}
-
-func Max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
 }
 
 func splitLFTagValues(in []interface{}, size int) [][]interface{} {

@@ -54,11 +54,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardSelectPlus":      testAccPermissions_twcWildcardSelectPlus,
 		},
 		"LFTags": {
-			"basic":         testAccLFTag_basic,
-			"disappears":    testAccLFTag_disappears,
-			"tagKeyComplex": testAccLFTag_TagKey_complex,
-			"values":        testAccLFTag_values,
-			"overFifty":     testAccLFTag_Values_overFifty,
+			"basic":           testAccLFTag_basic,
+			"disappears":      testAccLFTag_disappears,
+			"tagKeyComplex":   testAccLFTag_TagKey_complex,
+			"values":          testAccLFTag_Values,
+			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTags": {
 			"basic":            testAccResourceLFTags_basic,
