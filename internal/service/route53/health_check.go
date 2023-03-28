@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_health_check")
@@ -31,6 +32,7 @@ func ResourceHealthCheck() *schema.Resource {
 		ReadWithoutTimeout:   resourceHealthCheckRead,
 		UpdateWithoutTimeout: resourceHealthCheckUpdate,
 		DeleteWithoutTimeout: resourceHealthCheckDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,70 +42,11 @@ func ResourceHealthCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(val interface{}) string {
-					return strings.ToUpper(val.(string))
-				},
-				ValidateFunc: validation.StringInSlice(route53.HealthCheckType_Values(), true),
-			},
-			"failure_threshold": {
+			"child_health_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
+				ValidateFunc: validation.IntAtMost(256),
 			},
-			"request_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
-				ValidateFunc: validation.IntInSlice([]int{10, 30}),
-			},
-			"ip_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsIPAddress,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return net.ParseIP(old).Equal(net.ParseIP(new))
-				},
-			},
-			"fqdn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-
-			"invert_healthcheck": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"resource_path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-
-			"search_string": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-
-			"measure_latency": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-
 			"child_healthchecks": {
 				Type:     schema.TypeSet,
 				MaxItems: 256,
@@ -113,26 +56,62 @@ func ResourceHealthCheck() *schema.Resource {
 				},
 				Optional: true,
 			},
-			"child_health_threshold": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(256),
-			},
-
 			"cloudwatch_alarm_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"cloudwatch_alarm_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"disabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_sni": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"failure_threshold": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
+			},
+			"fqdn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
 			"insufficient_data_health_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(route53.InsufficientDataHealthStatus_Values(), true),
+			},
+			"invert_healthcheck": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"ip_address": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsIPAddress,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return net.ParseIP(old).Equal(net.ParseIP(new))
+				},
+			},
+			"measure_latency": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
+			"port": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IsPortNumber,
 			},
 			"reference_name": {
 				Type:     schema.TypeString,
@@ -145,12 +124,6 @@ func ResourceHealthCheck() *schema.Resource {
 				// Example generated suffix: -terraform-20190122200019880700000001
 				ValidateFunc: validation.StringLenBetween(0, (64 - resource.UniqueIDSuffixLength - 11)),
 			},
-			"enable_sni": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
 			"regions": {
 				Type:     schema.TypeSet,
 				MinItems: 3,
@@ -170,22 +143,39 @@ func ResourceHealthCheck() *schema.Resource {
 				},
 				Optional: true,
 			},
-
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			"request_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
-
+			"resource_path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
 			"routing_control_arn": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"search_string": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToUpper(val.(string))
+				},
+				ValidateFunc: validation.StringInSlice(route53.HealthCheckType_Values(), true),
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
