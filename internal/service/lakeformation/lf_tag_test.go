@@ -318,11 +318,7 @@ func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength
 			return fmt.Errorf("expected %d values, got %d", expectedLength, len(output.TagValues))
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

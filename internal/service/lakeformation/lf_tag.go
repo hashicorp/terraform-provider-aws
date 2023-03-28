@@ -159,8 +159,6 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	ns := n.(*schema.Set)
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
-	//toAddLen := toAdd.Len()
-	//toDeleteLen := toDelete.Len()
 
 	if len(toAdd.List()) > 0 {
 		toAddChunks := splitLFTagValues(toAdd.List(), lfTagsValuesMaxBatchSize)
