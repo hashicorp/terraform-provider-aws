@@ -30,34 +30,18 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		ReadWithoutTimeout:   resourceAssessmentTemplateRead,
 		UpdateWithoutTimeout: resourceAssessmentTemplateUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTemplateDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"target_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"duration": {
 				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"rules_package_arns": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -79,8 +63,24 @@ func ResourceAssessmentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"rules_package_arns": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
