@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.2
