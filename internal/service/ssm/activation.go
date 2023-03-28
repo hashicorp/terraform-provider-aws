@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssm_activation")
+// @SDKResource("aws_ssm_activation", name="Activation")
+// @Tags
 func ResourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,
@@ -81,13 +82,12 @@ func ResourceActivation() *schema.Resource {
 func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateActivationInput{
 		DefaultInstanceName: aws.String(name),
 		IamRole:             aws.String(d.Get("name").(string)),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -101,10 +101,6 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("registration_limit"); ok {
 		input.RegistrationLimit = aws.Int64(int64(v.(int)))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -126,8 +122,6 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	activation, err := FindActivationByID(ctx, conn, d.Id())
 
@@ -149,16 +143,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("registration_count", activation.RegistrationsCount)
 	d.Set("registration_limit", activation.RegistrationLimit)
 
-	tags := KeyValueTags(ctx, activation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, activation.Tags)
 
 	return diags
 }

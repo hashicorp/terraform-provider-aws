@@ -53,6 +53,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceActivation,
 			TypeName: "aws_ssm_activation",
+			Name:     "Activation",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceAssociation,
