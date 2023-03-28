@@ -1579,5 +1579,6 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 // arn:aws:iam::0123456789:role/role_group/EcsService
 // arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
 func getNameFromARN(arn string) string {
-	return strings.SplitAfterN(arn, "/", 2)[1]
+	const maxParts = 2 // Ensures the path is carried with the role's name by splitting only on first /
+	return strings.SplitAfterN(arn, "/", maxParts)[1]
 }
