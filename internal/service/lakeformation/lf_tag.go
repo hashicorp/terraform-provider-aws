@@ -99,7 +99,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				TagValuesToAdd: flex.ExpandStringList(v),
 			}
 
-			_, err := conn.UpdateLFTag(in)
+			_, err := conn.UpdateLFTagWithContext(ctx, in)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
 			}
