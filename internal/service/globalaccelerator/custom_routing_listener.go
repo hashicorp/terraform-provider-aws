@@ -167,3 +167,32 @@ func resourceCustomRoutingListenerDelete(d *schema.ResourceData, meta interface{
 
 	return nil
 }
+
+func FindCustomRoutingListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingListener, error) {
+	input := &globalaccelerator.DescribeCustomRoutingListenerInput{
+		ListenerArn: aws.String(arn),
+	}
+
+	return findCustomRoutingListener(conn, input)
+}
+
+func findCustomRoutingListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingListenerInput) (*globalaccelerator.CustomRoutingListener, error) {
+	output, err := conn.DescribeCustomRoutingListener(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Listener == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Listener, nil
+}
