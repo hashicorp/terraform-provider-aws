@@ -176,7 +176,6 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 			}
 		}
-
 	}
 
 	if len(toDelete.List()) > 0 {
@@ -195,7 +194,6 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 			}
 		}
-
 	}
 
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
@@ -255,5 +253,6 @@ func splitLFTagValues(in []interface{}, size int) [][]interface{} {
 		out = append(out, in[0:size])
 		in = in[size:]
 	}
+
 	return out
 }
