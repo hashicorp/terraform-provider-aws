@@ -94,7 +94,6 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							// ValidateFunc: validation.IntBetween(0, 160000),
 						},
 						"mode": {
 							Type:         schema.TypeString,
