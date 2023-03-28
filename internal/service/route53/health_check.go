@@ -25,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_health_check")
+// @SDKResource("aws_route53_health_check", name="Health Check")
+// @Tags(identifierAttribute="id", resourceType="healthcheck")
 func ResourceHealthCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHealthCheckCreate,
@@ -185,8 +186,6 @@ func ResourceHealthCheck() *schema.Resource {
 func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	healthCheckType := d.Get("type").(string)
 	healthCheckConfig := &route53.HealthCheckConfig{
@@ -290,7 +289,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
+	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -300,8 +299,6 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindHealthCheckByID(ctx, conn, d.Id())
 
@@ -343,23 +340,6 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 	d.Set("search_string", healthCheckConfig.SearchString)
 	d.Set("type", healthCheckConfig.Type)
-
-	tags, err := ListTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Health Check (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -438,14 +418,6 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Health Check (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Route53 Health Check (%s) tags: %s", d.Id(), err)
 		}
 	}
 
