@@ -229,7 +229,7 @@ resource "aws_ssm_activation" "test" {
   iam_role           = aws_iam_role.test.name
   registration_limit = "5"
 
-  depends_on         = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
@@ -242,7 +242,7 @@ resource "aws_ssm_activation" "test" {
   iam_role           = aws_iam_role.test.name
   registration_limit = "5"
 
-  depends_on         = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   tags = {
     Name = %[1]q
@@ -260,7 +260,7 @@ resource "aws_ssm_activation" "test" {
   iam_role           = aws_iam_role.test.name
   registration_limit = "5"
 
-  depends_on         = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, expirationDate))
 }
