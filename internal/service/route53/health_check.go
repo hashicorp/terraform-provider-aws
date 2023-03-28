@@ -376,72 +376,72 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		updateHealthCheck := &route53.UpdateHealthCheckInput{
+		input := &route53.UpdateHealthCheckInput{
 			HealthCheckId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("failure_threshold") {
-			updateHealthCheck.FailureThreshold = aws.Int64(int64(d.Get("failure_threshold").(int)))
-		}
-
-		if d.HasChange("fqdn") {
-			updateHealthCheck.FullyQualifiedDomainName = aws.String(d.Get("fqdn").(string))
-		}
-
-		if d.HasChange("port") {
-			updateHealthCheck.Port = aws.Int64(int64(d.Get("port").(int)))
-		}
-
-		if d.HasChange("resource_path") {
-			updateHealthCheck.ResourcePath = aws.String(d.Get("resource_path").(string))
-		}
-
-		if d.HasChange("invert_healthcheck") {
-			updateHealthCheck.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
+		if d.HasChange("child_health_threshold") {
+			input.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
 		}
 
 		if d.HasChange("child_healthchecks") {
-			updateHealthCheck.ChildHealthChecks = flex.ExpandStringSet(d.Get("child_healthchecks").(*schema.Set))
-		}
-
-		if d.HasChange("child_health_threshold") {
-			updateHealthCheck.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
-		}
-
-		if d.HasChange("search_string") {
-			updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
+			input.ChildHealthChecks = flex.ExpandStringSet(d.Get("child_healthchecks").(*schema.Set))
 		}
 
 		if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
-			cloudwatchAlarm := &route53.AlarmIdentifier{
+			alarmIdentifier := &route53.AlarmIdentifier{
 				Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
 				Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
 			}
 
-			updateHealthCheck.AlarmIdentifier = cloudwatchAlarm
-		}
-
-		if d.HasChange("insufficient_data_health_status") {
-			updateHealthCheck.InsufficientDataHealthStatus = aws.String(d.Get("insufficient_data_health_status").(string))
-		}
-
-		if d.HasChange("enable_sni") {
-			updateHealthCheck.EnableSNI = aws.Bool(d.Get("enable_sni").(bool))
-		}
-
-		if d.HasChange("regions") {
-			updateHealthCheck.Regions = flex.ExpandStringSet(d.Get("regions").(*schema.Set))
+			input.AlarmIdentifier = alarmIdentifier
 		}
 
 		if d.HasChange("disabled") {
-			updateHealthCheck.Disabled = aws.Bool(d.Get("disabled").(bool))
+			input.Disabled = aws.Bool(d.Get("disabled").(bool))
+		}
+
+		if d.HasChange("enable_sni") {
+			input.EnableSNI = aws.Bool(d.Get("enable_sni").(bool))
+		}
+
+		if d.HasChange("failure_threshold") {
+			input.FailureThreshold = aws.Int64(int64(d.Get("failure_threshold").(int)))
+		}
+
+		if d.HasChange("fqdn") {
+			input.FullyQualifiedDomainName = aws.String(d.Get("fqdn").(string))
+		}
+
+		if d.HasChange("insufficient_data_health_status") {
+			input.InsufficientDataHealthStatus = aws.String(d.Get("insufficient_data_health_status").(string))
+		}
+
+		if d.HasChange("invert_healthcheck") {
+			input.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
 		}
 
 		if d.HasChange("ip_address") {
-			updateHealthCheck.IPAddress = aws.String(d.Get("ip_address").(string))
+			input.IPAddress = aws.String(d.Get("ip_address").(string))
 		}
 
-		_, err := conn.UpdateHealthCheckWithContext(ctx, updateHealthCheck)
+		if d.HasChange("port") {
+			input.Port = aws.Int64(int64(d.Get("port").(int)))
+		}
+
+		if d.HasChange("regions") {
+			input.Regions = flex.ExpandStringSet(d.Get("regions").(*schema.Set))
+		}
+
+		if d.HasChange("resource_path") {
+			input.ResourcePath = aws.String(d.Get("resource_path").(string))
+		}
+
+		if d.HasChange("search_string") {
+			input.SearchString = aws.String(d.Get("search_string").(string))
+		}
+
+		_, err := conn.UpdateHealthCheckWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Health Check (%s): %s", d.Id(), err)
@@ -464,7 +464,9 @@ func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	log.Printf("[DEBUG] Deleting Route53 Health Check: %s", d.Id())
-	_, err := conn.DeleteHealthCheckWithContext(ctx, &route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
+	_, err := conn.DeleteHealthCheckWithContext(ctx, &route53.DeleteHealthCheckInput{
+		HealthCheckId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
 		return diags
@@ -475,4 +477,29 @@ func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) (*route53.HealthCheck, error) {
+	input := &route53.GetHealthCheckInput{
+		HealthCheckId: aws.String(id),
+	}
+
+	output, err := conn.GetHealthCheckWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.HealthCheck, nil
 }

@@ -11,31 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) (*route53.HealthCheck, error) {
-	input := &route53.GetHealthCheckInput{
-		HealthCheckId: aws.String(id),
-	}
-
-	output, err := conn.GetHealthCheckWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.HealthCheck, nil
-}
-
 func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
 	input := &route53.GetHostedZoneInput{
 		Id: aws.String(id),
