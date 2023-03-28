@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_activation")
@@ -25,24 +26,20 @@ func ResourceActivation() *schema.Resource {
 		CreateWithoutTimeout: resourceActivationCreate,
 		ReadWithoutTimeout:   resourceActivationRead,
 		DeleteWithoutTimeout: resourceActivationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"activation_code": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-			},
-			"expired": {
-				Type:     schema.TypeBool,
-				Computed: true,
 			},
 			"expiration_date": {
 				Type:         schema.TypeString,
@@ -51,13 +48,17 @@ func ResourceActivation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"expired": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"iam_role": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"registration_limit": {
-				Type:     schema.TypeInt,
+			"name": {
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -65,12 +66,13 @@ func ResourceActivation() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"activation_code": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"registration_limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
