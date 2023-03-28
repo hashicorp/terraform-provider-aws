@@ -363,30 +363,33 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 
 		// If the R handler didn't set tags, try and read them from the service API.
 		if tagsInContext.TagsOut.IsNone() {
-			var identifier string
-			diags.Append(request.State.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+				var identifier string
 
-			if diags.HasError() {
-				return ctx, diags
-			}
+				diags.Append(request.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
-			// If the service package has a generic resource list tags methods, call it.
-			var err error
+				if diags.HasError() {
+					return ctx, diags
+				}
 
-			if v, ok := sp.(interface {
-				ListTags(context.Context, any, string) error
-			}); ok {
-				err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-			} else if v, ok := sp.(interface {
-				ListTags(context.Context, any, string, string) error
-			}); ok && r.tags.ResourceType != "" {
-				err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-			}
+				// If the service package has a generic resource list tags methods, call it.
+				var err error
 
-			if err != nil {
-				diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				}
 
-				return ctx, diags
+				if err != nil {
+					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+
+					return ctx, diags
+				}
 			}
 		}
 
@@ -463,43 +466,44 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		if !newTagsAll.Equal(oldTagsAll) {
-			var identifier string
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+				var identifier string
 
-			diags.Append(request.Plan.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+				diags.Append(request.Plan.GetAttribute(ctx, path.Root(identifier), &identifier)...)
 
-			if diags.HasError() {
-				return ctx, diags
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				// If the service package has a generic resource update tags methods, call it.
+				var err error
+
+				if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, any, any) error
+				}); ok {
+					err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
+				} else if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, string, any, any) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+				}
+
+				if verify.ErrorISOUnsupported(meta.Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+						r.tags.IdentifierAttribute: identifier,
+						"error":                    err.Error(),
+					})
+
+					return ctx, diags
+				}
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+
+					return ctx, diags
+				}
 			}
-
-			// If the service package has a generic resource update tags methods, call it.
-			var err error
-
-			if v, ok := sp.(interface {
-				UpdateTags(context.Context, any, string, any, any) error
-			}); ok {
-				err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
-			} else if v, ok := sp.(interface {
-				UpdateTags(context.Context, any, string, string, any, any) error
-			}); ok && r.tags.ResourceType != "" {
-				err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
-			}
-
-			if verify.ErrorISOUnsupported(meta.Partition, err) {
-				// ISO partitions may not support tagging, giving error
-				tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-					r.tags.IdentifierAttribute: identifier,
-					"error":                    err.Error(),
-				})
-
-				return ctx, diags
-			}
-
-			if err != nil {
-				diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
-
-				return ctx, diags
-			}
-
 			// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 		}
 	}

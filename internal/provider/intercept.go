@@ -227,41 +227,42 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			tagsInContext.TagsIn = types.Some(tags)
 		case Update:
 			if d.HasChange(names.AttrTagsAll) {
-				var identifier string
-				if key := r.tags.IdentifierAttribute; key == "id" {
-					identifier = d.Id()
-				} else {
-					identifier = d.Get(key).(string)
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+					var identifier string
+					if identifierAttribute == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(identifierAttribute).(string)
+					}
+					o, n := d.GetChange(names.AttrTagsAll)
+
+					// If the service package has a generic resource update tags methods, call it.
+					var err error
+
+					if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, any, any) error
+					}); ok {
+						err = v.UpdateTags(ctx, meta, identifier, o, n)
+					} else if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, string, any, any) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+					}
+
+					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+						// ISO partitions may not support tagging, giving error
+						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+							r.tags.IdentifierAttribute: identifier,
+							"error":                    err.Error(),
+						})
+
+						return ctx, diags
+					}
+
+					if err != nil {
+						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					}
 				}
-				o, n := d.GetChange(names.AttrTagsAll)
-
-				// If the service package has a generic resource update tags methods, call it.
-				var err error
-
-				if v, ok := sp.(interface {
-					UpdateTags(context.Context, any, string, any, any) error
-				}); ok {
-					err = v.UpdateTags(ctx, meta, identifier, o, n)
-				} else if v, ok := sp.(interface {
-					UpdateTags(context.Context, any, string, string, any, any) error
-				}); ok && r.tags.ResourceType != "" {
-					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
-				}
-
-				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-						r.tags.IdentifierAttribute: identifier,
-						"error":                    err.Error(),
-					})
-
-					return ctx, diags
-				}
-
-				if err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-				}
-
 				// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 			}
 		}
@@ -279,37 +280,39 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
 			if tagsInContext.TagsOut.IsNone() {
-				var identifier string
-				if key := r.tags.IdentifierAttribute; key == "id" {
-					identifier = d.Id()
-				} else {
-					identifier = d.Get(key).(string)
-				}
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+					var identifier string
+					if identifierAttribute == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(identifierAttribute).(string)
+					}
 
-				// If the service package has a generic resource list tags methods, call it.
-				var err error
+					// If the service package has a generic resource list tags methods, call it.
+					var err error
 
-				if v, ok := sp.(interface {
-					ListTags(context.Context, any, string) error
-				}); ok {
-					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-				} else if v, ok := sp.(interface {
-					ListTags(context.Context, any, string, string) error
-				}); ok && r.tags.ResourceType != "" {
-					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-				}
+					if v, ok := sp.(interface {
+						ListTags(context.Context, any, string) error
+					}); ok {
+						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+					} else if v, ok := sp.(interface {
+						ListTags(context.Context, any, string, string) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					}
 
-				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-						r.tags.IdentifierAttribute: d.Id(),
-						"error":                    err.Error(),
-					})
-					return ctx, diags
-				}
+					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+						// ISO partitions may not support tagging, giving error
+						tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
+							r.tags.IdentifierAttribute: d.Id(),
+							"error":                    err.Error(),
+						})
+						return ctx, diags
+					}
 
-				if err != nil {
-					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					if err != nil {
+						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+					}
 				}
 			}
 
