@@ -38,32 +38,3 @@ func FindEndpointGroup(ctx context.Context, conn *globalaccelerator.GlobalAccele
 
 	return output.EndpointGroup, nil
 }
-
-func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
-	input := &globalaccelerator.DescribeListenerInput{
-		ListenerArn: aws.String(arn),
-	}
-
-	return FindListener(ctx, conn, input)
-}
-
-func FindListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
-	output, err := conn.DescribeListenerWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Listener, nil
-}
