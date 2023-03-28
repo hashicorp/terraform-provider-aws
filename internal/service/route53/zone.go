@@ -34,7 +34,8 @@ const (
 	zoneChangeSyncMaxPollInterval = 30
 )
 
-// @SDKResource("aws_route53_zone")
+// @SDKResource("aws_route53_zone", name="Hosted Zone")
+// @Tags(identifierAttribute="id", resourceType="hostedzone")
 func ResourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
@@ -125,9 +126,6 @@ func ResourceZone() *schema.Resource {
 func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	region := meta.(*conns.AWSClient).Region
 
 	input := &route53.CreateHostedZoneInput{
 		CallerReference: aws.String(resource.UniqueId()),
@@ -143,7 +141,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), region)
+	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
 
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
@@ -163,7 +161,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
+	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -184,8 +182,6 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindHostedZoneByID(ctx, conn, d.Id())
 
@@ -242,23 +238,6 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "setting vpc: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -310,14 +289,6 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Route53 Zone (%s) tags: %s", d.Id(), err)
 		}
 	}
 
