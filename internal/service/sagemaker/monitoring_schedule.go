@@ -203,40 +203,40 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenMonitoringScheduleConfig(monitoringScheduleConfig *sagemaker.MonitoringScheduleConfig) []map[string]interface{} {
-	if monitoringScheduleConfig == nil {
+func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig) []map[string]interface{} {
+	if config == nil {
 		return []map[string]interface{}{}
 	}
 
-	spec := map[string]interface{}{}
+	m := map[string]interface{}{}
 
-	if monitoringScheduleConfig.MonitoringJobDefinitionName != nil {
-		spec["monitoring_job_definition_name"] = aws.StringValue(monitoringScheduleConfig.MonitoringJobDefinitionName)
+	if config.MonitoringJobDefinitionName != nil {
+		m["monitoring_job_definition_name"] = aws.StringValue(config.MonitoringJobDefinitionName)
 	}
 
-	if monitoringScheduleConfig.MonitoringType != nil {
-		spec["monitoring_type"] = aws.StringValue(monitoringScheduleConfig.MonitoringType)
+	if config.MonitoringType != nil {
+		m["monitoring_type"] = aws.StringValue(config.MonitoringType)
 	}
 
-	if monitoringScheduleConfig.ScheduleConfig != nil {
-		spec["schedule_config"] = flattenScheduleConfig(monitoringScheduleConfig.ScheduleConfig)
+	if config.ScheduleConfig != nil {
+		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
 	}
 
-	return []map[string]interface{}{spec}
+	return []map[string]interface{}{m}
 }
 
-func flattenScheduleConfig(scheduleConfig *sagemaker.ScheduleConfig) []map[string]interface{} {
-	if scheduleConfig == nil {
+func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interface{} {
+	if config == nil {
 		return []map[string]interface{}{}
 	}
 
-	spec := map[string]interface{}{}
+	m := map[string]interface{}{}
 
-	if scheduleConfig.ScheduleExpression != nil {
-		spec["schedule_expression"] = aws.StringValue(scheduleConfig.ScheduleExpression)
+	if config.ScheduleExpression != nil {
+		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
 	}
 
-	return []map[string]interface{}{spec}
+	return []map[string]interface{}{m}
 }
 
 func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
