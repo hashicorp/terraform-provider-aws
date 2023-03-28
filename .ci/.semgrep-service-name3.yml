@@ -2913,6 +2913,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)WAF"
+            - pattern-not-regex: ^testAccWAFRateBasedRule.+
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: waf-in-test-name

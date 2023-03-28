@@ -37,23 +37,6 @@ func WaitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.ApiGatewayV2
 	return nil, err
 }
 
-func WaitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{apigatewayv2.DomainNameStatusUpdating},
-		Target:  []string{apigatewayv2.DomainNameStatusAvailable},
-		Refresh: StatusDomainName(ctx, conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*apigatewayv2.GetDomainNameOutput); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
 // WaitVPCLinkAvailable waits for a VPC Link to return Available
 func WaitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	stateConf := &resource.StateChangeConf{
