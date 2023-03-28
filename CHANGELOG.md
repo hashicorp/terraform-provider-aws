@@ -5,20 +5,29 @@ FEATURES:
 * **New Data Source:** `aws_appmesh_gateway_route` ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * **New Data Source:** `aws_appmesh_virtual_node` ([#27545](https://github.com/hashicorp/terraform-provider-aws/issues/27545))
 * **New Data Source:** `aws_appmesh_virtual_router` ([#26908](https://github.com/hashicorp/terraform-provider-aws/issues/26908))
+* **New Data Source:** `aws_oam_sink` ([#30258](https://github.com/hashicorp/terraform-provider-aws/issues/30258))
+* **New Data Source:** `aws_oam_sinks` ([#30258](https://github.com/hashicorp/terraform-provider-aws/issues/30258))
+* **New Data Source:** `aws_ssmincidents_replication_set` ([#29769](https://github.com/hashicorp/terraform-provider-aws/issues/29769))
 * **New Resource:** `aws_sns_topic_data_protection_policy` ([#30008](https://github.com/hashicorp/terraform-provider-aws/issues/30008))
+* **New Resource:** `aws_ssmincidents_replication_set` ([#29769](https://github.com/hashicorp/terraform-provider-aws/issues/29769))
 
 ENHANCEMENTS:
 
+* data-source/aws_db_instance: Add `master_user_secret` attribute ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* data-source/aws_rds_cluster: Add `master_user_secret` attribute ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
 * resource/aws_appmesh_gateway_route: Add `header`, `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_gateway_route: Add `port` to the `spec.grpc_route.action.target`, `spec.http_route.action.target` and `spec.http2_route.action.target` configuration blocks to support Virtual Services with multiple listeners ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_gateway_route: Add `priority` to the `spec` configuration block ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_route: Add `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_route: `spec.http_route.match.prefix` and `spec.http2_route.match.prefix` are Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_virtual_node: Add `ip_preference` and `response_type` to the `spec.service_discovery.dns` configuration block ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_db_instance: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* resource/aws_rds_cluster: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
 
 BUG FIXES:
 
 * resource/aws_appmesh_virtual_router: `spec.listener` is Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_lakeformation_lf_tag: Fix support for lf-tag keys with colons in the name ([#28258](https://github.com/hashicorp/terraform-provider-aws/issues/28258))
 
 ## 4.60.0 (March 24, 2023)
 
