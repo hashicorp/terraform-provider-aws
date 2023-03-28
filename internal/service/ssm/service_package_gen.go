@@ -102,6 +102,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
+			Name:     "Patch Baseline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "PatchBaseline",
+			},
 		},
 		{
 			Factory:  ResourcePatchGroup,
