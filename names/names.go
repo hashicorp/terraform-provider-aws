@@ -42,6 +42,7 @@ const (
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointId                = "ssm-contacts"
+	SSMIncidentsEndpointID               = "ssm-incidents"
 	TranscribeEndpointID                 = "transcribe"
 )
 

@@ -41,7 +41,7 @@ jobs:
   golangci-lintb:
     name: 2 of 2
     needs: [golangci-linta]
-    runs-on: [custom, linux, large]
+    runs-on: [custom, linux, xl]
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
