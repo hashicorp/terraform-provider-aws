@@ -2,30 +2,31 @@ package globalaccelerator
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_listener")
 func ResourceCustomRoutingListener() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomRoutingListenerCreate,
-		Read:   resourceCustomRoutingListenerRead,
-		Update: resourceCustomRoutingListenerUpdate,
-		Delete: resourceCustomRoutingListenerDelete,
+		CreateWithoutTimeout: resourceCustomRoutingListenerCreate,
+		ReadWithoutTimeout:   resourceCustomRoutingListenerRead,
+		UpdateWithoutTimeout: resourceCustomRoutingListenerUpdate,
+		DeleteWithoutTimeout: resourceCustomRoutingListenerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -64,63 +65,65 @@ func ResourceCustomRoutingListener() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingListenerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
-	acceleratorARN := d.Get("accelerator_arn").(string)
 
-	opts := &globalaccelerator.CreateCustomRoutingListenerInput{
+	acceleratorARN := d.Get("accelerator_arn").(string)
+	input := &globalaccelerator.CreateCustomRoutingListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
-	log.Printf("[DEBUG] Create Global Accelerator custom routing listener: %s", opts)
+	output, err := conn.CreateCustomRoutingListenerWithContext(ctx, input)
 
-	resp, err := conn.CreateCustomRoutingListener(opts)
 	if err != nil {
-		return fmt.Errorf("error creating Global Accelerator custom routing listener: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Custom Routing Listener: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
+	d.SetId(aws.StringValue(output.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
-	return resourceCustomRoutingListenerRead(d, meta)
+	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
-	listener, err := FindCustomRoutingListenerByARN(conn, d.Id())
+	listener, err := FindCustomRoutingListenerByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Global Accelerator listener (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Global Accelerator Custom Routing Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator listener (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Listener (%s): %s", d.Id(), err)
 	}
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
-		return fmt.Errorf("error setting port_range: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCustomRoutingListenerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -129,56 +132,57 @@ func resourceCustomRoutingListenerUpdate(d *schema.ResourceData, meta interface{
 		PortRanges:  expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
-	log.Printf("[DEBUG] Updating Global Accelerator custom routing listener: %s", input)
-	if _, err := conn.UpdateCustomRoutingListener(input); err != nil {
-		return fmt.Errorf("error updating Global Accelerator custom routing listener (%s): %w", d.Id(), err)
+	_, err := conn.UpdateCustomRoutingListenerWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Listener (%s): %s", d.Id(), err)
 	}
 
 	// Updating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return resourceCustomRoutingListenerRead(d, meta)
+	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
-	input := &globalaccelerator.DeleteCustomRoutingListenerInput{
+	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing Listener (%s)", d.Id())
+	_, err := conn.DeleteCustomRoutingListener(&globalaccelerator.DeleteCustomRoutingListenerInput{
 		ListenerArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Global Accelerator custom routing listener (%s)", d.Id())
-	_, err := conn.DeleteCustomRoutingListener(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Global Accelerator custom routing listener (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Custom Routing Listener (%s): %s", d.Id(), err)
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending.
-	if _, err := waitCustomRoutingAcceleratorDeployed(context.TODO(), conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindCustomRoutingListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingListener, error) {
+func FindCustomRoutingListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingListener, error) {
 	input := &globalaccelerator.DescribeCustomRoutingListenerInput{
 		ListenerArn: aws.String(arn),
 	}
 
-	return findCustomRoutingListener(conn, input)
+	return findCustomRoutingListener(ctx, conn, input)
 }
 
-func findCustomRoutingListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingListenerInput) (*globalaccelerator.CustomRoutingListener, error) {
-	output, err := conn.DescribeCustomRoutingListener(input)
+func findCustomRoutingListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingListenerInput) (*globalaccelerator.CustomRoutingListener, error) {
+	output, err := conn.DescribeCustomRoutingListenerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
 		return nil, &resource.NotFoundError{
