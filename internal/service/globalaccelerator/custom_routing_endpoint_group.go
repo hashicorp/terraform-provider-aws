@@ -6,8 +6,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -15,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -27,7 +26,7 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 		Delete: resourceCustomRoutingEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -40,15 +39,6 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"endpoint_group_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-
 			"destination_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -60,13 +50,6 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-
-						"to_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-
 						"protocols": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -75,10 +58,14 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(globalaccelerator.CustomRoutingProtocol_Values(), false),
 							},
 						},
+						"to_port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IsPortNumber,
+						},
 					},
 				},
 			},
-
 			"endpoint_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -93,7 +80,13 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 					},
 				},
 			},
-
+			"endpoint_group_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
 			"listener_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
