@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,67 +84,41 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	log.Printf("[DEBUG] SSM activation create: %s", d.Id())
-
-	activationInput := &ssm.CreateActivationInput{
-		IamRole: aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &ssm.CreateActivationInput{
+		DefaultInstanceName: aws.String(name),
+		IamRole:             aws.String(d.Get("name").(string)),
 	}
 
-	if _, ok := d.GetOk("name"); ok {
-		activationInput.DefaultInstanceName = aws.String(d.Get("name").(string))
-	}
-
-	if _, ok := d.GetOk("description"); ok {
-		activationInput.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("expiration_date"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
-		activationInput.ExpirationDate = aws.Time(t)
+		input.ExpirationDate = aws.Time(t)
 	}
 
-	if _, ok := d.GetOk("iam_role"); ok {
-		activationInput.IamRole = aws.String(d.Get("iam_role").(string))
+	if v, ok := d.GetOk("registration_limit"); ok {
+		input.RegistrationLimit = aws.Int64(int64(v.(int)))
 	}
 
-	if _, ok := d.GetOk("registration_limit"); ok {
-		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
-	}
 	if len(tags) > 0 {
-		activationInput.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// Retry to allow iam_role to be created and policy attachment to take place
-	var resp *ssm.CreateActivationOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.CreateActivationWithContext(ctx, activationInput)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "Not existing role") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateActivationWithContext(ctx, activationInput)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateActivationWithContext(ctx, input)
+	}, "ValidationException", "Not existing role")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM Activation (%s): %s", name, err)
 	}
 
-	if resp.ActivationId == nil {
-		return sdkdiag.AppendErrorf(diags, "ActivationId was nil")
-	}
-	d.SetId(aws.StringValue(resp.ActivationId))
-	d.Set("activation_code", resp.ActivationCode)
+	output := outputRaw.(*ssm.CreateActivationOutput)
+
+	d.SetId(aws.StringValue(output.ActivationId))
+	d.Set("activation_code", output.ActivationCode)
 
 	return append(diags, resourceActivationRead(ctx, d, meta)...)
 }
@@ -208,15 +181,16 @@ func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
-
-	params := &ssm.DeleteActivationInput{
+	_, err := conn.DeleteActivationWithContext(ctx, &ssm.DeleteActivationInput{
 		ActivationId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidActivation) {
+		return diags
 	}
 
-	_, err := conn.DeleteActivationWithContext(ctx, params)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Activation (%s): %s", d.Id(), err)
 	}
 
 	return diags
