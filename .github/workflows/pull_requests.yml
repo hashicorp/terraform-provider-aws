@@ -10,7 +10,7 @@ jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - name: Apply Labels
         uses: actions/labeler@v4
         with:
@@ -19,7 +19,7 @@ jobs:
   NeedsTriageLabeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - name: Apply needs-triage Label
         uses: actions/labeler@v4
         if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
@@ -29,9 +29,8 @@ jobs:
   SizeLabeler:
     runs-on: ubuntu-latest
     steps:
-      # See also: https://github.com/CodelyTV/pr-size-labeler/pull/26
       - name: Apply Size Label
-        uses: bflad/pr-size-labeler@d56e9ca5fe93539a256a7e7b4efd971f4f19fe00
+        uses: codelytv/pr-size-labeler@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'
@@ -48,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add comment to add helpful context for new contributors
-        uses: actions/first-interaction@v1
+        uses: actions/first-interaction@v1.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-

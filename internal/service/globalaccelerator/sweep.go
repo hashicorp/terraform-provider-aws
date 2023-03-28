@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -19,131 +19,221 @@ func init() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",
 		F:    sweepAccelerators,
+		Dependencies: []string{
+			"aws_globalaccelerator_listener",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_listener", &resource.Sweeper{
+		Name: "aws_globalaccelerator_listener",
+		F:    sweepListeners,
+		Dependencies: []string{
+			"aws_globalaccelerator_endpoint_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_endpoint_group", &resource.Sweeper{
+		Name: "aws_globalaccelerator_endpoint_group",
+		F:    sweepEndpointGroups,
 	})
 }
 
 func sweepAccelerators(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
-
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
 	input := &globalaccelerator.ListAcceleratorsInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListAccelerators(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
-			return nil
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving Global Accelerator Accelerators: %s", err)
-		}
-
-		for _, accelerator := range output.Accelerators {
-			arn := aws.StringValue(accelerator.AcceleratorArn)
-
-			errs := sweepListeners(client, accelerator.AcceleratorArn)
-			if errs != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, errs)
-			}
-
+		for _, v := range page.Accelerators {
 			r := ResourceAccelerator()
 			d := r.Data(nil)
-			d.SetId(arn)
-			err = r.Delete(d, client)
+			d.SetId(aws.StringValue(v.AcceleratorArn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Accelerators (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepEndpointGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	input := &globalaccelerator.ListAcceleratorsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			err := conn.ListListenersPagesWithContext(ctx, input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.Listeners {
+					input := &globalaccelerator.ListEndpointGroupsInput{
+						ListenerArn: v.ListenerArn,
+					}
+
+					err := conn.ListEndpointGroupsPagesWithContext(ctx, input, func(page *globalaccelerator.ListEndpointGroupsOutput, lastPage bool) bool {
+						if page == nil {
+							return !lastPage
+						}
+
+						for _, v := range page.EndpointGroups {
+							r := ResourceEndpointGroup()
+							d := r.Data(nil)
+							d.SetId(aws.StringValue(v.EndpointGroupArn))
+
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+						}
+
+						return !lastPage
+					})
+
+					if sweep.SkipSweepError(err) {
+						continue
+					}
+
+					if err != nil {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Endpoint Groups (%s): %w", region, err))
+					}
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Global Accelerator Accelerator (%s): %s", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Listeners (%s): %w", region, err))
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Global Accelerator Endpoint Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Endpoint Groups (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepEndpointGroups(client interface{}, listenerArn *string) *multierror.Error {
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
-	var sweeperErrs *multierror.Error
-
-	log.Printf("[INFO] deleting Endpoint Groups for Listener %s", *listenerArn)
-	input := &globalaccelerator.ListEndpointGroupsInput{
-		ListenerArn: listenerArn,
-	}
-	output, err := conn.ListEndpointGroups(input)
+func sweepListeners(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Global Accelerator Endpoint Groups for Listener (%s): %s", *listenerArn, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	for _, endpoint := range output.EndpointGroups {
-		arn := aws.StringValue(endpoint.EndpointGroupArn)
-
-		r := ResourceEndpointGroup()
-		d := r.Data(nil)
-		d.SetId(arn)
-		err = r.Delete(d, client)
-
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Global Accelerator endpoint group (%s): %s", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
-	}
-
-	return sweeperErrs
-}
-
-func sweepListeners(client interface{}, acceleratorArn *string) *multierror.Error {
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	log.Printf("[INFO] deleting Listeners for Accelerator %s", *acceleratorArn)
-	listenersInput := &globalaccelerator.ListListenersInput{
-		AcceleratorArn: acceleratorArn,
+	err = conn.ListAcceleratorsPagesWithContext(ctx, input, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			err := conn.ListListenersPagesWithContext(ctx, input, func(page *globalaccelerator.ListListenersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.Listeners {
+					r := ResourceListener()
+					d := r.Data(nil)
+					d.SetId(aws.StringValue(v.ListenerArn))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Listeners (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Global Accelerator Listener sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-	listenersOutput, err := conn.ListListeners(listenersInput)
+
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Global Accelerator Listeners for Accelerator (%s): %s", *acceleratorArn, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
 	}
 
-	for _, listener := range listenersOutput.Listeners {
-		errs := sweepEndpointGroups(client, listener.ListenerArn)
-		if errs != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, errs)
-		}
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
-		arn := aws.StringValue(listener.ListenerArn)
-
-		r := ResourceListener()
-		d := r.Data(nil)
-		d.SetId(arn)
-		err = r.Delete(d, client)
-
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Global Accelerator listener (%s): %s", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Listeners (%s): %w", region, err))
 	}
 
-	return sweeperErrs
+	return sweeperErrs.ErrorOrNil()
 }

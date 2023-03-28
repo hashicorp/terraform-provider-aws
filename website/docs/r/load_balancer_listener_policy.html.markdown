@@ -10,7 +10,6 @@ description: |-
 
 Attaches a load balancer policy to an ELB Listener.
 
-
 ## Example Usage
 
 ### Custom Policy
@@ -111,6 +110,7 @@ The following arguments are supported:
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `load_balancer_port` - (Required) The load balancer listener port to apply the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an update. To force an update without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 

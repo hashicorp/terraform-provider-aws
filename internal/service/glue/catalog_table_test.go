@@ -1,6 +1,7 @@
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -26,20 +27,21 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccGlueCatalogTable_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -60,20 +62,21 @@ func TestAccGlueCatalogTable_basic(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_columnParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_columnParameters(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.parameters.%", "1"),
@@ -90,21 +93,22 @@ func TestAccGlueCatalogTable_columnParameters(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_full(rName, description),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -154,21 +158,22 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 				),
@@ -182,7 +187,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 				Config:  testAccCatalogTableConfig_full(rName, description),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -227,21 +232,22 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_full(rName, description),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -290,7 +296,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 				Config:  testAccCatalogTableConfig_fullReplacedValues(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test table from terraform2"),
@@ -342,19 +348,20 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorEmptyConfigurationBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 				),
 			},
 		},
@@ -363,19 +370,20 @@ func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_emptyBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorSerDeInfoEmptyConfigurationBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 				),
 				// Expect non-empty instead of panic
 				ExpectNonEmptyPlan: true,
@@ -385,20 +393,21 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_emptyBlock(t *testing.T)
 }
 
 func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_storageDescriptorSerDeInfo(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
@@ -413,7 +422,7 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.
 				Config:  testAccCatalogTableConfig_storageDescriptorSerDeInfoUpdate(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
@@ -426,19 +435,20 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptorSkewedInfo_emptyBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorSkewedInfoEmptyConfigurationBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 				),
 				// Expect non-empty instead of panic
 				ExpectNonEmptyPlan: true,
@@ -448,19 +458,20 @@ func TestAccGlueCatalogTable_StorageDescriptorSkewedInfo_emptyBlock(t *testing.T
 }
 
 func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorSchemaReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
@@ -477,7 +488,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorSchemaReferenceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
@@ -490,19 +501,20 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_StorageDescriptor_schemaReferenceARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableConfig_storageDescriptorSchemaReferenceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
@@ -520,20 +532,21 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReferenceARN(t *testing.T) 
 }
 
 func TestAccGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_partitionIndexesSingle(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
@@ -551,20 +564,21 @@ func TestAccGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_partitionIndexesMultiple(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
@@ -585,22 +599,23 @@ func TestAccGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -609,20 +624,21 @@ func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_targetTable(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_target(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", "database_name"),
@@ -639,22 +655,23 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 }
 
 func TestAccGlueCatalogTable_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccCatalogTableConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1107,33 +1124,35 @@ resource "aws_glue_catalog_table" "test" {
 `, rName)
 }
 
-func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_catalog_table" {
-			continue
-		}
-
-		catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		if _, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName); err != nil {
-			//Verify the error is what we want
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_catalog_table" {
 				continue
 			}
 
-			return err
+			catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			if _, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName); err != nil {
+				//Verify the error is what we want
+				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+					continue
+				}
+
+				return err
+			}
+			return fmt.Errorf("still exists")
 		}
-		return fmt.Errorf("still exists")
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckCatalogTableExists(name string) resource.TestCheckFunc {
+func testAccCheckCatalogTableExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1149,8 +1168,8 @@ func testAccCheckCatalogTableExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		out, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err
 		}

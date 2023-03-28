@@ -9,6 +9,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_global_network")
 func DataSourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalNetworkRead,
@@ -32,7 +33,7 @@ func DataSourceGlobalNetwork() *schema.Resource {
 }
 
 func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -47,7 +48,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("description", globalNetwork.Description)
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
-	if err := d.Set("tags", KeyValueTags(globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

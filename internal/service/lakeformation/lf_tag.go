@@ -1,6 +1,7 @@
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,23 +10,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // This value is defined by AWS API
 const lfTagsValuesMaxBatchSize = 50
 
+// @SDKResource("aws_lakeformation_lf_tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLFTagCreate,
-		Read:   resourceLFTagRead,
-		Update: resourceLFTagUpdate,
-		Delete: resourceLFTagDelete,
+		CreateWithoutTimeout: resourceLFTagCreate,
+		ReadWithoutTimeout:   resourceLFTagRead,
+		UpdateWithoutTimeout: resourceLFTagUpdate,
+		DeleteWithoutTimeout: resourceLFTagDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +62,9 @@ func ResourceLFTag() *schema.Resource {
 	}
 }
 
-func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
@@ -84,9 +89,9 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 		TagValues: flex.ExpandStringSet(valuesSubset),
 	}
 
-	_, err := conn.CreateLFTag(input)
+	_, err := conn.CreateLFTagWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Lake Formation LF-Tag: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
 	}
 
 	// If there are more than 50 values, create them in batches of 50 using UpdateLFTag API
@@ -107,21 +112,22 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateLFTag(input)
 		if err != nil {
-			return fmt.Errorf("error creating Lake Formation LF-Tag (batch: %d to %d): %w", i, end, err)
+			return sdkdiag.AppendErrorf(diags, "error creating Lake Formation LF-Tag (batch: %d to %d): %w", i, end, err)
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
 
-	return resourceLFTagRead(d, meta)
+	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	input := &lakeformation.GetLFTagInput{
@@ -129,32 +135,33 @@ func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
 		TagKey:    aws.String(tagKey),
 	}
 
-	output, err := conn.GetLFTag(input)
+	output, err := conn.GetLFTagWithContext(ctx, input)
 	if !d.IsNewResource() {
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Lake Formation LF-Tag (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation LF-Tag: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	d.Set("key", output.TagKey)
 	d.Set("values", flex.FlattenStringSet(output.TagValues))
 	d.Set("catalog_id", output.CatalogId)
 
-	return nil
+	return diags
 }
 
-func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	o, n := d.GetChange("values")
@@ -193,19 +200,26 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateLFTag(input)
 		if err != nil {
-			return fmt.Errorf("error updating Lake Formation LF-Tag (%s) (batch %d): %w", d.Id(), i, err)
+			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s) (batch %d): %w", d.Id(), i, err)
+		}
+
+		_, err = conn.UpdateLFTagWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
+
 		}
 	}
 
-	return resourceLFTagRead(d, meta)
+	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	input := &lakeformation.DeleteLFTagInput{
@@ -213,20 +227,22 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 		TagKey:    aws.String(tagKey),
 	}
 
-	_, err = conn.DeleteLFTag(input)
+	_, err = conn.DeleteLFTagWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
+func ReadLFTagID(id string) (string, string, error) {
+	catalogID, tagKey, found := strings.Cut(id, ":")
+
+	if !found {
 		return "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
 	}
-	return idParts[0], idParts[1], nil
+
+	return catalogID, tagKey, nil
 }
 
 func validateLFTagValues() schema.SchemaValidateFunc {

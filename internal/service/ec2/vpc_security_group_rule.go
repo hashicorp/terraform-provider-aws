@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_security_group_rule")
 func ResourceSecurityGroupRule() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceSecurityGroupRuleCreate,
-		Read:   resourceSecurityGroupRuleRead,
-		Update: resourceSecurityGroupRuleUpdate,
-		Delete: resourceSecurityGroupRuleDelete,
+		CreateWithoutTimeout: resourceSecurityGroupRuleCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRuleRead,
+		UpdateWithoutTimeout: resourceSecurityGroupRuleUpdate,
+		DeleteWithoutTimeout: resourceSecurityGroupRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceSecurityGroupRuleImport,
@@ -103,6 +105,10 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"security_group_rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"self": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -142,20 +148,20 @@ func ResourceSecurityGroupRule() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
-		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
+		return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 	id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
@@ -165,6 +171,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 		input := &ec2.AuthorizeSecurityGroupIngressInput{
 			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
+		var output *ec2.AuthorizeSecurityGroupIngressOutput
 
 		if isVPC {
 			input.GroupId = sg.GroupId
@@ -172,31 +179,48 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 			input.GroupName = sg.GroupName
 		}
 
-		_, err = conn.AuthorizeSecurityGroupIngress(input)
+		output, err = conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
+
+		if err == nil {
+			if len(output.SecurityGroupRules) == 1 {
+				d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+			} else {
+				d.Set("security_group_rule_id", nil)
+			}
+		}
 
 	case securityGroupRuleTypeEgress:
 		input := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
 			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
+		var output *ec2.AuthorizeSecurityGroupEgressOutput
 
-		_, err = conn.AuthorizeSecurityGroupEgress(input)
+		output, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
+
+		if err == nil {
+			if len(output.SecurityGroupRules) == 1 {
+				d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+			} else {
+				d.Set("security_group_rule_id", nil)
+			}
+		}
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionDuplicate) {
-		return fmt.Errorf(`[WARN] A duplicate Security Group rule was found on (%s). This may be
+		return diag.Errorf(`[WARN] A duplicate Security Group rule was found on (%s). This may be
 a side effect of a now-fixed Terraform issue causing two security groups with
 identical attributes but different source_security_group_ids to overwrite each
 other in the state. See https://github.com/hashicorp/terraform/pull/2376 for more
-information and instructions for recovery. Error: %w`, securityGroupID, err)
+information and instructions for recovery. Error: %s`, securityGroupID, err)
 	}
 
 	if err != nil {
-		return fmt.Errorf("authorizing Security Group (%s) Rule (%s): %w", securityGroupID, id, err)
+		return diag.Errorf("authorizing Security Group (%s) Rule (%s): %s", securityGroupID, id, err)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
 			return nil, err
@@ -220,7 +244,7 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for Security Group (%s) Rule (%s) create: %w", securityGroupID, id, err)
+		return diag.Errorf("waiting for Security Group (%s) Rule (%s) create: %s", securityGroupID, id, err)
 	}
 
 	d.SetId(id)
@@ -228,12 +252,12 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 	return nil
 }
 
-func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	securityGroupID := d.Get("security_group_id").(string)
 	ruleType := d.Get("type").(string)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
@@ -242,10 +266,10 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
+		return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 
 	var rules []*ec2.IpPermission
@@ -266,7 +290,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Shouldn't reach here as we aren't called from resourceSecurityGroupRuleCreate.
-		return fmt.Errorf("reading Security Group (%s) Rule (%s): %w", securityGroupID, d.Id(), &resource.NotFoundError{})
+		return diag.Errorf("reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &resource.NotFoundError{})
 	}
 
 	flattenIpPermission(d, ipPermission, isVPC)
@@ -279,11 +303,22 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 		d.SetId(id)
 	}
 
+	if isVPC {
+		// Attempt to find the single matching AWS Security Group Rule resource ID.
+		securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
+
+		if err != nil {
+			return diag.Errorf("reading Security Group (%s) Rules: %s", securityGroupID, err)
+		}
+
+		d.Set("security_group_rule_id", findSecurityGroupRuleMatch(ipPermission, securityGroupRules, ruleType))
+	}
+
 	return nil
 }
 
-func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("description") {
 		securityGroupID := d.Get("security_group_id").(string)
@@ -291,13 +326,13 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		conns.GlobalMutexKV.Lock(securityGroupID)
 		defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-		sg, err := FindSecurityGroupByID(conn, securityGroupID)
+		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
-			return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
+			return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
 		}
 
-		ipPermission := expandIpPermission(d, sg)
+		ipPermission := expandIPPermission(d, sg)
 		ruleType := d.Get("type").(string)
 		isVPC := aws.StringValue(sg.VpcId) != ""
 
@@ -313,7 +348,7 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 				input.GroupName = sg.GroupName
 			}
 
-			_, err = conn.UpdateSecurityGroupRuleDescriptionsIngress(input)
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsIngressWithContext(ctx, input)
 
 		case securityGroupRuleTypeEgress:
 			input := &ec2.UpdateSecurityGroupRuleDescriptionsEgressInput{
@@ -321,31 +356,31 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 				IpPermissions: []*ec2.IpPermission{ipPermission},
 			}
 
-			_, err = conn.UpdateSecurityGroupRuleDescriptionsEgress(input)
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsEgressWithContext(ctx, input)
 		}
 
 		if err != nil {
-			return fmt.Errorf("updating Security Group (%s) Rule (%s) description: %w", securityGroupID, d.Id(), err)
+			return diag.Errorf("updating Security Group (%s) Rule (%s) description: %s", securityGroupID, d.Id(), err)
 		}
 	}
 
-	return resourceSecurityGroupRuleRead(d, meta)
+	return resourceSecurityGroupRuleRead(ctx, d, meta)
 }
 
-func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
-		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
+		return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 
@@ -361,7 +396,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 			input.GroupName = sg.GroupName
 		}
 
-		_, err = conn.RevokeSecurityGroupIngress(input)
+		_, err = conn.RevokeSecurityGroupIngressWithContext(ctx, input)
 
 	case securityGroupRuleTypeEgress:
 		input := &ec2.RevokeSecurityGroupEgressInput{
@@ -369,7 +404,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
 
-		_, err = conn.RevokeSecurityGroupEgress(input)
+		_, err = conn.RevokeSecurityGroupEgressWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) {
@@ -377,7 +412,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", securityGroupID, d.Id(), err)
+		return diag.Errorf("revoking Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), err)
 	}
 
 	return nil
@@ -598,6 +633,55 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) (
 	return rule, description
 }
 
+func findSecurityGroupRuleMatch(p *ec2.IpPermission, securityGroupRules []*ec2.SecurityGroupRule, ruleType string) string {
+	for _, r := range securityGroupRules {
+		if ruleType == securityGroupRuleTypeIngress && aws.BoolValue(r.IsEgress) {
+			continue
+		}
+
+		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
+			continue
+		}
+
+		if p.FromPort != nil && r.FromPort != nil && aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
+			continue
+		}
+
+		if p.IpProtocol != nil && r.IpProtocol != nil && aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
+			continue
+		}
+
+		// SecurityGroupRule has only a single source or destination set.
+		if r.CidrIpv4 != nil {
+			if len(p.IpRanges) == 1 && aws.StringValue(p.IpRanges[0].CidrIp) == aws.StringValue(r.CidrIpv4) {
+				if len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.CidrIpv6 != nil {
+			if len(p.Ipv6Ranges) == 1 && aws.StringValue(p.Ipv6Ranges[0].CidrIpv6) == aws.StringValue(r.CidrIpv6) {
+				if len(p.IpRanges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.PrefixListId != nil {
+			if len(p.PrefixListIds) == 1 && aws.StringValue(p.PrefixListIds[0].PrefixListId) == aws.StringValue(r.PrefixListId) {
+				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.ReferencedGroupInfo != nil {
+			if len(p.UserIdGroupPairs) == 1 && aws.StringValue(p.UserIdGroupPairs[0].GroupId) == aws.StringValue(r.ReferencedGroupInfo.GroupId) {
+				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
 const securityGroupRuleIDSeparator = "_"
 
 // byGroupPair implements sort.Interface for []*ec2.UserIDGroupPairs based on
@@ -688,7 +772,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
 }
 
-func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
+func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
 	apiObject := &ec2.IpPermission{
 		IpProtocol: aws.String(ProtocolForValue(d.Get("protocol").(string))),
 	}

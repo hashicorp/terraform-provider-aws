@@ -10,7 +10,7 @@ description: |-
 
 Provides an ElastiCache parameter group resource.
 
-~> **NOTE:** Attempting to remove the `reserved-memory` parameter when `family` is set to `redis2.6` or `redis2.8` may show a perpetual difference in Terraform due to an Elasticache API limitation. Leave that parameter configured with any value to workaround the issue.
+~> **NOTE:** Attempting to remove the `reserved-memory` parameter when `family` is set to `redis2.6` or `redis2.8` may show a perpetual difference in Terraform due to an ElastiCache API limitation. Leave that parameter configured with any value to workaround the issue.
 
 ## Example Usage
 
@@ -53,7 +53,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ElastiCache parameter group name.
 * `arn` - The AWS ARN associated with the parameter group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 

@@ -43,13 +43,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` A list of all attachments ids matching filter, you can retrieve more information about the attachment using the data [aws_ec2_transit_gateway_vpc_attachment][2] getting it by identifier
+* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_vpc_attachment][2] data source, searching by identifier.
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayVpcAttachments.html
-[2]: https://www.terraform.io/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html
+[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_vpc_attachment
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

@@ -119,21 +119,14 @@ resource "aws_vpn_connection" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
-
-One of the following arguments is required:
-
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
-
-Other arguments:
-
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -156,6 +149,8 @@ Other arguments:
 * `tunnel2_dpd_timeout_seconds` - (Optional, Default `30`) The number of seconds after which a DPD timeout occurs for the second VPN tunnel. Valid value is equal or higher than `30`.
 * `tunnel1_ike_versions` - (Optional) The IKE versions that are permitted for the first VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel2_ike_versions` - (Optional) The IKE versions that are permitted for the second VPN tunnel. Valid values are `ikev1 | ikev2`.
+* `tunnel1_log_options` - (Optional) Options for logging VPN tunnel activity. See [Log Options](#log-options) below for more details.
+* `tunnel2_log_options` - (Optional) Options for logging VPN tunnel activity. See [Log Options](#log-options) below for more details.
 * `tunnel1_phase1_dh_group_numbers` - (Optional) List of one or more Diffie-Hellman group numbers that are permitted for the first VPN tunnel for phase 1 IKE negotiations. Valid values are ` 2 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24`.
 * `tunnel2_phase1_dh_group_numbers` - (Optional) List of one or more Diffie-Hellman group numbers that are permitted for the second VPN tunnel for phase 1 IKE negotiations. Valid values are ` 2 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24`.
 * `tunnel1_phase1_encryption_algorithms` - (Optional) List of one or more encryption algorithms that are permitted for the first VPN tunnel for phase 1 IKE negotiations. Valid values are `AES128 | AES256 | AES128-GCM-16 | AES256-GCM-16`.
@@ -180,6 +175,20 @@ Other arguments:
 * `tunnel2_replay_window_size` - (Optional, Default `1024`) The number of packets in an IKE replay window for the second VPN tunnel. Valid value is between `64` and `2048`.
 * `tunnel1_startup_action` - (Optional, Default `add`) The action to take when the establishing the tunnel for the first VPN connection. By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel. Specify start for AWS to initiate the IKE negotiation. Valid values are `add | start`.
 * `tunnel2_startup_action` - (Optional, Default `add`) The action to take when the establishing the tunnel for the second VPN connection. By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel. Specify start for AWS to initiate the IKE negotiation. Valid values are `add | start`.
+
+### Log Options
+
+The `tunnel1_log_options` and `tunnel2_log_options` block supports the following arguments:
+
+* `cloudwatch_log_options` - (Optional) Options for sending VPN tunnel logs to CloudWatch. See [CloudWatch Log Options](#cloudwatch-log-options) below for more details.
+
+### CloudWatch Log Options
+
+The `cloudwatch_log_options` blocks supports the following arguments:
+
+* `log_enabled` - (Optional) Enable or disable VPN tunnel logging feature. The default is `false`.
+* `log_group_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch log group to send logs to.
+* `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 
 ## Attributes Reference
 

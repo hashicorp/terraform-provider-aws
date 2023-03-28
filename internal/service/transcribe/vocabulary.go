@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_vocabulary")
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
@@ -88,7 +89,7 @@ const (
 )
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
@@ -104,7 +105,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -129,7 +130,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindVocabularyByName(ctx, conn, d.Id())
 
@@ -178,7 +179,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateVocabularyInput{
@@ -217,7 +218,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
 

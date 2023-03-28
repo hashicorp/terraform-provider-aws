@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-	ctx := context.Background()
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
 
 	input := &comprehend.ListEntityRecognizersInput{}
 
@@ -55,4 +55,12 @@ resource "aws_subnet" "test" {
 }
 `, rName, subnetCount),
 	)
+}
+
+func uniqueIDPattern() string {
+	return prefixedUniqueIDPattern(resource.UniqueIdPrefix)
+}
+
+func prefixedUniqueIDPattern(prefix string) string {
+	return fmt.Sprintf("%s[[:xdigit:]]{%d}", prefix, resource.UniqueIDSuffixLength)
 }

@@ -1,30 +1,34 @@
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_workgroup")
 func ResourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkgroupCreate,
-		Read:   resourceWorkgroupRead,
-		Update: resourceWorkgroupUpdate,
-		Delete: resourceWorkgroupDelete,
+		CreateWithoutTimeout: resourceWorkgroupCreate,
+		ReadWithoutTimeout:   resourceWorkgroupRead,
+		UpdateWithoutTimeout: resourceWorkgroupUpdate,
+		DeleteWithoutTimeout: resourceWorkgroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,11 +59,63 @@ func ResourceWorkgroup() *schema.Resource {
 					},
 				},
 			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Optional: true,
+			"endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"vpc_endpoint": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_endpoint_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"network_interface": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"availability_zone": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"network_interface_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"private_ip_address": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"subnet_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
-			"publicly_accessible": {
+			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -67,6 +123,10 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
@@ -101,10 +161,11 @@ func ResourceWorkgroup() *schema.Resource {
 	}
 }
 
-func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := redshiftserverless.CreateWorkgroupInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
@@ -137,77 +198,83 @@ func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.Tags = Tags(tags.IgnoreAWS())
 
-	out, err := conn.CreateWorkgroup(&input)
+	out, err := conn.CreateWorkgroupWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Serverless Workgroup : %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Workgroup : %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Workgroup.WorkgroupName))
 
-	if _, err := waitWorkgroupAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Workgroup (%s) to be created: %w", d.Id(), err)
+	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceWorkgroupRead(d, meta)
+	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	out, err := FindWorkgroupByName(conn, d.Id())
+	out, err := FindWorkgroupByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Workgroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Serverless Workgroup (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(out.WorkgroupArn)
 	d.Set("arn", arn)
-	d.Set("namespace_name", out.NamespaceName)
-	d.Set("workgroup_name", out.WorkgroupName)
-	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("base_capacity", out.BaseCapacity)
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set("namespace_name", out.NamespaceName)
 	d.Set("publicly_accessible", out.PubliclyAccessible)
 	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
+	d.Set("workgroup_id", out.WorkgroupId)
+	d.Set("workgroup_name", out.WorkgroupName)
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
-		return fmt.Errorf("setting config_parameter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
+	}
+
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("error listing tags for edshift Serverless Workgroup (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for edshift Serverless Workgroup (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
@@ -238,49 +305,52 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := conn.UpdateWorkgroup(input)
+		_, err := conn.UpdateWorkgroupWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Redshift Serverless Workgroup (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitWorkgroupAvailable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Redshift Serverless Workgroup (%s) to be updated: %w", d.Id(), err)
+		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be updated: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Serverless Workgroup (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceWorkgroupRead(d, meta)
+	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
-	deleteInput := redshiftserverless.DeleteWorkgroupInput{
-		WorkgroupName: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := conn.DeleteWorkgroup(&deleteInput)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteWorkgroupWithContext(ctx, &redshiftserverless.DeleteWorkgroupInput{
+				WorkgroupName: aws.String(d.Id()),
+			})
+		},
+		// "ConflictException: There is an operation running on the workgroup. Try deleting the workgroup again later."
+		redshiftserverless.ErrCodeConflictException, "operation running")
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitWorkgroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Workgroup (%s) delete: %w", d.Id(), err)
+	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandConfigParameter(tfMap map[string]interface{}) *redshiftserverless.ConfigParameter {
@@ -360,4 +430,107 @@ func flattenConfigParameters(apiObjects []*redshiftserverless.ConfigParameter) [
 	}
 
 	return tfList
+}
+
+func flattenEndpoint(apiObject *redshiftserverless.Endpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.Address; v != nil {
+		tfMap["address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.VpcEndpoints; v != nil {
+		tfMap["vpc_endpoint"] = flattenVPCEndpoints(v)
+	}
+
+	return tfMap
+}
+
+func flattenVPCEndpoints(apiObjects []*redshiftserverless.VpcEndpoint) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenVPCEndpoint(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenVPCEndpoint(apiObject *redshiftserverless.VpcEndpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.VpcEndpointId; v != nil {
+		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.NetworkInterfaces; v != nil {
+		tfMap["network_interface"] = flattenNetworkInterfaces(v)
+	}
+	return tfMap
+}
+
+func flattenNetworkInterfaces(apiObjects []*redshiftserverless.NetworkInterface) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkInterface(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap["availability_zone"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.NetworkInterfaceId; v != nil {
+		tfMap["network_interface_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrivateIpAddress; v != nil {
+		tfMap["private_ip_address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SubnetId; v != nil {
+		tfMap["subnet_id"] = aws.StringValue(v)
+	}
+	return tfMap
 }

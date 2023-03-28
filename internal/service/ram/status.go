@@ -1,6 +1,7 @@
 package ram
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,9 +21,9 @@ const (
 )
 
 // StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
-func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		invitation, err := FindResourceShareInvitationByARN(conn, arn)
+		invitation, err := FindResourceShareInvitationByARN(ctx, conn, arn)
 
 		if err != nil {
 			return nil, ResourceShareInvitationStatusUnknown, err
@@ -37,9 +38,9 @@ func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefr
 }
 
 // StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
-func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		share, err := FindResourceShareOwnerSelfByARN(conn, arn)
+		share, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, ResourceShareStatusNotFound, nil
@@ -57,9 +58,9 @@ func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefre
 	}
 }
 
-func StatusResourceSharePrincipalAssociation(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
+func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err
