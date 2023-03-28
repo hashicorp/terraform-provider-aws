@@ -332,7 +332,7 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []ServicePackage
+	ServicePackages         map[string]ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 

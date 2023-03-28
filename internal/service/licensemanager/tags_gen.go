@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager/licensemanageriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -39,6 +40,25 @@ func KeyValueTags(ctx context.Context, tags []*licensemanager.Tag) tftags.KeyVal
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns licensemanager service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*licensemanager.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets licensemanager service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*licensemanager.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates licensemanager service tags.
@@ -78,6 +98,8 @@ func UpdateTags(ctx context.Context, conn licensemanageriface.LicenseManagerAPI,
 	return nil
 }
 
+// UpdateTags updates licensemanager service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).LicenseManagerConn(), identifier, oldTags, newTags)
 }
