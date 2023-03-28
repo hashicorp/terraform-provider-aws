@@ -93,6 +93,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceParameter,
 			TypeName: "aws_ssm_parameter",
+			Name:     "Parameter",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Parameter",
+			},
 		},
 		{
 			Factory:  ResourcePatchBaseline,
