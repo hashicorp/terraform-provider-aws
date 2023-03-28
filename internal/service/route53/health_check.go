@@ -315,34 +315,34 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("healthcheck/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	healthCheckConfig := output.HealthCheckConfig
-	d.Set("type", healthCheckConfig.Type)
-	d.Set("failure_threshold", healthCheckConfig.FailureThreshold)
-	d.Set("request_interval", healthCheckConfig.RequestInterval)
-	d.Set("fqdn", healthCheckConfig.FullyQualifiedDomainName)
-	d.Set("search_string", healthCheckConfig.SearchString)
-	d.Set("ip_address", healthCheckConfig.IPAddress)
-	d.Set("port", healthCheckConfig.Port)
-	d.Set("resource_path", healthCheckConfig.ResourcePath)
-	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
-	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
-	d.Set("disabled", healthCheckConfig.Disabled)
-	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
-
-	if err := d.Set("child_healthchecks", flex.FlattenStringList(healthCheckConfig.ChildHealthChecks)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting child_healthchecks: %s", err)
-	}
-
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
-	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
-	d.Set("enable_sni", healthCheckConfig.EnableSNI)
-
-	d.Set("regions", flex.FlattenStringList(healthCheckConfig.Regions))
-
-	if healthCheckConfig.AlarmIdentifier != nil {
-		d.Set("cloudwatch_alarm_name", healthCheckConfig.AlarmIdentifier.Name)
-		d.Set("cloudwatch_alarm_region", healthCheckConfig.AlarmIdentifier.Region)
+	d.Set("child_healthchecks", aws.StringValueSlice(healthCheckConfig.ChildHealthChecks))
+	if alarmIdentifier := healthCheckConfig.AlarmIdentifier; alarmIdentifier != nil {
+		d.Set("cloudwatch_alarm_name", alarmIdentifier.Name)
+		d.Set("cloudwatch_alarm_region", alarmIdentifier.Region)
 	}
+	d.Set("disabled", healthCheckConfig.Disabled)
+	d.Set("enable_sni", healthCheckConfig.EnableSNI)
+	d.Set("failure_threshold", healthCheckConfig.FailureThreshold)
+	d.Set("fqdn", healthCheckConfig.FullyQualifiedDomainName)
+	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
+	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
+	d.Set("ip_address", healthCheckConfig.IPAddress)
+	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
+	d.Set("port", healthCheckConfig.Port)
+	d.Set("regions", aws.StringValueSlice(healthCheckConfig.Regions))
+	d.Set("request_interval", healthCheckConfig.RequestInterval)
+	d.Set("resource_path", healthCheckConfig.ResourcePath)
+	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
+	d.Set("search_string", healthCheckConfig.SearchString)
+	d.Set("type", healthCheckConfig.Type)
 
 	tags, err := ListTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck)
 
@@ -360,13 +360,6 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "route53",
-		Resource:  fmt.Sprintf("healthcheck/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	return diags
 }
