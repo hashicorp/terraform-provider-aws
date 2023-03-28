@@ -334,6 +334,97 @@ func resourceCustomRoutingAcceleratorDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
+func FindCustomRoutingAcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAccelerator, error) {
+	input := &globalaccelerator.DescribeCustomRoutingAcceleratorInput{
+		AcceleratorArn: aws.String(arn),
+	}
+
+	return findCustomRoutingAccelerator(conn, input)
+}
+
+func findCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorInput) (*globalaccelerator.CustomRoutingAccelerator, error) {
+	output, err := conn.DescribeCustomRoutingAccelerator(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Accelerator == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Accelerator, nil
+}
+
+func FindCustomRoutingAcceleratorAttributesByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
+	input := &globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput{
+		AcceleratorArn: aws.String(arn),
+	}
+
+	return findCustomRoutingAcceleratorAttributes(conn, input)
+}
+
+func findCustomRoutingAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
+	output, err := conn.DescribeCustomRoutingAcceleratorAttributes(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AcceleratorAttributes == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AcceleratorAttributes, nil
+}
+
+func statusCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		accelerator, err := FindCustomRoutingAcceleratorByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return accelerator, aws.StringValue(accelerator.Status), nil
+	}
+}
+
+func waitCustomRoutingAcceleratorDeployed(conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.CustomRoutingAccelerator, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
+		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
+		Refresh: statusCustomRoutingAccelerator(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*globalaccelerator.CustomRoutingAccelerator); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
 func expandUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput {
 	return (*globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput)(expandUpdateAcceleratorAttributesInput(tfMap))
 }
