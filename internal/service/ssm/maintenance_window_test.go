@@ -517,7 +517,7 @@ func testAccCheckMaintenanceWindowExists(ctx context.Context, n string, v *ssm.G
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
-		output, err := tfssm.FindMaintenanceWindowsByID(ctx, conn, rs.Primary.ID)
+		output, err := tfssm.FindMaintenanceWindowByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -538,7 +538,7 @@ func testAccCheckMaintenanceWindowDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfssm.FindMaintenanceWindowsByID(ctx, conn, rs.Primary.ID)
+			_, err := tfssm.FindMaintenanceWindowByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

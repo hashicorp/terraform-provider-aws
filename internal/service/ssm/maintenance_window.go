@@ -150,7 +150,7 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn()
 
-	output, err := FindMaintenanceWindowsByID(ctx, conn, d.Id())
+	output, err := FindMaintenanceWindowByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window %s not found, removing from state", d.Id())
@@ -241,7 +241,7 @@ func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindMaintenanceWindowsByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetMaintenanceWindowOutput, error) {
+func FindMaintenanceWindowByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetMaintenanceWindowOutput, error) {
 	input := &ssm.GetMaintenanceWindowInput{
 		WindowId: aws.String(id),
 	}
