@@ -7,42 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// FindCustomRoutingEndpointGroupByARN returns the custom routing endpoint group corresponding to the specified ARN.
-// Returns NotFoundError if no custom routing endpoint group is found.
-func FindCustomRoutingEndpointGroupByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
-	input := &globalaccelerator.DescribeCustomRoutingEndpointGroupInput{
-		EndpointGroupArn: aws.String(arn),
-	}
-
-	return FindCustomRoutingEndpointGroup(conn, input)
-}
-
-// FindCustomRoutingEndpointGroup returns the custom routing endpoint group corresponding to the specified input.
-// Returns NotFoundError if no custom routing endpoint group is found.
-func FindCustomRoutingEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingEndpointGroupInput) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
-	output, err := conn.DescribeCustomRoutingEndpointGroup(input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.EndpointGroup == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.EndpointGroup, nil
-}
-
 // FindCustomRoutingListenerByARN returns the custom routing listener corresponding to the specified ARN.
 // Returns NotFoundError if no custom routing listener is found.
 func FindCustomRoutingListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingListener, error) {

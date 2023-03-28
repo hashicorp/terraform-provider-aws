@@ -221,6 +221,35 @@ func resourceCustomRoutingEndpointGroupDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
+func FindCustomRoutingEndpointGroupByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
+	input := &globalaccelerator.DescribeCustomRoutingEndpointGroupInput{
+		EndpointGroupArn: aws.String(arn),
+	}
+
+	return findCustomRoutingEndpointGroup(conn, input)
+}
+
+func findCustomRoutingEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingEndpointGroupInput) (*globalaccelerator.CustomRoutingEndpointGroup, error) {
+	output, err := conn.DescribeCustomRoutingEndpointGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.EndpointGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.EndpointGroup, nil
+}
+
 func expandCustomRoutingDestinationConfigurations(configurations []interface{}) []*globalaccelerator.CustomRoutingDestinationConfiguration {
 	if len(configurations) == 0 {
 		return nil
