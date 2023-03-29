@@ -65,6 +65,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePortfolio,
 			TypeName: "aws_servicecatalog_portfolio",
+			Name:     "Portfolio",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourcePortfolioShare,
