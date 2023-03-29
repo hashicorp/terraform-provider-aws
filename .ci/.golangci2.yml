@@ -29,10 +29,6 @@ issues:
     - linters:
         - staticcheck
       text: "MigrateState is deprecated and any new changes to a resource's schema should be handled by StateUpgraders."
-      # Many AWS services
-    - linters:
-        - staticcheck
-      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
       # Legacy CRUD
     - linters:
         - staticcheck
@@ -57,7 +53,15 @@ issues:
     - linters:
         - staticcheck
       path: internal/service/ce/
-      text: "SA1019: input.AnomalySubscription.Threshold is deprecated: Threshold has been deprecated in favor of ThresholdExpression"
+      text: "SA1019: [a-zA-Z0-9.]+.\\w+ is deprecated: \\w+ has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/cloudfront"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/cloudtrail"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
       path: internal/service/detective/
@@ -66,6 +70,10 @@ issues:
         - staticcheck
       path: internal/service/ecr/
       text: "SA1019: params.RegistryIds is deprecated: This field is deprecated."
+    - linters:
+        - staticcheck
+      path: "internal/service/firehose"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
       path: internal/service/globalaccelerator/
@@ -82,6 +90,14 @@ issues:
         - staticcheck
       path: internal/service/kms/
       text: "SA1019: [a-zA-Z0-9.]+.CustomerMasterKeySpec is deprecated: This field has been deprecated. Instead, use the KeySpec field"
+    - linters:
+        - staticcheck
+      path: "internal/service/neptune"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/s3"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
       path: internal/service/securityhub/
