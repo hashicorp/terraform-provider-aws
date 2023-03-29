@@ -89,6 +89,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProvisionedProduct,
 			TypeName: "aws_servicecatalog_provisioned_product",
+			Name:     "Provisioned Product",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceProvisioningArtifact,
