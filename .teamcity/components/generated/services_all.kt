@@ -140,6 +140,7 @@ val services = mapOf(
     "qldb" to ServiceSpec("QLDB (Quantum Ledger Database)"),
     "quicksight" to ServiceSpec("QuickSight"),
     "ram" to ServiceSpec("RAM (Resource Access Manager)"),
+    "rbin" to ServiceSpec("Recycle Bin (RBin)"),
     "rds" to ServiceSpec("RDS (Relational Database)", vpcLock = true),
     "redshift" to ServiceSpec("Redshift", vpcLock = true),
     "redshiftdata" to ServiceSpec("Redshift Data"),
