@@ -178,11 +178,7 @@ func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) r
 
 		_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
