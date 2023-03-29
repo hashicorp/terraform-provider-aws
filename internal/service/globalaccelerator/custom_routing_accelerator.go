@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -82,6 +83,12 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 				Default:      globalaccelerator.IpAddressTypeIpv4,
 				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
 			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"ip_sets": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -133,6 +140,10 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		input.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
+		input.IpAddresses = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	output, err := conn.CreateCustomRoutingAcceleratorWithContext(ctx, input)

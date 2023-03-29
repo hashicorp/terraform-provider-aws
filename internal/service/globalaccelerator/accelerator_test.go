@@ -33,7 +33,7 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
