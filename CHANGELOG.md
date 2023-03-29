@@ -1,14 +1,79 @@
-## 4.60.0 (Unreleased)
+## 4.61.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_appmesh_gateway_route` ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* **New Data Source:** `aws_appmesh_virtual_node` ([#27545](https://github.com/hashicorp/terraform-provider-aws/issues/27545))
+* **New Data Source:** `aws_appmesh_virtual_router` ([#26908](https://github.com/hashicorp/terraform-provider-aws/issues/26908))
+* **New Data Source:** `aws_oam_sink` ([#30258](https://github.com/hashicorp/terraform-provider-aws/issues/30258))
+* **New Data Source:** `aws_oam_sinks` ([#30258](https://github.com/hashicorp/terraform-provider-aws/issues/30258))
+* **New Data Source:** `aws_ssmincidents_replication_set` ([#29769](https://github.com/hashicorp/terraform-provider-aws/issues/29769))
+* **New Resource:** `aws_sns_topic_data_protection_policy` ([#30008](https://github.com/hashicorp/terraform-provider-aws/issues/30008))
+* **New Resource:** `aws_ssmincidents_replication_set` ([#29769](https://github.com/hashicorp/terraform-provider-aws/issues/29769))
+
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `master_user_secret` attribute ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* data-source/aws_rds_cluster: Add `master_user_secret` attribute ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* resource/aws_appmesh_gateway_route: Add `header`, `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_appmesh_gateway_route: Add `port` to the `spec.grpc_route.action.target`, `spec.http_route.action.target` and `spec.http2_route.action.target` configuration blocks to support Virtual Services with multiple listeners ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_appmesh_gateway_route: Add `priority` to the `spec` configuration block ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_appmesh_route: Add `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_appmesh_route: `spec.http_route.match.prefix` and `spec.http2_route.match.prefix` are Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_appmesh_virtual_node: Add `ip_preference` and `response_type` to the `spec.service_discovery.dns` configuration block ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_db_instance: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* resource/aws_lakeformation_lf_tag: Increase values MaxItem up to 1000 to match with AWS real limit ([#26546](https://github.com/hashicorp/terraform-provider-aws/issues/26546))
+* resource/aws_rds_cluster: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+
+BUG FIXES:
+
+* datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.container_overrides.*.environment` attribute ([#30214](https://github.com/hashicorp/terraform-provider-aws/issues/30214))
+* datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.container_overrides.*.resource_requirements` attribute ([#30214](https://github.com/hashicorp/terraform-provider-aws/issues/30214))
+* datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.inference_accelerator_overrides` attribute ([#30214](https://github.com/hashicorp/terraform-provider-aws/issues/30214))
+* resource/aws_appmesh_virtual_router: `spec.listener` is Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
+* resource/aws_lakeformation_lf_tag: Fix `iops` validation in `disk_iops_configuration` to allow values for `SINGLE_AZ_1` and `SINGLE_AZ_2` ([#30299](https://github.com/hashicorp/terraform-provider-aws/issues/30299))
+* resource/aws_lakeformation_lf_tag: Fix support for lf-tag keys with colons in the name ([#28258](https://github.com/hashicorp/terraform-provider-aws/issues/28258))
+
+## 4.60.0 (March 24, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_appmesh_route` ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
+* **New Data Source:** `aws_appmesh_virtual_gateway` ([#27057](https://github.com/hashicorp/terraform-provider-aws/issues/27057))
+* **New Resource:** `aws_cognito_managed_user_pool_client` ([#30140](https://github.com/hashicorp/terraform-provider-aws/issues/30140))
+* **New Resource:** `aws_oam_link` ([#30125](https://github.com/hashicorp/terraform-provider-aws/issues/30125))
+* **New Resource:** `aws_sesv2_contact_list` ([#30094](https://github.com/hashicorp/terraform-provider-aws/issues/30094))
 
 ENHANCEMENTS:
 
 * data-source/aws_ecs_cluster: Add `tags` attribute ([#30073](https://github.com/hashicorp/terraform-provider-aws/issues/30073))
+* resource/aws_appmesh_virtual_gateway: Add `logging.access_log.file.format` configuration block ([#29315](https://github.com/hashicorp/terraform-provider-aws/issues/29315))
+* resource/aws_appmesh_virtual_node: Add `logging.access_log.file.format` configuration block ([#29315](https://github.com/hashicorp/terraform-provider-aws/issues/29315))
+* resource/aws_rds_cluster: Conflict `snapshot_identifier` and `global_cluster_identifier` attributes, preventing misleading results on restore ([#30158](https://github.com/hashicorp/terraform-provider-aws/issues/30158))
 * resource/aws_securityhub_account: Add `enable_default_standards` argument ([#13477](https://github.com/hashicorp/terraform-provider-aws/issues/13477))
+* resource/aws_securityhub_member: `email` is Optional ([#19065](https://github.com/hashicorp/terraform-provider-aws/issues/19065))
 
 BUG FIXES:
 
+* data-source/aws_appmesh_mesh: Don't attempt to list tags if the current AWS account is not the mesh owner ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
+* data-source/aws_appmesh_virtual_service: Don't attempt to list tags if the current AWS account is not the mesh owner ([#26695](https://github.com/hashicorp/terraform-provider-aws/issues/26695))
 * resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
 * resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place ([#30081](https://github.com/hashicorp/terraform-provider-aws/issues/30081))
+* resource/aws_appmesh_gateway_route: Use configured `mesh_owner` when deleting shared gateway route ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_route: Use configured `mesh_owner` value when deleting shared route ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_gateway: Use configured `mesh_owner` value when deleting shared virtual gateway ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_node: Use configured `mesh_owner` value when deleting shared virtual node ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_router: Use configured `mesh_owner` value when deleting shared virtual router ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_appmesh_virtual_service: Use configured `mesh_owner` value when deleting shared virtual service ([#29362](https://github.com/hashicorp/terraform-provider-aws/issues/29362))
+* resource/aws_cognito_risk_configuration: Adds validation to `risk_exception_configuration` and requires at least one of `account_takeover_risk_configuration`, `compromised_credentials_risk_configuration`, or `risk_exception_configuration`. ([#30074](https://github.com/hashicorp/terraform-provider-aws/issues/30074))
+* resource/aws_medialive_channel: Change `TypeSet` to `TypeList` on `video_description`, to get more precise actions from plan output ([#30064](https://github.com/hashicorp/terraform-provider-aws/issues/30064))
+* resource/aws_medialive_channel: Fix type casting for `h264_settings` in `video_descriptions` ([#30063](https://github.com/hashicorp/terraform-provider-aws/issues/30063))
+* resource/aws_medialive_channel: Fix type casting of `program_num`, `segmentation_time` and `fragment_time` for `m2ts_settings` ([#30025](https://github.com/hashicorp/terraform-provider-aws/issues/30025))
+* resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete ([#30101](https://github.com/hashicorp/terraform-provider-aws/issues/30101))
+* resource/aws_placement_group: Change `spread_level` to Computed ([#28596](https://github.com/hashicorp/terraform-provider-aws/issues/28596))
+* resource/aws_security_group: Improve respect for delete timeout set by user and retry of certain errors ([#30114](https://github.com/hashicorp/terraform-provider-aws/issues/30114))
+* resource/aws_transfer_server: Fix error refreshing `protocol_details.as2_transports` value ([#30115](https://github.com/hashicorp/terraform-provider-aws/issues/30115))
 
 ## 4.59.0 (March 16, 2023)
 

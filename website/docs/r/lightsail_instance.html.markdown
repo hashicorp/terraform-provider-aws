@@ -32,6 +32,20 @@ resource "aws_lightsail_instance" "gitlab_test" {
 }
 ```
 
+### Example With User Data
+
+Lightsail user data is handled differently than ec2 user data. Lightsail user data only accepts a single lined string. The below example shows installing apache and creating the index page.
+
+```terraform
+resource "aws_lightsail_instance" "custom" {
+  name              = "custom"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+  user_data         = "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html"
+}
+```
+
 ### Enable Auto Snapshots
 
 ```terraform
@@ -62,7 +76,7 @@ instance (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
-* `user_data` - (Optional) launch script to configure server with additional user data
+* `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data
 * `ip_address_type` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
 * `add_on` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

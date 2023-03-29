@@ -181,7 +181,8 @@ func testAccAssessmentReportConfigBase(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "test" {

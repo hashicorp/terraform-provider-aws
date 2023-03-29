@@ -170,8 +170,8 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 
 	resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

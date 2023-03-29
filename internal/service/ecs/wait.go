@@ -131,8 +131,8 @@ func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 
 func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PROVISIONING"},
-		Target:  []string{"ACTIVE"},
+		Pending: []string{clusterStatusProvisioning},
+		Target:  []string{clusterStatusActive},
 		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterAvailableTimeout,
 		Delay:   clusterAvailableDelay,
@@ -149,8 +149,8 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"ACTIVE", "DEPROVISIONING"},
-		Target:  []string{"INACTIVE"},
+		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
+		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterDeleteTimeout,
 	}
