@@ -205,6 +205,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
+			Name:     "Virtual MFA Device",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
