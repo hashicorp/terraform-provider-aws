@@ -74,6 +74,42 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_disappears(t *testing.T)
 	})
 }
 
+func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v globalaccelerator.CustomRoutingEndpointGroup
+	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomRoutingEndpointGroupConfig_endpointConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "destination_configuration.0.protocols.*", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_configuration.0.endpoint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_group_region"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, n string, v *globalaccelerator.CustomRoutingEndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
@@ -149,4 +185,63 @@ resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccCustomRoutingEndpointGroupConfig_endpointConfiguration(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
+  name = %[1]q
+}
+
+resource "aws_globalaccelerator_custom_routing_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+
+  port_range {
+    from_port = 1
+    to_port   = 65534
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+
+  destination_configuration {
+    from_port = 8080
+    to_port   = 8081
+    protocols = ["TCP"]
+  }
+
+  endpoint_configuration {
+    endpoint_id = aws_subnet.test.id
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/28"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
