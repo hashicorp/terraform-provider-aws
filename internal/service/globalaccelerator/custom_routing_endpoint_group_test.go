@@ -31,6 +31,14 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 				Config: testAccCustomRoutingEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "destination_configuration.0.protocols.*", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_group_region"),
 				),
 			},
 			{
@@ -125,7 +133,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 resource "aws_globalaccelerator_custom_routing_listener" "test" {
   accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
 
-  port_range = {
+  port_range {
     from_port = 443
     to_port   = 443
   }
@@ -133,6 +141,12 @@ resource "aws_globalaccelerator_custom_routing_listener" "test" {
 
 resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
   listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+
+  destination_configuration {
+    from_port = 443
+    to_port   = 8443
+    protocols = ["TCP"]
+  }
 }
 `, rName)
 }
