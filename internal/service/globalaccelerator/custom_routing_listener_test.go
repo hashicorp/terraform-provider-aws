@@ -30,12 +30,16 @@ func TestAccGlobalAcceleratorCustomRoutingListener_basic(t *testing.T) {
 			{
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, rName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.to_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.1.from_port", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.1.to_port", "30000"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+						"from_port": "443",
+						"to_port":   "443",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+						"from_port": "10000",
+						"to_port":   "30000",
+					}),
 				),
 			},
 			{
@@ -62,7 +66,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 			{
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, rName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -130,12 +134,12 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 resource "aws_globalaccelerator_custom_routing_listener" "test" {
   accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
 
-  port_range = {
+  port_range {
     from_port = 443
     to_port   = 443
   }
 
-  port_range = {
+  port_range {
     from_port = 10000
     to_port   = 30000
   }
