@@ -34,6 +34,7 @@ BUG FIXES:
 * resource/aws_appmesh_virtual_router: `spec.listener` is Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_lakeformation_lf_tag: Fix `iops` validation in `disk_iops_configuration` to allow values for `SINGLE_AZ_1` and `SINGLE_AZ_2` ([#30299](https://github.com/hashicorp/terraform-provider-aws/issues/30299))
 * resource/aws_lakeformation_lf_tag: Fix support for lf-tag keys with colons in the name ([#28258](https://github.com/hashicorp/terraform-provider-aws/issues/28258))
+* resource/aws_launch_template: Allow `metadata_options` to be applied when `http_endpoint` is not configured ([#30107](https://github.com/hashicorp/terraform-provider-aws/issues/30107))
 
 ## 4.60.0 (March 24, 2023)
 
