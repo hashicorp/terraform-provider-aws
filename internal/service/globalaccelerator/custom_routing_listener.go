@@ -86,7 +86,7 @@ func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.Resource
 
 	// Creating a listener triggers the accelerator to change status to InPending.
 	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %w", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
 	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
