@@ -123,6 +123,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourcePolicy,
