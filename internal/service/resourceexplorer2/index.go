@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -83,7 +83,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	conn := r.Meta().ResourceExplorer2Client()
 
 	input := &resourceexplorer2.CreateIndexInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Tags:        GetTagsIn(ctx),
 	}
 

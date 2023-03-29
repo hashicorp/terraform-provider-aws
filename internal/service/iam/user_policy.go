@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,9 +90,9 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = resource.PrefixedUniqueId(v.(string))
+		policyName = id.PrefixedUniqueId(v.(string))
 	} else {
-		policyName = resource.UniqueId()
+		policyName = id.UniqueId()
 	}
 	request.PolicyName = aws.String(policyName)
 

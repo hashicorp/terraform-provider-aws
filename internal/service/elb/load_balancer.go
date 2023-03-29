@@ -17,7 +17,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -256,9 +256,9 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		elbName = v.(string)
 	} else {
 		if v, ok := d.GetOk("name_prefix"); ok {
-			elbName = resource.PrefixedUniqueId(v.(string))
+			elbName = id.PrefixedUniqueId(v.(string))
 		} else {
-			elbName = resource.PrefixedUniqueId("tf-lb-")
+			elbName = id.PrefixedUniqueId("tf-lb-")
 		}
 		d.Set("name", elbName)
 	}

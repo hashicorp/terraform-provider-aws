@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -182,20 +182,20 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	var id string
+	var instanceID string
 	if v, ok := d.GetOk("identifier"); ok {
-		id = v.(string)
+		instanceID = v.(string)
 	} else if v, ok := d.GetOk("identifier_prefix"); ok {
-		id = resource.PrefixedUniqueId(v.(string))
+		instanceID = id.PrefixedUniqueId(v.(string))
 	} else {
-		id = resource.PrefixedUniqueId("tf-")
+		instanceID = id.PrefixedUniqueId("tf-")
 	}
 
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-		DBInstanceIdentifier:    aws.String(id),
+		DBInstanceIdentifier:    aws.String(instanceID),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -231,7 +231,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*neptune.CreateDBInstanceOutput).DBInstance.DBInstanceIdentifier))

@@ -15,7 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -32,7 +32,7 @@ import (
 
 const (
 	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
+	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role", name="Role")

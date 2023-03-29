@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -327,7 +327,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeOpenzfs),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -339,7 +339,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OpenZFSConfiguration: &fsx.CreateFileSystemOpenZFSConfiguration{
@@ -530,7 +530,7 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -583,7 +583,7 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("root_volume_configuration") {
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(resource.UniqueId()),
+				ClientRequestToken:   aws.String(id.UniqueId()),
 				VolumeId:             aws.String(d.Get("root_volume_id").(string)),
 				OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 			}

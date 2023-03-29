@@ -19,7 +19,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -693,7 +693,7 @@ func ResourceGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
 				ConflictsWith: []string{"name"},
 			},
 			"placement_group": {

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,7 +91,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	in := &accessanalyzer.CreateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
@@ -147,7 +147,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	in := &accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
@@ -176,7 +176,7 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err = conn.DeleteArchiveRuleWithContext(ctx, &accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	})
 

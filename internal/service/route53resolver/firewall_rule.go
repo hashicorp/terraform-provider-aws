@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -86,11 +86,11 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	id := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
+	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleInput{
 		Action:               aws.String(d.Get("action").(string)),
-		CreatorRequestId:     aws.String(resource.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
+		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		Name:                 aws.String(name),
@@ -119,7 +119,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("creating Route53 Resolver Firewall Rule (%s): %s", name, err)
 	}
 
-	d.SetId(id)
+	d.SetId(ruleID)
 
 	return resourceFirewallRuleRead(ctx, d, meta)
 }

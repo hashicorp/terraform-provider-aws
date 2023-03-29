@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -129,7 +129,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.CreateHostedZoneInput{
-		CallerReference: aws.String(resource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(d.Get("name").(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{
 			Comment: aws.String(d.Get("comment").(string)),
@@ -336,7 +336,7 @@ func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (
 	output, err := conn.GetHostedZoneWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -25,7 +25,7 @@ import (
 
 const (
 	policyNameMaxLen       = 128
-	policyNamePrefixMaxLen = policyNameMaxLen - resource.UniqueIDSuffixLength
+	policyNamePrefixMaxLen = policyNameMaxLen - id.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_policy", name="Policy")

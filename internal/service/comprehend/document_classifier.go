@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -488,7 +488,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
-		ClientRequestToken:     aws.String(resource.UniqueId()),
+		ClientRequestToken:     aws.String(id.UniqueId()),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {

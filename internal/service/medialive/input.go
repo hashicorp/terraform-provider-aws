@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -185,7 +185,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputInput{
-		RequestId: aws.String(resource.UniqueId()),
+		RequestId: aws.String(id.UniqueId()),
 		Name:      aws.String(d.Get("name").(string)),
 		Type:      types.InputType(d.Get("type").(string)),
 	}

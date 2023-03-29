@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -273,7 +273,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 	sourceImageID := d.Get("source_ami_id").(string)
 	input := &ec2.CopyImageInput{
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 		Description:   aws.String(d.Get("description").(string)),
 		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
 		Name:          aws.String(name),

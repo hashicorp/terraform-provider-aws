@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -280,7 +280,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(resource.UniqueId()),
+		ProvisionToken:         aws.String(id.UniqueId()),
 		ProvisionedProductName: aws.String(d.Get("name").(string)),
 		Tags:                   GetTagsIn(ctx),
 	}
@@ -486,7 +486,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
-		UpdateToken:          aws.String(resource.UniqueId()),
+		UpdateToken:          aws.String(id.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -558,7 +558,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(resource.UniqueId()),
+		TerminateToken:       aws.String(id.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 

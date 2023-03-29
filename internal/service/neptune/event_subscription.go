@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -103,9 +103,9 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", resource.PrefixedUniqueId(v.(string)))
+		d.Set("name", id.PrefixedUniqueId(v.(string)))
 	} else {
-		d.Set("name", resource.PrefixedUniqueId("tf-"))
+		d.Set("name", id.PrefixedUniqueId("tf-"))
 	}
 
 	request := &neptune.CreateEventSubscriptionInput{

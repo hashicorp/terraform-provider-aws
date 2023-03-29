@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -75,7 +75,7 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 
 	name := data.Name.ValueString()
 	input := &route53.CreateCidrCollectionInput{
-		CallerReference: aws.String(sdkresource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(name),
 	}
 

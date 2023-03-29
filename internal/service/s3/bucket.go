@@ -20,7 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -97,7 +97,7 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -1711,7 +1711,7 @@ func resourceBucketInternalLifecycleUpdate(ctx context.Context, conn *s3.S3, d *
 		if val, ok := r["id"].(string); ok && val != "" {
 			rule.ID = aws.String(val)
 		} else {
-			rule.ID = aws.String(resource.PrefixedUniqueId("tf-s3-lifecycle-"))
+			rule.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		// Enabled

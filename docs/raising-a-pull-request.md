@@ -141,7 +141,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
   }
   ```
 
-- __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
+- __Uses id.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`id.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:

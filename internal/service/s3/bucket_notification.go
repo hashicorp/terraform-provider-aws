@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -166,7 +166,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			tc.Id = aws.String(val)
 		} else {
-			tc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-topic-"))
+			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
 		}
 
 		// TopicArn
@@ -219,7 +219,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			qc.Id = aws.String(val)
 		} else {
-			qc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-queue-"))
+			qc.Id = aws.String(id.PrefixedUniqueId("tf-s3-queue-"))
 		}
 
 		// QueueArn
@@ -272,7 +272,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			lc.Id = aws.String(val)
 		} else {
-			lc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-lambda-"))
+			lc.Id = aws.String(id.PrefixedUniqueId("tf-s3-lambda-"))
 		}
 
 		// LambdaFunctionArn

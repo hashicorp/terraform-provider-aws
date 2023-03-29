@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,7 +73,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &inspector2.EnableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
 		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 	}
 
 	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))

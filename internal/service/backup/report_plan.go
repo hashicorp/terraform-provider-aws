@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -125,7 +125,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get("name").(string)
 	input := &backup.CreateReportPlanInput{
-		IdempotencyToken:      aws.String(resource.UniqueId()),
+		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
@@ -214,7 +214,7 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &backup.UpdateReportPlanInput{
-			IdempotencyToken:      aws.String(resource.UniqueId()),
+			IdempotencyToken:      aws.String(id.UniqueId()),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 			ReportPlanDescription: aws.String(d.Get("description").(string)),
 			ReportPlanName:        aws.String(d.Id()),

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -464,7 +464,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
@@ -628,7 +628,7 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 		if v, ok := data["variant_name"].(string); ok && v != "" {
 			l.VariantName = aws.String(v)
 		} else {
-			l.VariantName = aws.String(resource.UniqueId())
+			l.VariantName = aws.String(id.UniqueId())
 		}
 
 		if v, ok := data["initial_variant_weight"]; ok {

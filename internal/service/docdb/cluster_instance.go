@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -201,9 +201,9 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		createOpts.DBInstanceIdentifier = aws.String(v.(string))
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId(v.(string)))
+			createOpts.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId(v.(string)))
 		} else {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId("tf-"))
+			createOpts.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId("tf-"))
 		}
 	}
 

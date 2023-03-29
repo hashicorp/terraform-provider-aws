@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -109,7 +109,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
