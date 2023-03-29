@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -60,6 +61,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.Int64{
 					int64validator.Between(1, 86400),
 				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"allowed_oauth_flows": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -74,6 +78,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"allowed_oauth_flows_user_pool_client": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"allowed_oauth_scopes": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -87,6 +94,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(3, 15),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"callback_urls": schema.SetAttribute{
@@ -108,14 +118,23 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Optional:   true,
 				Computed:   true,
 				Validators: userPoolClientURLValidator,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"enable_propagate_additional_user_context_data": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"enable_token_revocation": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"explicit_auth_flows": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -139,6 +158,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.Int64{
 					int64validator.Between(1, 86400),
 				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"logout_urls": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -161,6 +183,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.String{
 					stringvalidator.OneOf(cognitoidentityprovider.PreventUserExistenceErrorTypes_Values()...),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"read_attributes": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -171,6 +196,9 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(0, 315360000),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"supported_identity_providers": schema.SetAttribute{
