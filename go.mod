@@ -4,13 +4,13 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.226
+	github.com/aws/aws-sdk-go v1.44.231
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.6
@@ -20,21 +20,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.40.7
+	github.com/aws/aws-sdk-go-v2/service/rds v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.7
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.6
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.6
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
@@ -48,14 +48,14 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/hcl/v2 v2.16.1
-	github.com/hashicorp/terraform-plugin-framework v1.1.1
+	github.com/hashicorp/hcl/v2 v2.16.2
+	github.com/hashicorp/terraform-plugin-framework v1.2.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.14.3
 	github.com/hashicorp/terraform-plugin-log v0.8.0
 	github.com/hashicorp/terraform-plugin-mux v0.9.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.25.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/cli v1.1.5
@@ -103,8 +103,8 @@ require (
 	github.com/hashicorp/go-plugin v1.4.8 // indirect
 	github.com/hashicorp/hc-install v0.5.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.17.3 // indirect
-	github.com/hashicorp/terraform-json v0.15.0 // indirect
+	github.com/hashicorp/terraform-exec v0.18.1 // indirect
+	github.com/hashicorp/terraform-json v0.16.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.1.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
@@ -126,7 +126,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	github.com/zclconf/go-cty v1.12.1 // indirect
+	github.com/zclconf/go-cty v1.13.1 // indirect
 	go.opentelemetry.io/otel v1.14.0 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect

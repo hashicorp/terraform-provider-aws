@@ -70,7 +70,7 @@ func ResourceVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":            resourceVirualServiceSpecSchema(),
+			"spec":            resourceVirtualServiceSpecSchema(),
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -79,7 +79,7 @@ func ResourceVirtualService() *schema.Resource {
 	}
 }
 
-func resourceVirualServiceSpecSchema() *schema.Schema {
+func resourceVirtualServiceSpecSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,

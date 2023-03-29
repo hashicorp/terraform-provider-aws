@@ -24,7 +24,7 @@ func testAccVirtualServiceDataSource_virtualNode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
@@ -58,7 +58,7 @@ func testAccVirtualServiceDataSource_virtualRouter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
@@ -104,7 +104,7 @@ resource "aws_appmesh_virtual_service" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
   }
 }
 

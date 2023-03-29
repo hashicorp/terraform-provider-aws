@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn applicationinsightsiface.ApplicationInsi
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists applicationinsights service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(), identifier)
 
@@ -77,7 +79,7 @@ func KeyValueTags(ctx context.Context, tags []*applicationinsights.Tag) tftags.K
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*applicationinsights.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn applicationinsightsiface.ApplicationIn
 	return nil
 }
 
+// UpdateTags updates applicationinsights service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(), identifier, oldTags, newTags)
 }

@@ -185,6 +185,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -383,6 +384,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		sns.ServicePackage,
 		sqs.ServicePackage,
 		ssm.ServicePackage,
+		ssmincidents.ServicePackage,
 		ssoadmin.ServicePackage,
 		storagegateway.ServicePackage,
 		sts.ServicePackage,

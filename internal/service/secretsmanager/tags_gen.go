@@ -46,7 +46,7 @@ func KeyValueTags(ctx context.Context, tags []*secretsmanager.Tag) tftags.KeyVal
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*secretsmanager.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -98,6 +98,8 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	return nil
 }
 
+// UpdateTags updates secretsmanager service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).SecretsManagerConn(), identifier, oldTags, newTags)
 }
