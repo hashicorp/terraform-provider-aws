@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_route: `spec.http_route.match.prefix` and `spec.http2_route.match.prefix` are Optional ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_appmesh_virtual_node: Add `ip_preference` and `response_type` to the `spec.service_discovery.dns` configuration block ([#29064](https://github.com/hashicorp/terraform-provider-aws/issues/29064))
 * resource/aws_db_instance: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* resource/aws_lakeformation_lf_tag: Increase values MaxItem up to 1000 to match with AWS real limit ([#26546](https://github.com/hashicorp/terraform-provider-aws/issues/26546))
 * resource/aws_rds_cluster: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
 
 BUG FIXES:
