@@ -188,7 +188,7 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 					if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 						return nil
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				if output.InventoryConfiguration != nil {
 					return retry.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))

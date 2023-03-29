@@ -1199,10 +1199,10 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 				RouteTableIds: []*string{routeTable.RouteTableId},
 			})
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			if resp == nil || len(resp.RouteTables) == 0 {
-				return resource.NonRetryableError(fmt.Errorf("Route Table not found"))
+				return retry.NonRetryableError(fmt.Errorf("Route Table not found"))
 			}
 
 			for _, route := range resp.RouteTables[0].Routes {
