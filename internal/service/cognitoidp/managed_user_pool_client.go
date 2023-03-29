@@ -693,6 +693,7 @@ func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
+		return
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
