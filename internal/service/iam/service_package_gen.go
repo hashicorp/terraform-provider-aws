@@ -153,6 +153,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
+			Name:     "SAML Provider",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceServerCertificate,
