@@ -93,7 +93,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 
 	var results []*globalaccelerator.CustomRoutingAccelerator
 
-	err := conn.ListCustomRoutingAcceleratorsPages(&globalaccelerator.ListCustomRoutingAcceleratorsInput{}, func(page *globalaccelerator.ListCustomRoutingAcceleratorsOutput, lastPage bool) bool {
+	err := conn.ListCustomRoutingAcceleratorsPagesWithContext(ctx, &globalaccelerator.ListCustomRoutingAcceleratorsInput{}, func(page *globalaccelerator.ListCustomRoutingAcceleratorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

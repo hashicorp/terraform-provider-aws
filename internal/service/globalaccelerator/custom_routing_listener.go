@@ -153,7 +153,7 @@ func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.Resource
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing Listener (%s)", d.Id())
-	_, err := conn.DeleteCustomRoutingListener(&globalaccelerator.DeleteCustomRoutingListenerInput{
+	_, err := conn.DeleteCustomRoutingListenerWithContext(ctx, &globalaccelerator.DeleteCustomRoutingListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
 

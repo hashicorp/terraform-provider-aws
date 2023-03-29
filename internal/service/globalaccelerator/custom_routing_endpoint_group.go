@@ -129,12 +129,12 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		optsEndpoints := &globalaccelerator.AddCustomRoutingEndpointsInput{
+		input := &globalaccelerator.AddCustomRoutingEndpointsInput{
 			EndpointGroupArn:       aws.String(d.Id()),
 			EndpointConfigurations: expandCustomRoutingEndpointConfigurations(v.(*schema.Set).List()),
 		}
 
-		_, err := conn.AddCustomRoutingEndpoints(optsEndpoints)
+		_, err := conn.AddCustomRoutingEndpointsWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding Global Accelerator Custom Routing Endpoint Group (%s) endpoints: %s", d.Id(), err)
@@ -188,7 +188,7 @@ func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing Endpoint Group (%s)", d.Id())
-	_, err := conn.DeleteCustomRoutingEndpointGroup(&globalaccelerator.DeleteCustomRoutingEndpointGroupInput{
+	_, err := conn.DeleteCustomRoutingEndpointGroupWithContext(ctx, &globalaccelerator.DeleteCustomRoutingEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
 	})
 
