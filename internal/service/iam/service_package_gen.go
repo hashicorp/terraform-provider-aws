@@ -179,6 +179,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_iam_user",
+			Name:     "User",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceUserGroupMembership,
