@@ -117,6 +117,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceOpenIDConnectProvider,
