@@ -165,6 +165,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
+			Name:     "Service Linked Role",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceServiceSpecificCredential,
