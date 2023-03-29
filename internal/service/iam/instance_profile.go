@@ -108,13 +108,11 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		output, err = conn.CreateInstanceProfileWithContext(ctx, input)
 	}
 
-	if err == nil {
-		err = instanceProfileReadResult(ctx, d, output.InstanceProfile) // sets id
-	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Instance Profile (%s): %s", name, err)
 	}
+
+	flattenInstanceProfile(ctx, d, output.InstanceProfile) // sets id
 
 	waiterRequest := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
@@ -277,9 +275,8 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if err := instanceProfileReadResult(ctx, d, instanceProfile); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
-	}
+	flattenInstanceProfile(ctx, d, instanceProfile)
+
 	return diags
 }
 
@@ -305,7 +302,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile) error {
+func flattenInstanceProfile(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile) {
 	d.SetId(aws.StringValue(result.InstanceProfileName))
 	d.Set("arn", result.Arn)
 	d.Set("create_date", result.CreateDate.Format(time.RFC3339))
@@ -319,6 +316,4 @@ func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, resu
 	}
 
 	SetTagsOut(ctx, result.Tags)
-
-	return nil
 }
