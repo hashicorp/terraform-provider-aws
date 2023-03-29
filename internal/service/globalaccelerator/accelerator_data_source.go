@@ -56,6 +56,9 @@ func (d *dataSourceAccelerator) Schema(ctx context.Context, req datasource.Schem
 			"dns_name": schema.StringAttribute{
 				Computed: true,
 			},
+			"dual_stack_dns_name": schema.StringAttribute{
+				Computed: true,
+			},
 			"enabled": schema.BoolAttribute{
 				Computed: true,
 			},
@@ -150,6 +153,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		data.ARN = fwtypes.ARNValue(v)
 	}
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
+	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
 	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID())
 	data.ID = types.StringValue(acceleratorARN)
@@ -240,14 +244,15 @@ func (d *dataSourceAccelerator) flattenAcceleratorAttributesFramework(ctx contex
 }
 
 type dataSourceAcceleratorData struct {
-	ARN           fwtypes.ARN  `tfsdk:"arn"`
-	Attributes    types.List   `tfsdk:"attributes"`
-	DnsName       types.String `tfsdk:"dns_name"`
-	Enabled       types.Bool   `tfsdk:"enabled"`
-	HostedZoneID  types.String `tfsdk:"hosted_zone_id"`
-	ID            types.String `tfsdk:"id"`
-	IpAddressType types.String `tfsdk:"ip_address_type"`
-	IpSets        types.List   `tfsdk:"ip_sets"`
-	Name          types.String `tfsdk:"name"`
-	Tags          types.Map    `tfsdk:"tags"`
+	ARN              fwtypes.ARN  `tfsdk:"arn"`
+	Attributes       types.List   `tfsdk:"attributes"`
+	DnsName          types.String `tfsdk:"dns_name"`
+	DualStackDNSName types.String `tfsdk:"dual_stack_dns_name"`
+	Enabled          types.Bool   `tfsdk:"enabled"`
+	HostedZoneID     types.String `tfsdk:"hosted_zone_id"`
+	ID               types.String `tfsdk:"id"`
+	IpAddressType    types.String `tfsdk:"ip_address_type"`
+	IpSets           types.List   `tfsdk:"ip_sets"`
+	Name             types.String `tfsdk:"name"`
+	Tags             types.Map    `tfsdk:"tags"`
 }

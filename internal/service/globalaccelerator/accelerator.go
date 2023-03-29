@@ -67,6 +67,10 @@ func ResourceAccelerator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dual_stack_dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -192,6 +196,7 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("dns_name", accelerator.DnsName)
+	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID())
 	d.Set("ip_address_type", accelerator.IpAddressType)
