@@ -218,14 +218,18 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	switch when {
 	case Before:
 		switch why {
-		case Create:
+		case Create, Update:
 			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			// Remove system tags.
 			tags = tags.IgnoreAWS()
 
 			tagsInContext.TagsIn = types.Some(tags)
-		case Update:
+
+			if why == Create {
+				break
+			}
+
 			if d.HasChange(names.AttrTagsAll) {
 				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 					var identifier string

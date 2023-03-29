@@ -449,8 +449,27 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		resourceName = "<thing>"
 	}
 
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
 	switch when {
 	case Before:
+		var planTags fwtypes.Map
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		// Merge the resource's configured tags with any provider configured default_tags.
+		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
+		// Remove system tags.
+		tags = tags.IgnoreAWS()
+
+		tagsInContext.TagsIn = types.Some(tags)
+
 		var oldTagsAll, newTagsAll fwtypes.Map
 
 		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
