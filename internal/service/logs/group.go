@@ -134,6 +134,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", lg.LogGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set("skip_destroy", d.Get("skip_destroy"))
 
 	tags, err := ListLogGroupTags(ctx, conn, d.Id())
 

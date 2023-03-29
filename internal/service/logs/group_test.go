@@ -43,7 +43,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 		},
 	})
@@ -72,7 +72,7 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 		},
 	})
@@ -101,7 +101,7 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "name_prefix"},
 			},
 		},
 	})
@@ -155,7 +155,7 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
 				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -203,7 +203,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
 				Config: testAccGroupConfig_kmsKey(rName, 1),
@@ -253,7 +253,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"retention_in_days"},
 			},
 			{
 				Config: testAccGroupConfig_retentionPolicy(rName, 0),
@@ -309,6 +309,36 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v cloudwatchlogs.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
 				),
 			},
 		},
