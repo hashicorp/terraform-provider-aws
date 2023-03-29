@@ -61,7 +61,7 @@ val services = mapOf(
     "dlm" to ServiceSpec("DLM (Data Lifecycle Manager)"),
     "dms" to ServiceSpec("DMS (Database Migration)", vpcLock = true),
     "docdb" to ServiceSpec("DocDB (DocumentDB)", vpcLock = true),
-    "ds" to ServiceSpec("DS (Directory Service)", vpcLock = true),
+    "ds" to ServiceSpec("Directory Service", vpcLock = true),
     "dynamodb" to ServiceSpec("DynamoDB"),
     "ec2" to ServiceSpec("EC2 (Elastic Compute Cloud)", vpcLock = true),
     "ecr" to ServiceSpec("ECR (Elastic Container Registry)"),
