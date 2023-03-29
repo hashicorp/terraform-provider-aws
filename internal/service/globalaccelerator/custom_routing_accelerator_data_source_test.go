@@ -48,7 +48,6 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 			},
 		},
 	})
-
 }
 
 func testAccCustomRoutingAcceleratorDataSourceConfig_basic(rName string) string {
