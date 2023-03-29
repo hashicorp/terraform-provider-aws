@@ -304,37 +304,6 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	})
 }
 
-// func TestAccQuickSightDataSet_rowLevelPermissionDataSet(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var dataSet quicksight.DataSet
-// 	resourceName := "aws_quicksight_data_set.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	permissionsDataSetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	permissionsDataSetID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckQuickSightDataSetDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDataSetConfigRowLevelPermissionDataSet(rId, rName, permissionsDataSetID, permissionsDataSetName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.arn", "this.arn"),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.permission_policy", "GRANT_ACCESS"),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.format_version", "VERSION_1"),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.namespace", "namespace"),
-// 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_data_set.status", "ENABLED"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -765,62 +734,6 @@ resource "aws_quicksight_data_set" "test" {
 }
 `, rId, rName))
 }
-
-// TODO: Investigate how to add data columns to the permissions data set. This amount
-// of setup may not be feasible for an acceptance test. See error:
-// Error: error creating QuickSight Data Set: InvalidParameterValueException: Invalid RowLevelPermissionDataSet.
-// DataSet rules contain only metadata: UserName and/or GroupName. You need to add at least one data column to the data set
-//
-// func testAccDataSetConfigRowLevelPermissionDataSet(rId, rName, permissionsDataSetID, permissionsDataSetName string) string {
-// 	return acctest.ConfigCompose(
-// 		testAccDataSetConfigBase(rId, rName),
-// 		fmt.Sprintf(`
-// resource "aws_quicksight_data_set" "permissions_data_set" {
-//   data_set_id = %[3]q
-//   name        = %[4]q
-//   import_mode = "SPICE"
-
-//   physical_table_map {
-//     physical_table_map_id = %[3]q
-//     s3_source {
-//       data_source_arn = aws_quicksight_data_source.test.arn
-//       input_columns {
-//         name = "UserName"
-//         type = "STRING"
-//       }
-//       input_columns {
-//         name = "GroupName"
-//         type = "STRING"
-//       }
-//     }
-//   }
-// }
-
-// resource "aws_quicksight_data_set" "test" {
-//   data_set_id = %[1]q
-//   name        = %[2]q
-//   import_mode = "SPICE"
-
-//   physical_table_map {
-//     physical_table_map_id = %[1]q
-//     s3_source {
-//       data_source_arn = aws_quicksight_data_source.test.arn
-//       input_columns {
-//         name = "ColumnId-1"
-//         type = "STRING"
-//       }
-//     }
-//   }
-//   row_level_permission_data_set {
-//     arn = aws_quicksight_data_set.permissions_data_set.arn
-//     permission_policy = "GRANT_ACCESS"
-//     format_version = "VERSION_1"
-//     namespace = "namespace"
-//     status = "ENABLED"
-//   }
-// }
-// `, rId, rName, permissionsDataSetID, permissionsDataSetName))
-// }
 
 func testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName string) string {
 	return acctest.ConfigCompose(
