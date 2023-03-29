@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -254,7 +255,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -332,7 +332,7 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []ServicePackage
+	ServicePackages         map[string]ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
@@ -574,7 +574,7 @@ type AWSClient struct {
 	qldbsessionConn                  *qldbsession.QLDBSession
 	quicksightConn                   *quicksight.QuickSight
 	ramConn                          *ram.RAM
-	rbinConn                         *recyclebin.RecycleBin
+	rbinClient                       *rbin.Client
 	rdsConn                          *rds.RDS
 	rdsdataConn                      *rdsdataservice.RDSDataService
 	rumConn                          *cloudwatchrum.CloudWatchRUM
@@ -1586,8 +1586,8 @@ func (client *AWSClient) RAMConn() *ram.RAM {
 	return client.ramConn
 }
 
-func (client *AWSClient) RBinConn() *recyclebin.RecycleBin {
-	return client.rbinConn
+func (client *AWSClient) RBinClient() *rbin.Client {
+	return client.rbinClient
 }
 
 func (client *AWSClient) RDSConn() *rds.RDS {

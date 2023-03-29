@@ -18,6 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// This value is defined by AWS API
+const lfTagsValuesMaxBatchSize = 50
+
 // @SDKResource("aws_lakeformation_lf_tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
@@ -46,7 +49,9 @@ func ResourceLFTag() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: 15,
+				// Soft limit stated in AWS Doc
+				// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
+				MaxItems: 1000,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateLFTagValues(),
@@ -71,15 +76,34 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		catalogID = meta.(*conns.AWSClient).AccountID
 	}
 
+	tagValueChunks := splitLFTagValues(tagValues.List(), lfTagsValuesMaxBatchSize)
+
 	input := &lakeformation.CreateLFTagInput{
 		CatalogId: aws.String(catalogID),
 		TagKey:    aws.String(tagKey),
-		TagValues: flex.ExpandStringSet(tagValues),
+		TagValues: flex.ExpandStringList(tagValueChunks[0]),
 	}
 
 	_, err := conn.CreateLFTagWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
+	}
+
+	if len(tagValueChunks) > 1 {
+		tagValueChunks = tagValueChunks[1:]
+
+		for _, v := range tagValueChunks {
+			in := &lakeformation.UpdateLFTagInput{
+				CatalogId:      aws.String(catalogID),
+				TagKey:         aws.String(tagKey),
+				TagValuesToAdd: flex.ExpandStringList(v),
+			}
+
+			_, err := conn.UpdateLFTagWithContext(ctx, in)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Lake Formation LF-Tag: %s", err)
+			}
+		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
@@ -133,25 +157,43 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	o, n := d.GetChange("values")
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	toAdd := flex.ExpandStringSet(ns.Difference(os))
-	toDelete := flex.ExpandStringSet(os.Difference(ns))
+	toAdd := ns.Difference(os)
+	toDelete := os.Difference(ns)
 
-	input := &lakeformation.UpdateLFTagInput{
-		CatalogId: aws.String(catalogID),
-		TagKey:    aws.String(tagKey),
+	if len(toAdd.List()) > 0 {
+		toAddChunks := splitLFTagValues(toAdd.List(), lfTagsValuesMaxBatchSize)
+
+		input := &lakeformation.UpdateLFTagInput{
+			CatalogId: aws.String(catalogID),
+			TagKey:    aws.String(tagKey),
+		}
+
+		for _, v := range toAddChunks {
+			input.TagValuesToAdd = flex.ExpandStringList(v)
+
+			_, err = conn.UpdateLFTagWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
-	if len(toAdd) > 0 {
-		input.TagValuesToAdd = toAdd
-	}
+	if len(toDelete.List()) > 0 {
+		toDeleteChunks := splitLFTagValues(toDelete.List(), lfTagsValuesMaxBatchSize)
 
-	if len(toDelete) > 0 {
-		input.TagValuesToDelete = toDelete
-	}
+		input := &lakeformation.UpdateLFTagInput{
+			CatalogId: aws.String(catalogID),
+			TagKey:    aws.String(tagKey),
+		}
 
-	_, err = conn.UpdateLFTagWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
+		for _, v := range toDeleteChunks {
+			input.TagValuesToDelete = flex.ExpandStringList(v)
+
+			_, err = conn.UpdateLFTagWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
@@ -179,12 +221,14 @@ func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
+func ReadLFTagID(id string) (string, string, error) {
+	catalogID, tagKey, found := strings.Cut(id, ":")
+
+	if !found {
 		return "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
 	}
-	return idParts[0], idParts[1], nil
+
+	return catalogID, tagKey, nil
 }
 
 func validateLFTagValues() schema.SchemaValidateFunc {
@@ -192,4 +236,23 @@ func validateLFTagValues() schema.SchemaValidateFunc {
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
 	)
+}
+
+func splitLFTagValues(in []interface{}, size int) [][]interface{} {
+	var out [][]interface{}
+
+	for {
+		if len(in) == 0 {
+			break
+		}
+
+		if len(in) < size {
+			size = len(in)
+		}
+
+		out = append(out, in[0:size])
+		in = in[size:]
+	}
+
+	return out
 }
