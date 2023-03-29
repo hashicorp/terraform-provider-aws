@@ -151,7 +151,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 	}
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
-	data.HostedZoneID = types.StringValue(route53ZoneID)
+	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID())
 	data.ID = types.StringValue(acceleratorARN)
 	data.IpAddressType = flex.StringToFrameworkLegacy(ctx, accelerator.IpAddressType)
 	data.IpSets = d.flattenIPSetsFramework(ctx, accelerator.IpSets)
