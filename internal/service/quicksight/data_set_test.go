@@ -507,6 +507,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+		format = "JSON"
+	  }
     }
   }
 }
@@ -530,6 +533,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+		format = "JSON"
+	  }
     }
   }
   logical_table_map {
@@ -575,6 +581,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+		format = "JSON"
+	  }
     }
   }
   column_level_permission_rules {
@@ -602,6 +611,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   data_set_usage_configuration {
@@ -629,6 +641,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   field_folders {
@@ -657,6 +672,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   logical_table_map {
@@ -687,6 +705,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   permissions {
@@ -721,6 +742,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   permissions {
@@ -815,6 +839,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   row_level_permission_tag_configuration {
@@ -847,6 +874,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "ColumnId-1"
         type = "STRING"
       }
+	  upload_settings {
+        format = "JSON"
+	  }
     }
   }
   tags = {

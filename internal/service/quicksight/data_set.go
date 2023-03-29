@@ -612,8 +612,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"upload_settings": {
 										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -2430,12 +2429,9 @@ func flattenS3Source(apiObject *quicksight.S3Source) []interface{} {
 		tfMap["input_columns"] = flattenInputColumns(apiObject.InputColumns)
 	}
 
-	// TODO: switch to required, update tests
-	// Temporarily stop writing upload_settings to state on read to avoid
-	// inconsistent final plans when default values are returned
-	// if source.UploadSettings != nil {
-	// 	tfMap["upload_settings"] = flattenUploadSettings(source.UploadSettings)
-	// }
+	if apiObject.UploadSettings != nil {
+		tfMap["upload_settings"] = flattenUploadSettings(apiObject.UploadSettings)
+	}
 
 	return []interface{}{tfMap}
 }
