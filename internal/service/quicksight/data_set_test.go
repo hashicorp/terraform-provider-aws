@@ -40,7 +40,7 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.name", "ColumnId-1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.type", "STRING"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "ColumnId-1"),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.country_code", "US"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
 				),
@@ -190,7 +190,7 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.0", "ColumnId-1"),
+					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.description", "test"),
 				),
 			},
@@ -323,7 +323,7 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.column_name", "ColumnId-1"),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.column_name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_key", "uniquetagkey"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_multi_value_delimiter", ","),
@@ -473,7 +473,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -499,7 +499,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -514,7 +514,7 @@ resource "aws_quicksight_data_set" "test" {
     }
 	data_transforms {
       tag_column_operation {
-		column_name = "ColumnId-1"
+		column_name = "Column1"
 		tags {
 		  column_geographic_role = "STATE"
 		}
@@ -523,7 +523,7 @@ resource "aws_quicksight_data_set" "test" {
   }
   column_groups {
     geo_spatial_column_group {
-      columns = ["ColumnId-1"]
+      columns = ["Column1"]
       country_code = "US"
       name = "test"
     }
@@ -547,7 +547,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -556,7 +556,7 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   column_level_permission_rules {
-    column_names = ["ColumnId-1"]
+    column_names = ["Column1"]
     principals   = [aws_quicksight_user.test.arn]
   }
 }
@@ -577,7 +577,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -607,7 +607,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -617,7 +617,7 @@ resource "aws_quicksight_data_set" "test" {
   }
   field_folders {
     field_folders_id = %[1]q
-    columns = ["ColumnId-1"]
+    columns = ["Column1"]
     description = "test"
   }
 }
@@ -638,7 +638,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -671,7 +671,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -708,7 +708,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -749,7 +749,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
@@ -760,7 +760,7 @@ resource "aws_quicksight_data_set" "test" {
   row_level_permission_tag_configuration {
 	status = "ENABLED"
     tag_rules {
-      column_name = "ColumnId-1"
+      column_name = "Column1"
       tag_key = "uniquetagkey"
       match_all_value = "*"
       tag_multi_value_delimiter = ","
@@ -784,7 +784,7 @@ resource "aws_quicksight_data_set" "test" {
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
-        name = "ColumnId-1"
+        name = "Column1"
         type = "STRING"
       }
 	  upload_settings {
