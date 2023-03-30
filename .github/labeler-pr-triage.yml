@@ -244,6 +244,7 @@ service/cognitoidentity:
 service/cognitoidp:
   - 'internal/service/cognitoidp/**/*'
   - 'website/**/cognito_identity_provider*'
+  - 'website/**/cognito_managed_user*'
   - 'website/**/cognito_resource_*'
   - 'website/**/cognito_user*'
   - 'website/**/cognito_risk*'

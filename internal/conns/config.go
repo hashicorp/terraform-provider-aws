@@ -39,6 +39,7 @@ import (
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -129,6 +130,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
 	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
@@ -141,17 +143,20 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
+	tflog.Debug(ctx, "Creating AWS SDK v1 session")
 	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
 
+	tflog.Debug(ctx, "Retrieving AWS account details")
 	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("retrieving AWS account details: %s", err)
 	}
 
 	if accountID == "" {
+		// TODO: Make this a Warning Diagnostic
 		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
 	}
 
