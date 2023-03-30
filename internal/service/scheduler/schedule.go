@@ -154,7 +154,7 @@ func resourceSchedule() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"arn": {
 										Type:             schema.TypeString,
-										Optional:         true,
+										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 								},

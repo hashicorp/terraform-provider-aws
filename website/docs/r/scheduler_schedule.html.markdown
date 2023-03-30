@@ -107,7 +107,7 @@ The following arguments are optional:
 
 #### dead_letter_config Configuration Block
 
-* `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
+* `arn` - (Required) ARN of the SQS queue specified as the destination for the dead-letter queue.
 
 #### ecs_parameters Configuration Block
 
