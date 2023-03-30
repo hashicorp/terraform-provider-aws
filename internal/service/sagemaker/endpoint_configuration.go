@@ -116,53 +116,6 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enable_capture": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-
-						"initial_sampling_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-
-						"destination_s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							)},
-
-						"kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
-						"capture_options": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 2,
-							MinItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capture_mode": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.CaptureMode_Values(), false),
-									},
-								},
-							},
-						},
-
 						"capture_content_type_header": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -201,8 +154,57 @@ func ResourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"capture_options": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 2,
+							MinItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capture_mode": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.CaptureMode_Values(), false),
+									},
+								},
+							},
+						},
+						"destination_s3_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringLenBetween(1, 512),
+							),
+						},
+						"enable_capture": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"initial_sampling_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+						"kms_key_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
+			},
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -210,12 +212,6 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validName,
-			},
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"production_variants": {
 				Type:     schema.TypeList,
