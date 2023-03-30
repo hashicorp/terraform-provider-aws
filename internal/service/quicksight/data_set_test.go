@@ -508,22 +508,22 @@ resource "aws_quicksight_data_set" "test" {
   logical_table_map {
     alias = "Group1"
     source {
-      physical_table_id = %[1]q 
+      physical_table_id = %[1]q
     }
-	data_transforms {
+    data_transforms {
       tag_column_operation {
-		column_name = "Column1"
-		tags {
-		  column_geographic_role = "STATE"
-		}
-	  }
-	}
+        column_name = "Column1"
+        tags {
+          column_geographic_role = "STATE"
+        }
+      }
+    }
   }
   column_groups {
     geo_spatial_column_group {
-      columns = ["Column1"]
+      columns      = ["Column1"]
       country_code = "US"
-      name = "test"
+      name         = "test"
     }
   }
 }
@@ -647,7 +647,7 @@ resource "aws_quicksight_data_set" "test" {
   logical_table_map {
     alias = "Group1"
     source {
-      physical_table_id = %[1]q 
+      physical_table_id = %[1]q
     }
   }
 }
