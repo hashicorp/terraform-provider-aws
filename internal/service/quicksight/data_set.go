@@ -1136,7 +1136,6 @@ func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.Fiel
 
 	fieldFolderMap := make(map[string]*quicksight.FieldFolder)
 	for _, v := range tfList {
-
 		tfMap, ok := v.(map[string]interface{})
 		if !ok {
 			continue
@@ -1169,7 +1168,6 @@ func expandDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.L
 
 	logicalTableMap := make(map[string]*quicksight.LogicalTable)
 	for _, v := range tfList {
-
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
 			continue
@@ -1541,7 +1539,6 @@ func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.Phy
 
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
 	for _, v := range tfSet.List() {
-
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
 			continue
