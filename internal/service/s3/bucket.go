@@ -92,6 +92,7 @@ func ResourceBucket() *schema.Resource {
 			"bucket_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
 				ValidateFunc:  validation.StringLenBetween(0, 63-resource.UniqueIDSuffixLength),
@@ -693,15 +694,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn()
 
-	// Get the bucket and acl
-	var bucket string
-	if v, ok := d.GetOk("bucket"); ok {
-		bucket = v.(string)
-	} else if v, ok := d.GetOk("bucket_prefix"); ok {
-		bucket = resource.PrefixedUniqueId(v.(string))
-	} else {
-		bucket = resource.UniqueId()
-	}
+	bucket := create.Name(d.Get("bucket").(string), d.Get("bucket_prefix").(string))
 
 	awsRegion := meta.(*conns.AWSClient).Region
 
@@ -945,8 +938,8 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("bucket", d.Id())
-
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
+	d.Set("bucket_prefix", create.NamePrefixFromName(d.Get("bucket").(string)))
 
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource
 	pol, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
