@@ -778,117 +778,6 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
 }
 
-func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Retry due to S3 eventual consistency
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
-			return nil, terr
-		}, s3.ErrCodeNoSuchBucket)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	// Note: Order of argument updates below is important
-
-	if d.HasChange("policy") {
-		if err := resourceBucketInternalPolicyUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Policy: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("cors_rule") {
-		if err := resourceBucketInternalCorsUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) CORS Rules: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("website") {
-		if err := resourceBucketInternalWebsiteUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Website: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("versioning") {
-		v := d.Get("versioning").([]interface{})
-
-		if d.IsNewResource() {
-			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketInternalVersioningUpdate(ctx, conn, d.Id(), versioning, d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating (new) S3 Bucket (%s) Versioning: %s", d.Id(), err)
-				}
-			}
-		} else {
-			if err := resourceBucketInternalVersioningUpdate(ctx, conn, d.Id(), expandVersioning(v), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Versioning: %s", d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("acl") && !d.IsNewResource() {
-		if err := resourceBucketInternalACLUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) ACL: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("grant") {
-		if err := resourceBucketInternalGrantsUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Grants: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("logging") {
-		if err := resourceBucketInternalLoggingUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Logging: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("lifecycle_rule") {
-		if err := resourceBucketInternalLifecycleUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Lifecycle Rules: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("acceleration_status") {
-		if err := resourceBucketInternalAccelerationUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Acceleration Status: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("request_payer") {
-		if err := resourceBucketInternalRequestPayerUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Request Payer: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("replication_configuration") {
-		if err := resourceBucketInternalReplicationConfigurationUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Replication configuration: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Server-side Encryption configuration: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketInternalObjectLockConfigurationUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Object Lock configuration: %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceBucketRead(ctx, d, meta)...)
-}
-
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn()
@@ -1410,6 +1299,117 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		// Retry due to S3 eventual consistency
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
+			return nil, terr
+		}, s3.ErrCodeNoSuchBucket)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	// Note: Order of argument updates below is important
+
+	if d.HasChange("policy") {
+		if err := resourceBucketInternalPolicyUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Policy: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("cors_rule") {
+		if err := resourceBucketInternalCorsUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) CORS Rules: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("website") {
+		if err := resourceBucketInternalWebsiteUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Website: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("versioning") {
+		v := d.Get("versioning").([]interface{})
+
+		if d.IsNewResource() {
+			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
+				err := resourceBucketInternalVersioningUpdate(ctx, conn, d.Id(), versioning, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating (new) S3 Bucket (%s) Versioning: %s", d.Id(), err)
+				}
+			}
+		} else {
+			if err := resourceBucketInternalVersioningUpdate(ctx, conn, d.Id(), expandVersioning(v), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Versioning: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("acl") && !d.IsNewResource() {
+		if err := resourceBucketInternalACLUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("grant") {
+		if err := resourceBucketInternalGrantsUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Grants: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("logging") {
+		if err := resourceBucketInternalLoggingUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Logging: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("lifecycle_rule") {
+		if err := resourceBucketInternalLifecycleUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Lifecycle Rules: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("acceleration_status") {
+		if err := resourceBucketInternalAccelerationUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Acceleration Status: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("request_payer") {
+		if err := resourceBucketInternalRequestPayerUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Request Payer: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("replication_configuration") {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Replication configuration: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("server_side_encryption_configuration") {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Server-side Encryption configuration: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("object_lock_configuration") {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Object Lock configuration: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
+}
+
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn()
 
@@ -1453,6 +1453,23 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err != nil {
 		return diag.Errorf("deleting S3 Bucket (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func FindBucket(ctx context.Context, conn *s3.S3, bucket string) error {
+	input := &s3.HeadBucketInput{
+		Bucket: aws.String(bucket),
+	}
+
+	_, err := conn.HeadBucketWithContext(ctx, input)
+
+	if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
 	return nil
