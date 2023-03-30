@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.229
+	github.com/aws/aws-sdk-go v1.44.232
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.3
@@ -20,12 +20,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.7
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.7
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.6
@@ -33,8 +33,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.14.6
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.6
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
