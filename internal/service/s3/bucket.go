@@ -701,39 +701,29 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
 	if awsRegion == endpoints.UsEast1RegionID {
-		_, err := conn.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
-			Bucket: aws.String(bucket),
-		})
-		if err == nil {
+		if err := FindBucket(ctx, conn, bucket); err == nil {
 			return create.DiagError(names.S3, create.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
 		}
 	}
 
-	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
-
-	req := &s3.CreateBucketInput{
+	input := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
 		// NOTE: Please, do not add any other fields here unless the field is
 		// supported in *all* AWS partitions (including ISO partitions) and by
 		// 3rd party S3 providers.
 	}
 
-	if acl, ok := d.GetOk("acl"); ok {
-		acl := acl.(string)
-		req.ACL = aws.String(acl)
-		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
+	if v, ok := d.GetOk("acl"); ok {
+		input.ACL = aws.String(v.(string))
 	} else {
-		// Use default value previously available in v3.x of the provider
-		req.ACL = aws.String(s3.BucketCannedACLPrivate)
-		log.Printf("[DEBUG] S3 bucket %s has default canned ACL %s", bucket, s3.BucketCannedACLPrivate)
+		// Use default value previously available in v3.x of the provider.
+		input.ACL = aws.String(s3.BucketCannedACLPrivate)
 	}
-
-	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
 	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
 	if awsRegion != endpoints.UsEast1RegionID {
-		req.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
+		input.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
 			LocationConstraint: aws.String(awsRegion),
 		}
 	}
@@ -744,37 +734,33 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// S3 Object Lock is not supported on all partitions.
 	if v, ok := d.GetOk("object_lock_enabled"); ok {
-		req.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
+		input.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
 	objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
-		req.ObjectLockEnabledForBucket = aws.Bool(true)
+		input.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.CreateBucketWithContext(ctx, req)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateBucketWithContext(ctx, input)
+	}, errCodeOperationAborted)
 
-		if tfawserr.ErrCodeEquals(err, errCodeOperationAborted) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateBucketWithContext(ctx, req)
-	}
 	if err != nil {
 		return create.DiagError(names.S3, create.ErrActionCreating, resNameBucket, bucket, err)
 	}
 
-	// Assign the bucket name as the resource ID
 	d.SetId(bucket)
+
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return nil, FindBucket(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return create.DiagError(names.S3, create.ErrActionWaitingForCreation, resNameBucket, bucket, err)
+	}
+
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
 }
 
@@ -784,39 +770,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(d.Id()),
-	}
+	err := FindBucket(ctx, conn, d.Id())
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.HeadBucketWithContext(ctx, input)
-
-		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.HeadBucketWithContext(ctx, input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1452,7 +1408,15 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket (%s): %s", d.Id(), err)
+		return create.DiagError(names.S3, create.ErrActionDeleting, resNameBucket, d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
+		return nil, FindBucket(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return create.DiagError(names.S3, create.ErrActionWaitingForDeletion, resNameBucket, d.Id(), err)
 	}
 
 	return nil
