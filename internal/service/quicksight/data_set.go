@@ -1552,7 +1552,7 @@ func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.Phy
 
 		if customSqlList, ok := vMap["custom_sql"].([]interface{}); ok {
 			for _, v := range customSqlList {
-				physicalTable.CustomSql = expandDataSetCustomSql(v.(map[string]interface{}))
+				physicalTable.CustomSql = expandDataSetCustomSQL(v.(map[string]interface{}))
 			}
 		}
 		if relationalTableList, ok := vMap["relational_table"].([]interface{}); ok {
@@ -1572,26 +1572,26 @@ func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.Phy
 	return physicalTableMap
 }
 
-func expandDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql {
+func expandDataSetCustomSQL(tfMap map[string]interface{}) *quicksight.CustomSql {
 	if tfMap == nil {
 		return nil
 	}
 
-	customSql := &quicksight.CustomSql{}
+	customSQL := &quicksight.CustomSql{}
 	if v, ok := tfMap["columns"].([]interface{}); ok {
-		customSql.Columns = expandDataSetInputColumns(v)
+		customSQL.Columns = expandDataSetInputColumns(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
-		customSql.DataSourceArn = aws.String(v)
+		customSQL.DataSourceArn = aws.String(v)
 	}
 	if v, ok := tfMap["name"].(string); ok {
-		customSql.Name = aws.String(v)
+		customSQL.Name = aws.String(v)
 	}
 	if v, ok := tfMap["sql_query"].(string); ok {
-		customSql.SqlQuery = aws.String(v)
+		customSQL.SqlQuery = aws.String(v)
 	}
 
-	return customSql
+	return customSQL
 }
 
 func expandDataSetInputColumns(tfList []interface{}) []*quicksight.InputColumn {
@@ -2248,7 +2248,7 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 			"physical_table_map_id": k,
 		}
 		if v.CustomSql != nil {
-			tfMap["custom_sql"] = flattenCustomSql(v.CustomSql)
+			tfMap["custom_sql"] = flattenCustomSQL(v.CustomSql)
 		}
 		if v.RelationalTable != nil {
 			tfMap["relational_table"] = flattenRelationalTable(v.RelationalTable)
@@ -2265,7 +2265,7 @@ func physicalTableMapHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["custom_sql"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", customSqlHash(v)))
+		buf.WriteString(fmt.Sprintf("%d-", customSQLHash(v)))
 	}
 	if v, ok := m["relational_table"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", customRelationalTableHash(v)))
@@ -2277,7 +2277,7 @@ func physicalTableMapHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func customSqlHash(v interface{}) int {
+func customSQLHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.([]interface{})[0].(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["data_source_arn"].(string)))
@@ -2345,7 +2345,7 @@ func customUploadSettingsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenCustomSql(apiObject *quicksight.CustomSql) []interface{} {
+func flattenCustomSQL(apiObject *quicksight.CustomSql) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
