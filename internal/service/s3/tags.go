@@ -17,11 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	ErrCodeNoSuchTagSet      = "NoSuchTagSet"
-	ErrCodeNoSuchTagSetError = "NoSuchTagSetError"
-)
-
 // Custom S3 tag service update functions using the same format as generated code.
 
 // BucketListTags lists S3 bucket tags.

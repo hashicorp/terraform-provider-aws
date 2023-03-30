@@ -15,6 +15,8 @@ const (
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
+	ErrCodeNoSuchTagSet                              = "NoSuchTagSet"
+	ErrCodeNoSuchTagSetError                         = "NoSuchTagSetError"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
 	ErrCodeNotImplemented                            = "NotImplemented"
 	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
