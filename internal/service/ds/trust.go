@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -30,6 +31,7 @@ import (
 
 const (
 	trustCreatedTimeout = 10 * time.Minute
+	trustUpdatedTimeout = 10 * time.Minute
 	trustDeleteTimeout  = 5 * time.Minute
 )
 
@@ -67,6 +69,9 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"directory_id": schema.StringAttribute{
 				Required: true,
 				// TODO: validate regex(^d-[0-9a-f]{10}$)
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"id": framework.IDAttribute(),
 			"last_updated_date_time": schema.StringAttribute{
@@ -75,6 +80,9 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"remote_domain_name": schema.StringAttribute{
 				Required: true,
 				// TODO: validate maxlen(1024), regex(^([a-zA-Z0-9]+[\\.-])+([a-zA-Z0-9])+[.]?$)
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"selective_auth": schema.StringAttribute{
 				Optional: true,
@@ -91,10 +99,16 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.TrustDirection](),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"trust_password": schema.StringAttribute{
 				Required: true,
 				// TODO: validate maxlen(128), regex(^(\p{LD}|\p{Punct}| )+$)
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"trust_state": schema.StringAttribute{
 				Computed: true,
@@ -186,6 +200,45 @@ func (r *resourceTrust) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, config, plan resourceTrustData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().DSClient()
+
+	params := plan.updateInput(ctx)
+
+	_, err := conn.UpdateTrust(ctx, params)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	trust, err := waitTrustUpdated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustUpdatedTimeout)
+	if err != nil {
+		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionUpdating, ResNameTrust, state.ID.ValueString(), err))
+		return
+	}
+
+	plan.update(ctx, trust)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceTrust) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -258,6 +311,13 @@ func (data resourceTrustData) createInput(ctx context.Context) *directoryservice
 		TrustDirection:              stringlikeValueFromFramework[awstypes.TrustDirection](ctx, data.TrustDirection),
 		TrustPassword:               flex.StringFromFramework(ctx, data.TrustPassword),
 		TrustType:                   stringlikeValueFromFramework[awstypes.TrustType](ctx, data.TrustType),
+	}
+}
+
+func (data resourceTrustData) updateInput(ctx context.Context) *directoryservice.UpdateTrustInput {
+	return &directoryservice.UpdateTrustInput{
+		TrustId:       flex.StringFromFramework(ctx, data.ID),
+		SelectiveAuth: stringlikeValueFromFramework[awstypes.SelectiveAuth](ctx, data.SelectiveAuth),
 	}
 }
 
@@ -335,6 +395,29 @@ func waitTrustCreated(ctx context.Context, conn directoryservice.DescribeTrustsA
 		Pending: enum.Slice(
 			awstypes.TrustStateCreating,
 			awstypes.TrustStateCreated,
+			awstypes.TrustStateVerifying,
+		),
+		Target: enum.Slice(
+			awstypes.TrustStateVerified,
+			awstypes.TrustStateVerifyFailed,
+		),
+		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Trust); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+func waitTrustUpdated(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TrustStateUpdating,
+			awstypes.TrustStateUpdated,
 			awstypes.TrustStateVerifying,
 		),
 		Target: enum.Slice(
