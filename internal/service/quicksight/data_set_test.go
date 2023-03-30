@@ -506,7 +506,7 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   logical_table_map {
-	logical_table_map_id = %[1]q
+    logical_table_map_id = %[1]q
     alias                = "Group1"
     source {
       physical_table_id = %[1]q
@@ -646,7 +646,7 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   logical_table_map {
-	logical_table_map_id = %[1]q
+    logical_table_map_id = %[1]q
     alias                = "Group1"
     source {
       physical_table_id = %[1]q
