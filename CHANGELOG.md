@@ -41,6 +41,8 @@ BUG FIXES:
 * resource/aws_fsx_openzfs_file_system: Fix `iops` validation in `disk_iops_configuration` to allow values for `SINGLE_AZ_1` and `SINGLE_AZ_2` ([#30299](https://github.com/hashicorp/terraform-provider-aws/issues/30299))
 * resource/aws_lakeformation_lf_tag: Fix support for lf-tag keys with colons in the name ([#28258](https://github.com/hashicorp/terraform-provider-aws/issues/28258))
 * resource/aws_launch_template: Allow `metadata_options` to be applied when `http_endpoint` is not configured ([#30107](https://github.com/hashicorp/terraform-provider-aws/issues/30107))
+* resource/aws_ssm_activation: Fix IAM eventual consistency errors on resource Create ([#30280](https://github.com/hashicorp/terraform-provider-aws/issues/30280))
+* resource/aws_ssm_document: Correctly set `default_version`, `document_version`, `hash`, `latest_version` and `parameter` as Computed when `content` changes ([#28489](https://github.com/hashicorp/terraform-provider-aws/issues/28489))
 * resource/aws_wafv2_ip_set: Fix `DiffSuppress` on `addresses` to detect changes for unknown values ([#30352](https://github.com/hashicorp/terraform-provider-aws/issues/30352))
 
 ## 4.60.0 (March 24, 2023)
