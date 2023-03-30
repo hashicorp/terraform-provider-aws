@@ -31,7 +31,7 @@ func BucketListTags(ctx context.Context, conn s3iface.S3API, identifier string) 
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
 	}
 
@@ -112,7 +112,7 @@ func ObjectListTags(ctx context.Context, conn s3iface.S3API, bucket, key string)
 		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
 	}
 

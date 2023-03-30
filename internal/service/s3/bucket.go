@@ -791,7 +791,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.CreateBucketWithContext(ctx, req)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeOperationAborted) {
+		if tfawserr.ErrCodeEquals(err, errCodeOperationAborted) {
 			return resource.RetryableError(err)
 		}
 
@@ -992,7 +992,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, ErrCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, errCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 bucket (%s) policy: %s", d.Id(), err)
 	}
 
@@ -1052,7 +1052,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -1081,10 +1081,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err,
-		ErrCodeMethodNotAllowed,
-		ErrCodeNotImplemented,
+		errCodeMethodNotAllowed,
+		errCodeNotImplemented,
 		ErrCodeNoSuchWebsiteConfiguration,
-		ErrCodeXNotImplemented,
+		errCodeXNotImplemented,
 	) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket website configuration: %s", err)
 	}
@@ -1146,7 +1146,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeUnsupportedArgument, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
 	}
 
@@ -1171,7 +1171,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket request payment: %s", err)
 	}
 
@@ -1195,7 +1195,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket logging: %s", err)
 	}
 
@@ -1224,7 +1224,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1253,7 +1253,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
@@ -1312,7 +1312,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeNotImplemented, ErrCodeObjectLockConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, ErrCodeObjectLockConfigurationNotFound) {
 		if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID {
 			return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Object Lock configuration: %s", d.Id(), err)
 		}
@@ -1457,7 +1457,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeBucketNotEmpty) {
+	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
@@ -1961,7 +1961,7 @@ func resourceBucketInternalPolicyUpdate(ctx context.Context, conn *s3.S3, d *sch
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBucketPolicyWithContext(ctx, params)
-		if tfawserr.ErrCodeEquals(err, ErrCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
+		if tfawserr.ErrCodeEquals(err, errCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -2015,7 +2015,7 @@ func resourceBucketInternalReplicationConfigurationUpdate(ctx context.Context, c
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, ErrCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -2105,7 +2105,7 @@ func resourceBucketInternalServerSideEncryptionConfigurationUpdate(ctx context.C
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	return err

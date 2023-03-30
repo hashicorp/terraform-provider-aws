@@ -138,7 +138,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
@@ -175,7 +175,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Metrics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
