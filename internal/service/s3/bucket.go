@@ -38,7 +38,8 @@ const (
 	resNameBucket = "Bucket"
 )
 
-// @SDKResource("aws_s3_bucket")
+// @SDKResource("aws_s3_bucket", name="Bucket")
+// @Tags
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -767,8 +768,6 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	err := FindBucket(ctx, conn, d.Id())
 
@@ -782,6 +781,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.DiagError(names.S3, create.ErrActionReading, resNameBucket, d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "s3",
+		Resource:  d.Id(),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("bucket", d.Id())
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 	d.Set("bucket_prefix", create.NamePrefixFromName(d.Get("bucket").(string)))
@@ -1234,23 +1239,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "s3",
-		Resource:  d.Id(),
-	}.String()
-	d.Set("arn", arn)
+	SetTagsOut(ctx, Tags(tags))
 
 	return diags
 }

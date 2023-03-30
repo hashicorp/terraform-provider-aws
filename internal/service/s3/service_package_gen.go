@@ -57,6 +57,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBucket,
 			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceBucketAccelerateConfiguration,
