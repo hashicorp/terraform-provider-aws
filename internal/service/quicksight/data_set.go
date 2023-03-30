@@ -160,294 +160,11 @@ func ResourceDataSet() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(quicksight.DataSetImportMode_Values(), false),
 			},
 			"logical_table_map": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				MaxItems: 1,
-				// key length constraint 1 to 64
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alias": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 64),
-						},
-						"data_transforms": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 2048,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cast_column_type_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"column_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 128),
-												},
-												"format": {
-													Type:         schema.TypeString,
-													Computed:     true,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 32),
-												},
-												"new_column_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(quicksight.ColumnDataType_Values(), false),
-												},
-											},
-										},
-									},
-									"create_columns_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"columns": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 128,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"column_id": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 64),
-															},
-															"column_name": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 128),
-															},
-															"expression": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 4096),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"filter_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"condition_expression": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 4096),
-												},
-											},
-										},
-									},
-									"project_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"projected_columns": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 2000,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"rename_column_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"column_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 128),
-												},
-												"new_column_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 128),
-												},
-											},
-										},
-									},
-									"tag_column_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"column_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 128),
-												},
-												"tags": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 16,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"column_description": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"text": {
-																			Type:         schema.TypeString,
-																			Computed:     true,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(0, 500),
-																		},
-																	},
-																},
-															},
-															"column_geographic_role": {
-																Type:         schema.TypeString,
-																Computed:     true,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialDataRole_Values(), false),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"untag_column_operation": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"column_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 128),
-												},
-												"tag_names": {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice(quicksight.ColumnTagName_Values(), false),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"source": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data_set_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-										Optional: true,
-									},
-									"join_instruction": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"left_join_key_properties": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unique_key": {
-																Type:     schema.TypeBool,
-																Computed: true,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"left_operand": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 64),
-												},
-												"on_clause": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 512),
-												},
-												"right_join_key_properties": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unique_key": {
-																Type:     schema.TypeBool,
-																Computed: true,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"right_operand": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 64),
-												},
-												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(quicksight.JoinType_Values(), false),
-												},
-											},
-										},
-									},
-									"physical_table_id": {
-										Type:         schema.TypeString,
-										Computed:     true,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 64),
-									},
-								},
-							},
-						},
-					},
-				},
+				MaxItems: 64,
+				Elem:     logicalTableMapSchema(),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -738,6 +455,296 @@ func ResourceDataSet() *schema.Resource {
 	}
 }
 
+func logicalTableMapSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"alias": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"data_transforms": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 2048,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cast_column_type_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"format": {
+										Type:         schema.TypeString,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 32),
+									},
+									"new_column_type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(quicksight.ColumnDataType_Values(), false),
+									},
+								},
+							},
+						},
+						"create_columns_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"columns": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 128,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"column_id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 64),
+												},
+												"column_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 128),
+												},
+												"expression": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 4096),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"filter_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition_expression": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 4096),
+									},
+								},
+							},
+						},
+						"project_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"projected_columns": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 2000,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"rename_column_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"new_column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+								},
+							},
+						},
+						"tag_column_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"tags": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 16,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"column_description": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"text": {
+																Type:         schema.TypeString,
+																Computed:     true,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 500),
+															},
+														},
+													},
+												},
+												"column_geographic_role": {
+													Type:         schema.TypeString,
+													Computed:     true,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialDataRole_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"untag_column_operation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"tag_names": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(quicksight.ColumnTagName_Values(), false),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"logical_table_map_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"source": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_set_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
+						},
+						"join_instruction": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"left_join_key_properties": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"unique_key": {
+													Type:     schema.TypeBool,
+													Computed: true,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"left_operand": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+									"on_clause": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"right_join_key_properties": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"unique_key": {
+													Type:     schema.TypeBool,
+													Computed: true,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"right_operand": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(quicksight.JoinType_Values(), false),
+									},
+								},
+							},
+						},
+						"physical_table_id": {
+							Type:         schema.TypeString,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -779,8 +786,8 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FieldFolders = expandDataSetFieldFolders(v.List())
 	}
 
-	if v, ok := d.GetOk("logical_table_map"); ok && len(v.([]interface{})) != 0 {
-		input.LogicalTableMap = expandDataSetLogicalTableMap(v.([]interface{}))
+	if v, ok := d.GetOk("logical_table_map"); ok && v.(*schema.Set).Len() != 0 {
+		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -940,7 +947,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("logical_table_map") {
-			params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").([]interface{}))
+			params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").(*schema.Set))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
@@ -1160,19 +1167,21 @@ func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.Fiel
 	return fieldFolderMap
 }
 
-func expandDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.LogicalTable {
-	if len(tfList) == 0 {
+func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.LogicalTable {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 
 	logicalTableMap := make(map[string]*quicksight.LogicalTable)
-	for _, v := range tfList {
+	for _, v := range tfSet.List() {
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
 		logicalTable := &quicksight.LogicalTable{}
+		logicalTableMapID := vMap["logical_table_map_id"].(string)
+
 		if v, ok := vMap["alias"].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
@@ -1183,7 +1192,7 @@ func expandDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.L
 			logicalTable.DataTransforms = expandDataSetDataTransforms(v)
 		}
 
-		logicalTableMap["s3PhysicalTable"] = logicalTable
+		logicalTableMap[logicalTableMapID] = logicalTable
 	}
 
 	return logicalTableMap
@@ -1930,18 +1939,20 @@ func fieldFoldersHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) []interface{} {
+func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) *schema.Set {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-	for _, table := range apiObject {
+	for key, table := range apiObject {
 		if table == nil {
 			continue
 		}
 
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]interface{}{
+			"logical_table_map_id": key,
+		}
 		if table.Alias != nil {
 			tfMap["alias"] = aws.StringValue(table.Alias)
 		}
@@ -1954,7 +1965,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) []int
 		tfList = append(tfList, tfMap)
 	}
 
-	return tfList
+	return schema.NewSet(schema.HashResource(logicalTableMapSchema()), tfList)
 }
 
 func flattenDataTransforms(apiObject []*quicksight.TransformOperation) []interface{} {
@@ -2233,8 +2244,7 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 		return nil
 	}
 
-	tfSet := schema.NewSet(physicalTableMapHash, []interface{}{})
-
+	var tfList []interface{}
 	for k, v := range apiObject {
 		if v == nil {
 			continue
@@ -2252,9 +2262,10 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 		if v.S3Source != nil {
 			tfMap["s3_source"] = flattenS3Source(v.S3Source)
 		}
-		tfSet.Add(tfMap)
+		tfList = append(tfList, tfMap)
 	}
-	return tfSet
+
+	return schema.NewSet(physicalTableMapHash, tfList)
 }
 
 func physicalTableMapHash(v interface{}) int {

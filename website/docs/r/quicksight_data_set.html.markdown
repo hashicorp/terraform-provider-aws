@@ -186,7 +186,7 @@ The following arguments are optional:
 
 For a `physical_table_map` item to be valid, only one of `custom_sql`, `relational_table`, or `s3_source` should be configured.
 
-* `physical_table_id` - (Required) Key of the physical table map.
+* `physical_table_map_id` - (Required) Key of the physical table map.
 * `custom_sql` - (Optional) A physical table type built from the results of the custom SQL query. See [custom_sql](#custom_sq1).
 * `relational_table` - (Optional) A physical table type for relational data sources. See [relational_table](#relational_table).
 * `s3_source` - (Optional) A physical table type for as S3 data source. See [s3_source](#s3_source).
@@ -258,6 +258,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 ### logical_table_map
 
 * `alias` - (Required) A display name for the logical table.
+* `logical_table_map_id` - (Required) Key of the logical table map.
 * `data_transforms` - (Optional) Transform operations that act on this logical table. For this structure to be valid, only one of the attributes can be non-null. See [data_transforms](#data_transforms).
 * `source` - (Optional) Source of this logical table. See [source](#source).
 
