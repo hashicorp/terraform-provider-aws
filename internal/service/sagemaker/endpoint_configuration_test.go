@@ -756,11 +756,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
@@ -798,11 +793,6 @@ func testAccEndpointConfigurationConfig_asyncKMS(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_kms_key" "test" {
@@ -866,11 +856,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -911,11 +896,6 @@ func testAccEndpointConfigurationConfig_asyncClient(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_kms_key" "test" {
