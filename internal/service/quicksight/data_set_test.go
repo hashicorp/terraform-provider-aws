@@ -756,7 +756,7 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
   row_level_permission_tag_configuration {
-	status = "ENABLED"
+    status = "ENABLED"
     tag_rules {
       column_name               = "Column1"
       tag_key                   = "uniquetagkey"

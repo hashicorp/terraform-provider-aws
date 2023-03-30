@@ -740,63 +740,62 @@ func ResourceDataSet() *schema.Resource {
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	id := d.Get("data_set_id").(string)
-
-	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
-
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountId = v.(string)
 	}
-	params := &quicksight.CreateDataSetInput{
+	dataSetID := d.Get("data_set_id").(string)
+
+	d.SetId(createDataSetID(awsAccountId, dataSetID))
+
+	input := &quicksight.CreateDataSetInput{
 		AwsAccountId:     aws.String(awsAccountId),
-		DataSetId:        aws.String(id),
+		DataSetId:        aws.String(dataSetID),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.ColumnGroups = expandDataSetColumnGroups(v.([]interface{}))
+		input.ColumnGroups = expandDataSetColumnGroups(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 {
-		params.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(v.([]interface{}))
+		input.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(v.([]interface{}))
+		input.DataSetUsageConfiguration = expandDataSetUsageConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.Get("field_folders").(*schema.Set); ok && v.Len() > 0 {
-		params.FieldFolders = expandDataSetFieldFolders(v.List())
+		input.FieldFolders = expandDataSetFieldFolders(v.List())
 	}
 
 	if v, ok := d.GetOk("logical_table_map"); ok && len(v.([]interface{})) != 0 {
-		params.LogicalTableMap = expandDataSetLogicalTableMap(v.([]interface{}))
+		input.LogicalTableMap = expandDataSetLogicalTableMap(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Permissions = expandDataSetPermissions(v.([]interface{}))
+		input.Permissions = expandDataSetPermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(v.([]interface{}))
+		input.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(v.([]interface{}))
+		input.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataSetWithContext(ctx, params)
+	_, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
@@ -1705,7 +1704,7 @@ func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermis
 		tfMap := tfListRaw.(map[string]interface{})
 
 		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringList(tfMap["actions"].(*schema.Set).List()),
+			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
 			Principal: aws.String(tfMap["principal"].(string)),
 		}
 
@@ -2530,9 +2529,13 @@ func flattenTagRules(apiObject []*quicksight.RowLevelPermissionTagRule) []interf
 }
 
 func ParseDataSetID(id string) (string, string, error) {
-	parts := strings.SplitN(id, "/", 2)
+	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SOURCE_ID", id)
 	}
 	return parts[0], parts[1], nil
+}
+
+func createDataSetID(awsAccountID, dataSourceID string) string {
+	return fmt.Sprintf("%s,%s", awsAccountID, dataSourceID)
 }

@@ -149,7 +149,7 @@ resource "aws_quicksight_data_set" "example" {
     }
   }
   row_level_permission_tag_configuration {
-	  status = "ENABLED"
+    status = "ENABLED"
     tag_rules {
       column_name               = "Column1"
       tag_key                   = "tagkey"
@@ -372,12 +372,13 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
+* `id` - A comma-delimited string joining AWS account ID and data set ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-A QuickSight data source can be imported using the AWS account ID, and data source ID name separated by a slash (`/`) e.g.,
+A QuickSight Data Set can be imported using the AWS account ID and data set ID name separated by a comma (`,`) e.g.,
 
 ```
-$ terraform import aws_quicksight_data_set.example 123456789123/my-data-set-id
+$ terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
