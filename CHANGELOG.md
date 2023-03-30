@@ -31,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_globalaccelerator_accelerator: Add `dual_stack_dns_name` attribute ([#28922](https://github.com/hashicorp/terraform-provider-aws/issues/28922))
 * resource/aws_lakeformation_lf_tag: Increase values MaxItem up to 1000 to match with AWS real limit ([#26546](https://github.com/hashicorp/terraform-provider-aws/issues/26546))
 * resource/aws_rds_cluster: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager ([#28848](https://github.com/hashicorp/terraform-provider-aws/issues/28848))
+* resource/aws_sagemaker_endpoint_configuration: Add `production_variants.enable_ssm_access` and `shadow_production_variants.enable_ssm_access` arguments ([#30267](https://github.com/hashicorp/terraform-provider-aws/issues/30267))
 
 BUG FIXES:
 
