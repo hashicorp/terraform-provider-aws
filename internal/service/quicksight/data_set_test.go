@@ -421,7 +421,7 @@ func testAccCheckQuickSightDataSetDestroy(s *terraform.State) error {
 			DataSetId:    aws.String(dataSetId),
 		})
 
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -476,9 +476,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
-		format = "JSON"
-	  }
+      upload_settings {
+        format = "JSON"
+      }
     }
   }
 }
@@ -502,9 +502,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
-		format = "JSON"
-	  }
+      upload_settings {
+        format = "JSON"
+      }
     }
   }
   logical_table_map {
@@ -550,9 +550,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
-		format = "JSON"
-	  }
+      upload_settings {
+        format = "JSON"
+      }
     }
   }
   column_level_permission_rules {
@@ -580,14 +580,14 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   data_set_usage_configuration {
     disable_use_as_direct_query_source = false
-    disable_use_as_imported_source = false
+    disable_use_as_imported_source     = false
   }
 }
 `, rId, rName))
@@ -610,15 +610,15 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   field_folders {
     field_folders_id = %[1]q
-    columns = ["Column1"]
-    description = "test"
+    columns          = ["Column1"]
+    description      = "test"
   }
 }
 `, rId, rName))
@@ -641,9 +641,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   logical_table_map {
@@ -674,9 +674,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   permissions {
@@ -711,9 +711,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   permissions {
@@ -752,17 +752,17 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   row_level_permission_tag_configuration {
 	status = "ENABLED"
     tag_rules {
-      column_name = "Column1"
-      tag_key = "uniquetagkey"
-      match_all_value = "*"
+      column_name               = "Column1"
+      tag_key                   = "uniquetagkey"
+      match_all_value           = "*"
       tag_multi_value_delimiter = ","
     }
   }
@@ -787,9 +787,9 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-	  upload_settings {
+      upload_settings {
         format = "JSON"
-	  }
+      }
     }
   }
   tags = {

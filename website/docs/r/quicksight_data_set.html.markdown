@@ -151,9 +151,9 @@ resource "aws_quicksight_data_set" "example" {
   row_level_permission_tag_configuration {
 	  status = "ENABLED"
     tag_rules {
-      column_name = "Column1"
-      tag_key = "tagkey"
-      match_all_value = "*"
+      column_name               = "Column1"
+      tag_key                   = "tagkey"
+      match_all_value           = "*"
       tag_multi_value_delimiter = ","
     }
   }
