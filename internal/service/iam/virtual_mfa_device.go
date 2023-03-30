@@ -16,15 +16,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iam_virtual_mfa_device")
+// @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
+// @Tags
 func ResourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
 		ReadWithoutTimeout:   resourceVirtualMFADeviceRead,
 		UpdateWithoutTimeout: resourceVirtualMFADeviceUpdate,
 		DeleteWithoutTimeout: resourceVirtualMFADeviceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -49,8 +52,8 @@ func ResourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"virtual_mfa_device_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -61,6 +64,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 				),
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -68,17 +72,13 @@ func ResourceVirtualMFADevice() *schema.Resource {
 func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("virtual_mfa_device_name").(string)
+	tags := GetTagsIn(ctx)
 	request := &iam.CreateVirtualMFADeviceInput{
 		Path:                 aws.String(d.Get("path").(string)),
+		Tags:                 tags,
 		VirtualMFADeviceName: aws.String(name),
-	}
-
-	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateVirtualMFADeviceWithContext(ctx, request)
@@ -103,7 +103,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if request.Tags == nil && len(tags) > 0 {
-		err := virtualMFAUpdateTags(ctx, conn, d.Id(), nil, tags)
+		err := virtualMFAUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -122,8 +122,6 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindVirtualMFADevice(ctx, conn, d.Id())
 
@@ -140,25 +138,15 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("arn", output.SerialNumber)
 
 	// The call above returns empty tags
-	tagsInput := &iam.ListMFADeviceTagsInput{
+	mfaTags, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{
 		SerialNumber: aws.String(d.Id()),
-	}
+	})
 
-	mfaTags, err := conn.ListMFADeviceTagsWithContext(ctx, tagsInput)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device Tags (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device (%s) tags: %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(ctx, mfaTags.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, mfaTags.Tags)
 
 	return diags
 }

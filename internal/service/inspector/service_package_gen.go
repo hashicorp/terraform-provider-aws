@@ -37,6 +37,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAssessmentTemplate,
 			TypeName: "aws_inspector_assessment_template",
+			Name:     "Assessment Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceResourceGroup,

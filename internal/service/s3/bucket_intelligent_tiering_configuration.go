@@ -184,7 +184,7 @@ func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d 
 		Id:     aws.String(configurationName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
@@ -222,7 +222,7 @@ func FindBucketIntelligentTieringConfiguration(ctx context.Context, conn *s3.S3,
 
 	output, err := conn.GetBucketIntelligentTieringConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

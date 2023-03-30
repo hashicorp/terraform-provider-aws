@@ -1380,15 +1380,19 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-				Key:     aws.String(rs.Primary.Attributes["key"]),
-				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
-			})
-			if err == nil {
-				return fmt.Errorf("AWS S3 Object still exists: %s", rs.Primary.ID)
+			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Object %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -1493,13 +1497,10 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, expectedClass string
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		out, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
+		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
-			return fmt.Errorf("HeadObject error: %v", err)
+			return err
 		}
 
 		// The "STANDARD" (which is also the default) storage
@@ -1523,13 +1524,10 @@ func testAccCheckObjectSSE(ctx context.Context, n, expectedSSE string) resource.
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		out, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
+		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
-			return fmt.Errorf("HeadObject error: %v", err)
+			return err
 		}
 
 		if out.ServerSideEncryption == nil {
