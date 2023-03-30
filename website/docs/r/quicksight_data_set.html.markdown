@@ -195,7 +195,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 * `name` - (Required) Display name for the SQL query result.
 * `sql_query` - (Required) SQL query.
-- `columns` - (Optional) Column schema from the SQL query result set. See [columns](#columns).
+* `columns` - (Optional) Column schema from the SQL query result set. See [columns](#columns).
 
 ### columns
 
@@ -242,7 +242,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 ### column_level_permission_rules
 
 * `column_names` - (Optional) An array of column names.
-* `principals` - (Optional) An array of ARNs for Amazon QuickSight users or groups. 
+* `principals` - (Optional) An array of ARNs for Amazon QuickSight users or groups.
 
 ### data_set_usage_configuration
 
