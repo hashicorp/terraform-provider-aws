@@ -103,6 +103,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
+			Name:     "Object",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceBucketObjectLockConfiguration,
