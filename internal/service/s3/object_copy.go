@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -312,13 +310,9 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	output, err := FindObjectByThreePartKey(ctx, conn, bucket, key, "")
 
-	resp, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -328,19 +322,13 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): empty response", d.Id())
-	}
-
-	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
-
-	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
-	d.Set("cache_control", resp.CacheControl)
-	d.Set("content_disposition", resp.ContentDisposition)
-	d.Set("content_encoding", resp.ContentEncoding)
-	d.Set("content_language", resp.ContentLanguage)
-	d.Set("content_type", resp.ContentType)
-	metadata := flex.PointersMapToStringList(resp.Metadata)
+	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
+	d.Set("cache_control", output.CacheControl)
+	d.Set("content_disposition", output.ContentDisposition)
+	d.Set("content_encoding", output.ContentEncoding)
+	d.Set("content_language", output.ContentLanguage)
+	d.Set("content_type", output.ContentType)
+	metadata := flex.PointersMapToStringList(output.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -351,25 +339,25 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("metadata", metadata); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting metadata: %s", err)
 	}
-	d.Set("version_id", resp.VersionId)
-	d.Set("server_side_encryption", resp.ServerSideEncryption)
-	d.Set("website_redirect", resp.WebsiteRedirectLocation)
-	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
-	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("version_id", output.VersionId)
+	d.Set("server_side_encryption", output.ServerSideEncryption)
+	d.Set("website_redirect", output.WebsiteRedirectLocation)
+	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", output.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
 
-	if err := resourceObjectSetKMS(ctx, d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
+	d.Set("etag", strings.Trim(aws.StringValue(output.ETag), `"`))
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.ObjectStorageClassStandard)
-	if resp.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("storage_class", resp.StorageClass)
+	if output.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("storage_class", output.StorageClass)
 	}
 
 	// Retry due to S3 eventual consistency
