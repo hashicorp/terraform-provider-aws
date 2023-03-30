@@ -56,23 +56,25 @@ func ResourceIPSet() *schema.Resource {
 				MaxItems: 10000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					o, n := d.GetChange("addresses")
-					oldAddresses := o.(*schema.Set).List()
-					newAddresses := n.(*schema.Set).List()
-					if len(oldAddresses) == len(newAddresses) {
-						for _, ov := range oldAddresses {
-							hasAddress := false
-							for _, nv := range newAddresses {
-								if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
-									hasAddress = true
-									break
+					if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
+						o, n := d.GetChange("addresses")
+						oldAddresses := o.(*schema.Set).List()
+						newAddresses := n.(*schema.Set).List()
+						if len(oldAddresses) == len(newAddresses) {
+							for _, ov := range oldAddresses {
+								hasAddress := false
+								for _, nv := range newAddresses {
+									if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
+										hasAddress = true
+										break
+									}
+								}
+								if !hasAddress {
+									return false
 								}
 							}
-							if !hasAddress {
-								return false
-							}
+							return true
 						}
-						return true
 					}
 					return false
 				},
