@@ -431,7 +431,7 @@ func testAccCheckFeatureGroupExists(ctx context.Context, n string, v *sagemaker.
 	}
 }
 
-func testAccFeatureGroupBaseConfig(rName string) string {
+func testAccFeatureGroupConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -454,16 +454,11 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccFeatureGroupOfflineBaseConfig(rName string) string {
+func testAccFeatureGroupConfig_baseOffline(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -490,7 +485,7 @@ resource "aws_iam_policy" "test" {
 }
 
 func testAccFeatureGroupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -510,7 +505,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccFeatureGroupConfig_description(rName string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -531,7 +526,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccFeatureGroupConfig_multi(rName string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -556,7 +551,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccFeatureGroupConfig_onlineSecurity(rName string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -586,8 +581,8 @@ resource "aws_sagemaker_feature_group" "test" {
 
 func testAccFeatureGroupConfig_offlineBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFeatureGroupBaseConfig(rName),
-		testAccFeatureGroupOfflineBaseConfig(rName),
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
@@ -615,8 +610,8 @@ resource "aws_sagemaker_feature_group" "test" {
 
 func testAccFeatureGroupConfig_offlineTableFormat(rName, format string) string {
 	return acctest.ConfigCompose(
-		testAccFeatureGroupBaseConfig(rName),
-		testAccFeatureGroupOfflineBaseConfig(rName),
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
@@ -645,8 +640,8 @@ resource "aws_sagemaker_feature_group" "test" {
 
 func testAccFeatureGroupConfig_offlineCreateGlueCatalog(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFeatureGroupBaseConfig(rName),
-		testAccFeatureGroupOfflineBaseConfig(rName),
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
@@ -674,8 +669,8 @@ resource "aws_sagemaker_feature_group" "test" {
 
 func testAccFeatureGroupConfig_offlineCreateGlueCatalogProvidedCatalog(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFeatureGroupBaseConfig(rName),
-		testAccFeatureGroupOfflineBaseConfig(rName),
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -717,7 +712,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccFeatureGroupConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -741,7 +736,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccFeatureGroupConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
