@@ -802,6 +802,10 @@ func FindObjectByThreePartKey(ctx context.Context, conn *s3.S3, bucket, key, eta
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
