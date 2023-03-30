@@ -488,7 +488,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 				var identifier string
 
-				diags.Append(request.Plan.GetAttribute(ctx, path.Root(identifier), &identifier)...)
+				diags.Append(request.Plan.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
 				if diags.HasError() {
 					return ctx, diags
