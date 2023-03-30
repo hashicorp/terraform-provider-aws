@@ -469,6 +469,50 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		CheckDestroy: testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.60.0",
+					},
+				},
+				Config: testAccEndpointConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "production_variants.0.enable_ssm_access"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccEndpointConfigurationConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
