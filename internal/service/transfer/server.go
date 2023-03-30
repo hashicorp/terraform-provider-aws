@@ -895,7 +895,7 @@ func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.As2Transports; v != nil {
-		tfMap["as2_transport"] = aws.StringValueSlice(v)
+		tfMap["as2_transports"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.PassiveIp; v != nil {

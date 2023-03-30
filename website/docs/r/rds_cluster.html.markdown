@@ -145,12 +145,77 @@ resource "aws_rds_cluster_instance" "example" {
 }
 ```
 
+### RDS/Aurora Managed Master Passwords via Secrets Manager, default KMS Key
+
+-> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
+
+You can specify the `manage_master_user_password` attribute to enable managing the master password with Secrets Manager. You can also update an existing cluster to use Secrets Manager by specify the `manage_master_user_password` attribute and removing the `master_password` attribute (removal is required).
+
+```terraform
+resource "aws_rds_cluster" "test" {
+  cluster_identifier          = "example"
+  database_name               = "test"
+  manage_master_user_password = true
+  master_username             = "test"
+}
+```
+
+### RDS/Aurora Managed Master Passwords via Secrets Manager, specific KMS Key
+
+-> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
+
+You can specify the `master_user_secret_kms_key_id` attribute to specify a specific KMS Key.
+
+```terraform
+resource "aws_kms_key" "example" {
+  description = "Example KMS Key"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier            = "example"
+  database_name                 = "test"
+  manage_master_user_password   = true
+  master_username               = "test"
+  master_user_secret_kms_key_id = aws_kms_key.example.key_id
+}
+```
+
+### Global Cluster Restored From Snapshot
+
+```terraform
+data "aws_db_cluster_snapshot" "example" {
+  db_cluster_identifier = "example-original-cluster"
+  most_recent           = true
+}
+
+resource "aws_rds_cluster" "example" {
+  # Because the global cluster is sourced from this cluster, the initial 
+  # engine and engine_version values are defined here and automatically
+  # inherited by the global cluster.
+  engine         = "aurora"
+  engine_version = "5.6.mysql_aurora.1.22.4"
+
+  cluster_identifier  = "example"
+  snapshot_identifier = data.aws_db_cluster_snapshot.example.id
+
+  lifecycle {
+    ignore_changes = [snapshot_identifier, global_cluster_identifier]
+  }
+}
+
+resource "aws_rds_global_cluster" "example" {
+  global_cluster_identifier    = "example"
+  source_db_cluster_identifier = aws_rds_cluster.example.arn
+  force_destroy                = true
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
 the AWS official documentation :
 
-* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
+* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
 * [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
 The following arguments are supported:
@@ -180,7 +245,9 @@ The following arguments are supported:
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html) for availability and limitations.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
-* `master_password` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]
+* `manage_master_user_password` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `master_password` is provided.
+* `master_user_secret_kms_key_id` - (Optional) The Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
+* `master_password` - (Required unless `manage_master_user_password` is set to true or unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]. Cannot be set if `manage_master_user_password` is set to `true`.
 * `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
@@ -191,7 +258,7 @@ The following arguments are supported:
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
 * `serverlessv2_scaling_configuration`- (Optional) Nested attribute with scaling properties for ServerlessV2. Only valid when `engine_mode` is set to `provisioned`. More details below.
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
-* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
+* `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Conflicts with `global_cluster_identifier`. Clusters cannot be restored from snapshot **and** joined to an existing global cluster in a single operation. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-getting-started.html#aurora-global-database.use-snapshot) or the [Global Cluster Restored From Snapshot example](#global-cluster-restored-from-snapshot) for instructions on building a global cluster starting with a snapshot.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
 * `allocated_storage` - (Optional) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster. (This setting is required to create a Multi-AZ DB cluster).
 * `storage_type` - (Optional) Specifies the storage type to be associated with the DB cluster. (This setting is required to create a Multi-AZ DB cluster). Valid values: `io1`, Default: `io1`.
@@ -321,6 +388,7 @@ load-balanced across replicas
 * `database_name` - The database name
 * `port` - The database port
 * `master_username` - The master username for the database
+* `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
 * `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
@@ -331,6 +399,14 @@ load-balanced across replicas
 [3]: /docs/providers/aws/r/rds_cluster_instance.html
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 [5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
+
+### master_user_secret
+
+The `master_user_secret` configuration block supports the following attributes:
+
+* `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
+* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
 

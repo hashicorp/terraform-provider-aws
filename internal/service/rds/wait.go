@@ -2,8 +2,6 @@ package rds
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -14,9 +12,6 @@ import (
 const (
 	dbClusterRoleAssociationCreatedTimeout = 10 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 10 * time.Minute
-
-	dbClusterActivityStreamStartedTimeout = 30 * time.Minute
-	dbClusterActivityStreamStoppedTimeout = 30 * time.Minute
 )
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
@@ -237,46 +232,6 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 	}
 
 	return nil, err
-}
-
-// waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be started
-func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterArn)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStarting},
-		Target:     []string{rds.ActivityStreamStatusStarted},
-		Refresh:    statusDBClusterActivityStream(ctx, conn, dbClusterArn),
-		Timeout:    dbClusterActivityStreamStartedTimeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be started: %v", dbClusterArn, err)
-	}
-	return nil
-}
-
-// waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be stopped
-func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterArn)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStopping},
-		Target:     []string{},
-		Refresh:    statusDBClusterActivityStream(ctx, conn, dbClusterArn),
-		Timeout:    dbClusterActivityStreamStoppedTimeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", dbClusterArn, err)
-	}
-	return nil
 }
 
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {

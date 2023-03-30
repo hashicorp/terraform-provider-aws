@@ -67,26 +67,6 @@ func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleAR
 	}
 }
 
-func statusDBClusterActivityStream(ctx context.Context, conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterWithActivityStream(ctx, conn, dbClusterArn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", nil
-		}
-
-		return output, aws.StringValue(output.ActivityStreamStatus), nil
-	}
-}
-
 func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBInstanceAutomatedBackupByARN(ctx, conn, arn)

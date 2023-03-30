@@ -91,3 +91,14 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
+
+func ExpectSingleResult[T any](a []*T) error {
+	if l := len(a); l == 0 {
+		return NewEmptyResultError(nil)
+	} else if l > 1 {
+		return NewTooManyResultsError(l, nil)
+	} else if a[0] == nil {
+		return NewEmptyResultError(nil)
+	}
+	return nil
+}

@@ -201,6 +201,29 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2IPSet_addresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.IPSet
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPSetConfig_addresses(ipSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPSetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2IPSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.IPSet
@@ -344,6 +367,27 @@ resource "aws_wafv2_ip_set" "ip_set" {
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+`, name)
+}
+
+func testAccIPSetConfig_addresses(name string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+}
+
+resource "aws_wafv2_ip_set" "ip_set" {
+  name               = %[1]q
+  description        = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "${aws_eip.test.public_ip}/32"]
 
   tags = {
     Tag1 = "Value1"

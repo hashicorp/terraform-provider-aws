@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/synthetics/syntheticsiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // map[string]*string handling
@@ -22,6 +23,25 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 // KeyValueTags creates KeyValueTags from synthetics service tags.
 func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
+}
+
+// GetTagsIn returns synthetics service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets synthetics service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates synthetics service tags.
@@ -61,6 +81,8 @@ func UpdateTags(ctx context.Context, conn syntheticsiface.SyntheticsAPI, identif
 	return nil
 }
 
+// UpdateTags updates synthetics service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).SyntheticsConn(), identifier, oldTags, newTags)
 }

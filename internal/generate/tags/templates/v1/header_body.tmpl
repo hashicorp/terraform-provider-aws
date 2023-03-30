@@ -2,9 +2,7 @@
 package {{ .ServicePackage }}
 
 import (
-	{{- if .ContextPkg }}
 	"context"
-	{{- end }}
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
@@ -35,5 +33,8 @@ import (
 	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	{{- end }}
+	{{- if .InternalTypesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/internal/types"
 	{{- end }}
 )

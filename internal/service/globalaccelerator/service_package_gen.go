@@ -24,7 +24,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCustomRoutingAccelerator,
+			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
@@ -32,6 +37,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccelerator,
 			TypeName: "aws_globalaccelerator_accelerator",
+		},
+		{
+			Factory:  ResourceCustomRoutingAccelerator,
+			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+		},
+		{
+			Factory:  ResourceCustomRoutingEndpointGroup,
+			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
+		},
+		{
+			Factory:  ResourceCustomRoutingListener,
+			TypeName: "aws_globalaccelerator_custom_routing_listener",
 		},
 		{
 			Factory:  ResourceEndpointGroup,
