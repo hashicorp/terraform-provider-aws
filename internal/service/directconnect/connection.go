@@ -184,8 +184,8 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
-	d.Set("provider_name", connection.ProviderName)
-	d.Set("vlan_id", connection.Vlan)
+	d.Set("provider_name", connection.PartnerName)
+	d.Set("vlan_id", connection.VLAN)
 
 	// d.Set("request_macsec", d.Get("request_macsec").(bool))
 
