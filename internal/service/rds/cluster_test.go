@@ -2500,7 +2500,8 @@ resource "aws_rds_cluster" "test" {
   database_name                   = "test"
   manage_master_user_password     = true
   master_username                 = "tfacctest"
-  db_cluster_parameter_group_name = "default.aurora5.6"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
   skip_final_snapshot             = true
 }
 `, rName)
@@ -4397,7 +4398,8 @@ resource "aws_rds_cluster" "test" {
   database_name                   = "test"
   master_username                 = "tfacctest"
   master_password                 = %[2]q
-  db_cluster_parameter_group_name = "default.aurora5.6"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
   skip_final_snapshot             = true
 }
 `, rName, password)
