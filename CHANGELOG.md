@@ -1,5 +1,9 @@
 ## 4.62.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
+
 ENHANCEMENTS:
 
 * resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block ([#30118](https://github.com/hashicorp/terraform-provider-aws/issues/30118))
