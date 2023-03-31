@@ -35,25 +35,11 @@ func ResourceFeatureGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"feature_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
-				),
-			},
-			"record_identifier_feature_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-				),
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"event_time_feature_name": {
 				Type:     schema.TypeString,
@@ -64,18 +50,6 @@ func ResourceFeatureGroup() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"feature_definition": {
 				Type:     schema.TypeList,
@@ -102,6 +76,16 @@ func ResourceFeatureGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+			"feature_group_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
+				),
 			},
 			"offline_store_config": {
 				Type:         schema.TypeList,
@@ -136,6 +120,10 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
+						"disable_glue_table_creation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"s3_storage_config": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -154,9 +142,11 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"disable_glue_table_creation": {
-							Type:     schema.TypeBool,
-							Optional: true,
+						"table_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      sagemaker.TableFormatGlue,
+							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
 						},
 					},
 				},
@@ -169,6 +159,11 @@ func ResourceFeatureGroup() *schema.Resource {
 				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enable_online_store": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -183,13 +178,24 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"enable_online_store": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 					},
 				},
+			},
+			"record_identifier_feature_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+				),
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -472,6 +478,10 @@ func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineSto
 		config.DisableGlueTableCreation = aws.Bool(v)
 	}
 
+	if v, ok := m["table_format"].(string); ok {
+		config.TableFormat = aws.String(v)
+	}
+
 	return config
 }
 
@@ -482,6 +492,7 @@ func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig)
 
 	m := map[string]interface{}{
 		"disable_glue_table_creation": aws.BoolValue(config.DisableGlueTableCreation),
+		"table_format":                aws.StringValue(config.TableFormat),
 	}
 
 	if config.DataCatalogConfig != nil {
