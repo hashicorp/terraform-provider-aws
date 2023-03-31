@@ -55,6 +55,14 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
 			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
+		"RouteTableAssociations": {
+			"Filter": testAccTransitGatewayRouteTableAssociationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTableAssociationsDataSource_basic,
+		},
+		"RouteTablePropagations": {
+			"Filter": testAccTransitGatewayRouteTablePropagationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
+		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
