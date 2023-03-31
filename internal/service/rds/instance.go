@@ -2095,6 +2095,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			// InvalidParameterValue: A ManageMasterUserPassword value is required when MasterUserSecretKmsKeyId is specified.
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 	}
 
