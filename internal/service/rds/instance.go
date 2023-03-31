@@ -121,9 +121,10 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -294,6 +295,26 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"listener_endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hosted_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -307,6 +328,37 @@ func ResourceInstance() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"password"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"master_user_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
+			},
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -318,14 +370,16 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 5, 10, 15, 30, 60}),
 			},
 			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -366,9 +420,10 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -756,6 +811,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				requiresModifyDbInstance = true
 			}
 		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			if current, desired := aws.Int64Value(output.DBInstance.MaxAllocatedStorage), int64(v.(int)); current != desired {
@@ -790,13 +854,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
-
 		if _, ok := d.GetOk("character_set_name"); ok {
 			diags = sdkdiag.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
 		}
@@ -820,7 +880,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
-			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
@@ -863,6 +922,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("monitoring_interval"); ok {
 			input.MonitoringInterval = aws.Int64(int64(v.(int)))
 		}
@@ -881,6 +948,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -1322,9 +1393,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
@@ -1344,7 +1412,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
-			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                    Tags(tags.IgnoreAWS()),
@@ -1406,6 +1473,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 		}
@@ -1432,6 +1507,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -1596,6 +1675,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if v.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
+
 	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
@@ -1642,6 +1740,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
 		d.Set("port", v.Endpoint.Port)
+	}
+
+	if v.ListenerEndpoint != nil {
+		if err := d.Set("listener_endpoint", []interface{}{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
+		}
+	} else {
+		d.Set("listener_endpoint", nil)
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
@@ -1980,6 +2086,17 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 	}
 
+	if d.HasChange("manage_master_user_password") {
+		needsModify = true
+		input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+	}
+
+	if d.HasChange("master_user_secret_kms_key_id") {
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+	}
+
 	if d.HasChange("max_allocated_storage") {
 		needsModify = true
 		v := d.Get("max_allocated_storage").(int)
@@ -2021,7 +2138,10 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("password") {
 		needsModify = true
-		input.MasterUserPassword = aws.String(d.Get("password").(string))
+		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
+		if v, ok := d.GetOk("password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			input.MasterUserPassword = aws.String(v.(string))
+		}
 	}
 
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
@@ -2584,4 +2704,26 @@ func dbInstanceValidBlueGreenEngines() []string {
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
 	}
+}
+
+func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Address; v != nil {
+		tfMap["address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

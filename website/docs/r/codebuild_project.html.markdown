@@ -103,7 +103,7 @@ data "aws_iam_policy_document" "example" {
 
 resource "aws_iam_role_policy" "example" {
   role   = aws_iam_role.example.name
-  policy = data.aws_iam_role_policy.example.json
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_codebuild_project" "example" {

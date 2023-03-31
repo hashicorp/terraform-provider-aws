@@ -95,8 +95,9 @@ func ResourceQueue() *schema.Resource {
 				},
 			},
 			"quick_connect_ids_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
+				Deprecated: "Use the quick_connect_ids instead",
+				Type:       schema.TypeSet,
+				Computed:   true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -323,29 +324,39 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// updates to quick_connect_ids
 	if d.HasChange("quick_connect_ids") {
-		// first disassociate all existing quick connects
-		if v, ok := d.GetOk("quick_connect_ids_associated"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, input)
+		o, n := d.GetChange("quick_connect_ids")
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		quickConnectIdsUpdateAdd := ns.Difference(os)
+		quickConnectIdsUpdateRemove := os.Difference(ns)
+
+		if len(quickConnectIdsUpdateAdd.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
+			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, &connect.AssociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateAdd),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %s", d.Id(), err)
 			}
 		}
 
-		// re-associate the quick connects
-		if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, input)
+		if len(quickConnectIdsUpdateRemove.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
+			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, &connect.DisassociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateRemove),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %s", d.Id(), err)
 			}
 		}
 	}

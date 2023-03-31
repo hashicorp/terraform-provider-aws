@@ -10,13 +10,14 @@ import (
 )
 
 func TestAccECRImageDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	registry, repo, tag := "137112412989", "amazonlinux", "latest"
 	resourceByTag := "data.aws_ecr_image.by_tag"
 	resourceByDigest := "data.aws_ecr_image.by_digest"
 	resourceByMostRecent := "data.aws_ecr_image.by_most_recent"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

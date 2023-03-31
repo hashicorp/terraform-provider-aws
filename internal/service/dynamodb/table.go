@@ -146,6 +146,10 @@ func ResourceTable() *schema.Resource {
 				Default:      dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -356,8 +360,12 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(append(dynamodb.StreamViewType_Values(), ""), false),
 			},
 			"table_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  dynamodb.TableClassStandard,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && new == dynamodb.TableClassStandard
+				},
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -501,6 +509,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.AttributeDefinitions = expandAttributes(aSet.List())
 		}
 
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			input.DeletionProtectionEnabled = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
 			input.LocalSecondaryIndexes = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
@@ -628,6 +640,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	}
 
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+
 	if table.ProvisionedThroughput != nil {
 		d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
 		d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
@@ -656,8 +670,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if table.StreamSpecification != nil {
-		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 	} else {
 		d.Set("stream_enabled", false)
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
@@ -693,7 +707,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
@@ -793,6 +807,20 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// Table Class cannot be changed concurrently with other values
+	if d.HasChange("table_class") {
+		_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+			TableName:  aws.String(d.Id()),
+			TableClass: aws.String(d.Get("table_class").(string)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: %s", d.Id(), err)
+		}
+		if _, err := waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: waiting for completion: %s", d.Id(), err)
+		}
+	}
+
 	hasTableUpdate := false
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(d.Id()),
@@ -808,6 +836,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		input.BillingMode = aws.String(billingMode)
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		hasTableUpdate = true
+		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
 	// make change when
@@ -848,11 +881,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
-	}
-
-	if d.HasChange("table_class") {
-		hasTableUpdate = true
-		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {

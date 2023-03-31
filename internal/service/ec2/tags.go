@@ -37,6 +37,19 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 	}
 }
 
+func tagSpecificationsFromTags(tags []*ec2.Tag, t string) []*ec2.TagSpecification {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(t),
+			Tags:         tags,
+		},
+	}
+}
+
 // tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
 func tagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {

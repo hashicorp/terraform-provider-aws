@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -148,6 +149,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
@@ -183,6 +185,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -239,6 +242,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		codeartifact.ServicePackage,
 		codebuild.ServicePackage,
 		codecommit.ServicePackage,
+		codegurureviewer.ServicePackage,
 		codepipeline.ServicePackage,
 		codestarconnections.ServicePackage,
 		codestarnotifications.ServicePackage,
@@ -344,6 +348,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		qldb.ServicePackage,
 		quicksight.ServicePackage,
 		ram.ServicePackage,
+		rbin.ServicePackage,
 		rds.ServicePackage,
 		redshift.ServicePackage,
 		redshiftdata.ServicePackage,
@@ -379,6 +384,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		sns.ServicePackage,
 		sqs.ServicePackage,
 		ssm.ServicePackage,
+		ssmincidents.ServicePackage,
 		ssoadmin.ServicePackage,
 		storagegateway.ServicePackage,
 		sts.ServicePackage,

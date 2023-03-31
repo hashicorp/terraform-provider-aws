@@ -95,6 +95,27 @@ func ResourceWorkspace() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"network_access_control": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix_list_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpce_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"notification_destinations": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -214,6 +235,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("network_access_control"); ok {
+		input.NetworkAccessControl = expandNetworkAccessControl(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
 	output, err := conn.CreateWorkspaceWithContext(ctx, input)
 
@@ -274,6 +299,10 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
+	}
+
+	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
 	tags := KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -352,7 +381,23 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("vpc_configuration") {
-			input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
+			if v, ok := d.Get("vpc_configuration").([]interface{}); ok {
+				if len(v) > 0 {
+					input.VpcConfiguration = expandVPCConfiguration(v)
+				} else {
+					input.RemoveVpcConfiguration = aws.Bool(true)
+				}
+			}
+		}
+
+		if d.HasChange("network_access_control") {
+			if v, ok := d.Get("network_access_control").([]interface{}); ok {
+				if len(v) > 0 {
+					input.NetworkAccessControl = expandNetworkAccessControl(v)
+				} else {
+					input.RemoveNetworkAccessConfiguration = aws.Bool(true)
+				}
+			}
 		}
 
 		_, err := conn.UpdateWorkspaceWithContext(ctx, input)
@@ -449,6 +494,42 @@ func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} 
 	}
 	if rs.SubnetIds != nil {
 		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+	}
+
+	return []interface{}{m}
+}
+
+func expandNetworkAccessControl(cfg []interface{}) *managedgrafana.NetworkAccessConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	conf := cfg[0].(map[string]interface{})
+
+	out := managedgrafana.NetworkAccessConfiguration{}
+
+	if v, ok := conf["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.PrefixListIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := conf["vpce_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.VpceIds = flex.ExpandStringSet(v)
+	}
+
+	return &out
+}
+
+func flattenNetworkAccessControl(rs *managedgrafana.NetworkAccessConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.PrefixListIds != nil {
+		m["prefix_list_ids"] = flex.FlattenStringSet(rs.PrefixListIds)
+	}
+	if rs.VpceIds != nil {
+		m["vpce_ids"] = flex.FlattenStringSet(rs.VpceIds)
 	}
 
 	return []interface{}{m}

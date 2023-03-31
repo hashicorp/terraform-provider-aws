@@ -2709,6 +2709,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)codedeploy"
     severity: WARNING
+  - id: codegurureviewer-in-func-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in func name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-test-name
+    languages:
+      - go
+    message: Include "CodeGuruReviewer" in test name
+    paths:
+      include:
+        - internal/service/codegurureviewer/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCodeGuruReviewer"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codegurureviewer-in-const-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in const name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+    severity: WARNING
+  - id: codegurureviewer-in-var-name
+    languages:
+      - go
+    message: Do not use "CodeGuruReviewer" in var name inside codegurureviewer package
+    paths:
+      include:
+        - internal/service/codegurureviewer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruReviewer"
+    severity: WARNING
   - id: codepipeline-in-func-name
     languages:
       - go
@@ -3231,19 +3289,4 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING
