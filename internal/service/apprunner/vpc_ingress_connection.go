@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_vpc_ingress_connection")
 func ResourceVPCIngressConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIngressConnectionCreate,
@@ -76,7 +77,7 @@ func ResourceVPCIngressConnection() *schema.Resource {
 func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -159,7 +160,7 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error setting ingress_vpc_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner VPC Ingress Configuration (%s): %s", arn, err))
@@ -185,7 +186,7 @@ func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner VPC Ingress Configuration (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

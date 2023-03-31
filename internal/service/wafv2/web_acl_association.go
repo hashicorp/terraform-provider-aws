@@ -18,10 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	webACLAssociationCreateTimeout = 5 * time.Minute
-)
-
+// @SDKResource("aws_wafv2_web_acl_association")
 func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,
@@ -29,7 +26,11 @@ func ResourceWebACLAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceWebACLAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -61,7 +62,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLAssociationCreateTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.AssociateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 

@@ -2,14 +2,16 @@ package lightsail
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -61,7 +64,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]`), "must begin with an alphanumeric character"),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
@@ -154,15 +157,23 @@ func ResourceInstance() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			customdiff.ValidateChange("availability_zone", func(ctx context.Context, old, new, meta any) error {
+				// The availability_zone must be in the same region as the provider region
+				if !strings.HasPrefix(new.(string), meta.(*conns.AWSClient).Region) {
+					return fmt.Errorf("availability_zone must be within the same region as provider region: %s", meta.(*conns.AWSClient).Region)
+				}
+				return nil
+			}),
+			verify.SetTagsDiff,
+		),
 	}
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	iName := d.Get("name").(string)
 
@@ -189,47 +200,36 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateInstances(&in)
+	out, err := conn.CreateInstancesWithContext(ctx, &in)
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, iName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), errors.New("No operations found for request"))
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateInstance, ResInstance, iName)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-	d.SetId(d.Get("name").(string))
-
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), errors.New("Error waiting for request operation"))
-	}
+	d.SetId(iName)
 
 	// Cannot enable add ons with creation request
 	if expandAddOnEnabled(d.Get("add_on").([]interface{})) {
 		in := lightsail.EnableAddOnInput{
-			ResourceName: aws.String(d.Get("name").(string)),
+			ResourceName: aws.String(iName),
 			AddOnRequest: expandAddOnRequest(d.Get("add_on").([]interface{})),
 		}
 
 		out, err := conn.EnableAddOnWithContext(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, d.Get("name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, iName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, d.Get("name").(string), errors.New("No operations found for request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeEnableAddOn, ResInstance, iName)
 
-		op := out.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, d.Get("name").(string), errors.New("Error waiting for request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -278,7 +278,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -294,7 +294,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	out, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
+	out, err := conn.DeleteInstanceWithContext(ctx, &lightsail.DeleteInstanceInput{
 		InstanceName:      aws.String(d.Id()),
 		ForceDeleteAddOns: aws.Bool(true),
 	})
@@ -307,12 +307,10 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResInstance, d.Id(), err)
 	}
 
-	op := out.Operations[0]
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteInstance, ResInstance, d.Id())
 
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteInstance, ResInstance, d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return nil
@@ -322,32 +320,27 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	if d.HasChange("ip_address_type") {
-		out, err := conn.SetIpAddressType(&lightsail.SetIpAddressTypeInput{
+		out, err := conn.SetIpAddressTypeWithContext(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  aws.String("Instance"),
 			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeSetIpAddressType, ResInstance, d.Id(), err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), errors.New("No operations found for request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetIpAddressType, ResInstance, d.Id())
 
-		op := out.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, d.Get("name").(string), errors.New("Error waiting for request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResInstance, d.Id(), err)
 		}
 	}
@@ -355,7 +348,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResInstance, d.Id(), err)
 		}
 	}
@@ -436,16 +429,10 @@ func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeDisableAddOn, ResInstance, name, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeDisableAddOn, ResInstance, name, errors.New("No operations found for request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDisableAddOn, ResInstance, name)
 
-		op := out.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeDisableAddOn, ResInstance, name, errors.New("Error waiting for request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -461,16 +448,10 @@ func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, name, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, name, errors.New("No operations found for request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeEnableAddOn, ResInstance, name)
 
-		op := out.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, name, errors.New("Error waiting for request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 

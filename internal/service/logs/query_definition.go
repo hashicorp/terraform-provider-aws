@@ -19,10 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_query_definition", resourceQueryDefinition)
-}
-
+// @SDKResource("aws_cloudwatch_query_definition")
 func resourceQueryDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryDefinitionPut,
@@ -163,7 +160,7 @@ func FindQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 	}
 	var output *cloudwatchlogs.QueryDefinition
 
-	err := describeQueryDefinitionsPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
+	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

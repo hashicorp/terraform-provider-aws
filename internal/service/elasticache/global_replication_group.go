@@ -36,6 +36,7 @@ const (
 	GlobalReplicationGroupMemberRoleSecondary = "SECONDARY"
 )
 
+// @SDKResource("aws_elasticache_global_replication_group")
 func ResourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -43,7 +44,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGlobalReplicationGroupUpdate,
 		DeleteWithoutTimeout: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
@@ -392,7 +393,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
-	if aws.StringValue(globalReplicationGroup.Status) == "deleting" || aws.StringValue(globalReplicationGroup.Status) == "deleted" {
+	if !d.IsNewResource() && (aws.StringValue(globalReplicationGroup.Status) == "deleting" || aws.StringValue(globalReplicationGroup.Status) == "deleted") {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalReplicationGroup.Status))
 		d.SetId("")
 		return nil

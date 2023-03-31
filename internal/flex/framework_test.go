@@ -163,7 +163,7 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 
 	type testCase struct {
 		input    types.Set
-		expected []string
+		expected Set[string]
 	}
 	tests := map[string]testCase{
 		"null": {
@@ -958,6 +958,127 @@ func TestStringValueToFrameworkLegacy(t *testing.T) {
 
 			got := StringValueToFrameworkLegacy(context.Background(), test.input)
 
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFloat64ToFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *float64
+		expected types.Float64
+	}
+	tests := map[string]testCase{
+		"valid float64": {
+			input:    aws.Float64(42.1),
+			expected: types.Float64Value(42.1),
+		},
+		"zero float64": {
+			input:    aws.Float64(0),
+			expected: types.Float64Value(0),
+		},
+		"nil float64": {
+			input:    nil,
+			expected: types.Float64Null(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Float64ToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFloat64ToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *float64
+		expected types.Float64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Float64(42.1),
+			expected: types.Float64Value(42.1),
+		},
+		"zero int64": {
+			input:    aws.Float64(0),
+			expected: types.Float64Value(0),
+		},
+		"nil int64": {
+			input:    nil,
+			expected: types.Float64Value(0),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Float64ToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestSet_Difference_strings(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		original Set[string]
+		new      Set[string]
+		expected Set[string]
+	}
+	tests := map[string]testCase{
+		"nil": {
+			original: nil,
+			new:      nil,
+			expected: nil,
+		},
+		"equal": {
+			original: Set[string]{"one"},
+			new:      Set[string]{"one"},
+			expected: nil,
+		},
+		"difference": {
+			original: Set[string]{"one", "two", "four"},
+			new:      Set[string]{"one", "two", "three"},
+			expected: Set[string]{"four"},
+		},
+		"difference_remove": {
+			original: Set[string]{"one", "two"},
+			new:      Set[string]{"one"},
+			expected: Set[string]{"two"},
+		},
+		"difference_add": {
+			original: Set[string]{"one"},
+			new:      Set[string]{"one", "two"},
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := test.original.Difference(test.new)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}

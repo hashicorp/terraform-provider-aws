@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_config")
 func ResourceFirewallConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallConfigCreate,
@@ -22,7 +23,7 @@ func ResourceFirewallConfig() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallConfigDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

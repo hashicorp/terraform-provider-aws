@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_memorydb_snapshot")
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
@@ -144,7 +145,7 @@ func ResourceSnapshot() *schema.Resource {
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSnapshotInput{
@@ -179,7 +180,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Snapshot (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -214,7 +215,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
 	d.Set("source", snapshot.Source)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)

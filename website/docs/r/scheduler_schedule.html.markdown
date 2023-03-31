@@ -107,7 +107,7 @@ The following arguments are optional:
 
 #### dead_letter_config Configuration Block
 
-* `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
+* `arn` - (Required) ARN of the SQS queue specified as the destination for the dead-letter queue.
 
 #### ecs_parameters Configuration Block
 
@@ -139,7 +139,7 @@ The following arguments are optional:
 
 ##### network_configuration Configuration Block
 
-* `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. You can specify `ENABLED` only when the `launch_type` is set to `FARGATE`. One of: `ENABLED`, `DISABLED`.
+* `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. This attribute is a boolean type, where `true` maps to `ENABLED` and `false` to `DISABLED`. You can specify `true` only when the `launch_type` is set to `FARGATE`.
 * `security_groups` - (Optional) Set of 1 to 5 Security Group ID-s to be associated with the task. These security groups must all be in the same VPC.
 * `subnets` - (Optional) Set of 1 to 16 subnets to be associated with the task. These subnets must all be in the same VPC.
 

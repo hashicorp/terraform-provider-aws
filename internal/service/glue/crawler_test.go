@@ -2,6 +2,7 @@ package glue_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -20,20 +21,21 @@ import (
 )
 
 func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTarget(rName, "table1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -57,7 +59,7 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_dynamoDBTarget(rName, "table2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -88,20 +90,21 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 }
 
 func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", "false"),
 				),
@@ -114,7 +117,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", "true"),
 				),
@@ -122,7 +125,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", "false"),
 				),
@@ -132,20 +135,21 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 }
 
 func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
 				),
@@ -158,7 +162,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 1.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "1.5"),
 				),
@@ -166,7 +170,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
 				),
@@ -176,6 +180,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 }
 
 func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -183,15 +188,15 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -216,7 +221,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -248,6 +253,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 }
 
 func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -255,15 +261,15 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "2"),
@@ -274,7 +280,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_jdbcTargetExclusions1(rName, jdbcConnectionUrl, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "1"),
@@ -291,6 +297,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 }
 
 func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -298,15 +305,15 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
@@ -320,7 +327,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, "database-name/table1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
@@ -331,7 +338,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
@@ -352,6 +359,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 }
 
 func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -359,15 +367,15 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -382,7 +390,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -394,6 +402,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 }
 
 func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -401,15 +410,15 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "false"),
@@ -424,7 +433,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -434,7 +443,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "false"),
@@ -446,6 +455,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 }
 
 func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -453,15 +463,15 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBMultiple(rName, connectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -479,7 +489,7 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -489,7 +499,7 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_mongoDBMultiple(rName, connectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
@@ -504,6 +514,7 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 }
 
 func TestAccGlueCrawler_deltaTarget(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -511,17 +522,18 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table1"),
+				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table1", "null"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
@@ -533,11 +545,12 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table2"),
+				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table2", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.create_native_delta_table", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table2"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
@@ -548,20 +561,21 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 }
 
 func TestAccGlueCrawler_s3Target(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -585,7 +599,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
@@ -616,21 +630,22 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetConnectionName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_target.0.connection_name", connectionName, "name"),
@@ -646,20 +661,21 @@ func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetSampleSize(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.sample_size", "1"),
 				),
@@ -672,7 +688,7 @@ func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3TargetSampleSize(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.sample_size", "2"),
 				),
@@ -682,20 +698,21 @@ func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetExclusions2(rName, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "2"),
@@ -706,7 +723,7 @@ func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3TargetExclusions1(rName, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "1"),
@@ -723,20 +740,21 @@ func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetEventQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.event_queue_arn", "sqs", rName),
@@ -753,20 +771,21 @@ func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
 }
 
 func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_catalogTargetDlqEventQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.event_queue_arn", "aws_sqs_queue.test", "arn"),
@@ -783,20 +802,21 @@ func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetDlqEventQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_target.0.event_queue_arn", "aws_sqs_queue.test", "arn"),
@@ -814,20 +834,21 @@ func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
 }
 
 func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "s3://bucket1", "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
@@ -839,7 +860,7 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
@@ -849,7 +870,7 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "s3://bucket1", "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
@@ -868,20 +889,21 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 }
 
 func TestAccGlueCrawler_catalogTarget(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -907,7 +929,7 @@ func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -941,20 +963,21 @@ func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 }
 
 func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
@@ -965,7 +988,7 @@ func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_catalogTargetMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", fmt.Sprintf("%s_database_0", rName)),
@@ -979,7 +1002,7 @@ func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
@@ -997,21 +1020,22 @@ func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 }
 
 func TestAccGlueCrawler_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCrawler(), resourceName),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCrawler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1020,20 +1044,21 @@ func TestAccGlueCrawler_disappears(t *testing.T) {
 }
 
 func TestAccGlueCrawler_classifiers(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_classifiersSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.0", rName+"1"),
 				),
@@ -1041,7 +1066,7 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_classifiersMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.0", rName+"1"),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.1", rName+"2"),
@@ -1050,7 +1075,7 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_classifiersSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.0", rName+"1"),
 				),
@@ -1065,6 +1090,7 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 }
 
 func TestAccGlueCrawler_Configuration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	configuration1 := `{"Version": 1.0, "CrawlerOutput": {"Tables": { "AddOrUpdateBehavior": "MergeNewColumns" }}}`
 	configuration2 := `{"Version": 1.0, "CrawlerOutput": {"Partitions": { "AddOrUpdateBehavior": "InheritFromTable" }}}`
@@ -1072,22 +1098,22 @@ func TestAccGlueCrawler_Configuration(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_configuration(rName, configuration1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					testAccCheckCrawlerConfiguration(&crawler, configuration1),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_configuration(rName, configuration2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					testAccCheckCrawlerConfiguration(&crawler, configuration2),
 				),
 			},
@@ -1099,7 +1125,7 @@ func TestAccGlueCrawler_Configuration(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_configuration(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 				),
 			},
@@ -1108,27 +1134,28 @@ func TestAccGlueCrawler_Configuration(t *testing.T) {
 }
 
 func TestAccGlueCrawler_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -1142,21 +1169,22 @@ func TestAccGlueCrawler_description(t *testing.T) {
 }
 
 func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleARNNoPath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "name"),
 				),
 			},
@@ -1170,20 +1198,21 @@ func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
 }
 
 func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleARNPath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "role", fmt.Sprintf("path/%s", rName)),
 				),
 			},
@@ -1197,20 +1226,21 @@ func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
 }
 
 func TestAccGlueCrawler_RoleName_path(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleNamePath(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "role", fmt.Sprintf("path/%s", rName)),
 				),
 			},
@@ -1224,27 +1254,28 @@ func TestAccGlueCrawler_RoleName_path(t *testing.T) {
 }
 
 func TestAccGlueCrawler_schedule(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_schedule(rName, "cron(0 1 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 1 * * ? *)"),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_schedule(rName, "cron(0 2 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 2 * * ? *)"),
 				),
 			},
@@ -1256,7 +1287,7 @@ func TestAccGlueCrawler_schedule(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
 				),
 			},
@@ -1265,20 +1296,21 @@ func TestAccGlueCrawler_schedule(t *testing.T) {
 }
 
 func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_schemaChangePolicy(rName, glue.DeleteBehaviorDeleteFromDatabase, glue.UpdateBehaviorUpdateInDatabase),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", glue.DeleteBehaviorDeleteFromDatabase),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", glue.UpdateBehaviorUpdateInDatabase),
@@ -1287,7 +1319,7 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_schemaChangePolicy(rName, glue.DeleteBehaviorLog, glue.UpdateBehaviorLog),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", glue.DeleteBehaviorLog),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", glue.UpdateBehaviorLog),
@@ -1303,27 +1335,28 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 }
 
 func TestAccGlueCrawler_tablePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", "prefix1"),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", "prefix2"),
 				),
 			},
@@ -1337,27 +1370,28 @@ func TestAccGlueCrawler_tablePrefix(t *testing.T) {
 }
 
 func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", "prefix"),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
 				),
 			},
@@ -1371,20 +1405,21 @@ func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 }
 
 func TestAccGlueCrawler_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler1, crawler2, crawler3 glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler1),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1397,7 +1432,7 @@ func TestAccGlueCrawler_tags(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler2),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -1406,7 +1441,7 @@ func TestAccGlueCrawler_tags(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler3),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1416,27 +1451,28 @@ func TestAccGlueCrawler_tags(t *testing.T) {
 }
 
 func TestAccGlueCrawler_security(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_securityConfiguration(rName, "security_configuration1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration1"),
 				),
 			},
 			{
 				Config: testAccCrawlerConfig_securityConfiguration(rName, "security_configuration2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration2"),
 				),
 			},
@@ -1450,20 +1486,21 @@ func TestAccGlueCrawler_security(t *testing.T) {
 }
 
 func TestAccGlueCrawler_lineage(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_lineage(rName, "ENABLE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
 				),
@@ -1476,14 +1513,14 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_lineage(rName, "DISABLE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "DISABLE")),
 			},
 			{
 				Config: testAccCrawlerConfig_lineage(rName, "ENABLE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
 				),
@@ -1493,20 +1530,21 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 }
 
 func TestAccGlueCrawler_lakeformation(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_lakeformation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "true"),
 				),
@@ -1519,7 +1557,7 @@ func TestAccGlueCrawler_lakeformation(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_lakeformation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "false")),
 			},
@@ -1528,20 +1566,21 @@ func TestAccGlueCrawler_lakeformation(t *testing.T) {
 }
 
 func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrawlerDestroy,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_recrawlPolicy(rName, "CRAWL_EVERYTHING"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVERYTHING"),
 				),
@@ -1554,14 +1593,14 @@ func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 			{
 				Config: testAccCrawlerConfig_recrawlPolicy(rName, "CRAWL_NEW_FOLDERS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_NEW_FOLDERS_ONLY")),
 			},
 			{
 				Config: testAccCrawlerConfig_recrawlPolicy(rName, "CRAWL_EVERYTHING"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrawlerExists(resourceName, &crawler),
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVERYTHING"),
 				),
@@ -1570,7 +1609,7 @@ func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
+func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -1582,7 +1621,7 @@ func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resou
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
-		output, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
+		output, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1594,27 +1633,29 @@ func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resou
 	}
 }
 
-func testAccCheckCrawlerDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_crawler" {
-			continue
+func testAccCheckCrawlerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_crawler" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			_, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
-		_, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckCrawlerConfiguration(crawler *glue.Crawler, acctestJSON string) resource.TestCheckFunc {
@@ -2892,7 +2933,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, connectionUrl, path1, path2))
 }
 
-func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName string) string {
+func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName, createNativeDeltaTable string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2917,12 +2958,13 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   delta_target {
-    connection_name = aws_glue_connection.test.name
-    delta_tables    = [%[3]q]
-    write_manifest  = false
+    connection_name           = aws_glue_connection.test.name
+    delta_tables              = [%[3]q]
+    write_manifest            = false
+    create_native_delta_table = %[4]s
   }
 }
-`, rName, connectionUrl, tableName))
+`, rName, connectionUrl, tableName, createNativeDeltaTable))
 }
 
 func testAccCrawlerConfig_lakeformation(rName string, use bool) string {

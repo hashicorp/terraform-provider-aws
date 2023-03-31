@@ -127,6 +127,7 @@ var (
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic_subscription")
 func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
@@ -135,7 +136,7 @@ func ResourceTopicSubscription() *schema.Resource {
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
@@ -202,7 +203,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
 		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -263,8 +264,33 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func putSubscriptionAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+	// Filter policy order matters
+	filterPolicyScope, ok := attributes[SubscriptionAttributeNameFilterPolicyScope]
+
+	if ok {
+		delete(attributes, SubscriptionAttributeNameFilterPolicyScope)
+	}
+
+	// MessageBody is backwards-compatible so it should always be applied first
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageBody {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+		if err != nil {
+			return err
+		}
+	}
+
 	for name, value := range attributes {
 		err := putSubscriptionAttribute(ctx, conn, arn, name, value)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// MessageAttributes isn't compatible with nested policies, so it should always be last
+	// in case the update also includes a change from a nested policy to a flat policy
+	if filterPolicyScope == SubscriptionFilterPolicyScopeMessageAttributes {
+		err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
 
 		if err != nil {
 			return err

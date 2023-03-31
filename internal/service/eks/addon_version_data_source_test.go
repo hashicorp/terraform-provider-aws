@@ -1,7 +1,6 @@
 package eks_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -12,18 +11,18 @@ import (
 )
 
 func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	versionDataSourceName := "data.aws_eks_addon_version.test"
 	addonDataSourceName := "data.aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy,
+		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, true),

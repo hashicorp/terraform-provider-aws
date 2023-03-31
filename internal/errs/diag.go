@@ -42,9 +42,24 @@ func NewAttributeErrorDiagnostic(path cty.Path, summary, detail string) diag.Dia
 	)
 }
 
+func NewAttributeWarningDiagnostic(path cty.Path, summary, detail string) diag.Diagnostic {
+	return withPath(
+		NewWarningDiagnostic(summary, detail),
+		path,
+	)
+}
+
 func NewErrorDiagnostic(summary, detail string) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,
+		Summary:  summary,
+		Detail:   detail,
+	}
+}
+
+func NewWarningDiagnostic(summary, detail string) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
 		Summary:  summary,
 		Detail:   detail,
 	}

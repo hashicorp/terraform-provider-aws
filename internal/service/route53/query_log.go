@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_query_log")
 func ResourceQueryLog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogCreate,
@@ -23,7 +24,7 @@ func ResourceQueryLog() *schema.Resource {
 		DeleteWithoutTimeout: resourceQueryLogDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

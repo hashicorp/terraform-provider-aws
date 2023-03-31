@@ -38,49 +38,38 @@ resource "aws_budgets_budget_action" "example" {
   }
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*"]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_policy" "example" {
   name        = "example"
   description = "My example policy"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy      = data.aws_iam_policy_document.example.json
 }
 
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "budgets.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
+    principals {
+      type        = "Service"
+      identifiers = ["budgets.${data.aws_partition.current.dns_suffix}"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_budgets_budget" "example" {
@@ -149,6 +138,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of resource.
 * `arn` - The ARN of the budget action.
 * `status` - The status of the budget action.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 

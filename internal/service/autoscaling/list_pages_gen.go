@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 )
 
-func describeInstanceRefreshesPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput, fn func(*autoscaling.DescribeInstanceRefreshesOutput, bool) bool) error {
-	return describeInstanceRefreshesPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeInstanceRefreshesPagesWithContext(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput, fn func(*autoscaling.DescribeInstanceRefreshesOutput, bool) bool) error {
+func describeInstanceRefreshesPages(ctx context.Context, conn autoscalingiface.AutoScalingAPI, input *autoscaling.DescribeInstanceRefreshesInput, fn func(*autoscaling.DescribeInstanceRefreshesOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeInstanceRefreshesWithContext(ctx, input)
 		if err != nil {
@@ -29,11 +26,7 @@ func describeInstanceRefreshesPagesWithContext(ctx context.Context, conn *autosc
 	}
 	return nil
 }
-func describeLoadBalancerTargetGroupsPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancerTargetGroupsInput, fn func(*autoscaling.DescribeLoadBalancerTargetGroupsOutput, bool) bool) error {
-	return describeLoadBalancerTargetGroupsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeLoadBalancerTargetGroupsPagesWithContext(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancerTargetGroupsInput, fn func(*autoscaling.DescribeLoadBalancerTargetGroupsOutput, bool) bool) error {
+func describeLoadBalancerTargetGroupsPages(ctx context.Context, conn autoscalingiface.AutoScalingAPI, input *autoscaling.DescribeLoadBalancerTargetGroupsInput, fn func(*autoscaling.DescribeLoadBalancerTargetGroupsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeLoadBalancerTargetGroupsWithContext(ctx, input)
 		if err != nil {
@@ -49,11 +42,7 @@ func describeLoadBalancerTargetGroupsPagesWithContext(ctx context.Context, conn 
 	}
 	return nil
 }
-func describeLoadBalancersPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancersInput, fn func(*autoscaling.DescribeLoadBalancersOutput, bool) bool) error {
-	return describeLoadBalancersPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeLoadBalancersPagesWithContext(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancersInput, fn func(*autoscaling.DescribeLoadBalancersOutput, bool) bool) error {
+func describeLoadBalancersPages(ctx context.Context, conn autoscalingiface.AutoScalingAPI, input *autoscaling.DescribeLoadBalancersInput, fn func(*autoscaling.DescribeLoadBalancersOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeLoadBalancersWithContext(ctx, input)
 		if err != nil {
@@ -69,11 +58,7 @@ func describeLoadBalancersPagesWithContext(ctx context.Context, conn *autoscalin
 	}
 	return nil
 }
-func describeWarmPoolPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeWarmPoolInput, fn func(*autoscaling.DescribeWarmPoolOutput, bool) bool) error {
-	return describeWarmPoolPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeWarmPoolPagesWithContext(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeWarmPoolInput, fn func(*autoscaling.DescribeWarmPoolOutput, bool) bool) error {
+func describeWarmPoolPages(ctx context.Context, conn autoscalingiface.AutoScalingAPI, input *autoscaling.DescribeWarmPoolInput, fn func(*autoscaling.DescribeWarmPoolOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeWarmPoolWithContext(ctx, input)
 		if err != nil {

@@ -17,21 +17,22 @@ import (
 )
 
 func TestAccSFNStateMachine_createUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	roleResourceName := "aws_iam_role.for_sfn"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -58,7 +59,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_basic(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -80,20 +81,21 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -106,7 +108,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -120,20 +122,21 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -146,7 +149,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -160,20 +163,21 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
@@ -188,20 +192,21 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -216,20 +221,21 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -242,7 +248,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -251,7 +257,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -261,20 +267,21 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_tracing(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_tracingDisable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
 				),
@@ -287,7 +294,7 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_tracingEnable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "true"),
 				),
@@ -297,21 +304,22 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
+					testAccCheckExists(ctx, resourceName, &sm),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -320,20 +328,21 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 }
 
 func TestAccSFNStateMachine_expressLogging(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStateMachineDestroy,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelError),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -347,7 +356,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelAll),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &sm),
+					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -361,7 +370,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 	})
 }
 
-func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
+func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -374,7 +383,7 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
-		output, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
+		output, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -386,28 +395,30 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 	}
 }
 
-func testAccCheckStateMachineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
+func testAccCheckStateMachineDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sfn_state_machine" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sfn_state_machine" {
+				continue
+			}
+
+			_, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Step Functions State Machine %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Step Functions State Machine %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccStateMachineConfig_base(rName string) string {
