@@ -218,27 +218,40 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	switch when {
 	case Before:
 		switch why {
-		case Create:
+		case Create, Update:
 			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			// Remove system tags.
 			tags = tags.IgnoreAWS()
 
 			tagsInContext.TagsIn = types.Some(tags)
-		case Update:
-			// If the service package has a generic resource update tags methods, call it.
-			if v, ok := sp.(interface {
-				UpdateTags(context.Context, any, string, any, any) error
-			}); ok {
-				if d.HasChange(names.AttrTagsAll) {
+
+			if why == Create {
+				break
+			}
+
+			if d.HasChange(names.AttrTagsAll) {
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 					var identifier string
-					if key := r.tags.IdentifierAttribute; key == "id" {
+					if identifierAttribute == "id" {
 						identifier = d.Id()
 					} else {
-						identifier = d.Get(key).(string)
+						identifier = d.Get(identifierAttribute).(string)
 					}
 					o, n := d.GetChange(names.AttrTagsAll)
-					err := v.UpdateTags(ctx, meta, identifier, o, n)
+
+					// If the service package has a generic resource update tags methods, call it.
+					var err error
+
+					if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, any, any) error
+					}); ok {
+						err = v.UpdateTags(ctx, meta, identifier, o, n)
+					} else if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, string, any, any) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+					}
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 						// ISO partitions may not support tagging, giving error
@@ -271,19 +284,26 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
 			if tagsInContext.TagsOut.IsNone() {
-				// If the service package has a generic resource list tags methods, call it.
-				if v, ok := sp.(interface {
-					ListTags(context.Context, any, string) error
-				}); ok {
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 					var identifier string
-
-					if key := r.tags.IdentifierAttribute; key == "id" {
+					if identifierAttribute == "id" {
 						identifier = d.Id()
 					} else {
-						identifier = d.Get(key).(string)
+						identifier = d.Get(identifierAttribute).(string)
 					}
 
-					err := v.ListTags(ctx, meta, identifier) // Sets tags in Context
+					// If the service package has a generic resource list tags methods, call it.
+					var err error
+
+					if v, ok := sp.(interface {
+						ListTags(context.Context, any, string) error
+					}); ok {
+						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+					} else if v, ok := sp.(interface {
+						ListTags(context.Context, any, string, string) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					}
 
 					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 						// ISO partitions may not support tagging, giving error

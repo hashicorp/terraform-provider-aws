@@ -149,6 +149,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
@@ -347,6 +348,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		qldb.ServicePackage,
 		quicksight.ServicePackage,
 		ram.ServicePackage,
+		rbin.ServicePackage,
 		rds.ServicePackage,
 		redshift.ServicePackage,
 		redshiftdata.ServicePackage,

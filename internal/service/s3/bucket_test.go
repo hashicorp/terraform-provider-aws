@@ -2769,33 +2769,19 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 				continue
 			}
 
-			input := &s3.HeadBucketInput{
-				Bucket: aws.String(rs.Primary.ID),
-			}
+			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 
-			// Retry for S3 eventual consistency
-			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-				_, err := conn.HeadBucketWithContext(ctx, input)
-
-				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeEquals(err, "NotFound") {
-					return nil
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return resource.RetryableError(fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID))
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.HeadBucketWithContext(ctx, input)
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("S3 Bucket %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -2812,23 +2798,12 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		provider := providerF()
+		conn := providerF().Meta().(*conns.AWSClient).S3Conn()
 
-		conn := provider.Meta().(*conns.AWSClient).S3Conn()
-		_, err := conn.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-				return fmt.Errorf("S3 bucket not found")
-			}
-			return err
-		}
-		return nil
+		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 	}
 }
 

@@ -29,12 +29,14 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 const objectCreationTimeout = 2 * time.Minute
 
-// @SDKResource("aws_s3_object")
+// @SDKResource("aws_s3_object", name="Object")
+// @Tags
 func ResourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -175,8 +177,8 @@ func ResourceObject() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -197,40 +199,14 @@ func resourceObjectCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, objectCreationTimeout, func() (interface{}, error) {
+		return FindObjectByThreePartKey(ctx, conn, bucket, key, "")
+	}, d.IsNewResource())
 
-	input := &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-
-	var resp *s3.HeadObjectOutput
-
-	err := resource.RetryContext(ctx, objectCreationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.HeadObjectWithContext(ctx, input)
-
-		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.HeadObjectWithContext(ctx, input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -240,15 +216,15 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
+	output := outputRaw.(*s3.HeadObjectOutput)
 
-	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
-	d.Set("cache_control", resp.CacheControl)
-	d.Set("content_disposition", resp.ContentDisposition)
-	d.Set("content_encoding", resp.ContentEncoding)
-	d.Set("content_language", resp.ContentLanguage)
-	d.Set("content_type", resp.ContentType)
-	metadata := flex.PointersMapToStringList(resp.Metadata)
+	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
+	d.Set("cache_control", output.CacheControl)
+	d.Set("content_disposition", output.ContentDisposition)
+	d.Set("content_encoding", output.ContentEncoding)
+	d.Set("content_language", output.ContentLanguage)
+	d.Set("content_type", output.ContentType)
+	metadata := flex.PointersMapToStringList(output.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -259,26 +235,26 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("metadata", metadata); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting metadata: %s", err)
 	}
-	d.Set("version_id", resp.VersionId)
-	d.Set("server_side_encryption", resp.ServerSideEncryption)
-	d.Set("website_redirect", resp.WebsiteRedirectLocation)
-	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
-	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("version_id", output.VersionId)
+	d.Set("server_side_encryption", output.ServerSideEncryption)
+	d.Set("website_redirect", output.WebsiteRedirectLocation)
+	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", output.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
 
-	if err := resourceObjectSetKMS(ctx, d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
+	d.Set("etag", strings.Trim(aws.StringValue(output.ETag), `"`))
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	if resp.StorageClass == nil {
+	if output.StorageClass == nil {
 		d.Set("storage_class", s3.StorageClassStandard)
 	} else {
-		d.Set("storage_class", resp.StorageClass)
+		d.Set("storage_class", output.StorageClass)
 	}
 
 	// Retry due to S3 eventual consistency
@@ -296,16 +272,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -815,4 +782,33 @@ func flattenObjectDate(t *time.Time) string {
 	}
 
 	return t.Format(time.RFC3339)
+}
+
+func FindObjectByThreePartKey(ctx context.Context, conn *s3.S3, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
+	input := &s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	if etag != "" {
+		input.IfMatch = aws.String(etag)
+	}
+
+	output, err := conn.HeadObjectWithContext(ctx, input)
+
+	if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

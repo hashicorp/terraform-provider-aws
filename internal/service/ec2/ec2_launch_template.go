@@ -1935,21 +1935,18 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
 		apiObject.HttpEndpoint = aws.String(v)
+	}
 
-		if v == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
-			// These parameters are not allowed unless HttpEndpoint is enabled.
-			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
-				apiObject.HttpTokens = aws.String(v)
-			}
+	if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+		apiObject.HttpTokens = aws.String(v)
+	}
 
-			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
-				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
-			}
+	if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+		apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+	}
 
-			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
-				apiObject.InstanceMetadataTags = aws.String(v)
-			}
-		}
+	if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
+		apiObject.InstanceMetadataTags = aws.String(v)
 	}
 
 	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {

@@ -259,7 +259,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateTriggerWithContext(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
 				return resource.RetryableError(err)
 			}
 

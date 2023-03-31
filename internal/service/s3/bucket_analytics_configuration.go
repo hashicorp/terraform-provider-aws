@@ -204,7 +204,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
