@@ -971,10 +971,10 @@ func TestAccRDSInstance_password(t *testing.T) {
 				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
-				Config: testAccInstanceConfig_password(rName, "valid-password"),
+				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
 				),
 			},
 			{
@@ -987,6 +987,13 @@ func TestAccRDSInstance_password(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 				},
+			},
+			{
+				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+				),
 			},
 		},
 	})
