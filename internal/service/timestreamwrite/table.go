@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_timestreamwrite_table")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,

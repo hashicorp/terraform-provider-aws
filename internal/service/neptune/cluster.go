@@ -31,10 +31,12 @@ const (
 
 	DefaultPort = 8182
 
-	ServerlessMinNCUs = 2.5
-	ServerlessMaxNCUs = 128.0
+	oldServerlessMinNCUs = 2.5
+	ServerlessMinNCUs    = 1.0
+	ServerlessMaxNCUs    = 128.0
 )
 
+// @SDKResource("aws_neptune_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -252,8 +254,8 @@ func ResourceCluster() *schema.Resource {
 						"min_capacity": {
 							Type:     schema.TypeFloat,
 							Optional: true,
-							Default:  ServerlessMinNCUs,
-							// Minimum capacity is 2.5 NCUs
+							Default:  oldServerlessMinNCUs,
+							// Minimum capacity is 1.0 NCU
 							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
 							ValidateFunc: validation.FloatAtLeast(ServerlessMinNCUs),
 						},

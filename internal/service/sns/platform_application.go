@@ -97,6 +97,7 @@ var (
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
+// @SDKResource("aws_sns_platform_application")
 func ResourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlatformApplicationCreate,

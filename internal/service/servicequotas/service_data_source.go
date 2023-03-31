@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_servicequotas_service")
 func DataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,

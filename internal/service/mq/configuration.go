@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mq_configuration")
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationCreate,

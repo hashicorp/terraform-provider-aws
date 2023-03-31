@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudformation_stack_set")
 func ResourceStackSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetCreate,

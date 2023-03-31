@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_globalaccelerator_endpoint_group")
 func ResourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
@@ -329,6 +330,35 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
+}
+
+func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
+	input := &globalaccelerator.DescribeEndpointGroupInput{
+		EndpointGroupArn: aws.String(arn),
+	}
+
+	return findEndpointGroup(ctx, conn, input)
+}
+
+func findEndpointGroup(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeEndpointGroupInput) (*globalaccelerator.EndpointGroup, error) {
+	output, err := conn.DescribeEndpointGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.EndpointGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.EndpointGroup, nil
 }
 
 func expandEndpointConfiguration(tfMap map[string]interface{}) *globalaccelerator.EndpointConfiguration {

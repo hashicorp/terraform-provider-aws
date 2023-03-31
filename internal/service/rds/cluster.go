@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,6 +30,7 @@ const (
 	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
+// @SDKResource("aws_rds_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -237,10 +239,42 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"master_password"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"master_user_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
+			},
 			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -430,6 +464,13 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ConflictsWith: []string{
+					// Clusters cannot be joined to an existing global cluster as part of
+					// the "restore from snapshot" operation. Trigger an error during plan
+					// to prevent an apply with unexpected results (ie. a regional
+					// cluster which is not joined to the provided global cluster).
+					"global_cluster_identifier",
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
@@ -534,8 +575,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbClusterInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -585,9 +636,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if _, ok := d.GetOk("master_password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"master_password": required field is not set`)
-		}
 		if _, ok := d.GetOk("master_username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"master_username": required field is not set`)
 		}
@@ -602,7 +650,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			S3BucketName:        aws.String(tfMap["bucket_name"].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
@@ -649,6 +696,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("kms_key_id"); ok {
 			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -752,8 +811,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbClusterInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -877,12 +946,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
 		// Note: Username and password credentials are required and valid
-		// unless the cluster is a read-replica. This also applies to clusters
-		// within a global cluster. Providing a password and/or username for
-		// a replica will result in an InvalidParameterValue error.
+		// unless the cluster password is managed by RDS, or it is a read-replica.
+		// This also applies to clusters within a global cluster.
+		// Providing a password and/or username for a replica
+		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_username"); ok {
@@ -1031,6 +1108,25 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("iops", dbc.Iops)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
@@ -1085,7 +1181,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
 			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
@@ -1179,8 +1275,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 
+		if d.HasChange("manage_master_user_password") {
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+		}
 		if d.HasChange("master_password") {
-			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+			if v, ok := d.GetOk("master_password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+				input.MasterUserPassword = aws.String(v.(string))
+			}
+		}
+		if d.HasChange("master_user_secret_kms_key_id") {
+			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			}
 		}
 
 		if d.HasChange("network_type") {
@@ -1487,7 +1593,13 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	dbCluster := output.DBClusters[0]
 
 	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+	if arn.IsARN(id) {
+		if aws.StringValue(dbCluster.DBClusterArn) != id {
+			return nil, &resource.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}

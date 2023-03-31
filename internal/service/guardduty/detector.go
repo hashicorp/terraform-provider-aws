@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_guardduty_detector")
 func ResourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,

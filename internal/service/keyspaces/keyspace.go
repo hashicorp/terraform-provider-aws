@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_keyspaces_keyspace")
 func ResourceKeyspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyspaceCreate,

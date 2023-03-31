@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_account")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -460,7 +461,7 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Organizations,
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.Account, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{organizations.AccountStatusPendingClosure},
+		Pending:      []string{organizations.AccountStatusPendingClosure, organizations.AccountStatusActive},
 		Target:       []string{},
 		Refresh:      statusAccountStatus(ctx, conn, id),
 		PollInterval: 10 * time.Second,

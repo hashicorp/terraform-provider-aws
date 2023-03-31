@@ -26,8 +26,8 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,8 +65,8 @@ func TestAccAuditManagerAssessment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func TestAccAuditManagerAssessment_disappears(t *testing.T) {
 				Config: testAccAssessmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceAssessment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceAssessment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,8 +92,8 @@ func TestAccAuditManagerAssessment_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -145,8 +145,8 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -231,7 +231,8 @@ func testAccAssessmentConfigBase(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "test" {

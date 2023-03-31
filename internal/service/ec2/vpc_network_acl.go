@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_network_acl")
 func ResourceNetworkACL() *schema.Resource {
 	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:       schema.TypeSet,

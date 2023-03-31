@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists opensearchserverless service tags.
@@ -28,14 +30,30 @@ func ListTags(ctx context.Context, conn *opensearchserverless.Client, identifier
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists opensearchserverless service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OpenSearchServerlessClient(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns opensearchserverless service tags.
-func Tags(tags tftags.KeyValueTags) []types.Tag {
-	result := make([]types.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := types.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -47,7 +65,7 @@ func Tags(tags tftags.KeyValueTags) []types.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from opensearchserverless service tags.
-func KeyValueTags(ctx context.Context, tags []types.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -57,10 +75,29 @@ func KeyValueTags(ctx context.Context, tags []types.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns opensearchserverless service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []awstypes.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets opensearchserverless service tags in Context.
+func SetTagsOut(ctx context.Context, tags []awstypes.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates opensearchserverless service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *opensearchserverless.Client, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn *opensearchserverless.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -91,4 +128,10 @@ func UpdateTags(ctx context.Context, conn *opensearchserverless.Client, identifi
 	}
 
 	return nil
+}
+
+// UpdateTags updates opensearchserverless service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).OpenSearchServerlessClient(), identifier, oldTags, newTags)
 }

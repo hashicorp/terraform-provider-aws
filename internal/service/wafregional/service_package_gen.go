@@ -5,32 +5,104 @@ package wafregional
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+		},
+		{
+			Factory:  DataSourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+		},
+		{
+			Factory:  DataSourceRule,
+			TypeName: "aws_wafregional_rule",
+		},
+		{
+			Factory:  DataSourceSubscribedRuleGroup,
+			TypeName: "aws_wafregional_subscribed_rule_group",
+		},
+		{
+			Factory:  DataSourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceByteMatchSet,
+			TypeName: "aws_wafregional_byte_match_set",
+		},
+		{
+			Factory:  ResourceGeoMatchSet,
+			TypeName: "aws_wafregional_geo_match_set",
+		},
+		{
+			Factory:  ResourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+		},
+		{
+			Factory:  ResourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+		},
+		{
+			Factory:  ResourceRegexMatchSet,
+			TypeName: "aws_wafregional_regex_match_set",
+		},
+		{
+			Factory:  ResourceRegexPatternSet,
+			TypeName: "aws_wafregional_regex_pattern_set",
+		},
+		{
+			Factory:  ResourceRule,
+			TypeName: "aws_wafregional_rule",
+		},
+		{
+			Factory:  ResourceRuleGroup,
+			TypeName: "aws_wafregional_rule_group",
+		},
+		{
+			Factory:  ResourceSizeConstraintSet,
+			TypeName: "aws_wafregional_size_constraint_set",
+		},
+		{
+			Factory:  ResourceSQLInjectionMatchSet,
+			TypeName: "aws_wafregional_sql_injection_match_set",
+		},
+		{
+			Factory:  ResourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+		},
+		{
+			Factory:  ResourceWebACLAssociation,
+			TypeName: "aws_wafregional_web_acl_association",
+		},
+		{
+			Factory:  ResourceXSSMatchSet,
+			TypeName: "aws_wafregional_xss_match_set",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "wafregional"
+	return names.WAFRegional
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

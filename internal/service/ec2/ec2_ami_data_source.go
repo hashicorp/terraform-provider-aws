@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ami")
 func DataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIRead,

@@ -33,6 +33,7 @@ const (
 	validationExceptionMessage = "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity"
 )
 
+// @SDKResource("aws_kendra_index")
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexCreate,

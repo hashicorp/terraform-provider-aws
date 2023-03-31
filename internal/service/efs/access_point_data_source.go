@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_efs_access_point")
 func DataSourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointRead,

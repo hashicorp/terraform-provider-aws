@@ -17,7 +17,7 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/sdf"
 
     ebs {
       volume_size = 20
@@ -168,7 +168,7 @@ To find out more information for an existing AMI to override the configuration, 
 
 Each `block_device_mappings` supports the following:
 
-* `device_name` - (Optional) The name of the device to mount.
+* `device_name` - (Required) The name of the device to mount.
 * `ebs` - (Optional) Configure EBS volume properties.
 * `no_device` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - (Optional) The [Instance Store Device
@@ -182,7 +182,7 @@ The `ebs` block supports the following:
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
+  This must be set with a `volume_type` of `"io1/io2/gp3"`.
 * `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
@@ -305,6 +305,10 @@ This configuration block supports the following:
       * inference
     ```
 
+* `allowed_instance_types` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+
+    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+
 * `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -321,7 +325,10 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+
+    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+
 * `instance_generations` - (Optional) List of instance generation names. Default is any generation.
 
     ```
@@ -344,6 +351,9 @@ This configuration block supports the following:
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
+* `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.

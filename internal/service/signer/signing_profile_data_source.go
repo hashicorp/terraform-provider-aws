@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_signer_signing_profile")
 func DataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningProfileRead,

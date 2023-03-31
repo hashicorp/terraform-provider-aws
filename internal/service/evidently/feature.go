@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_evidently_feature")
 func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFeatureCreate,

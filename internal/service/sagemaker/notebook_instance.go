@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_notebook_instance")
 func ResourceNotebookInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotebookInstanceCreate,

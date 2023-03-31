@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_waf_rule_group")
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,

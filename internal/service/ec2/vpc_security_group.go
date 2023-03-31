@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -379,10 +380,16 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
+	firstShortRetry := 1 * time.Minute
+	remainingRetry := d.Timeout(schema.TimeoutDelete) - firstShortRetry
+	if d.Timeout(schema.TimeoutDelete) < 1*time.Minute {
+		remainingRetry = 30 * time.Second
+	}
+
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
-		2*time.Minute, // short initial attempt followed by full length attempt
+		firstShortRetry, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
 			return conn.DeleteSecurityGroupWithContext(ctx, &ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
@@ -391,7 +398,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		errCodeDependencyViolation, errCodeInvalidGroupInUse,
 	)
 
-	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) || tfawserr.ErrCodeEquals(err, errCodeInvalidGroupInUse) {
 		if v := d.Get("revoke_rules_on_delete").(bool); v {
 			err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), true)
 
@@ -402,7 +409,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
-			d.Timeout(schema.TimeoutDelete),
+			remainingRetry,
 			func() (interface{}, error) {
 				return conn.DeleteSecurityGroupWithContext(ctx, &ec2.DeleteSecurityGroupInput{
 					GroupId: aws.String(d.Id()),

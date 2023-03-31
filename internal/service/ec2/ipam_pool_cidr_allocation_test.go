@@ -25,7 +25,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 	cidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
@@ -56,7 +56,7 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 	cidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
@@ -80,7 +80,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 	netmask := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
@@ -111,7 +111,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 	expectedCidr := "172.2.0.16/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -141,7 +141,7 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 	cidr2 := "10.1.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
@@ -184,7 +184,7 @@ func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),

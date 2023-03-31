@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_licensemanager_license_configuration")
 func ResourceLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLicenseConfigurationCreate,

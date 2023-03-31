@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dms_replication_task")
 func ResourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationTaskCreate,

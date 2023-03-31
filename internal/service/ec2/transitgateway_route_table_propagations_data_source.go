@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_route_table_propagations")
 func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTablePropagationsRead,

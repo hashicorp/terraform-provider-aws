@@ -20,11 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// Global Route53 Zone ID for Global Accelerators, exported as a
-// convenience attribute for Route53 aliases (see
-// https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
-const route53ZoneID = "Z2BJ6XQ5FK7U4H"
-
+// @SDKResource("aws_globalaccelerator_accelerator")
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -68,6 +64,10 @@ func ResourceAccelerator() *schema.Resource {
 				},
 			},
 			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dual_stack_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,8 +196,9 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("dns_name", accelerator.DnsName)
+	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
 	d.Set("enabled", accelerator.Enabled)
-	d.Set("hosted_zone_id", route53ZoneID)
+	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID())
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return diag.Errorf("setting ip_sets: %s", err)
@@ -343,6 +344,97 @@ func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
+	input := &globalaccelerator.DescribeAcceleratorInput{
+		AcceleratorArn: aws.String(arn),
+	}
+
+	return findAccelerator(ctx, conn, input)
+}
+
+func findAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
+	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Accelerator == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Accelerator, nil
+}
+
+func FindAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
+	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
+		AcceleratorArn: aws.String(arn),
+	}
+
+	return findAcceleratorAttributes(ctx, conn, input)
+}
+
+func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
+	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AcceleratorAttributes == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AcceleratorAttributes, nil
+}
+
+func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		accelerator, err := FindAcceleratorByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return accelerator, aws.StringValue(accelerator.Status), nil
+	}
+}
+
+func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
+		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
+		Refresh: statusAccelerator(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*globalaccelerator.Accelerator); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {

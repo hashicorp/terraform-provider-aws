@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_event_bus_policy")
 func ResourceBusPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusPolicyCreate,
@@ -37,7 +38,7 @@ func ResourceBusPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
+				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
 			"policy": {

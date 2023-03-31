@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipam_resource_discovery")
 func ResourceIPAMResourceDiscovery() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMResourceDiscoveryCreate,

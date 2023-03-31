@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sagemaker_space")
 func ResourceSpace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpaceCreate,

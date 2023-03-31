@@ -88,22 +88,6 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	return nil, &resource.NotFoundError{}
 }
 
-func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {
-	dbCluster, err := FindDBClusterByID(ctx, conn, arn)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if status := aws.StringValue(dbCluster.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
-		return nil, &resource.NotFoundError{
-			Message: status,
-		}
-	}
-
-	return dbCluster, nil
-}
-
 func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),

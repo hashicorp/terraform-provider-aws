@@ -20,7 +20,7 @@ func testAccStandardsControl_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
@@ -50,7 +50,7 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
@@ -68,8 +68,10 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 }
 
 func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001

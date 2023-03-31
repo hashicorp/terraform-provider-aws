@@ -20,7 +20,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -43,7 +43,7 @@ func testAccDataLakeSettings_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -65,7 +65,7 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),

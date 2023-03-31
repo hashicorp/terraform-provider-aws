@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_subnet")
 func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,

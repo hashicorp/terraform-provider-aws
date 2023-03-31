@@ -22,7 +22,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -56,7 +56,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -79,7 +79,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -125,7 +125,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -157,7 +157,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -188,7 +188,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
@@ -219,7 +219,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),

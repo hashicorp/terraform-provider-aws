@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_emrcontainers_virtual_cluster")
 func ResourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,

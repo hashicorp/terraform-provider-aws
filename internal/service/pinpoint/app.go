@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_pinpoint_app")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -308,7 +309,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn()
 
-	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Pinpoint Application: %s", d.Id())
 	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -317,7 +318,11 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

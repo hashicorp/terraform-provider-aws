@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_codedeploy_deployment_config")
 func ResourceDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentConfigCreate,

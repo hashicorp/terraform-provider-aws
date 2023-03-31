@@ -22,6 +22,7 @@ import (
 
 const scriptMutex = `aws_gamelift_script`
 
+// @SDKResource("aws_gamelift_script")
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScriptCreate,

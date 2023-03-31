@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_gateway_response")
 func ResourceGatewayResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayResponsePut,

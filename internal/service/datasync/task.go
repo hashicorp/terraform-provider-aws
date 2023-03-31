@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_datasync_task")
 func ResourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,

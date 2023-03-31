@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_inventory")
 func ResourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketInventoryPut,
@@ -276,7 +277,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
@@ -314,7 +315,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 			return resource.RetryableError(err)
 		}
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 			return resource.RetryableError(err)
 		}
 
@@ -335,7 +336,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Inventory Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

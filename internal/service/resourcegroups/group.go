@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_resourcegroups_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,

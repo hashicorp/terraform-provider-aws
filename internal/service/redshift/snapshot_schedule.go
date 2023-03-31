@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_snapshot_schedule")
 func ResourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotScheduleCreate,

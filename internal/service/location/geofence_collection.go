@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_geofence_collection")
 func ResourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGeofenceCollectionCreate,
