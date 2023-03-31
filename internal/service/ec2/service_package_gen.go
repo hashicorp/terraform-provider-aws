@@ -180,6 +180,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_attachment",
 		},
 		{
+			Factory:  DataSourceTransitGatewayAttachments,
+			TypeName: "aws_ec2_transit_gateway_attachments",
+		},
+		{
 			Factory:  DataSourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
 		},
