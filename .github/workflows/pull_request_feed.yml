@@ -2,8 +2,6 @@ name: "Pull Request Feed"
 on:
   pull_request:
     types: [opened, closed]
-env:
-  IN_MAINTAINER_LIST: true
 jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
