@@ -23,13 +23,13 @@ func DataSourceTransitGatewayAttachments() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
