@@ -1520,16 +1520,12 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_managedMasterPasswordKMSKey(rName),
+				Config: testAccClusterConfig_managedMasterPasswordKMSKey(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret_kms_key_id", "aws_kms_key.test.0", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -1549,6 +1545,18 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 					"master_user_secret_kms_key_id",
 					"skip_final_snapshot",
 				},
+			},
+			{
+				Config: testAccClusterConfig_managedMasterPasswordKMSKey(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret_kms_key_id", "aws_kms_key.test.1", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
+				),
 			},
 		},
 	})
@@ -2338,6 +2346,41 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_password(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_password(rName, "avoid-plaintext-passwords"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_password(rName, "barbarbar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "barbarbar"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -2476,13 +2519,15 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_managedMasterPasswordKMSKey(rName string) string {
+func testAccClusterConfig_managedMasterPasswordKMSKey(rName string, idx int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_kms_key" "example" {
-  description = "Terraform acc test %[1]s"
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description = "%[1]s-${count.index}"
 
   policy = <<POLICY
 {
@@ -2509,11 +2554,11 @@ resource "aws_rds_cluster" "test" {
   database_name                   = "test"
   manage_master_user_password     = true
   master_username                 = "tfacctest"
-  master_user_secret_kms_key_id   = aws_kms_key.example.arn
+  master_user_secret_kms_key_id   = aws_kms_key.test[%[2]d].arn
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
 }
-`, rName)
+`, rName, idx)
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -4358,4 +4403,17 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, rName, enableHttpEndpoint)
+}
+
+func testAccClusterConfig_password(rName, password string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = %[2]q
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot             = true
+}
+`, rName, password)
 }
