@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_vpc_attachment")
 func ResourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,

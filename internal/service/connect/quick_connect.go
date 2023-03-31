@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_quick_connect")
 func ResourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,

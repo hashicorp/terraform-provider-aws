@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_client_certificate")
 func ResourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,

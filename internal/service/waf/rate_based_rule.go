@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_waf_rate_based_rule")
 func ResourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRateBasedRuleCreate,

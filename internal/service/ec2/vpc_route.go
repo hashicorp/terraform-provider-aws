@@ -44,6 +44,7 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
+// @SDKResource("aws_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -150,8 +151,7 @@ func ResourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 				ConflictsWith: []string{
-					routeDestinationIPv6CIDRBlock, // IPv4 destinations only.
-					routeDestinationPrefixListID,  // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
+					routeDestinationPrefixListID, // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
 				},
 			},
 			"vpc_peering_connection_id": {

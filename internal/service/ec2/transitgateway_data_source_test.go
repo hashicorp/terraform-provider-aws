@@ -55,6 +55,14 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
 			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
+		"RouteTableAssociations": {
+			"Filter": testAccTransitGatewayRouteTableAssociationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTableAssociationsDataSource_basic,
+		},
+		"RouteTablePropagations": {
+			"Filter": testAccTransitGatewayRouteTablePropagationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
+		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
@@ -78,7 +86,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
@@ -113,7 +121,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),

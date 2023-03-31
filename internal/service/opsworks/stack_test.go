@@ -26,8 +26,8 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -81,8 +81,8 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -109,8 +109,8 @@ func TestAccOpsWorksStack_noVPC_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -151,8 +151,8 @@ func TestAccOpsWorksStack_noVPC_defaultAZ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -185,8 +185,8 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -235,8 +235,8 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
@@ -306,8 +306,8 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -442,8 +442,8 @@ func TestAccOpsWorksStack_windows(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_eks_node_group")
 func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,

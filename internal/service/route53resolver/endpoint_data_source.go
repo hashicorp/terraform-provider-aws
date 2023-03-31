@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_route53_resolver_endpoint")
 func DataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,

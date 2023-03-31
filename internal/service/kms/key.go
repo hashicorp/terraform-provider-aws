@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_key")
 func ResourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,

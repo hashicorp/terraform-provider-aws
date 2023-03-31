@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_main_route_table_association")
 func ResourceMainRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMainRouteTableAssociationCreate,

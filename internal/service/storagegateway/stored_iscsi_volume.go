@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_stored_iscsi_volume")
 func ResourceStorediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorediSCSIVolumeCreate,

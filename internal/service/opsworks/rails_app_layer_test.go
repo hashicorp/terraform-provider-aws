@@ -22,7 +22,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 	resourceName := "aws_opsworks_rails_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
@@ -78,7 +78,7 @@ func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
 	resourceName := "aws_opsworks_rails_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
@@ -102,7 +102,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 	resourceName := "aws_opsworks_rails_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
@@ -144,8 +144,8 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -192,7 +192,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 	resourceName := "aws_opsworks_rails_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
@@ -239,7 +239,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 	resourceName := "aws_opsworks_rails_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),

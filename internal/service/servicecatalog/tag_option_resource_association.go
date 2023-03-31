@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_tag_option_resource_association")
 func ResourceTagOptionResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagOptionResourceAssociationCreate,

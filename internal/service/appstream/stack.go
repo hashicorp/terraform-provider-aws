@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appstream_stack")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,

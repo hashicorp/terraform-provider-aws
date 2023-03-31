@@ -5,32 +5,55 @@ package gamelift
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAlias,
+			TypeName: "aws_gamelift_alias",
+		},
+		{
+			Factory:  ResourceBuild,
+			TypeName: "aws_gamelift_build",
+		},
+		{
+			Factory:  ResourceFleet,
+			TypeName: "aws_gamelift_fleet",
+		},
+		{
+			Factory:  ResourceGameServerGroup,
+			TypeName: "aws_gamelift_game_server_group",
+		},
+		{
+			Factory:  ResourceGameSessionQueue,
+			TypeName: "aws_gamelift_game_session_queue",
+		},
+		{
+			Factory:  ResourceScript,
+			TypeName: "aws_gamelift_script",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "gamelift"
+	return names.GameLift
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

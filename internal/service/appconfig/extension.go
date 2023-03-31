@@ -21,6 +21,7 @@ const (
 	ResExtension = "Extension"
 )
 
+// @SDKResource("aws_appconfig_extension")
 func ResourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,

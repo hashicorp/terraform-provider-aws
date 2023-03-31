@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftserverless_namespace")
 func ResourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
@@ -77,7 +78,7 @@ func ResourceNamespace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"userlog", "connectionlog", "useractivitylog"}, false),
+					ValidateFunc: validation.StringInSlice(redshiftserverless.LogExport_Values(), false),
 				},
 			},
 			"namespace_id": {

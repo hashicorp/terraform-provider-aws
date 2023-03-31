@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_transit_virtual_interface")
 func ResourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,

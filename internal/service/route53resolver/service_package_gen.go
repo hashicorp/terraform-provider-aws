@@ -5,32 +5,112 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceEndpoint,
+			TypeName: "aws_route53_resolver_endpoint",
+		},
+		{
+			Factory:  DataSourceFirewallConfig,
+			TypeName: "aws_route53_resolver_firewall_config",
+		},
+		{
+			Factory:  DataSourceFirewallDomainList,
+			TypeName: "aws_route53_resolver_firewall_domain_list",
+		},
+		{
+			Factory:  DataSourceFirewallRuleGroup,
+			TypeName: "aws_route53_resolver_firewall_rule_group",
+		},
+		{
+			Factory:  DataSourceFirewallRuleGroupAssociation,
+			TypeName: "aws_route53_resolver_firewall_rule_group_association",
+		},
+		{
+			Factory:  DataSourceResolverFirewallRules,
+			TypeName: "aws_route53_resolver_firewall_rules",
+		},
+		{
+			Factory:  DataSourceRule,
+			TypeName: "aws_route53_resolver_rule",
+		},
+		{
+			Factory:  DataSourceRules,
+			TypeName: "aws_route53_resolver_rules",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceConfig,
+			TypeName: "aws_route53_resolver_config",
+		},
+		{
+			Factory:  ResourceDNSSECConfig,
+			TypeName: "aws_route53_resolver_dnssec_config",
+		},
+		{
+			Factory:  ResourceEndpoint,
+			TypeName: "aws_route53_resolver_endpoint",
+		},
+		{
+			Factory:  ResourceFirewallConfig,
+			TypeName: "aws_route53_resolver_firewall_config",
+		},
+		{
+			Factory:  ResourceFirewallDomainList,
+			TypeName: "aws_route53_resolver_firewall_domain_list",
+		},
+		{
+			Factory:  ResourceFirewallRule,
+			TypeName: "aws_route53_resolver_firewall_rule",
+		},
+		{
+			Factory:  ResourceFirewallRuleGroup,
+			TypeName: "aws_route53_resolver_firewall_rule_group",
+		},
+		{
+			Factory:  ResourceFirewallRuleGroupAssociation,
+			TypeName: "aws_route53_resolver_firewall_rule_group_association",
+		},
+		{
+			Factory:  ResourceQueryLogConfig,
+			TypeName: "aws_route53_resolver_query_log_config",
+		},
+		{
+			Factory:  ResourceQueryLogConfigAssociation,
+			TypeName: "aws_route53_resolver_query_log_config_association",
+		},
+		{
+			Factory:  ResourceRule,
+			TypeName: "aws_route53_resolver_rule",
+		},
+		{
+			Factory:  ResourceRuleAssociation,
+			TypeName: "aws_route53_resolver_rule_association",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "route53resolver"
+	return names.Route53Resolver
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

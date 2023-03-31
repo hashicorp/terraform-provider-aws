@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshift_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,

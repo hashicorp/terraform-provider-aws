@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_product_portfolio_association")
 func ResourceProductPortfolioAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductPortfolioAssociationCreate,

@@ -73,89 +73,10 @@ endif
 
 default: build
 
+# Please keep targets in alphabetical order
+
 build: fmtcheck
 	$(GO_VER) install
-
-gen:
-	rm -f .github/labeler-issue-triage.yml
-	rm -f .github/labeler-pr-triage.yml
-	rm -f infrastructure/repository/labels-service.tf
-	rm -f internal/conns/*_gen.go
-	rm -f internal/provider/*_gen.go
-	rm -f internal/service/**/*_gen.go
-	rm -f internal/sweep/sweep_test.go
-	rm -f names/caps.md
-	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
-	rm -f website/docs/guides/custom-service-endpoints.html.md
-	rm -f .ci/.semgrep-caps-aws-ec2.yml
-	rm -f .ci/.semgrep-configs.yml
-	rm -f .ci/.semgrep-service-name*.yml
-	$(GO_VER) generate ./...
-
-servicepackages:
-	rm -f internal/service/**/service_package_gen.go
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
-
-sweep:
-	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
-	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
-	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
-
-test: fmtcheck
-	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
-
-testacc: fmtcheck
-	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
-		echo ""; \
-		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
-		echo ""; \
-		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
-		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
-		echo ""; \
-		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
-		exit 1; \
-	fi
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
-
-t: fmtcheck
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
-
-testacc-lint:
-	@echo "Checking acceptance tests with terrafmt"
-	find $(SVC_DIR) -type f -name '*_test.go' \
-    | sort -u \
-    | xargs -I {} terrafmt diff --check --fmtcompat {}
-
-testacc-lint-fix:
-	@echo "Fixing acceptance tests with terrafmt"
-	find $(SVC_DIR) -type f -name '*_test.go' \
-	| sort -u \
-	| xargs -I {} terrafmt fmt  --fmtcompat {}
-
-fmt:
-	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
-
-fumpt:
-	@echo "==> Fixing source code with gofumpt..."
-	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
-
-# Currently required by tf-deploy compile
-fmtcheck:
-	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
-
-gencheck:
-	@echo "==> Checking generated source code..."
-	@$(MAKE) gen
-	@git diff --compact-summary --exit-code || \
-		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
-
-generate-changelog:
-	@echo "==> Generating changelog..."
-	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -189,7 +110,48 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-lint: golangci-lint providerlint importlint
+fmt:
+	@echo "==> Fixing source code with gofmt..."
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+# Currently required by tf-deploy compile
+fmtcheck:
+	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+
+fumpt:
+	@echo "==> Fixing source code with gofumpt..."
+	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+gen:
+	rm -f .github/labeler-issue-triage.yml
+	rm -f .github/labeler-pr-triage.yml
+	rm -f infrastructure/repository/labels-service.tf
+	rm -f internal/conns/*_gen.go
+	rm -f internal/provider/*_gen.go
+	rm -f internal/service/**/*_gen.go
+	rm -f internal/sweep/sweep_test.go
+	rm -f names/caps.md
+	rm -f names/*_gen.go
+	rm -f website/allowed-subcategories.txt
+	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .ci/.semgrep-caps-aws-ec2.yml
+	rm -f .ci/.semgrep-configs.yml
+	rm -f .ci/.semgrep-service-name*.yml
+	$(GO_VER) generate ./...
+	# Generate service package data last as it may depend on output of earlier generators.
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
+	$(GO_VER) generate ./internal/generate/servicepackages
+
+gencheck:
+	@echo "==> Checking generated source code..."
+	@$(MAKE) gen
+	@git diff --compact-summary --exit-code || \
+		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+
+generate-changelog:
+	@echo "==> Generating changelog..."
+	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 gh-workflows-lint:
 	@echo "==> Checking github workflows with actionlint..."
@@ -201,6 +163,12 @@ golangci-lint:
 		--config .ci/.golangci.yml \
 		--config .ci/.golangci2.yml \
 		./$(PKG_NAME)/...
+
+importlint:
+	@echo "==> Checking source code with importlint..."
+	@impi --local . --scheme stdThirdPartyLocal ./internal/...
+
+lint: golangci-lint providerlint importlint
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -229,9 +197,107 @@ providerlint:
 		-XS002=false \
 		./internal/service/... ./internal/provider/...
 
-importlint:
-	@echo "==> Checking source code with importlint..."
-	@impi --local . --scheme stdThirdPartyLocal ./internal/...
+sanity:
+	@echo "==> Sanity Check (48 tests of Top 30 resources)"
+	@echo "==> NOTE: This is meant to find big problems with the provider as a whole."
+	@echo "==> This is not an exhaustive test."
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/logs/... \
+		./internal/service/ec2/... \
+		./internal/service/ecs/... \
+		./internal/service/elbv2/... \
+		./internal/service/iam/... \
+		./internal/service/kms/... \
+		./internal/service/lambda/... \
+		./internal/service/meta/... \
+		./internal/service/route53/... \
+		./internal/service/s3/... \
+		./internal/service/secretsmanager/... \
+		./internal/service/sts/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccSecretsManagerSecret_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
+
+semall:
+	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
+	@semgrep --error --metrics=off \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
+
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
+
+servicepackages:
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
+	$(GO_VER) generate ./internal/generate/servicepackages
+
+skaff:
+	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
+
+sweep:
+	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
+	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
+
+t: fmtcheck
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+test: fmtcheck
+	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
+
+test-compile:
+	@if [ "$(TEST)" = "./..." ]; then \
+		echo "ERROR: Set TEST to a specific package. For example,"; \
+		echo "  make test-compile TEST=./$(PKG_NAME)"; \
+		exit 1; \
+	fi
+	$(GO_VER) test -c $(TEST) $(TESTARGS)
+
+testacc: fmtcheck
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
+		echo ""; \
+		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
+		echo ""; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
+		echo ""; \
+		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
+		exit 1; \
+	fi
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+testacc-lint:
+	@echo "Checking acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+    | sort -u \
+    | xargs -I {} terrafmt diff --check --fmtcompat {}
+
+testacc-lint-fix:
+	@echo "Fixing acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+	| sort -u \
+	| xargs -I {} terrafmt fmt  --fmtcompat {}
+
+testacc-short: fmtcheck
+	@echo "Running acceptance tests with -short flag"
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+tfsdk2fw:
+	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
@@ -245,13 +311,7 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
-test-compile:
-	@if [ "$(TEST)" = "./..." ]; then \
-		echo "ERROR: Set TEST to a specific package. For example,"; \
-		echo "  make test-compile TEST=./$(PKG_NAME)"; \
-		exit 1; \
-	fi
-	$(GO_VER) test -c $(TEST) $(TESTARGS)
+ts: testacc-short
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
@@ -281,70 +341,45 @@ website-lint-fix:
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-semgrep:
-	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
-
-semall:
-	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep --error --metrics=off \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep.yml \
-		--config .ci/.semgrep-caps-aws-ec2.yml \
-		--config .ci/.semgrep-configs.yml \
-		--config .ci/.semgrep-service-name0.yml \
-		--config .ci/.semgrep-service-name1.yml \
-		--config .ci/.semgrep-service-name2.yml \
-		--config .ci/.semgrep-service-name3.yml \
-		--config .ci/semgrep/ \
-		--config 'r/dgryski.semgrep-go.badnilguard' \
-		--config 'r/dgryski.semgrep-go.errnilcheck' \
-		--config 'r/dgryski.semgrep-go.marshaljson' \
-		--config 'r/dgryski.semgrep-go.nilerr' \
-		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
-
-skaff:
-	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
-
-tfsdk2fw:
-	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
-
 yamllint:
 	@yamllint .
 
+# Please keep targets in alphabetical order
 .PHONY: \
 	build \
-	gen \
-	servicepackages \
-	sweep \
-	t \
-	test \
-	testacc \
-	testacc-lint \
-	testacc-lint-fix \
-	fmt \
-	fumpt \
-	fmtcheck \
-	gencheck \
-	generate-changelog \
 	depscheck \
 	docs-lint \
 	docs-lint-fix \
 	docscheck \
-	lint \
+	fmt \
+	fmtcheck \
+	fumpt \
+	gen \
+	gencheck \
+	generate-changelog \
 	gh-workflows-lint \
 	golangci-lint \
-	providerlint \
 	importlint \
-	tools \
+	lint \
+	providerlint \
+	sanity \
+	semall \
+	semgrep \
+	servicepackages \
+	skaff \
+	sweep \
+	t \
+	test \
 	test-compile \
+	testacc \
+	testacc-lint \
+	testacc-lint-fix \
+	testacc-short \
+	tfsdk2fw \
+	tools \
+	ts \
 	website-link-check \
 	website-link-check-ghrc \
 	website-lint \
 	website-lint-fix \
-	semgrep \
-	semall \
-	skaff \
-	tfsdk2fw \
 	yamllint

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_response_headers_policy")
 func ResourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponseHeadersPolicyCreate,

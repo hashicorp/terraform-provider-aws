@@ -20,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_placement_group")
 func ResourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
 		ReadWithoutTimeout:   resourcePlacementGroupRead,
 		UpdateWithoutTimeout: resourcePlacementGroupUpdate,
 		DeleteWithoutTimeout: resourcePlacementGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -54,6 +56,7 @@ func ResourcePlacementGroup() *schema.Resource {
 			},
 			"spread_level": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
@@ -96,7 +99,6 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SpreadLevel = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
 	_, err := conn.CreatePlacementGroupWithContext(ctx, input)
 
 	if err != nil {
@@ -132,6 +134,14 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("name", pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
@@ -148,16 +158,6 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return diags
 }

@@ -21,8 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_iam_server_certificate", name="Server Certificate")
+// @Tags
 func ResourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,
@@ -87,8 +90,8 @@ func ResourceServerCertificate() *schema.Resource {
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"upload_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -102,14 +105,14 @@ func ResourceServerCertificate() *schema.Resource {
 func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	sslCertName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	tags := GetTagsIn(ctx)
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
+		Tags:                  tags,
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -118,10 +121,6 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("path"); ok {
 		input.Path = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.UploadServerCertificateWithContext(ctx, input)
@@ -143,7 +142,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := serverCertificateUpdateTags(ctx, conn, sslCertName, nil, tags)
+		err := serverCertificateUpdateTags(ctx, conn, sslCertName, nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -162,8 +161,6 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cert, err := FindServerCertificateByName(ctx, conn, d.Get("name").(string))
 
@@ -196,16 +193,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("upload_date", nil)
 	}
 
-	tags := KeyValueTags(ctx, cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cert.Tags)
 
 	return diags
 }

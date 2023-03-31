@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudformation_stack")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,

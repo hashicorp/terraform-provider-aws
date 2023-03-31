@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_configuration_aggregator")
 func ResourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_vpc_connector")
 func ResourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,

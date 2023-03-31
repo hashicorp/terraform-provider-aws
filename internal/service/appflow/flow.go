@@ -24,6 +24,7 @@ const (
 	AttrObjectPath = "object_path"
 )
 
+// @SDKResource("aws_appflow_flow")
 func ResourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
@@ -382,6 +383,10 @@ func ResourceFlow() *schema.Resource {
 																		},
 																	},
 																},
+															},
+															"preserve_source_data_typing": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
 													},
@@ -1725,6 +1730,10 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.S3OutputF
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["preserve_source_data_typing"].(bool); ok {
+		a.PreserveSourceDataTyping = aws.Bool(v)
+	}
+
 	return a
 }
 
@@ -2827,6 +2836,10 @@ func flattenS3OutputFormatConfig(s3OutputFormatConfig *appflow.S3OutputFormatCon
 
 	if v := s3OutputFormatConfig.PrefixConfig; v != nil {
 		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
+	}
+
+	if v := s3OutputFormatConfig.PreserveSourceDataTyping; v != nil {
+		m["preserve_source_data_typing"] = aws.BoolValue(v)
 	}
 
 	return m

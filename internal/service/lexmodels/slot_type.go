@@ -25,6 +25,7 @@ const (
 	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_slot_type")
 func ResourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSlotTypeCreate,

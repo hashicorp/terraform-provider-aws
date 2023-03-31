@@ -32,6 +32,7 @@ type ssmClient interface {
 	SSMClient() *ssm.Client
 }
 
+// @SDKResource("aws_ssm_default_patch_baseline")
 func ResourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultPatchBaselineCreate,

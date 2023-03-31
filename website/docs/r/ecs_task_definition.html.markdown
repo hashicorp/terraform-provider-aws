@@ -330,6 +330,7 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
+* `arn_without_revision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
 * `revision` - Revision of the task in a particular family.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

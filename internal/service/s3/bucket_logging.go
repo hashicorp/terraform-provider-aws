@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_logging")
 func ResourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLoggingCreate,

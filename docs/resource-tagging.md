@@ -229,7 +229,7 @@ tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]in
 /* ... creation steps ... */
 
 if len(tags) > 0 {
-  if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+  if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
     return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
@@ -282,7 +282,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags, err := ListTags(conn, arn.String())
+tags, err := ListTags(ctx, conn, arn.String())
 
 if err != nil {
   return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
@@ -306,7 +306,7 @@ In the resource `Update` operation, implement the logic to handle tagging update
 ```go
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
-  if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+  if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
     return fmt.Errorf("updating tags: %w", err)
   }
 }
@@ -323,7 +323,7 @@ if d.HasChangesExcept("tags", "tags_all") {
     SetAsDefault:   aws.Bool(true),
   }
 
-  if _, err := conn.CreatePolicyVersion(request); err != nil {
+  if _, err := conn.CreatePolicyVersionWithContext(ctx, request); err != nil {
       return fmt.Errorf("updating IAM policy (%s): %w", d.Id(), err)
   }
 }
@@ -337,20 +337,21 @@ In the resource testing, implement a new test named `_tags` with associated conf
 
 ```go
 func TestAccEKSCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
   var cluster1, cluster2, cluster3 eks.Cluster
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckClusterDestroy,
+    CheckDestroy:             testAccCheckClusterDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster1),
+          testAccCheckClusterExists(ctx, resourceName, &cluster1),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
         ),
@@ -363,7 +364,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster2),
+          testAccCheckClusterExists(ctx, resourceName, &cluster2),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -372,7 +373,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster3),
+          testAccCheckClusterExists(ctx, resourceName, &cluster3),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
         ),
