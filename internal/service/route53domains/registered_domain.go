@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53domains_registered_domain")
 func ResourceRegisteredDomain() *schema.Resource {
 	contactSchema := &schema.Schema{
 		Type:     schema.TypeList,

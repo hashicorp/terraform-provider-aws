@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elasticache_replication_group")
 func ResourceReplicationGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

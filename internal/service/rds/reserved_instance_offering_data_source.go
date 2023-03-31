@@ -18,6 +18,7 @@ const (
 	ResNameReservedInstanceOffering = "Reserved Instance Offering"
 )
 
+// @SDKDataSource("aws_rds_reserved_instance_offering")
 func DataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReservedOfferingRead,

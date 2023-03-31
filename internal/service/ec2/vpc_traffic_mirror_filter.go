@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_traffic_mirror_filter")
 func ResourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterCreate,

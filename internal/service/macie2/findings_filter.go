@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie2_findings_filter")
 func ResourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingsFilterCreate,
@@ -193,13 +194,15 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	resp, err := conn.GetFindingsFilterWithContext(ctx, input)
+
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error reading Macie FindingsFilter (%s): %w", d.Id(), err))
 	}
 

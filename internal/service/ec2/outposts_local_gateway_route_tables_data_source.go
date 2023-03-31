@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_local_gateway_route_tables")
 func DataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayRouteTablesRead,

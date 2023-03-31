@@ -24,9 +24,9 @@ func testAccPortfolioShare_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -77,10 +77,10 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -120,10 +120,10 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -160,9 +160,9 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),

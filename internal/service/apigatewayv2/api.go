@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apigatewayv2_api")
 func ResourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,

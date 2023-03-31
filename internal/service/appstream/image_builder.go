@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appstream_image_builder")
 func ResourceImageBuilder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBuilderCreate,

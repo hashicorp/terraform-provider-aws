@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_usage_plan_key")
 func ResourceUsagePlanKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanKeyCreate,

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codepipeline_custom_action_type")
 func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,

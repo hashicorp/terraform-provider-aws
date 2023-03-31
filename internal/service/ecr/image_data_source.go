@@ -15,6 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// @SDKDataSource("aws_ecr_image")
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRead,

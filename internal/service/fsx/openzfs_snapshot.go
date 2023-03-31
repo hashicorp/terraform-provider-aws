@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_fsx_openzfs_snapshot")
 func ResourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenzfsSnapshotCreate,

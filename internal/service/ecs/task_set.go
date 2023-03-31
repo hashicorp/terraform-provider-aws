@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecs_task_set")
 func ResourceTaskSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskSetCreate,

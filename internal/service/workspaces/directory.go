@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_workspaces_directory")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,

@@ -28,12 +28,14 @@ func targets() []string {
 	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"}
 }
 
+// @SDKResource("aws_glue_crawler")
 func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCrawlerCreate,
 		ReadWithoutTimeout:   resourceCrawlerRead,
 		UpdateWithoutTimeout: resourceCrawlerUpdate,
 		DeleteWithoutTimeout: resourceCrawlerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -78,6 +80,11 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
+			"classifiers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"configuration": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -87,11 +94,6 @@ func ResourceCrawler() *schema.Resource {
 					return json
 				},
 				ValidateFunc: validation.StringIsJSON,
-			},
-			"classifiers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"database_name": {
 				Type:     schema.TypeString,
@@ -107,6 +109,10 @@ func ResourceCrawler() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
 							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"create_native_delta_table": {
+							Type:     schema.TypeBool,
 							Optional: true,
 						},
 						"delta_tables": {
@@ -279,36 +285,6 @@ func ResourceCrawler() *schema.Resource {
 					return old == strings.TrimPrefix(newARN.Resource, "role/")
 				},
 			},
-			"schedule": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"schema_change_policy": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      glue.DeleteBehaviorDeprecateInDatabase,
-							ValidateFunc: validation.StringInSlice(glue.DeleteBehavior_Values(), false),
-						},
-						"update_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      glue.UpdateBehaviorUpdateInDatabase,
-							ValidateFunc: validation.StringInSlice(glue.UpdateBehavior_Values(), false),
-						},
-					},
-				},
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"s3_target": {
 				Type:         schema.TypeList,
 				Optional:     true,
@@ -347,6 +323,36 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
+			"schedule": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"schema_change_policy": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_behavior": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.DeleteBehaviorDeprecateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.DeleteBehavior_Values(), false),
+						},
+						"update_behavior": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.UpdateBehaviorUpdateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.UpdateBehavior_Values(), false),
+						},
+					},
+				},
+			},
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"table_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -377,7 +383,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
 				return resource.RetryableError(err)
 			}
 
@@ -404,6 +410,188 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(name)
 
 	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
+}
+
+func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Crawler (%s): %s", d.Id(), err)
+	}
+
+	crawlerARN := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "glue",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
+	}.String()
+	d.Set("arn", crawlerARN)
+	d.Set("name", crawler.Name)
+	d.Set("database_name", crawler.DatabaseName)
+	d.Set("role", crawler.Role)
+	d.Set("configuration", crawler.Configuration)
+	d.Set("description", crawler.Description)
+	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
+	d.Set("schedule", "")
+	if crawler.Schedule != nil {
+		d.Set("schedule", crawler.Schedule.ScheduleExpression)
+	}
+	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
+	}
+	d.Set("table_prefix", crawler.TablePrefix)
+
+	if crawler.SchemaChangePolicy != nil {
+		if err := d.Set("schema_change_policy", flattenCrawlerSchemaChangePolicy(crawler.SchemaChangePolicy)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting schema_change_policy: %s", err)
+		}
+	}
+
+	if crawler.Targets != nil {
+		if err := d.Set("dynamodb_target", flattenDynamoDBTargets(crawler.Targets.DynamoDBTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dynamodb_target: %s", err)
+		}
+
+		if err := d.Set("jdbc_target", flattenJDBCTargets(crawler.Targets.JdbcTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting jdbc_target: %s", err)
+		}
+
+		if err := d.Set("s3_target", flattenS3Targets(crawler.Targets.S3Targets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting s3_target: %s", err)
+		}
+
+		if err := d.Set("catalog_target", flattenCatalogTargets(crawler.Targets.CatalogTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting catalog_target: %s", err)
+		}
+
+		if err := d.Set("mongodb_target", flattenMongoDBTargets(crawler.Targets.MongoDBTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting mongodb_target: %s", err)
+		}
+
+		if err := d.Set("delta_target", flattenDeltaTargets(crawler.Targets.DeltaTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting delta_target: %s", err)
+		}
+	}
+
+	tags, err := ListTags(ctx, conn, crawlerARN)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Crawler (%s): %s", crawlerARN, err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	}
+
+	if err := d.Set("lineage_configuration", flattenCrawlerLineageConfiguration(crawler.LineageConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lineage_configuration: %s", err)
+	}
+
+	if err := d.Set("lake_formation_configuration", flattenLakeFormationConfiguration(crawler.LakeFormationConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lake_formation_configuration: %s", err)
+	}
+
+	if err := d.Set("recrawl_policy", flattenCrawlerRecrawlPolicy(crawler.RecrawlPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting recrawl_policy: %s", err)
+	}
+
+	return diags
+}
+
+func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	glueConn := meta.(*conns.AWSClient).GlueConn()
+	name := d.Get("name").(string)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		updateCrawlerInput, err := updateCrawlerInput(d, name)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
+		}
+
+		// Retry for IAM eventual consistency
+		err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+			_, err := glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
+			if err != nil {
+				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(ctx, glueConn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
+		}
+	}
+
+	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
+}
+
+func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	glueConn := meta.(*conns.AWSClient).GlueConn()
+
+	log.Printf("[DEBUG] Deleting Glue Crawler: %s", d.Id())
+	_, err := glueConn.DeleteCrawlerWithContext(ctx, &glue.DeleteCrawlerInput{
+		Name: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Crawler (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
@@ -736,8 +924,9 @@ func expandDeltaTargets(targets []interface{}) []*glue.DeltaTarget {
 
 func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	target := &glue.DeltaTarget{
-		DeltaTables:   flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
-		WriteManifest: aws.Bool(cfg["write_manifest"].(bool)),
+		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
+		DeltaTables:            flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		WriteManifest:          aws.Bool(cfg["write_manifest"].(bool)),
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -745,168 +934,6 @@ func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	}
 
 	return target
-}
-
-func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	glueConn := meta.(*conns.AWSClient).GlueConn()
-	name := d.Get("name").(string)
-
-	if d.HasChangesExcept("tags", "tags_all") {
-		updateCrawlerInput, err := updateCrawlerInput(d, name)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
-		}
-
-		// Retry for IAM eventual consistency
-		err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-			_, err := glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
-			if err != nil {
-				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-					return resource.RetryableError(err)
-				}
-
-				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-					return resource.RetryableError(err)
-				}
-
-				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, glueConn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
-	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
-}
-
-func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Crawler (%s): %s", d.Id(), err)
-	}
-
-	crawlerARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
-	}.String()
-	d.Set("arn", crawlerARN)
-	d.Set("name", crawler.Name)
-	d.Set("database_name", crawler.DatabaseName)
-	d.Set("role", crawler.Role)
-	d.Set("configuration", crawler.Configuration)
-	d.Set("description", crawler.Description)
-	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
-	d.Set("schedule", "")
-	if crawler.Schedule != nil {
-		d.Set("schedule", crawler.Schedule.ScheduleExpression)
-	}
-	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
-	}
-	d.Set("table_prefix", crawler.TablePrefix)
-
-	if crawler.SchemaChangePolicy != nil {
-		if err := d.Set("schema_change_policy", flattenCrawlerSchemaChangePolicy(crawler.SchemaChangePolicy)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting schema_change_policy: %s", err)
-		}
-	}
-
-	if crawler.Targets != nil {
-		if err := d.Set("dynamodb_target", flattenDynamoDBTargets(crawler.Targets.DynamoDBTargets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dynamodb_target: %s", err)
-		}
-
-		if err := d.Set("jdbc_target", flattenJDBCTargets(crawler.Targets.JdbcTargets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting jdbc_target: %s", err)
-		}
-
-		if err := d.Set("s3_target", flattenS3Targets(crawler.Targets.S3Targets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting s3_target: %s", err)
-		}
-
-		if err := d.Set("catalog_target", flattenCatalogTargets(crawler.Targets.CatalogTargets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting catalog_target: %s", err)
-		}
-
-		if err := d.Set("mongodb_target", flattenMongoDBTargets(crawler.Targets.MongoDBTargets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting mongodb_target: %s", err)
-		}
-
-		if err := d.Set("delta_target", flattenDeltaTargets(crawler.Targets.DeltaTargets)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting delta_target: %s", err)
-		}
-	}
-
-	tags, err := ListTags(ctx, conn, crawlerARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Crawler (%s): %s", crawlerARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	if err := d.Set("lineage_configuration", flattenCrawlerLineageConfiguration(crawler.LineageConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lineage_configuration: %s", err)
-	}
-
-	if err := d.Set("lake_formation_configuration", flattenLakeFormationConfiguration(crawler.LakeFormationConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lake_formation_configuration: %s", err)
-	}
-
-	if err := d.Set("recrawl_policy", flattenCrawlerRecrawlPolicy(crawler.RecrawlPolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting recrawl_policy: %s", err)
-	}
-
-	return diags
 }
 
 func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
@@ -995,29 +1022,13 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 	for _, deltaTarget := range deltaTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(deltaTarget.ConnectionName)
+		attrs["create_native_delta_table"] = aws.BoolValue(deltaTarget.CreateNativeDeltaTable)
 		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
 		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
 
 		result = append(result, attrs)
 	}
 	return result
-}
-
-func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	glueConn := meta.(*conns.AWSClient).GlueConn()
-
-	log.Printf("[DEBUG] deleting Glue Crawler: %s", d.Id())
-	_, err := glueConn.DeleteCrawlerWithContext(ctx, &glue.DeleteCrawlerInput{
-		Name: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Glue Crawler: %s", err)
-	}
-	return diags
 }
 
 func flattenCrawlerSchemaChangePolicy(cfg *glue.SchemaChangePolicy) []map[string]interface{} {

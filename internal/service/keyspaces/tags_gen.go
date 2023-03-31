@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/keyspaces/keyspacesiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists keyspaces service tags.
@@ -26,6 +28,22 @@ func ListTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier 
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists keyspaces service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -57,10 +75,30 @@ func KeyValueTags(ctx context.Context, tags []*keyspaces.Tag) tftags.KeyValueTag
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns keyspaces service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*keyspaces.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets keyspaces service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*keyspaces.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates keyspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -91,4 +129,10 @@ func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifie
 	}
 
 	return nil
+}
+
+// UpdateTags updates keyspaces service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(), identifier, oldTags, newTags)
 }

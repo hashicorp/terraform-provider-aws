@@ -18,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpc_endpoint_service")
 func DataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,

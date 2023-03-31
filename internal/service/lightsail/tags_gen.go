@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/lightsail/lightsailiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -40,10 +42,30 @@ func KeyValueTags(ctx context.Context, tags []*lightsail.Tag) tftags.KeyValueTag
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns lightsail service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*lightsail.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets lightsail service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*lightsail.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates lightsail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn lightsailiface.LightsailAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn lightsailiface.LightsailAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -74,4 +96,10 @@ func UpdateTags(ctx context.Context, conn lightsailiface.LightsailAPI, identifie
 	}
 
 	return nil
+}
+
+// UpdateTags updates lightsail service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LightsailConn(), identifier, oldTags, newTags)
 }

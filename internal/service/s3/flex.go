@@ -238,7 +238,7 @@ func ExpandLifecycleRuleFilter(ctx context.Context, l []interface{}) *s3.Lifecyc
 		result.And = ExpandLifecycleRuleFilterAndOperator(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v >= 0 {
 		result.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 

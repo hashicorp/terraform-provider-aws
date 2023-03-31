@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_globalaccelerator_listener")
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -181,6 +182,35 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+	input := &globalaccelerator.DescribeListenerInput{
+		ListenerArn: aws.String(arn),
+	}
+
+	return findListener(ctx, conn, input)
+}
+
+func findListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
+	output, err := conn.DescribeListenerWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Listener == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Listener, nil
 }
 
 func expandPortRange(tfMap map[string]interface{}) *globalaccelerator.PortRange {

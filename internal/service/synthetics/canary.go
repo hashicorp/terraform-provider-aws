@@ -27,6 +27,7 @@ import (
 
 const canaryMutex = `aws_synthetics_canary`
 
+// @SDKResource("aws_synthetics_canary")
 func ResourceCanary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCanaryCreate,

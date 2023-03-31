@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_category")
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostCategoryCreate,
@@ -467,6 +468,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
+			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
 			Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
 			RuleVersion:     aws.String(d.Get("rule_version").(string)),
 		}
@@ -477,10 +479,6 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange("split_charge_rule") {
 			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
-		}
-
-		if d.HasChange("effective_start") {
-			input.EffectiveStart = aws.String(d.Get("effective_start").(string))
 		}
 
 		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)

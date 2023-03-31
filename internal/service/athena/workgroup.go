@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_athena_workgroup")
 func ResourceWorkGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkGroupCreate,

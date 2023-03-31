@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_elastic_beanstalk_application")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -153,7 +154,7 @@ func resourceApplicationDescriptionUpdate(ctx context.Context, beanstalkConn *el
 func resourceApplicationAppVersionLifecycleUpdate(ctx context.Context, beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
 	name := d.Get("name").(string)
 	appversion_lifecycles := d.Get("appversion_lifecycle").([]interface{})
-	var appversion_lifecycle map[string]interface{} = nil
+	var appversion_lifecycle map[string]interface{}
 	if len(appversion_lifecycles) == 1 {
 		appversion_lifecycle = appversion_lifecycles[0].(map[string]interface{})
 	}

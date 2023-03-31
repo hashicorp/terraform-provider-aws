@@ -2,14 +2,17 @@ package batch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_batch_compute_environment")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -90,7 +94,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							MaxItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"image_id_override": {
@@ -498,6 +502,141 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	}
 
 	return nil
+}
+
+func FindComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
+	input := &batch.DescribeComputeEnvironmentsInput{
+		ComputeEnvironments: aws.StringSlice([]string{name}),
+	}
+
+	output, err := findComputeEnvironmentDetail(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == batch.CEStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findComputeEnvironmentDetail(ctx context.Context, conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
+	output, err := conn.DescribeComputeEnvironmentsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ComputeEnvironments) == 0 || output.ComputeEnvironments[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ComputeEnvironments); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ComputeEnvironments[0], nil
+}
+
+func statusComputeEnvironment(ctx context.Context, conn *batch.Batch, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		computeEnvironmentDetail, err := FindComputeEnvironmentDetailByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return computeEnvironmentDetail, aws.StringValue(computeEnvironmentDetail.Status), nil
+	}
+}
+
+func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{batch.CEStatusCreating},
+		Target:  []string{batch.CEStatusValid},
+		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		if status := aws.StringValue(output.Status); status == batch.CEStatusInvalid {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{batch.CEStatusDeleting},
+		Target:  []string{},
+		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		if status := aws.StringValue(output.Status); status == batch.CEStatusInvalid {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{batch.CEStatusUpdating},
+		Target:  []string{batch.CEStatusValid},
+		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		if status := aws.StringValue(output.Status); status == batch.CEStatusInvalid {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{batch.CEStatusUpdating},
+		Target:  []string{batch.CEStatusValid},
+		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *batch.ComputeResource {

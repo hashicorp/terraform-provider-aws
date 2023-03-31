@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ram_principal_association")
 func ResourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalAssociationCreate,

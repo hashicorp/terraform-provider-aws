@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_dhcp_options")
 func ResourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsCreate,

@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codedeploy_deployment_group")
 func ResourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentGroupCreate,

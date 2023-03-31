@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_device")
 func ResourceDevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceCreate,

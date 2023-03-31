@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_global_network")
 func ResourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,

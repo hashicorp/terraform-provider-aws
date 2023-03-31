@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3ObjectCopy_basic(t *testing.T) {
@@ -24,7 +26,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	sourceKey := "WshngtnNtnls"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
@@ -49,7 +51,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
@@ -71,7 +73,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	resourceName := "aws_s3_object_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
@@ -96,15 +98,19 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-				Key:     aws.String(rs.Primary.Attributes["key"]),
-				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
-			})
-			if err == nil {
-				return fmt.Errorf("AWS S3 Object still exists: %s", rs.Primary.ID)
+			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Object %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

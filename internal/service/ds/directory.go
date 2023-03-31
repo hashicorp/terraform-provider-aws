@@ -24,6 +24,7 @@ const (
 	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_directory_service_directory")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
