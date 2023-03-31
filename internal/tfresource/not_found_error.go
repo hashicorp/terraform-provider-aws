@@ -24,7 +24,7 @@ func (e *EmptyResultError) Error() string {
 }
 
 func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+	_, ok := err.(*EmptyResultError) //nolint:errorlint // Explicitly does *not* match down the error tree
 	return ok
 }
 
@@ -61,7 +61,7 @@ func (e *TooManyResultsError) Error() string {
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
-	_, ok := err.(*TooManyResultsError)
+	_, ok := err.(*TooManyResultsError) //nolint:errorlint // Explicitly does *not* match down the error tree
 	return ok
 }
 
@@ -90,4 +90,15 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	}
 
 	return fmt.Errorf("reading %s: %w", resourceType, err)
+}
+
+func ExpectSingleResult[T any](a []*T) error {
+	if l := len(a); l == 0 {
+		return NewEmptyResultError(nil)
+	} else if l > 1 {
+		return NewTooManyResultsError(l, nil)
+	} else if a[0] == nil {
+		return NewEmptyResultError(nil)
+	}
+	return nil
 }

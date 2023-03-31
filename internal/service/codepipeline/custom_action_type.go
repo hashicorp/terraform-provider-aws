@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codepipeline_custom_action_type")
 func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -177,7 +178,7 @@ func ResourceCustomActionType() *schema.Resource {
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	category := d.Get("category").(string)
 	provider := d.Get("provider_name").(string)

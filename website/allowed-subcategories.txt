@@ -50,6 +50,7 @@ CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Logs
+CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -80,7 +81,6 @@ Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
-DS (Directory Service)
 Data Exchange
 Data Pipeline
 DataSync
@@ -88,6 +88,7 @@ Detective
 DevOps Guru
 Device Farm
 Direct Connect
+Directory Service
 DocDB (DocumentDB)
 DynamoDB
 DynamoDB Accelerator (DAX)
@@ -303,6 +304,7 @@ VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPN (Client)
 VPN (Site-to-Site)
+Verified Access
 WAF
 WAF Classic
 WAF Classic Regional

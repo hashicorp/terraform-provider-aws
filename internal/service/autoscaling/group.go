@@ -32,6 +32,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_autoscaling_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -162,6 +163,10 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"auto_rollback": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -429,6 +434,12 @@ func ResourceGroup() *schema.Resource {
 																	ValidateFunc: validation.StringInSlice(autoscaling.AcceleratorType_Values(), false),
 																},
 															},
+															"allowed_instance_types": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																MaxItems: 400,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
 															"bare_metal": {
 																Type:         schema.TypeString,
 																Optional:     true,
@@ -527,6 +538,25 @@ func ResourceGroup() *schema.Resource {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"network_bandwidth_gbps": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
+																		},
+																		"min": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
 																		},
 																	},
 																},
@@ -943,11 +973,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1152,23 +1182,23 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
+		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tags", ListOfStringMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
@@ -1312,12 +1342,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := KeyValueTags(oTagRaw, d.Id(), TagResourceTypeGroup)
-		oTags := KeyValueTags(oTagsRaw, d.Id(), TagResourceTypeGroup)
+		oTag := KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup)
+		oTags := KeyValueTags(ctx, oTagsRaw, d.Id(), TagResourceTypeGroup)
 		oldTags := Tags(oTag.Merge(oTags))
 
-		nTag := KeyValueTags(nTagRaw, d.Id(), TagResourceTypeGroup)
-		nTags := KeyValueTags(nTagsRaw, d.Id(), TagResourceTypeGroup)
+		nTag := KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup)
+		nTags := KeyValueTags(ctx, nTagsRaw, d.Id(), TagResourceTypeGroup)
 		newTags := Tags(nTag.Merge(nTags))
 
 		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
@@ -2638,6 +2668,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
 		apiObject.BareMetal = aws.String(v)
 	}
@@ -2676,6 +2710,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 
 	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
@@ -2800,6 +2838,26 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *autoscaling.MemoryMiB
 
 	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *autoscaling.NetworkBandwidthGbpsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.NetworkBandwidthGbpsRequest{}
+
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		min = v
+		apiObject.Min = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
 	}
 
 	return apiObject
@@ -3063,6 +3121,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 
 	apiObject := &autoscaling.RefreshPreferences{}
 
+	if v, ok := tfMap["auto_rollback"].(bool); ok {
+		apiObject.AutoRollback = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
 		if v, null, _ := nullable.Int(v).Value(); !null {
 			apiObject.CheckpointDelay = aws.Int64(v)
@@ -3301,6 +3363,10 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 		tfMap["accelerator_types"] = aws.StringValueSlice(v)
 	}
 
+	if v := apiObject.AllowedInstanceTypes; v != nil {
+		tfMap["allowed_instance_types"] = aws.StringValueSlice(v)
+	}
+
 	if v := apiObject.BareMetal; v != nil {
 		tfMap["bare_metal"] = aws.StringValue(v)
 	}
@@ -3339,6 +3405,10 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 
 	if v := apiObject.MemoryMiB; v != nil {
 		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+	}
+
+	if v := apiObject.NetworkBandwidthGbps; v != nil {
+		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
@@ -3453,6 +3523,24 @@ func flattenMemoryMiB(apiObject *autoscaling.MemoryMiBRequest) map[string]interf
 
 	if v := apiObject.Min; v != nil {
 		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkBandwidthGbps(apiObject *autoscaling.NetworkBandwidthGbpsRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap

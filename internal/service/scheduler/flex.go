@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,7 +74,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	return m
 }
 
-func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
+func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *types.EcsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -129,7 +131,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 		a.ReferenceId = aws.String(v)
 	}
 
-	tags := tftags.New(tfMap["tags"].(map[string]interface{}))
+	tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
 	if len(tags) > 0 {
 		for k, v := range tags.IgnoreAWS().Map() {
@@ -151,7 +153,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 	return a
 }
 
-func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{} {
+func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -235,7 +237,7 @@ func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{}
 			tags[key] = tagMap["value"]
 		}
 
-		m["tags"] = tftags.New(tags).IgnoreAWS().Map()
+		m["tags"] = tftags.New(ctx, tags).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.TaskCount; v != nil {
@@ -598,7 +600,7 @@ func flattenSQSParameters(apiObject *types.SqsParameters) map[string]interface{}
 	return m
 }
 
-func expandTarget(tfMap map[string]interface{}) *types.Target {
+func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Target {
 	if tfMap == nil {
 		return nil
 	}
@@ -614,7 +616,7 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 	}
 
 	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.EcsParameters = expandECSParameters(v[0].(map[string]interface{}))
+		a.EcsParameters = expandECSParameters(ctx, v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -648,7 +650,7 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 	return a
 }
 
-func flattenTarget(apiObject *types.Target) map[string]interface{} {
+func flattenTarget(ctx context.Context, apiObject *types.Target) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -664,7 +666,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 	}
 
 	if v := apiObject.EcsParameters; v != nil {
-		m["ecs_parameters"] = []interface{}{flattenECSParameters(v)}
+		m["ecs_parameters"] = []interface{}{flattenECSParameters(ctx, v)}
 	}
 
 	if v := apiObject.EventBridgeParameters; v != nil {

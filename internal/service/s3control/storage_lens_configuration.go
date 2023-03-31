@@ -24,10 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_storage_lens_configuration", resourceStorageLensConfiguration)
-}
-
+// @SDKResource("aws_s3control_storage_lens_configuration")
 func resourceStorageLensConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorageLensConfigurationCreate,
@@ -395,7 +392,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -601,14 +598,14 @@ func StorageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
 	return result
 }
 
-func KeyValueTagsFromStorageLensTags(tags []types.StorageLensTag) tftags.KeyValueTags {
+func KeyValueTagsFromStorageLensTags(ctx context.Context, tags []types.StorageLensTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Client, accountID, configID string) (tftags.KeyValueTags, error) {
@@ -620,15 +617,15 @@ func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Clien
 	output, err := conn.GetStorageLensConfigurationTagging(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTagsFromStorageLensTags(output.Tags), nil
+	return KeyValueTagsFromStorageLensTags(ctx, output.Tags), nil
 }
 
 func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)

@@ -28,6 +28,8 @@ const (
 	VPCCIDRMaxIPv6 = 56
 )
 
+// @SDKResource("aws_vpc", name="VPC")
+// @Tags(identifierAttribute="id")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -35,6 +37,7 @@ func ResourceVPC() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCRead,
 		UpdateWithoutTimeout: resourceVPCUpdate,
 		DeleteWithoutTimeout: resourceVPCDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVPCImport,
 		},
@@ -178,8 +181,6 @@ func ResourceVPC() *schema.Resource {
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if _, ok := d.GetOk("enable_classiclink"); ok {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
@@ -188,7 +189,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpc),
+		TagSpecifications:           tagSpecificationsFromTags(GetTagsIn(ctx), ec2.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -219,7 +220,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC: %s", input)
 	output, err := conn.CreateVpcWithContext(ctx, input)
 
 	if err != nil {
@@ -263,8 +263,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
@@ -391,16 +389,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	tags := KeyValueTags(vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
@@ -475,14 +464,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		d.Set("ipv6_association_id", associationID)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): updating tags: %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceVPCRead(ctx, d, meta)...)

@@ -28,6 +28,7 @@ const (
 	gameServerGroupDeletedDefaultTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_game_server_group")
 func ResourceGameServerGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGameServerGroupCreate,
@@ -190,7 +191,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &gamelift.CreateGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),

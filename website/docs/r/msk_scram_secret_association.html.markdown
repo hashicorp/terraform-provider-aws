@@ -54,22 +54,24 @@ resource "aws_secretsmanager_secret_version" "example" {
   secret_string = jsonencode({ username = "user", password = "pass" })
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "AWSKafkaResourcePolicy"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["kafka.amazonaws.com"]
+    }
+
+    actions   = ["secretsmanager:getSecretValue"]
+    resources = [aws_secretsmanager_secret.example.arn]
+  }
+}
+
 resource "aws_secretsmanager_secret_policy" "example" {
   secret_arn = aws_secretsmanager_secret.example.arn
-  policy     = <<POLICY
-{
-  "Version" : "2012-10-17",
-  "Statement" : [ {
-    "Sid": "AWSKafkaResourcePolicy",
-    "Effect" : "Allow",
-    "Principal" : {
-      "Service" : "kafka.amazonaws.com"
-    },
-    "Action" : "secretsmanager:getSecretValue",
-    "Resource" : "${aws_secretsmanager_secret.example.arn}"
-  } ]
-}
-POLICY
+  policy     = data.aws_iam_policy_document.example.json
 }
 ```
 

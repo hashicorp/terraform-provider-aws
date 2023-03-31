@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -24,7 +25,7 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -59,7 +60,7 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -104,7 +105,7 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -141,7 +142,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -188,9 +189,9 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			testAccPreCheckLoggingConfiguration(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -240,7 +241,7 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -264,7 +265,7 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -530,9 +531,7 @@ resource "aws_waf_web_acl" "test" {
 }
 
 func testAccWebACLConfig_logging(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLoggingConfigurationRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   name        = %[1]q
   metric_name = %[1]q
@@ -597,13 +596,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = aws_s3_bucket.test.arn
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccWebACLConfig_loggingRemoved(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLoggingConfigurationRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   metric_name = %[1]q
   name        = %[1]q
@@ -612,13 +609,11 @@ resource "aws_waf_web_acl" "test" {
     type = "ALLOW"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccWebACLConfig_loggingUpdate(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLoggingConfigurationRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
   metric_name = %[1]q
   name        = %[1]q
@@ -672,7 +667,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = aws_s3_bucket.test.arn
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccWebACLConfig_tags1(rName, tag1Key, tag1Value string) string {

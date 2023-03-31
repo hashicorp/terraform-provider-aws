@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_secretsmanager_secret_policy")
 func ResourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,
