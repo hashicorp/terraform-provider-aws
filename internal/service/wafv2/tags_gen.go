@@ -30,6 +30,8 @@ func ListTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) 
 	return KeyValueTags(ctx, output.TagInfoForResource.TagList), nil
 }
 
+// ListTags lists wafv2 service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(), identifier)
 
@@ -77,7 +79,7 @@ func KeyValueTags(ctx context.Context, tags []*wafv2.Tag) tftags.KeyValueTags {
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*wafv2.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -129,6 +131,8 @@ func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string
 	return nil
 }
 
+// UpdateTags updates wafv2 service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(), identifier, oldTags, newTags)
 }

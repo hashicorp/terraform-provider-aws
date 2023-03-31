@@ -303,6 +303,8 @@ Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_d
 The `dns` object supports the following:
 
 * `hostname` - (Required) DNS host name for your virtual node.
+* `ip_preference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, `IPv6_ONLY`.
+* `response_type` - (Optional) The DNS response type for the virtual node. Valid values: `LOADBALANCER`, `ENDPOINTS`.
 
 The `port_mapping` object supports the following:
 

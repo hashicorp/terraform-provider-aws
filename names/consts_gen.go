@@ -39,6 +39,7 @@ const (
 	CUR                          = "cur"
 	Chime                        = "chime"
 	ChimeSDKIdentity             = "chimesdkidentity"
+	ChimeSDKMediaPipelines       = "chimesdkmediapipelines"
 	ChimeSDKMeetings             = "chimesdkmeetings"
 	ChimeSDKMessaging            = "chimesdkmessaging"
 	Cloud9                       = "cloud9"

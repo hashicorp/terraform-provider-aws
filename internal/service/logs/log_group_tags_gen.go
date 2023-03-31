@@ -30,6 +30,8 @@ func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLo
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListLogGroupTags lists logs service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identifier string) error {
 	tags, err := ListLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier)
 
@@ -81,6 +83,8 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 	return nil
 }
 
+// UpdateLogGroupTags updates logs service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateLogGroupTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateLogGroupTags(ctx, meta.(*conns.AWSClient).LogsConn(), identifier, oldTags, newTags)
 }

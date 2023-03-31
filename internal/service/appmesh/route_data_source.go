@@ -48,12 +48,12 @@ func DataSourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"virtual_router_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }

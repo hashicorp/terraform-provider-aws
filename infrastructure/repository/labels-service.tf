@@ -37,6 +37,7 @@ variable "service_labels" {
     "ce",
     "chime",
     "chimesdkidentity",
+    "chimesdkmediapipelines",
     "chimesdkmeetings",
     "chimesdkmessaging",
     "cloud9",

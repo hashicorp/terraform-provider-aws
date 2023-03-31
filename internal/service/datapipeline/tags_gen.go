@@ -46,7 +46,7 @@ func KeyValueTags(ctx context.Context, tags []*datapipeline.Tag) tftags.KeyValue
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*datapipeline.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -98,6 +98,8 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 	return nil
 }
 
+// UpdateTags updates datapipeline service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).DataPipelineConn(), identifier, oldTags, newTags)
 }

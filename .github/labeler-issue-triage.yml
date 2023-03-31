@@ -99,6 +99,8 @@ service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkidentity_'
+service/chimesdkmediapipelines:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmediapipelines_'
 service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:

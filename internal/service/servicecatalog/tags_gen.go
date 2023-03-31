@@ -43,7 +43,7 @@ func KeyValueTags(ctx context.Context, tags []*servicecatalog.Tag) tftags.KeyVal
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*servicecatalog.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}

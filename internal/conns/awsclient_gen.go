@@ -71,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -383,6 +384,7 @@ type AWSClient struct {
 	curConn                          *costandusagereportservice.CostandUsageReportService
 	chimeConn                        *chime.Chime
 	chimesdkidentityConn             *chimesdkidentity.ChimeSDKIdentity
+	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	cloud9Conn                       *cloud9.Cloud9
@@ -806,6 +808,10 @@ func (client *AWSClient) ChimeConn() *chime.Chime {
 
 func (client *AWSClient) ChimeSDKIdentityConn() *chimesdkidentity.ChimeSDKIdentity {
 	return client.chimesdkidentityConn
+}
+
+func (client *AWSClient) ChimeSDKMediaPipelinesConn() *chimesdkmediapipelines.ChimeSDKMediaPipelines {
+	return client.chimesdkmediapipelinesConn
 }
 
 func (client *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings.ChimeSDKMeetings {

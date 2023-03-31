@@ -39,7 +39,7 @@ func (client *AWSClient) HTTPClient() *http.Client {
 	return client.httpClient
 }
 
-// CloudFrontDistributionHostedZoneIDForPartition returns for the Route 53 hosted zone ID
+// CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
 	if client.Partition == endpoints.AwsCnPartitionID {
@@ -67,4 +67,10 @@ func (client *AWSClient) DefaultKMSKeyPolicy() string {
 	]
 }	
 `, client.Partition, client.AccountID)
+}
+
+// GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
+// for AWS Global Accelerator accelerators in the configured AWS partition.
+func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
+	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }

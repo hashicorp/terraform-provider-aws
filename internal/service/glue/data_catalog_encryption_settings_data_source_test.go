@@ -31,7 +31,7 @@ func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataCatalogEncryptionSettingsDataSourceConfig_basic() string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccDataCatalogEncryptionSettingsDataSourceConfig_basic() string {
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {
