@@ -63,6 +63,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
+  transit_gateway_default_route_table_association = false
+
   tags = {
     Name = %[1]q
   }
@@ -101,6 +103,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  transit_gateway_default_route_table_association = false
 
   tags = {
     Name = %[1]q
