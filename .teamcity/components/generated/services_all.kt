@@ -164,6 +164,7 @@ val services = mapOf(
     "schemas" to ServiceSpec("EventBridge Schemas"),
     "secretsmanager" to ServiceSpec("Secrets Manager"),
     "securityhub" to ServiceSpec("Security Hub"),
+    "securitylake" to ServiceSpec("Security Lake"),
     "serverlessrepo" to ServiceSpec("Serverless Application Repository"),
     "servicecatalog" to ServiceSpec("Service Catalog"),
     "servicediscovery" to ServiceSpec("Cloud Map", vpcLock = true),
