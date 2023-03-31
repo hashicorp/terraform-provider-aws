@@ -81,7 +81,6 @@ Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
-DS (Directory Service)
 Data Exchange
 Data Pipeline
 DataSync
@@ -89,6 +88,7 @@ Detective
 DevOps Guru
 Device Farm
 Direct Connect
+Directory Service
 DocDB (DocumentDB)
 DynamoDB
 DynamoDB Accelerator (DAX)

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -36,4 +37,23 @@ func KeyValueTags(ctx context.Context, tags []*servicecatalog.Tag) tftags.KeyVal
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns servicecatalog service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*servicecatalog.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets servicecatalog service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*servicecatalog.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }

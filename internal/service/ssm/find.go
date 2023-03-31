@@ -2,7 +2,6 @@ package ssm
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -33,30 +32,6 @@ func FindAssociationById(ctx context.Context, conn *ssm.SSM, id string) (*ssm.As
 	}
 
 	return output.AssociationDescription, nil
-}
-
-// FindDocumentByName returns the Document corresponding to the specified name.
-func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
-	input := &ssm.DescribeDocumentInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.DescribeDocumentWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Document == nil {
-		return nil, fmt.Errorf("error describing SSM Document (%s): empty result", name)
-	}
-
-	doc := output.Document
-
-	if aws.StringValue(doc.Status) == ssm.DocumentStatusFailed {
-		return nil, fmt.Errorf("Document is in a failed state: %s", aws.StringValue(doc.StatusInformation))
-	}
-
-	return output.Document, nil
 }
 
 // FindPatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
