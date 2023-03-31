@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
@@ -623,6 +624,7 @@ type AWSClient struct {
 	schemasConn                      *schemas.Schemas
 	secretsmanagerConn               *secretsmanager.SecretsManager
 	securityhubConn                  *securityhub.SecurityHub
+	securitylakeClient               *securitylake.Client
 	serverlessrepoConn               *serverlessapplicationrepository.ServerlessApplicationRepository
 	servicecatalogConn               *servicecatalog.ServiceCatalog
 	servicecatalogappregistryConn    *appregistry.AppRegistry
@@ -1790,6 +1792,10 @@ func (client *AWSClient) SecretsManagerConn() *secretsmanager.SecretsManager {
 
 func (client *AWSClient) SecurityHubConn() *securityhub.SecurityHub {
 	return client.securityhubConn
+}
+
+func (client *AWSClient) SecurityLakeClient() *securitylake.Client {
+	return client.securitylakeClient
 }
 
 func (client *AWSClient) ServerlessRepoConn() *serverlessapplicationrepository.ServerlessApplicationRepository {

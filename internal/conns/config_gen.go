@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
@@ -705,6 +706,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.schedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {
 		if endpoint := c.Endpoints[names.Scheduler]; endpoint != "" {
 			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.securitylakeClient = securitylake.NewFromConfig(cfg, func(o *securitylake.Options) {
+		if endpoint := c.Endpoints[names.SecurityLake]; endpoint != "" {
+			o.EndpointResolver = securitylake.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.transcribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {

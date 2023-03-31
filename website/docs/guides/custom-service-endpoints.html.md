@@ -333,6 +333,7 @@ provider "aws" {
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>
+  <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
   <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
