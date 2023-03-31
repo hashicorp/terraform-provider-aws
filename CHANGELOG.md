@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_transit_gateway_route_table_propagations` ([#29640](https://github.com/hashicorp/terraform-provider-aws/issues/29640))
+* **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
 * **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
 
 ENHANCEMENTS:
@@ -15,6 +17,7 @@ BUG FIXES:
 * resource/aws_ce_cost_category: Fixed `effective_start` being reset on any changes despite `effective_start` having the same value ([#30369](https://github.com/hashicorp/terraform-provider-aws/issues/30369))
 * resource/aws_glue_crawler: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_glue_trigger: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
+* resource/aws_s3_bucket_lifecycle_configuration: Allow `rule.filter.object_size_greater_than` = 0 ([#29857](https://github.com/hashicorp/terraform-provider-aws/issues/29857))
 * resource/aws_scheduler_schedule: Mark `arn` property of `dead_letter_config` as a required property ([#30360](https://github.com/hashicorp/terraform-provider-aws/issues/30360))
 
 ## 4.61.0 (March 30, 2023)
