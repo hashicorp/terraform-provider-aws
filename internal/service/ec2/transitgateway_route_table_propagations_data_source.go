@@ -23,17 +23,17 @@ func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"transit_gateway_route_table_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 		},
 	}
 }
