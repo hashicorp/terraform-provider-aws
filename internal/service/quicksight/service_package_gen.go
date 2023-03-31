@@ -26,6 +26,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceDataSet,
+			TypeName: "aws_quicksight_data_set",
+		},
+		{
 			Factory:  ResourceDataSource,
 			TypeName: "aws_quicksight_data_source",
 		},
