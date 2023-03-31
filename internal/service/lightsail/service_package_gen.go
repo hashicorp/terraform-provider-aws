@@ -62,6 +62,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_lightsail_disk_attachment",
 		},
 		{
+			Factory:  ResourceDistribution,
+			TypeName: "aws_lightsail_distribution",
+		},
+		{
 			Factory:  ResourceDomain,
 			TypeName: "aws_lightsail_domain",
 		},
