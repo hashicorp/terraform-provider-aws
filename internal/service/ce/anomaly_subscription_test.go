@@ -44,7 +44,6 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
 			{
@@ -75,7 +74,6 @@ func TestAccCEAnomalySubscription_thresholdExpression(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
 			{
@@ -257,43 +255,6 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAnomalySubscriptionConfig_threshold(rName, 100, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAnomalySubscriptionConfig_threshold(rName, 200, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "200"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription costexplorer.AnomalySubscription
@@ -428,7 +389,6 @@ func testAccAnomalySubscriptionConfig_basic(rName string, address string) string
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
@@ -499,7 +459,6 @@ resource "aws_ce_anomaly_monitor" "test2" {
 
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "WEEKLY"
 
   monitor_arn_list = [
@@ -520,7 +479,6 @@ func testAccAnomalySubscriptionConfig_frequency(rName string, rFrequency string,
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = %[2]q
 
   monitor_arn_list = [
@@ -541,7 +499,6 @@ func testAccAnomalySubscriptionConfig_subscriber2(rName string, address1 string,
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "WEEKLY"
 
   monitor_arn_list = [
@@ -637,7 +594,6 @@ resource "aws_sns_topic_policy" "test" {
 
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100000000
   frequency = "IMMEDIATE"
 
   monitor_arn_list = [
@@ -656,34 +612,12 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName))
 }
 
-func testAccAnomalySubscriptionConfig_threshold(rName string, rThreshold int, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_ce_anomaly_subscription" "test" {
-  name      = %[1]q
-  threshold = %[2]d
-  frequency = "WEEKLY"
-
-  monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
-  ]
-
-  subscriber {
-    type    = "EMAIL"
-    address = %[3]q
-  }
-}
-`, rName, rThreshold, address))
-}
-
 func testAccAnomalySubscriptionConfig_tags1(rName string, tagKey1, tagValue1 string, address string) string {
 	return acctest.ConfigCompose(
 		testAccAnomalySubscriptionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
@@ -708,7 +642,6 @@ func testAccAnomalySubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, 
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
