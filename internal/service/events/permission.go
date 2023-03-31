@@ -67,7 +67,7 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
+				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
 			"principal": {
