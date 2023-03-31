@@ -6,12 +6,16 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_s3_bucket:  Enable S3-compatible providers with no support for bucket tagging ([#30151](https://github.com/hashicorp/terraform-provider-aws/issues/30151))
+* resource/aws_sagemaker_endpoint_configuration: Add `name_prefix` argument ([#28785](https://github.com/hashicorp/terraform-provider-aws/issues/28785))
 * resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block ([#30118](https://github.com/hashicorp/terraform-provider-aws/issues/30118))
 
 BUG FIXES:
 
+* resource/aws_ce_cost_category: Fixed `effective_start` being reset on any changes despite `effective_start` having the same value ([#30369](https://github.com/hashicorp/terraform-provider-aws/issues/30369))
 * resource/aws_glue_crawler: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_glue_trigger: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
+* resource/aws_scheduler_schedule: Mark `arn` property of `dead_letter_config` as a required property ([#30360](https://github.com/hashicorp/terraform-provider-aws/issues/30360))
 
 ## 4.61.0 (March 30, 2023)
 
