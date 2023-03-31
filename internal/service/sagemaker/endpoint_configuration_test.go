@@ -55,19 +55,20 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
@@ -82,19 +83,20 @@ func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
