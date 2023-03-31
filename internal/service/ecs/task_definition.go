@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecs_task_definition")
 func ResourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,6 +60,10 @@ func ResourceTaskDefinition() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn_without_revision": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -436,7 +441,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
@@ -540,6 +545,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
@@ -599,6 +605,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
 
@@ -652,7 +659,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1241,4 +1248,20 @@ func flattenTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[strin
 	m["size_in_gib"] = aws.Int64Value(pc.SizeInGiB)
 
 	return []map[string]interface{}{m}
+}
+
+// StripRevision strips the trailing revision number from a task definition ARN
+//
+// Invalid ARNs will return an empty string. ARNs with an unexpected number of
+// separators in the resource section are returned unmodified.
+func StripRevision(s string) string {
+	tdArn, err := arn.Parse(s)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(tdArn.Resource, ":")
+	if len(parts) == 2 {
+		tdArn.Resource = parts[0]
+	}
+	return tdArn.String()
 }

@@ -9,8 +9,6 @@ rules:
       exclude:
         # `pattern-not` not working
         - internal/service/kafkaconnect
-        # WIP
-        - internal/acctest/acctest.go
     patterns:
       - pattern: |
           $CONN.$API(...)

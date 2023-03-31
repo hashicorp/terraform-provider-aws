@@ -50,7 +50,7 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -76,7 +76,7 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateArn *string)
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
@@ -105,7 +105,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
@@ -131,7 +131,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
@@ -172,7 +172,7 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 		output, err := conn.ImportCertificateWithContext(ctx, &acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: tfacm.Tags(tftags.New(map[string]interface{}{
+			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
 				"Name": rName,
 			}).IgnoreAWS()),
 		})

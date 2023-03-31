@@ -19,6 +19,7 @@ import (
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
+// @SDKResource("aws_iot_thing_type")
 func ResourceThingType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingTypeCreate,
@@ -88,7 +89,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	params := &iot.CreateThingTypeInput{
 		ThingTypeName: aws.String(d.Get("name").(string)),
 	}

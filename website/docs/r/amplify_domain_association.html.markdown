@@ -53,6 +53,7 @@ The following arguments are supported:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `domain_name` - (Required) Domain name for the domain association.
+* `enable_auto_sub_domain` - (Optional) Enables the automated creation of subdomains for branches.
 * `sub_domain` - (Required) Setting for the subdomain. Documented below.
 * `wait_for_verification` - (Optional) If enabled, the resource will wait for the domain association status to change to `PENDING_DEPLOYMENT` or `AVAILABLE`. Setting this to `false` will skip the process. Default: `true`.
 

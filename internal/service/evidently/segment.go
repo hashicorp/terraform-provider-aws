@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_evidently_segment")
 func ResourceSegment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSegmentCreate,
@@ -91,7 +92,7 @@ func ResourceSegment() *schema.Resource {
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateSegmentInput{
@@ -145,7 +146,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", segment.Name)
 	d.Set("pattern", segment.Pattern)
 
-	tags := KeyValueTags(segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)

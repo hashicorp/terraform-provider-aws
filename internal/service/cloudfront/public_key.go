@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_public_key")
 func ResourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicKeyCreate,

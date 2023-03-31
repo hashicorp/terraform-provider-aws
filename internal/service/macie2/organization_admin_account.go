@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_macie2_organization_admin_account")
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
@@ -77,20 +78,25 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error reading Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
 	}
 
 	if res == nil {
-		log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		if !d.IsNewResource() {
+			log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.FromErr(&resource.NotFoundError{})
 	}
 
 	d.Set("admin_account_id", res.AccountId)

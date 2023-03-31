@@ -88,13 +88,18 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	}
 
 	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	if count := len(output.Clusters); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	if status := aws.StringValue(output.Clusters[0].Status); status == clusterStatusInactive {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output.Clusters[0], nil

@@ -9,10 +9,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	documentStatusUnknown = "Unknown"
-)
-
 func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAssociationById(ctx, conn, id)
@@ -32,23 +28,6 @@ func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.S
 		}
 
 		return output, aws.StringValue(output.Overview.Status), nil
-	}
-}
-
-// statusDocument fetches the Document and its Status
-func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDocumentByName(ctx, conn, name)
-
-		if err != nil {
-			return nil, ssm.DocumentStatusFailed, err
-		}
-
-		if output == nil {
-			return output, documentStatusUnknown, nil
-		}
-
-		return output, aws.StringValue(output.Status), nil
 	}
 }
 

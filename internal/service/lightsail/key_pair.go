@@ -18,6 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
+const (
+	ResKeyPair = "KeyPair"
+)
+
+// @SDKResource("aws_lightsail_key_pair")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
@@ -154,11 +159,10 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		op = resp.Operation
 	}
 
-	err := waitOperation(ctx, conn, op.Id)
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{op}, "CreateKeyPair", ResKeyPair, kName)
 
-	if err != nil {
-		// We don't return an error here because the Create call succeeded
-		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
@@ -199,12 +203,10 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
-	op := resp.Operation
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, "DeleteKeyPair", ResKeyPair, d.Id())
 
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): waiting for completion: %s", d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return diags

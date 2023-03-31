@@ -23,7 +23,7 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
@@ -39,6 +39,41 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resourceName := "aws_lb_ssl_negotiation_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+				),
+			},
+			{
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+				),
+			},
+			{
+				Config:   testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -47,7 +82,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
@@ -183,4 +218,73 @@ resource "aws_lb_ssl_negotiation_policy" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate string, certToUse int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_iam_server_certificate" "test" {
+  count            = 2
+  name_prefix      = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+
+  listener {
+    instance_port      = 8000
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = aws_iam_server_certificate.test[%[4]d].arn
+  }
+}
+
+resource "aws_lb_ssl_negotiation_policy" "test" {
+  name          = %[1]q
+  load_balancer = aws_elb.test.id
+  lb_port       = 443
+
+  attribute {
+    name  = "Protocol-TLSv1"
+    value = "false"
+  }
+
+  attribute {
+    name  = "Protocol-TLSv1.1"
+    value = "false"
+  }
+
+  attribute {
+    name  = "Protocol-TLSv1.2"
+    value = "true"
+  }
+
+  attribute {
+    name  = "Server-Defined-Cipher-Order"
+    value = "true"
+  }
+
+  attribute {
+    name  = "ECDHE-RSA-AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "EDH-RSA-DES-CBC3-SHA"
+    value = "false"
+  }
+
+  triggers = {
+    certificate_arn = aws_iam_server_certificate.test[%[4]d].arn,
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), certToUse))
 }

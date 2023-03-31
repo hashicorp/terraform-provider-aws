@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route_table")
 func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTableRead,
@@ -203,7 +204,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -239,7 +240,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_id", rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

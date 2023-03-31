@@ -27,6 +27,7 @@ const (
 	ruleGroupDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_rule_group")
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
@@ -131,7 +132,7 @@ func ResourceRuleGroup() *schema.Resource {
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateRuleGroupInput{

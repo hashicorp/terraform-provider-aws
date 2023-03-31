@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ses_identity_notification_topic")
 func ResourceIdentityNotificationTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationTopicSet,

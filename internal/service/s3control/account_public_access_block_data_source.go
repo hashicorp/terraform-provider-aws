@@ -9,10 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_s3_account_public_access_block", dataSourceAccountPublicAccessBlock)
-}
-
+// @SDKDataSource("aws_s3_account_public_access_block")
 func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,

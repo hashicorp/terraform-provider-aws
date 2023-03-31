@@ -17,8 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
+// @Tags
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -62,8 +65,8 @@ func ResourcePortfolio() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -72,15 +75,13 @@ func ResourcePortfolio() *schema.Resource {
 func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(name),
 		IdempotencyToken: aws.String(resource.UniqueId()),
-		Tags:             Tags(tags.IgnoreAWS()),
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -105,8 +106,6 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindPortfolioByID(ctx, conn, d.Id())
 
@@ -127,16 +126,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -169,8 +159,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		input.AddTags = Tags(tftags.New(n).IgnoreAWS())
-		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAWS().Keys())
+		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
+		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
 	}
 
 	_, err := conn.UpdatePortfolioWithContext(ctx, input)
