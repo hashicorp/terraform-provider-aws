@@ -2092,8 +2092,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	}
 
 	if d.HasChange("master_user_secret_kms_key_id") {
-		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+		needsModify = true
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			// InvalidParameterValue: A ManageMasterUserPassword value is required when MasterUserSecretKmsKeyId is specified.
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 	}
 
@@ -2139,7 +2142,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("password") {
 		needsModify = true
 		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
-		if v, ok := d.GetOk("password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+		if v, ok := d.GetOk("password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 	}

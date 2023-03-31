@@ -1279,12 +1279,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 		if d.HasChange("master_password") {
-			if v, ok := d.GetOk("master_password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			if v, ok := d.GetOk("master_password"); ok {
 				input.MasterUserPassword = aws.String(v.(string))
 			}
 		}
 		if d.HasChange("master_user_secret_kms_key_id") {
-			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			}
 		}

@@ -2338,6 +2338,36 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_password(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_password(rName, "valid-password-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "valid-password-1"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_password", "valid-password-2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -2470,7 +2500,8 @@ resource "aws_rds_cluster" "test" {
   database_name                   = "test"
   manage_master_user_password     = true
   master_username                 = "tfacctest"
-  db_cluster_parameter_group_name = "default.aurora5.6"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
   skip_final_snapshot             = true
 }
 `, rName)
@@ -4358,4 +4389,18 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, rName, enableHttpEndpoint)
+}
+
+func testAccClusterConfig_password(rName, password string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = %[2]q
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
+  skip_final_snapshot             = true
+}
+`, rName, password)
 }
