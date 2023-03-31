@@ -18,6 +18,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"Filter": testAccTransitGatewayAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayAttachmentDataSource_ID,
 		},
+		"Attachments": {
+			"Filter": testAccTransitGatewayAttachmentsDataSource_Filter,
+		},
 		"Connect": {
 			"Filter": testAccTransitGatewayConnectDataSource_Filter,
 			"ID":     testAccTransitGatewayConnectDataSource_ID,

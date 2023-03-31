@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccTransitGatewayAttachmentsDataSource_Filter(t *testing.T) {
+func testAccTransitGatewayAttachmentsDataSource_Filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_attachments.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
