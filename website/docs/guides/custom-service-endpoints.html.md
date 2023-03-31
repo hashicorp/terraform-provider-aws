@@ -106,6 +106,7 @@ provider "aws" {
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
   <li><code>chimesdkidentity</code></li>
+  <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkmeetings</code></li>
   <li><code>chimesdkmessaging</code></li>
   <li><code>cloud9</code></li>

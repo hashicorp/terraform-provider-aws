@@ -27,6 +27,7 @@ val services = mapOf(
     "budgets" to ServiceSpec("Web Services Budgets"),
     "ce" to ServiceSpec("CE (Cost Explorer)"),
     "chime" to ServiceSpec("Chime"),
+    "chimesdkmediapipelines" to ServiceSpec("Chime SDK Media Pipelines"),
     "cloud9" to ServiceSpec("Cloud9"),
     "cloudcontrol" to ServiceSpec("Cloud Control API"),
     "cloudformation" to ServiceSpec("CloudFormation", vpcLock = true),

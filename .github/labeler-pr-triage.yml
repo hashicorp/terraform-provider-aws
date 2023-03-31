@@ -173,6 +173,9 @@ service/chime:
 service/chimesdkidentity:
   - 'internal/service/chimesdkidentity/**/*'
   - 'website/**/chimesdkidentity_*'
+service/chimesdkmediapipelines:
+  - 'internal/service/chimesdkmediapipelines/**/*'
+  - 'website/**/chimesdkmediapipelines_*'
 service/chimesdkmeetings:
   - 'internal/service/chimesdkmeetings/**/*'
   - 'website/**/chimesdkmeetings_*'

@@ -69,6 +69,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -353,6 +354,7 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.curConn = costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CUR])}))
 	client.chimeConn = chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Chime])}))
 	client.chimesdkidentityConn = chimesdkidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKIdentity])}))
+	client.chimesdkmediapipelinesConn = chimesdkmediapipelines.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMediaPipelines])}))
 	client.chimesdkmeetingsConn = chimesdkmeetings.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMeetings])}))
 	client.chimesdkmessagingConn = chimesdkmessaging.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMessaging])}))
 	client.cloud9Conn = cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Cloud9])}))
