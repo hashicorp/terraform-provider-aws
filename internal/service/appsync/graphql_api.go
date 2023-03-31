@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -720,7 +720,7 @@ func resourceSchemaPut(ctx context.Context, d *schema.ResourceData, meta interfa
 			return err
 		}
 
-		activeSchemaConfig := &resource.StateChangeConf{
+		activeSchemaConfig := &retry.StateChangeConf{
 			Pending: []string{appsync.SchemaStatusProcessing},
 			Target:  []string{"SUCCESS", appsync.SchemaStatusActive}, // should be only appsync.SchemaStatusActive . I think this is a problem in documentation: https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
 			Refresh: func() (interface{}, string, error) {

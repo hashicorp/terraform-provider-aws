@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/applicationinsights"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 func waitApplicationCreated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED"},
 		Refresh: statusApplication(ctx, conn, name),
@@ -31,7 +31,7 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Appli
 }
 
 func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),

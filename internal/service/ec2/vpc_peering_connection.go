@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -357,22 +357,22 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.EC2, d *sc
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
-	err := resource.RetryContext(ctx, VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := retry.RetryContext(ctx, VPCPeeringConnectionOptionsPropagationTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if v := vpcPeeringConnection.AccepterVpcInfo; v != nil && accepterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, accepterPeeringConnectionOptions) {
-				return resource.RetryableError(errors.New("Accepter Options not stable"))
+				return retry.RetryableError(errors.New("Accepter Options not stable"))
 			}
 		}
 
 		if v := vpcPeeringConnection.RequesterVpcInfo; v != nil && requesterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, requesterPeeringConnectionOptions) {
-				return resource.RetryableError(errors.New("Requester Options not stable"))
+				return retry.RetryableError(errors.New("Requester Options not stable"))
 			}
 		}
 

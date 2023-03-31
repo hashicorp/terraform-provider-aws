@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -120,7 +121,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	tags := r.ExpandTags(ctx, data.Tags)
 	input := &resourceexplorer2.CreateViewInput{
-		ClientToken:        aws.String(sdkresource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		Filters:            r.expandSearchFilter(ctx, data.Filters),
 		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
 		ViewName:           aws.String(data.Name.ValueString()),
@@ -472,7 +473,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	output, err := conn.GetView(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.UnauthorizedException](err) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

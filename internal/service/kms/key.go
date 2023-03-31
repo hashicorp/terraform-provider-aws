@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -375,7 +375,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 		key.tags, err = ListTags(ctx, conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-			return nil, &resource.NotFoundError{LastError: err}
+			return nil, &retry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {

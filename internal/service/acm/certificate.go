@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -334,7 +335,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		domainName := d.Get("domain_name").(string)
 		input := &acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
-			IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
+			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
 		}
 
 		if v, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -819,7 +820,7 @@ func findCertificate(ctx context.Context, conn *acm.ACM, input *acm.DescribeCert
 	output, err := conn.DescribeCertificateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -848,7 +849,7 @@ func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.
 	}
 
 	if status := aws.StringValue(output.Status); status == acm.CertificateStatusValidationTimedOut {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -871,7 +872,7 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.ACM, arn string)
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		certificate, err := FindCertificateByARN(ctx, conn, arn)
 
@@ -910,7 +911,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 }
 
 func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
 		Timeout: timeout,
@@ -925,7 +926,7 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.AC
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
@@ -942,7 +943,7 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) re
 }
 
 func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.RenewalSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{acm.RenewalStatusPendingAutoRenewal},
 		Target:  []string{acm.RenewalStatusSuccess},
 		Refresh: statusCertificateRenewal(ctx, conn, arn),

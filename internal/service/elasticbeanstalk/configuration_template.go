@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -222,7 +222,7 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

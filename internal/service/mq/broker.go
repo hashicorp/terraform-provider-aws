@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -360,7 +361,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &mq.CreateBrokerRequest{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              aws.String(engineType),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -641,7 +642,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	output, err := conn.DescribeBrokerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -658,7 +659,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.StateRefreshFunc {
+func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBrokerByID(ctx, conn, id)
 
@@ -675,7 +676,7 @@ func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.Sta
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
@@ -691,7 +692,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
 			mq.BrokerStateDeletionInProgress,
@@ -712,7 +713,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,

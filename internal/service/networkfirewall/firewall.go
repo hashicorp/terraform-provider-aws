@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -436,7 +436,7 @@ func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewal
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -453,7 +453,7 @@ func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewal
 	return output, nil
 }
 
-func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallByARN(ctx, conn, arn)
 
@@ -474,7 +474,7 @@ const (
 )
 
 func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -491,7 +491,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirew
 }
 
 func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (string, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -512,7 +512,7 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirew
 }
 
 func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
 		Target:  []string{},
 		Refresh: statusFirewall(ctx, conn, arn),

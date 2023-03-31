@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -573,7 +573,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*
 	output, err := conn.GetEnvironmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -590,7 +590,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*
 	return output.Environment, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		environment, err := FindEnvironmentByName(ctx, conn, name)
 
@@ -607,7 +607,7 @@ func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) resour
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusCreating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: statusEnvironment(ctx, conn, name),
@@ -628,7 +628,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, t
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusUpdating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: statusEnvironment(ctx, conn, name),
@@ -649,7 +649,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, t
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusDeleting},
 		Target:  []string{},
 		Refresh: statusEnvironment(ctx, conn, name),

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -210,15 +210,15 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateAssessment(ctx, &in)
 		if err != nil {
 			var nfe *awstypes.ResourceNotFoundException
 			if errors.As(err, &nfe) {
-				return sdkv2resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return sdkv2resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -396,7 +396,7 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkv2resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

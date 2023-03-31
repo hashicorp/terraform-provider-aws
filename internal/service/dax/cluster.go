@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -256,15 +256,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateClusterWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -282,7 +282,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(strings.ToLower(*resp.Cluster.ClusterName))
 
 	pending := []string{"creating", "modifying"}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -475,7 +475,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if awaitUpdate {
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
 		pending := []string{"modifying"}
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -531,13 +531,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteClusterWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, dax.ErrCodeInvalidClusterStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -549,7 +549,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
@@ -566,7 +566,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(clusterID)},

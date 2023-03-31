@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -170,13 +170,13 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	var err error
-	err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		out, err = conn.DescribeRepositoriesWithContext(ctx, input)
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -280,16 +280,16 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ecrpublic.DescribeRepositoriesInput{
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err = conn.DescribeRepositoriesWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
+		return retry.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositoriesWithContext(ctx, input)

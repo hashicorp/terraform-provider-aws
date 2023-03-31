@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,7 +90,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &ec2.AllocateHostsInput{
 		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
 		Quantity:         aws.Int64(1),
 	}

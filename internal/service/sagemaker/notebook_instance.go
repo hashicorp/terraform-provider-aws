@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -435,15 +435,15 @@ func StartNotebookInstance(ctx context.Context, conn *sagemaker.SageMaker, id st
 	}
 	// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 	// it doesn't change we'll send another request
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.StartNotebookInstanceWithContext(ctx, startOpts)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("starting: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("starting: %s", err))
 		}
 
 		_, err = WaitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
-			return resource.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+			return retry.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
 		}
 
 		return nil

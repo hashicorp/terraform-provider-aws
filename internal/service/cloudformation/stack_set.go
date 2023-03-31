@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -196,7 +196,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StackSetName:       aws.String(name),
 	}
 
@@ -320,7 +320,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &cloudformation.UpdateStackSetInput{
-		OperationId:  aws.String(resource.UniqueId()),
+		OperationId:  aws.String(id.UniqueId()),
 		StackSetName: aws.String(d.Id()),
 		Tags:         []*cloudformation.Tag{},
 		TemplateBody: aws.String(d.Get("template_body").(string)),

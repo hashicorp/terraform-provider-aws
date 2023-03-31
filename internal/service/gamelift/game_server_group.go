@@ -12,7 +12,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -221,16 +221,16 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
 	var out *gamelift.CreateGameServerGroupOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -392,14 +392,14 @@ func resourceGameServerGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	input := &gamelift.DeleteGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteGameServerGroupWithContext(ctx, input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete game server group %s: %s", d.Id(), err)
 			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

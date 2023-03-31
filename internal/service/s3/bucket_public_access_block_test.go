@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -285,16 +286,16 @@ func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, co
 		}
 
 		var output *s3.GetPublicAccessBlockOutput
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
 			output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -339,7 +340,7 @@ func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string
 			Bucket: aws.String(rs.Primary.ID),
 		}
 
-		return resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			_, err := conn.GetPublicAccessBlockWithContext(ctx, getInput)
 
 			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
@@ -347,10 +348,10 @@ func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(fmt.Errorf("S3 Bucket Public Access Block (%s) still exists", rs.Primary.ID))
+			return retry.RetryableError(fmt.Errorf("S3 Bucket Public Access Block (%s) still exists", rs.Primary.ID))
 		})
 	}
 }

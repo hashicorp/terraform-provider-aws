@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -117,15 +117,15 @@ func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData,
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, 60*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteAssessmentTargetWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeAssessmentRunInProgressException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

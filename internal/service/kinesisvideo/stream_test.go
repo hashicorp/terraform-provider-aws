@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -198,7 +199,7 @@ func testAccCheckStreamDisappears(ctx context.Context, resourceName string) reso
 			return err
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{kinesisvideo.StatusDeleting},
 			Target:     []string{"DELETED"},
 			Refresh:    tfkinesisvideo.StreamStateRefresh(ctx, conn, rs.Primary.ID),

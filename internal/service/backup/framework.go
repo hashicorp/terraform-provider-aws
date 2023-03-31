@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -141,7 +141,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("name").(string)
 
 	input := &backup.CreateFrameworkInput{
-		IdempotencyToken:  aws.String(resource.UniqueId()),
+		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
 	}
@@ -228,7 +228,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
-			IdempotencyToken:     aws.String(resource.UniqueId()),
+			IdempotencyToken:     aws.String(id.UniqueId()),
 			FrameworkControls:    expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 			FrameworkDescription: aws.String(d.Get("description").(string)),
 			FrameworkName:        aws.String(d.Id()),

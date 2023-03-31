@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -400,7 +400,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, clusterDeleteTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, clusterDeleteTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteClusterWithContext(ctx, input)
 
 		if err == nil {
@@ -410,21 +410,21 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		if tfawserr.ErrCodeEquals(err, "ClusterContainsContainerInstancesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrCodeEquals(err, "ClusterContainsServicesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrCodeEquals(err, "ClusterContainsTasksException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		return retry.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteClusterWithContext(ctx, input)
@@ -443,16 +443,16 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func retryClusterCreate(ctx context.Context, conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
 	var output *ecs.CreateClusterOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

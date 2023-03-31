@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,7 +102,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.UserGroupId))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceUserGroupPendingStates,
 		Target:     []string{"active"},
 		Refresh:    resourceUserGroupStateRefreshFunc(ctx, d.Get("user_group_id").(string), conn),
@@ -213,7 +213,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
 			}
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    resourceUserGroupPendingStates,
 				Target:     []string{"active"},
 				Refresh:    resourceUserGroupStateRefreshFunc(ctx, d.Get("user_group_id").(string), conn),
@@ -260,7 +260,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil && !tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache User Group: %s", err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
 		Refresh:    resourceUserGroupStateRefreshFunc(ctx, d.Get("user_group_id").(string), conn),
@@ -281,7 +281,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceUserGroupStateRefreshFunc(ctx context.Context, id string, conn *elasticache.ElastiCache) resource.StateRefreshFunc {
+func resourceUserGroupStateRefreshFunc(ctx context.Context, id string, conn *elasticache.ElastiCache) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := FindUserGroupByID(ctx, conn, id)
 

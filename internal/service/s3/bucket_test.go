@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -531,7 +532,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				// Tear down CF stack.
 				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
-				requestToken := resource.UniqueId()
+				requestToken := id.UniqueId()
 				req := &cloudformation.DeleteStackInput{
 					StackName:          aws.String(stackID),
 					ClientRequestToken: aws.String(requestToken),
@@ -2864,7 +2865,7 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, st
   }
 }`, n)
 
-		requestToken := resource.UniqueId()
+		requestToken := id.UniqueId()
 		req := &cloudformation.CreateStackInput{
 			StackName:          aws.String(stackName),
 			TemplateBody:       aws.String(templateBody),

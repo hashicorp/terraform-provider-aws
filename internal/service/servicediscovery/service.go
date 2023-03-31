@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -155,7 +155,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreateServiceInput{
-		CreatorRequestId: aws.String(resource.UniqueId()),
+		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 	}
 

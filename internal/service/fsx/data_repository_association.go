@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -159,7 +159,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
 		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
@@ -211,7 +211,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			AssociationId:      aws.String(d.Id()),
 		}
 
@@ -282,7 +282,7 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
-		ClientRequestToken:     aws.String(resource.UniqueId()),
+		ClientRequestToken:     aws.String(id.UniqueId()),
 		AssociationId:          aws.String(d.Id()),
 		DeleteDataInFileSystem: aws.Bool(d.Get("delete_data_in_filesystem").(bool)),
 	}

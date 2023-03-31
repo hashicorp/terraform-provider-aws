@@ -12,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -108,7 +109,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverEndpointInput{
-		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
+		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
 		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
@@ -290,7 +291,7 @@ func FindResolverEndpointByID(ctx context.Context, conn *route53resolver.Route53
 	output, err := conn.GetResolverEndpointWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -330,7 +331,7 @@ func findResolverEndpointIPAddressesByID(ctx context.Context, conn *route53resol
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverEndpointByID(ctx, conn, id)
 
@@ -347,7 +348,7 @@ func statusEndpoint(ctx context.Context, conn *route53resolver.Route53Resolver, 
 }
 
 func waitEndpointCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverEndpointStatusCreating},
 		Target:     []string{route53resolver.ResolverEndpointStatusOperational},
 		Refresh:    statusEndpoint(ctx, conn, id),
@@ -368,7 +369,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Route53Resol
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverEndpoint, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverEndpointStatusUpdating},
 		Target:     []string{route53resolver.ResolverEndpointStatusOperational},
 		Refresh:    statusEndpoint(ctx, conn, id),
@@ -389,7 +390,7 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Route53Resol
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverEndpointStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEndpoint(ctx, conn, id),

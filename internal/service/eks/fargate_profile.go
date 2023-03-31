@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,10 +110,10 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
-	id := FargateProfileCreateResourceID(clusterName, fargateProfileName)
+	profileID := FargateProfileCreateResourceID(clusterName, fargateProfileName)
 
 	input := &eks.CreateFargateProfileInput{
-		ClientRequestToken:  aws.String(resource.UniqueId()),
+		ClientRequestToken:  aws.String(id.UniqueId()),
 		ClusterName:         aws.String(clusterName),
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
@@ -129,17 +130,17 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateFargateProfileWithContext(ctx, input)
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Misconfigured PodExecutionRole Trust Policy") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -150,10 +151,10 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EKS Fargate Profile (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EKS Fargate Profile (%s): %s", profileID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(profileID)
 
 	_, err = waitFargateProfileCreated(ctx, conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutCreate))
 

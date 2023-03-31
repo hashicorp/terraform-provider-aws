@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -200,9 +201,9 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		createOpts.DBInstanceIdentifier = aws.String(v.(string))
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId(v.(string)))
+			createOpts.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId(v.(string)))
 		} else {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId("tf-"))
+			createOpts.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId("tf-"))
 		}
 	}
 
@@ -216,14 +217,14 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating DocDB Instance opts: %s", createOpts)
 	var resp *docdb.CreateDBInstanceOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -237,7 +238,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
 	// reuse db_instance refresh func
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -396,13 +397,13 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if requestUpdate {
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.ModifyDBInstanceWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -414,7 +415,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		// reuse db_instance refresh func
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
 			Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -453,7 +454,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	// re-uses db_instance refresh func
 	log.Println("[INFO] Waiting for DocDB Cluster Instance to be destroyed")
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -469,7 +470,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := resourceInstanceRetrieve(ctx, conn, id)
 
@@ -494,7 +495,7 @@ func resourceInstanceRetrieve(ctx context.Context, conn *docdb.DocDB, id string)
 	}
 	out, err := conn.DescribeDBInstancesWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
