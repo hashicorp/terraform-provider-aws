@@ -37,6 +37,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidPrefix(t *testing.T) {
+	t.Parallel()
+
 	maxLength := 37
 	validPrefixes := []string{
 		"ValidSageMakerName",
