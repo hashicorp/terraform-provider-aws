@@ -51,98 +51,84 @@ func TestAccTransitGatewayRouteTablePropagationsDataSource_filter(t *testing.T) 
 }
 
 func testAccTransitGatewayRouteTablePropagationsDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
-resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
 
-	tags = {
-	  Name = %[1]q
-	}
-}  
-resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id     = aws_vpc.test.id
-
-	tags = {
-	  Name = %[1]q
-	}
-}  
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-	subnet_ids         = [aws_subnet.test.id]
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
-	vpc_id             = aws_vpc.test.id
+  subnet_ids         = aws_subnet.test[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_ec2_transit_gateway_route_table" "test" {
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-	transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
-	transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
-data "aws_ec2_transit_gateway_route_table_propagations" "test" {
-	transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 
-	depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
+data "aws_ec2_transit_gateway_route_table_propagations" "test" {
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+
+  depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTransitGatewayRouteTablePropagationsDataSourceConfig_filter(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
-resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
 
-	tags = {
-	  Name = %[1]q
-	}
-}  
-resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id     = aws_vpc.test.id
-
-	tags = {
-	  Name = %[1]q
-	}
-}  
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-	subnet_ids         = [aws_subnet.test.id]
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
-	vpc_id             = aws_vpc.test.id
+  subnet_ids         = aws_subnet.test[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_ec2_transit_gateway_route_table" "test" {
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
-	transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
-	transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
+
 data "aws_ec2_transit_gateway_route_table_propagations" "test" {
-	transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 
-	filter {
-		name   = "transit-gateway-attachment-id"
-		values = [aws_ec2_transit_gateway_vpc_attachment.test.id]
-	}
+  filter {
+    name   = "transit-gateway-attachment-id"
+    values = [aws_ec2_transit_gateway_vpc_attachment.test.id]
+  }
 
-	depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
+  depends_on = [aws_ec2_transit_gateway_route_table_propagation.test]
 }
-`, rName)
+`, rName))
 }
