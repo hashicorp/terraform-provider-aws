@@ -1,0 +1,53 @@
+name: "Pull Request Feed"
+on:
+  pull_request:
+    types: [opened, closed]
+jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+  NotificationPRMerged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notification PR Merged
+        uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":merged: <${{ github.event.pull_request.merged_by.html_url }}|${{ github.event.pull_request.merged_by.login }}> merged <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  NotificationMaintainerPROpened:
+    needs: community_check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notification Maintainer PR Opened
+        uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":open: <${{ github.event.pull_request.user.html_url }}|${{ github.event.pull_request.user.login }}> opened <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
