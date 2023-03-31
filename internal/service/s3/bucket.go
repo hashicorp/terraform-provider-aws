@@ -1230,6 +1230,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
+	if tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
@@ -1426,7 +1430,7 @@ func FindBucket(ctx context.Context, conn *s3.S3, bucket string) error {
 		}
 	}
 
-	return nil
+	return err
 }
 
 // https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region

@@ -3,10 +3,11 @@ on:
 
 name: Pull Request Target (All types)
 
-env:
-  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   Labeler:
     runs-on: ubuntu-latest
     steps:
@@ -16,16 +17,19 @@ jobs:
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   NeedsTriageLabeler:
+    needs: community_check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - name: Apply needs-triage Label
         uses: actions/labeler@v4
-        if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
+        if: (github.event.action == 'opened' && !needs.community_check.outputs.maintainer)
         with:
           configuration-path: .github/labeler-pr-needs-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   SizeLabeler:
     runs-on: ubuntu-latest
     steps:
@@ -43,6 +47,7 @@ jobs:
           l_max_size: '300'
           xl_label: 'size/XL'
           message_if_xl: ''
+
   PullRequestComments:
     runs-on: ubuntu-latest
     steps:

@@ -383,7 +383,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
 				return retry.RetryableError(err)
 			}
 
@@ -536,7 +536,7 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return retry.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
 					return retry.RetryableError(err)
 				}
 

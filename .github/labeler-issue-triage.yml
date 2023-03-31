@@ -99,6 +99,8 @@ service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkidentity_'
+service/chimesdkmediapipelines:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmediapipelines_'
 service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
@@ -559,6 +561,8 @@ service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
+service/securitylake:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securitylake_'
 service/serverlessrepo:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
