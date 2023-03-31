@@ -6,12 +6,11 @@ jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
-  merged-notification:
+  NotificationPRMerged:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Send custom JSON data to Slack workflow
-        id: slack
+      - name: Notification PR Merged
         uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844
         with:
           payload: |
@@ -29,12 +28,11 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-  maintainer-pullrequest:
+  NotificationMaintainerPROpened:
     needs: community_check
     runs-on: ubuntu-latest
     steps:
-      - name: Send custom JSON data to Slack workflow
-        id: slack
+      - name: Notification Maintainer PR Opened
         uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844
         if: github.event.action == 'opened' && needs.community_check.outputs.maintainer)
         with:
