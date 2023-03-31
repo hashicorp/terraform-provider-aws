@@ -38,7 +38,6 @@ func ResourceGateway() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"owner_account_id": {
