@@ -2917,6 +2917,23 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccLaunchTemplateConfig_metadataOptionsWithOptionalHttpTokens(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccLaunchTemplateConfig_metadataOptionsIPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
@@ -4069,6 +4086,19 @@ resource "aws_launch_template" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_metadataOptionsWithOptionalHttpTokens(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  metadata_options {
+    http_endpoint               = "enabled"
+	http_tokens                 = "optional"
   }
 }
 `, rName)
