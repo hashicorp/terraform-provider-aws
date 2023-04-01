@@ -677,7 +677,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_tokens": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.LaunchTemplateHttpTokensStateOptional,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateHttpTokensState_Values(), false),
 						},
 						"instance_metadata_tags": {
