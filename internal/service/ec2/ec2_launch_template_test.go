@@ -4091,7 +4091,7 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccLaunchTemplateConfig_metadataOptionsWithOptionalHttpTokens(rName string) string {
+func testAccLaunchTemplateConfig_metadataOptionsWithOptionalHTTPTokens(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
