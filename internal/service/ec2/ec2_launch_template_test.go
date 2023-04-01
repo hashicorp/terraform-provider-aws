@@ -2917,7 +2917,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_metadataOptionsWithOptionalHttpTokens(rName),
+				Config: testAccLaunchTemplateConfig_metadataOptionsWithOptionalHTTPTokens(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
