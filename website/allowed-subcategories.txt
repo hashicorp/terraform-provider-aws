@@ -304,6 +304,7 @@ Transit Gateway
 Translate
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
+VPC Lattice
 VPN (Client)
 VPN (Site-to-Site)
 Verified Access

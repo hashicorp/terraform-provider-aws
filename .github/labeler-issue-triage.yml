@@ -639,6 +639,8 @@ service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b)'
+service/vpclattice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_vpclattice_'
 service/vpnclient:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_client_vpn'
 service/vpnsite:
