@@ -4098,7 +4098,7 @@ resource "aws_launch_template" "test" {
 
   metadata_options {
     http_endpoint               = "enabled"
-	http_tokens                 = "optional"
+    http_tokens                 = "optional"
   }
 }
 `, rName)
