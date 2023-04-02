@@ -587,7 +587,6 @@ func TestAccCloudWatchMetricAlarm_missingReturnDataFromMetricQuery(t *testing.T)
 	})
 }
 
-// TODO: make a test with multiple return_data
 func TestAccCloudWatchMetricAlarm_moreThanOneReturnDataFromMetricQuery(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
