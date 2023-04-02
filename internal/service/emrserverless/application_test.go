@@ -2,6 +2,7 @@ package emrserverless_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -140,9 +141,32 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 
 func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	firstVersionRegex, err := regexp.Compile("1\\.0\\.0")
+	if err != nil {
+		t.Error(err)
+	}
+
+	secondVersionRegex, err := regexp.Compile("1\\.0\\.1")
+	if err != nil {
+		t.Error(err)
+	}
+
+	firstImageConfig, err := testAccApplicationConfig_imageConfiguration(rName, "1.0.0", "1.0.1", "1.0.0")
+	if err != nil {
+		t.Error(err)
+	}
+
+	secondImageConfig, err := testAccApplicationConfig_imageConfiguration(rName, "1.0.0", "1.0.1", "1.0.1")
+	if err != nil {
+		t.Error(err)
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -151,11 +175,11 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_imageConfiguration(rName, "public.ecr.aws/emr-serverless/hive/emr-6.9.0:20221221"),
+				Config: firstImageConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.image_uri", "public.ecr.aws/emr-serverless/hive/emr-6.9.0:20221221"),
+					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", firstVersionRegex),
 				),
 			},
 			{
@@ -164,11 +188,11 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_imageConfiguration(rName, "public.ecr.aws/emr-serverless/hive/emr-6.9.0:20221108"),
+				Config: secondImageConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_configuration.0.image_uri", "public.ecr.aws/emr-serverless/hive/emr-6.9.0:20221108"),
+					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", secondVersionRegex),
 				),
 			},
 		},
@@ -484,16 +508,183 @@ resource "aws_emrserverless_application" "test" {
 `, rName, arch)
 }
 
-func testAccApplicationConfig_imageConfiguration(rName, imageUri string) string {
+// At the time of writing, the AWS EMR Serverless API returns a 500 error if you try to create an EMR Serverless
+// application with an image from a public emr repo, and so we need to build an image and put it in a temporary
+// repo in order to run the test
+func testAccApplicationConfig_imageConfiguration(rName, firstImageVersion, secondImageVersion, selectedImageVersion string) (string, error) {
+	if firstImageVersion == secondImageVersion {
+		return "", errors.New(fmt.Sprintf("firstImageVersion and secondImageVersion cannot be equal. Was given %[1]q for both", firstImageVersion))
+	}
+
+	if selectedImageVersion != firstImageVersion && selectedImageVersion != secondImageVersion {
+		return "", errors.New(fmt.Sprintf("selectedImageVersion must be equal to firstImageVersion or secondImageVersion (%[1]q or %[2]q). Was given %[3]q", firstImageVersion, secondImageVersion, selectedImageVersion))
+	}
+
+	selectedVersionResourceName := "test_version1"
+	if selectedImageVersion != firstImageVersion {
+		selectedVersionResourceName = "test_version2"
+	}
+
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_ecr_repository" "test" {
+	name = %[1]q
+	force_delete = true
+}
+
+resource "aws_vpc" "test" {
+	cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_default_route_table" "test" {
+	default_route_table_id = aws_vpc.test.default_route_table_id
+
+	route {
+		cidr_block = "0.0.0.0/0"
+		gateway_id = aws_internet_gateway.test.id
+	}
+}
+
+resource "aws_internet_gateway" "test" {
+	vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+	cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+	map_public_ip_on_launch = true
+	vpc_id                  = aws_vpc.test.id
+}
+
+resource "aws_default_security_group" "test" {
+	vpc_id = aws_vpc.test.id
+
+	egress {
+		cidr_blocks = ["0.0.0.0/0"]
+		from_port   = 0
+		protocol    = "-1"
+		to_port     = 0
+	}
+
+	ingress {
+		from_port = 0
+		protocol  = -1
+		self      = true
+		to_port   = 0
+	}
+}
+
+resource "aws_iam_role" "test" {
+	assume_role_policy = jsonencode({
+		Version = "2012-10-17"
+		Statement = [{
+			Action = "sts:AssumeRole"
+			Effect = "Allow"
+			Principal = {
+				Service = "ec2.${data.aws_partition.current.dns_suffix}"
+			}
+			Sid = ""
+		}]
+	})
+	name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonSSMManagedInstanceCore" {
+	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+	role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "EC2InstanceProfileForImageBuilder" {
+	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/EC2InstanceProfileForImageBuilder"
+	role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "EC2InstanceProfileForImageBuilderECRContainerBuilds" {
+	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
+	role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_instance_profile" "test" {
+	name = aws_iam_role.test.name
+	role = aws_iam_role.test.name
+
+	depends_on = [
+		aws_iam_role_policy_attachment.AmazonSSMManagedInstanceCore,
+		aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds
+	]
+}
+
+resource "aws_imagebuilder_container_recipe" "test_version1" {
+	name              = "%[1]s_version1"
+	container_type    = "DOCKER"
+	parent_image      = "public.ecr.aws/emr-serverless/hive/emr-6.9.0"
+	version           = %[3]q
+	platform_override = "Linux"
+
+	component {
+		component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+	}
+
+	dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+EOF
+
+	target_repository {
+		repository_name = aws_ecr_repository.test.name
+		service         = "ECR"
+	}
+}
+
+resource "aws_imagebuilder_container_recipe" "test_version2" {
+	name              = "%[1]s_version2"
+	container_type    = "DOCKER"
+	parent_image      = "public.ecr.aws/emr-serverless/hive/emr-6.9.0"
+	version           = %[4]q
+	platform_override = "Linux"
+
+	component {
+		component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+	}
+
+	dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+EOF
+
+	target_repository {
+		repository_name = aws_ecr_repository.test.name
+		service         = "ECR"
+	}
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+	instance_profile_name = aws_iam_instance_profile.test.name
+	name                  = %[1]q
+	security_group_ids    = [aws_default_security_group.test.id]
+	subnet_id             = aws_subnet.test.id
+
+	depends_on = [aws_default_route_table.test]
+}
+
+resource "aws_imagebuilder_image" "test_version1" {
+	container_recipe_arn             = aws_imagebuilder_container_recipe.test_version1.arn
+	infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_imagebuilder_image" "test_version2" {
+	container_recipe_arn             = aws_imagebuilder_container_recipe.test_version2.arn
+	infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
   release_label = "emr-6.9.0"
   type          = "hive"
 
   image_configuration {
-		image_uri    = %[2]q
+		image_uri    = "${aws_ecr_repository.test.repository_url}:${replace(aws_imagebuilder_image.%[2]s.version, "/", "-")}"
   }
 }
-`, rName, imageUri)
+`, rName, selectedVersionResourceName, firstImageVersion, secondImageVersion), nil
 }

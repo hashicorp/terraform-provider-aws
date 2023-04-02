@@ -309,7 +309,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting auto_stop_configuration: %s", err)
 	}
 
-	if err := d.Set("image_configuration", []interface{}{flattenImageConfiguration(application.ImageConfiguration)}); err != nil {
+	if err := d.Set("image_configuration", flattenImageConfiguration(application.ImageConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting image_configuration: %s", err)
 	}
 
@@ -578,18 +578,20 @@ func expandImageConfiguration(tfMap map[string]interface{}) *emrserverless.Image
 	return apiObject
 }
 
-func flattenImageConfiguration(apiObject *emrserverless.ImageConfiguration) map[string]interface{} {
-	if apiObject == nil {
+func flattenImageConfiguration(apiObject *emrserverless.ImageConfiguration) []interface{} {
+	if apiObject == nil || apiObject.ImageUri == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	var tfList []interface{}
 
 	if v := apiObject.ImageUri; v != nil {
-		tfMap["image_uri"] = aws.StringValue(v)
+		tfList = append(tfList, map[string]interface{}{
+			"image_uri": aws.StringValue(v),
+		})
 	}
 
-	return tfMap
+	return tfList
 }
 
 func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialCapacityConfig {
