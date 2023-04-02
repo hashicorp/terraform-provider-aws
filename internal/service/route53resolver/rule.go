@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,7 +111,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverRuleInput{
-		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-rule-")),
+		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get("domain_name").(string)),
 		RuleType:         aws.String(d.Get("rule_type").(string)),
 	}
@@ -285,7 +286,7 @@ func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Reso
 	output, err := conn.GetResolverRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -302,7 +303,7 @@ func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Reso
 	return output.ResolverRule, nil
 }
 
-func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverRuleByID(ctx, conn, id)
 
@@ -319,7 +320,7 @@ func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id s
 }
 
 func waitRuleCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{route53resolver.ResolverRuleStatusComplete},
 		Refresh: statusRule(ctx, conn, id),
 		Timeout: timeout,
@@ -339,7 +340,7 @@ func waitRuleCreated(ctx context.Context, conn *route53resolver.Route53Resolver,
 }
 
 func waitRuleUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverRuleStatusUpdating},
 		Target:  []string{route53resolver.ResolverRuleStatusComplete},
 		Refresh: statusRule(ctx, conn, id),
@@ -360,7 +361,7 @@ func waitRuleUpdated(ctx context.Context, conn *route53resolver.Route53Resolver,
 }
 
 func waitRuleDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRule, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverRuleStatusDeleting},
 		Target:  []string{},
 		Refresh: statusRule(ctx, conn, id),

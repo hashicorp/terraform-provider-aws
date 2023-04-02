@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -224,7 +225,7 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 //
 // These verifications and configuration are preferred at this level to prevent
 // provider developers from experiencing less clear errors for every test.
-func PreCheck(t *testing.T) {
+func PreCheck(ctx context.Context, t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
@@ -243,9 +244,6 @@ func PreCheck(t *testing.T) {
 		//   * Region is automatically handled via shared AWS configuration file and still verified
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
-
-		// TODO: take `ctx` as a parameter instead
-		ctx := Context(t)
 
 		diags := Provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
 		if err := sdkdiag.DiagnosticsError(diags); err != nil {
@@ -352,7 +350,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, resource.UniqueIDSuffixLength, suffix))
+	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -371,7 +369,7 @@ func CheckResourceAttrNameGenerated(resourceName string, attributeName string) r
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(resource.UniqueIdPrefix, suffix))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(id.UniqueIdPrefix, suffix))(s)
 	}
 }
 
@@ -796,7 +794,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == "aws-us-gov" || Partition() == "aws-us-gov" {
+		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -820,7 +818,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 }
 
-// PreCheckRegion checks that the test region is one of the specified regions.
+// PreCheckRegion checks that the test region is one of the specified AWS Regions.
 func PreCheckRegion(t *testing.T, regions ...string) {
 	curr := Region()
 	var regionOK bool
@@ -833,11 +831,11 @@ func PreCheckRegion(t *testing.T, regions ...string) {
 	}
 
 	if !regionOK {
-		t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.DefaultRegion, curr, strings.Join(regions, ", "))
 	}
 }
 
-// PreCheckRegionNot checks that the test region is not one of the specified regions.
+// PreCheckRegionNot checks that the test region is not one of the specified AWS Regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	curr := Region()
 
@@ -848,7 +846,7 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 	}
 }
 
-// PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
+// PreCheckAlternateRegionIs checks that the alternate test region is the specified AWS Region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
 	if curr := AlternateRegion(); curr != region {
 		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AlternateRegion, curr, region)
@@ -1632,7 +1630,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(resource.UniqueId()),
+			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpca.Validity{
@@ -1700,7 +1698,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(resource.UniqueId()),
+			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpca.Validity{
@@ -2294,4 +2292,12 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 	}
 
 	return is, nil
+}
+
+func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
+}
+
+func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
 }

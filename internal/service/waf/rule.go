@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -236,7 +236,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	wr := NewRetryer(conn)
-	err := resource.RetryContext(ctx, RuleDeleteTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, RuleDeleteTimeout, func() *retry.RetryError {
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			req := &waf.DeleteRuleInput{
 				ChangeToken: token,
@@ -248,9 +248,9 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, waf.ErrCodeReferencedItemException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

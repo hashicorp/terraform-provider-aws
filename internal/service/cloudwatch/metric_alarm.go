@@ -113,6 +113,10 @@ func ResourceMetricAlarm() *schema.Resource {
 									"period": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ValidateFunc: validation.Any(
+											validation.IntInSlice([]int{1, 5, 10, 30}),
+											validation.IntDivisibleBy(60),
+										),
 									},
 									"stat": {
 										Type:     schema.TypeString,
@@ -137,6 +141,14 @@ func ResourceMetricAlarm() *schema.Resource {
 						"label": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"period": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.IntInSlice([]int{1, 5, 10, 30}),
+								validation.IntDivisibleBy(60),
+							),
 						},
 						"return_data": {
 							Type:     schema.TypeBool,
@@ -634,6 +646,9 @@ func flattenMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[stri
 			metric := flattenMetricAlarmMetricsMetricStat(mq.MetricStat)
 			metricQuery["metric"] = []interface{}{metric}
 		}
+		if mq.Period != nil {
+			metricQuery["period"] = aws.Int64Value(mq.Period)
+		}
 		metricQueries = append(metricQueries, metricQuery)
 	}
 
@@ -677,6 +692,9 @@ func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
 		}
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
 			metricQuery.MetricStat = expandMetricAlarmMetricsMetric(v.([]interface{}))
+		}
+		if v, ok := metricQueryResource["period"]; ok && v.(int) != 0 {
+			metricQuery.Period = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
 			metricQuery.AccountId = aws.String(v.(string))

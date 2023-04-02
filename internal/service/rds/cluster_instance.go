@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -234,9 +234,9 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		identifier = v.(string)
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
+			identifier = id.PrefixedUniqueId(v.(string))
 		} else {
-			identifier = resource.PrefixedUniqueId("tf-")
+			identifier = id.PrefixedUniqueId("tf-")
 		}
 	}
 	input := &rds.CreateDBInstanceInput{

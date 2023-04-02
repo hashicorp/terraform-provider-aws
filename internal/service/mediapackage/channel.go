@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -187,15 +187,15 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	dcinput := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	err = resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DescribeChannelWithContext(ctx, dcinput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeChannelWithContext(ctx, dcinput)

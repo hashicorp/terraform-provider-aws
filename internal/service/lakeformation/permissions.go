@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -427,27 +427,27 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.RetryContext(ctx, IAMPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.GrantPermissionsWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Grantee has no permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access requested permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
@@ -732,21 +732,21 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 
-	err := resource.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *retry.RetryError {
 		var err error
 		_, err = conn.RevokePermissionsWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access requested permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
@@ -775,12 +775,12 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *retry.RetryError {
 		var err error
 		_, err = conn.RevokePermissionsWithContext(ctx, input)
 
 		if !tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		return nil

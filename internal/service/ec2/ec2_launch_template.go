@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -974,7 +974,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(resource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
 	}
@@ -1099,7 +1099,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(resource.UniqueId()),
+			ClientToken:      aws.String(id.UniqueId()),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1935,21 +1935,18 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
 		apiObject.HttpEndpoint = aws.String(v)
+	}
 
-		if v == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
-			// These parameters are not allowed unless HttpEndpoint is enabled.
-			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
-				apiObject.HttpTokens = aws.String(v)
-			}
+	if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+		apiObject.HttpTokens = aws.String(v)
+	}
 
-			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
-				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
-			}
+	if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+		apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+	}
 
-			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
-				apiObject.InstanceMetadataTags = aws.String(v)
-			}
-		}
+	if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
+		apiObject.InstanceMetadataTags = aws.String(v)
 	}
 
 	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {

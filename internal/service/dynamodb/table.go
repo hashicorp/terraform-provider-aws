@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -145,6 +145,10 @@ func ResourceTable() *schema.Resource {
 				Optional:     true,
 				Default:      dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
+			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
@@ -505,6 +509,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.AttributeDefinitions = expandAttributes(aSet.List())
 		}
 
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			input.DeletionProtectionEnabled = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
 			input.LocalSecondaryIndexes = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
@@ -631,6 +639,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	}
+
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
 
 	if table.ProvisionedThroughput != nil {
 		d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
@@ -826,6 +836,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		input.BillingMode = aws.String(billingMode)
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		hasTableUpdate = true
+		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
 	// make change when
@@ -1155,23 +1170,23 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			}
 		}
 
-		err := resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *retry.RetryError {
 			_, err := conn.UpdateTableWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, "ValidationException", "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -1290,14 +1305,14 @@ func updatePITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, 
 		conn = dynamodb.New(session)
 	}
 
-	err := resource.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateContinuousBackupsWithContext(ctx, input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1584,28 +1599,28 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				},
 			}
 
-			err := resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 				_, err := conn.UpdateTableWithContext(ctx, input)
 				notFoundRetries := 0
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 						notFoundRetries++
 						if notFoundRetries > 3 {
-							return resource.NonRetryableError(err)
+							return retry.NonRetryableError(err)
 						}
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})

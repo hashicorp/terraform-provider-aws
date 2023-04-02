@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -531,19 +532,16 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 						},
 					},
@@ -821,7 +819,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
-		ClientToken:                       aws.String(resource.UniqueId()),
+		ClientToken:                       aws.String(id.UniqueId()),
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
@@ -1364,13 +1362,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+						err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-									return resource.RetryableError(err)
+									return retry.RetryableError(err)
 								}
-								return resource.NonRetryableError(err)
+								return retry.NonRetryableError(err)
 							}
 							return nil
 						})
@@ -1812,6 +1810,34 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("private_dns_name_options") && !d.IsNewResource() {
+		if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			input := &ec2.ModifyPrivateDnsNameOptionsInput{
+				InstanceId: aws.String(d.Id()),
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_aaaa_record") {
+				input.EnableResourceNameDnsAAAARecord = aws.Bool(tfMap["enable_resource_name_dns_aaaa_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.enable_resource_name_dns_a_record") {
+				input.EnableResourceNameDnsARecord = aws.Bool(tfMap["enable_resource_name_dns_a_record"].(bool))
+			}
+
+			if d.HasChange("private_dns_name_options.0.hostname_type") {
+				input.PrivateDnsHostnameType = aws.String(tfMap["hostname_type"].(string))
+			}
+
+			_, err := conn.ModifyPrivateDnsNameOptionsWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -1974,13 +2000,13 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.AssociateIamInstanceProfileWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -2479,16 +2505,16 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.E
 	input := &ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := resource.RetryContext(ctx, 15*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.GetPasswordDataWithContext(ctx, input)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if resp.PasswordData == nil || aws.StringValue(resp.PasswordData) == "" {
-			return resource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
 		passwordData = strings.TrimSpace(aws.StringValue(resp.PasswordData))

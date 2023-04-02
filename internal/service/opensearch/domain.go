@@ -14,7 +14,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -335,6 +335,10 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"dashboard_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_endpoint_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -559,7 +563,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// and might cause duplicate domain to appear in state
 	resp, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 	if err == nil {
-		return sdkdiag.AppendErrorf(diags, "OpenSearch domain %s already exists", aws.StringValue(resp.DomainName))
+		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.StringValue(resp.DomainName))
 	}
 
 	inputCreateDomain := opensearchservice.CreateDomainInput{
@@ -672,40 +676,37 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		inputCreateDomain.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating OpenSearch domain: %s", inputCreateDomain)
-
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *opensearchservice.CreateDomainOutput
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateDomainWithContext(ctx, &inputCreateDomain)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				log.Printf("[DEBUG] Retrying creation of OpenSearch domain %s", aws.StringValue(inputCreateDomain.DomainName))
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -713,20 +714,20 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		out, err = conn.CreateDomainWithContext(ctx, &inputCreateDomain)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating OpenSearch domain: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
-	log.Printf("[DEBUG] Waiting for OpenSearch domain %q to be created", d.Id())
+	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
 	if err := WaitForDomainCreation(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] OpenSearch domain %q created", d.Id())
+	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		log.Printf("[DEBUG] Modifying config for OpenSearch domain %q", d.Id())
+		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
 
 		inputUpdateDomainConfig := &opensearchservice.UpdateDomainConfigInput{
 			DomainName: aws.String(d.Get("domain_name").(string)),
@@ -737,10 +738,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.UpdateDomainConfigWithContext(ctx, inputUpdateDomainConfig)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch Domain: %s", err)
 		}
 
-		log.Printf("[DEBUG] Config for OpenSearch domain %q modified", d.Id())
+		log.Printf("[DEBUG] Config for OpenSearch Domain %q modified", d.Id())
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
@@ -755,7 +756,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] OpenSearch domain (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -764,8 +765,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received OpenSearch domain: %s", ds)
-
 	outDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, &opensearchservice.DescribeDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
@@ -773,8 +772,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received config for OpenSearch domain: %s", outDescribeDomainConfig)
 
 	dc := outDescribeDomainConfig.DomainConfig
 
@@ -848,17 +845,19 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		d.Set("endpoint", endpoints["vpc"])
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", ds.Endpoint)
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain not in VPC expected to have null Endpoints value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain not in VPC expected to have null Endpoints value", d.Id())
 		}
 	}
 
@@ -1053,7 +1052,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).OpenSearchConn()
 	domainName := d.Get("domain_name").(string)
 
-	log.Printf("[DEBUG] Deleting OpenSearch domain: %q", domainName)
+	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
 	_, err := conn.DeleteDomainWithContext(ctx, &opensearchservice.DeleteDomainInput{
 		DomainName: aws.String(domainName),
 	})
@@ -1064,7 +1063,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for OpenSearch domain %q to be deleted", domainName)
+	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be deleted", domainName)
 	if err := waitForDomainDelete(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
@@ -1095,6 +1094,10 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func getDashboardEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_dashboards"
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {

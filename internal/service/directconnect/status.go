@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectionByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusConnectionState(ctx context.Context, conn *directconnect.DirectConnec
 	}
 }
 
-func statusGatewayState(ctx context.Context, conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusGatewayState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGatewayByID(ctx, conn, id)
 
@@ -41,7 +41,7 @@ func statusGatewayState(ctx context.Context, conn *directconnect.DirectConnect, 
 	}
 }
 
-func statusGatewayAssociationState(ctx context.Context, conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusGatewayAssociationState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGatewayAssociationByID(ctx, conn, id)
 
@@ -57,7 +57,7 @@ func statusGatewayAssociationState(ctx context.Context, conn *directconnect.Dire
 	}
 }
 
-func statusHostedConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusHostedConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindHostedConnectionByID(ctx, conn, id)
 
@@ -73,7 +73,7 @@ func statusHostedConnectionState(ctx context.Context, conn *directconnect.Direct
 	}
 }
 
-func statusLagState(ctx context.Context, conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusLagState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLagByID(ctx, conn, id)
 

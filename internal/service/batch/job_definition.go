@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -340,6 +341,48 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
+	const (
+		jobDefinitionStatusInactive = "INACTIVE"
+	)
+	input := &batch.DescribeJobDefinitionsInput{
+		JobDefinitions: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := findJobDefinition(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == jobDefinitionStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.JobDefinitions) == 0 || output.JobDefinitions[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.JobDefinitions); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.JobDefinitions[0], nil
 }
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {

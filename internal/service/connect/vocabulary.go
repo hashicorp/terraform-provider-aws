@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,7 +102,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	vocabularyName := d.Get("name").(string)
 
 	input := &connect.CreateVocabularyInput{
-		ClientToken:    aws.String(resource.UniqueId()),
+		ClientToken:    aws.String(id.UniqueId()),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get("content").(string)),
 		LanguageCode:   aws.String(d.Get("language_code").(string)),

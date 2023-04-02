@@ -99,6 +99,8 @@ service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkidentity_'
+service/chimesdkmediapipelines:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmediapipelines_'
 service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
@@ -206,7 +208,7 @@ service/dynamodbstreams:
 service/ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ebs_'
 service/ec2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
 service/ec2ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ebs_|volume_attach|snapshot_create)'
 service/ec2instanceconnect:
@@ -559,6 +561,8 @@ service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
+service/securitylake:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securitylake_'
 service/serverlessrepo:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_serverlessapplicationrepository_'
 service/servicecatalog:

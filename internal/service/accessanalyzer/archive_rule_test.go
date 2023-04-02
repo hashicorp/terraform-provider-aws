@@ -23,7 +23,7 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
@@ -79,7 +79,7 @@ filter {
 `
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
@@ -127,7 +127,7 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),

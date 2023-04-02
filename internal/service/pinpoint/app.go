@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -162,9 +162,9 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
+		name = id.PrefixedUniqueId(v.(string))
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	log.Printf("[DEBUG] Pinpoint create app: %s", name)
@@ -309,7 +309,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn()
 
-	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Pinpoint Application: %s", d.Id())
 	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -318,7 +318,11 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

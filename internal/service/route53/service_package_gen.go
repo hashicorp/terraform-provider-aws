@@ -52,6 +52,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceHealthCheck,
 			TypeName: "aws_route53_health_check",
+			Name:     "Health Check",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "healthcheck",
+			},
 		},
 		{
 			Factory:  ResourceHostedZoneDNSSEC,
@@ -84,6 +89,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceZone,
 			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "hostedzone",
+			},
 		},
 		{
 			Factory:  ResourceZoneAssociation,

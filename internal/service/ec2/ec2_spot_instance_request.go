@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -145,7 +146,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
 		// Users can get equivalent behavior out of TF's "count" meta-parameter.
@@ -201,21 +202,21 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 	// Make the spot instance request
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		resp, err = conn.RequestSpotInstancesWithContext(ctx, spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Printf("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		// IAM roles can also take time to propagate in AWS:
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -235,7 +236,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
-		spotStateConf := &resource.StateChangeConf{
+		spotStateConf := &retry.StateChangeConf{
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html
 			Pending:    []string{"start", "pending-evaluation", "pending-fulfillment"},
 			Target:     []string{"fulfilled"},
@@ -427,9 +428,9 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-// SpotInstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// SpotInstanceStateRefreshFunc returns a retry.StateRefreshFunc that is used to watch
 // an EC2 spot instance request
-func SpotInstanceStateRefreshFunc(ctx context.Context, conn *ec2.EC2, sir *ec2.SpotInstanceRequest) resource.StateRefreshFunc {
+func SpotInstanceStateRefreshFunc(ctx context.Context, conn *ec2.EC2, sir *ec2.SpotInstanceRequest) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeSpotInstanceRequestsWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},

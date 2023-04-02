@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -209,7 +209,7 @@ func FindTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Net
 	output, err := conn.GetTransitGatewayPeeringWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -226,7 +226,7 @@ func FindTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Net
 	return output.TransitGatewayPeering, nil
 }
 
-func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTransitGatewayPeeringByID(ctx, conn, id)
 
@@ -243,7 +243,7 @@ func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateCreating},
 		Target:  []string{networkmanager.PeeringStateAvailable},
 		Timeout: timeout,
@@ -260,7 +260,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,

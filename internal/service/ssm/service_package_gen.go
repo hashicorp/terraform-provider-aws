@@ -53,6 +53,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceActivation,
 			TypeName: "aws_ssm_activation",
+			Name:     "Activation",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceAssociation,
@@ -65,10 +67,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDocument,
 			TypeName: "aws_ssm_document",
+			Name:     "Document",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Document",
+			},
 		},
 		{
 			Factory:  ResourceMaintenanceWindow,
 			TypeName: "aws_ssm_maintenance_window",
+			Name:     "Maintenance Window",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "MaintenanceWindow",
+			},
 		},
 		{
 			Factory:  ResourceMaintenanceWindowTarget,
@@ -81,10 +93,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceParameter,
 			TypeName: "aws_ssm_parameter",
+			Name:     "Parameter",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Parameter",
+			},
 		},
 		{
 			Factory:  ResourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
+			Name:     "Patch Baseline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "PatchBaseline",
+			},
 		},
 		{
 			Factory:  ResourcePatchGroup,

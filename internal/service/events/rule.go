@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -248,15 +248,15 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// IAM Roles take some time to propagate
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -307,15 +307,15 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	err = resource.RetryContext(ctx, ruleDeleteRetryTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, ruleDeleteRetryTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Rule can't be deleted since it has targets") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -338,16 +338,16 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 func retryPutRule(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
 	var output *eventbridge.PutRuleOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.PutRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

@@ -49,6 +49,8 @@ func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAP
 	return nil
 }
 
+// UpdateTagsNoIgnoreSystem updates transfer service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTagsNoIgnoreSystem(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTagsNoIgnoreSystem(ctx, meta.(*conns.AWSClient).TransferConn(), identifier, oldTags, newTags)
 }

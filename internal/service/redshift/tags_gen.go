@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift/redshiftiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -39,6 +40,25 @@ func KeyValueTags(ctx context.Context, tags []*redshift.Tag) tftags.KeyValueTags
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns redshift service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*redshift.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets redshift service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*redshift.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates redshift service tags.
@@ -78,6 +98,8 @@ func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier 
 	return nil
 }
 
+// UpdateTags updates redshift service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).RedshiftConn(), identifier, oldTags, newTags)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +30,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
@@ -76,7 +77,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
@@ -107,7 +108,7 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
@@ -176,7 +177,7 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				input := &s3.GetBucketInventoryConfigurationInput{
 					Bucket: aws.String(bucket),
 					Id:     aws.String(name),
@@ -187,10 +188,10 @@ func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckF
 					if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 						return nil
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				if output.InventoryConfiguration != nil {
-					return resource.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))
+					return retry.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))
 				}
 				return nil
 			})

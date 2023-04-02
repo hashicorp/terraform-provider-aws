@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -818,7 +818,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	var resp *codebuild.CreateProjectOutput
 	// Handle IAM eventual consistency
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		var err error
 
 		resp, err = conn.CreateProjectWithContext(ctx, params)
@@ -826,10 +826,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
 			if tfawserr.ErrMessageContains(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -1576,16 +1576,16 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		params.Tags = Tags(tags.IgnoreAWS())
 
 		// Handle IAM eventual consistency
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateProjectWithContext(ctx, params)
 			if err != nil {
 				// InvalidInputException: CodeBuild is not authorized to perform
 				// InvalidInputException: Not authorized to perform DescribeSecurityGroups
 				if tfawserr.ErrMessageContains(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil

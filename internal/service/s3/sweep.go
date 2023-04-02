@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -245,7 +246,7 @@ func bucketNameFilter(bucket *s3.Bucket) (bool, error) {
 }
 
 var (
-	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, resource.UniqueIdPrefix))
+	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
 )
 
 func bucketRegionFilter(ctx context.Context, conn *s3.S3, region string) bucketFilter {

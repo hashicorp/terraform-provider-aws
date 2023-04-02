@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func waitWorkspaceCreated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusCreating},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
 		Refresh: statusWorkspaceStatus(ctx, conn, id),
@@ -26,7 +26,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *managedgrafana.ManagedGrafa
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusUpdating},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
 		Refresh: statusWorkspaceStatus(ctx, conn, id),
@@ -43,7 +43,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *managedgrafana.ManagedGrafa
 }
 
 func waitWorkspaceDeleted(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusDeleting},
 		Target:  []string{},
 		Refresh: statusWorkspaceStatus(ctx, conn, id),
@@ -60,7 +60,7 @@ func waitWorkspaceDeleted(ctx context.Context, conn *managedgrafana.ManagedGrafa
 }
 
 func waitLicenseAssociationCreated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusUpgrading},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
 		Refresh: statusWorkspaceStatus(ctx, conn, id),
@@ -77,7 +77,7 @@ func waitLicenseAssociationCreated(ctx context.Context, conn *managedgrafana.Man
 }
 
 func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.SamlAuthentication, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.SamlConfigurationStatusNotConfigured},
 		Target:  []string{managedgrafana.SamlConfigurationStatusConfigured},
 		Refresh: statusWorkspaceSAMLConfiguration(ctx, conn, id),

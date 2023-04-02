@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +81,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
@@ -380,10 +380,16 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
+	firstShortRetry := 1 * time.Minute
+	remainingRetry := d.Timeout(schema.TimeoutDelete) - firstShortRetry
+	if d.Timeout(schema.TimeoutDelete) < 1*time.Minute {
+		remainingRetry = 30 * time.Second
+	}
+
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
-		2*time.Minute, // short initial attempt followed by full length attempt
+		firstShortRetry, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
 			return conn.DeleteSecurityGroupWithContext(ctx, &ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
@@ -392,7 +398,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		errCodeDependencyViolation, errCodeInvalidGroupInUse,
 	)
 
-	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) || tfawserr.ErrCodeEquals(err, errCodeInvalidGroupInUse) {
 		if v := d.Get("revoke_rules_on_delete").(bool); v {
 			err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), true)
 
@@ -403,7 +409,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
-			d.Timeout(schema.TimeoutDelete),
+			remainingRetry,
 			func() (interface{}, error) {
 				return conn.DeleteSecurityGroupWithContext(ctx, &ec2.DeleteSecurityGroupInput{
 					GroupId: aws.String(d.Id()),

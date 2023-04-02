@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // FindAPIByID returns the API corresponding to the specified ID.
@@ -25,7 +25,7 @@ func FindAPI(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigat
 	output, err := conn.GetApiWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -37,7 +37,7 @@ func FindAPI(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigat
 
 	// Handle any empty result.
 	if output == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -72,37 +72,4 @@ func FindAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apiga
 	}
 
 	return apis, nil
-}
-
-func FindDomainNameByName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
-	input := &apigatewayv2.GetDomainNameInput{
-		DomainName: aws.String(name),
-	}
-
-	return FindDomainName(ctx, conn, input)
-}
-
-func FindDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
-	output, err := conn.GetDomainNameWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Handle any empty result.
-	if output == nil || len(output.DomainNameConfigurations) == 0 {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
 }

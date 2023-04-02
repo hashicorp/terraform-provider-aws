@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -392,7 +392,7 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTaskByARN(ctx, conn, arn)
 
@@ -409,7 +409,7 @@ func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) resour
 }
 
 func waitTaskAvailable(ctx context.Context, conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{datasync.TaskStatusCreating, datasync.TaskStatusUnavailable},
 		Target:  []string{datasync.TaskStatusAvailable, datasync.TaskStatusRunning},
 		Refresh: statusTask(ctx, conn, arn),

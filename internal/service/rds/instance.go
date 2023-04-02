@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -328,6 +328,37 @@ func ResourceInstance() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"password"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"master_user_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
+			},
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -389,9 +420,10 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -779,6 +811,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				requiresModifyDbInstance = true
 			}
 		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			if current, desired := aws.Int64Value(output.DBInstance.MaxAllocatedStorage), int64(v.(int)); current != desired {
@@ -813,13 +854,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
-
 		if _, ok := d.GetOk("character_set_name"); ok {
 			diags = sdkdiag.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
 		}
@@ -843,7 +880,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
-			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
@@ -886,6 +922,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("monitoring_interval"); ok {
 			input.MonitoringInterval = aws.Int64(int64(v.(int)))
 		}
@@ -904,6 +948,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -1345,9 +1393,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"password": required field is not set`)
-		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
@@ -1367,7 +1412,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
-			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                    Tags(tags.IgnoreAWS()),
@@ -1429,6 +1473,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 		}
@@ -1455,6 +1507,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -1619,6 +1675,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if v.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
+
 	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
@@ -2011,6 +2086,20 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 	}
 
+	if d.HasChange("manage_master_user_password") {
+		needsModify = true
+		input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+	}
+
+	if d.HasChange("master_user_secret_kms_key_id") {
+		needsModify = true
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			// InvalidParameterValue: A ManageMasterUserPassword value is required when MasterUserSecretKmsKeyId is specified.
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+		}
+	}
+
 	if d.HasChange("max_allocated_storage") {
 		needsModify = true
 		v := d.Get("max_allocated_storage").(int)
@@ -2052,7 +2141,10 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("password") {
 		needsModify = true
-		input.MasterUserPassword = aws.String(d.Get("password").(string))
+		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
+		}
 	}
 
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
@@ -2282,7 +2374,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2307,7 +2399,7 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 
 	output, err := conn.DescribeDBInstances(ctx, input)
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2333,7 +2425,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2376,7 +2468,7 @@ func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, i
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2419,7 +2511,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusAvailable,
 			InstanceStatusBackingUp,
@@ -2450,7 +2542,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 	return nil, err
 }
 
-func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
 
@@ -2466,7 +2558,7 @@ func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resour
 	}
 }
 
-func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
 
@@ -2490,7 +2582,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 	output, err := conn.DescribeBlueGreenDeployments(ctx, input)
 
 	if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2506,7 +2598,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 	deployment := output.BlueGreenDeployments[0]
 
 	if aws.StringValue(deployment.BlueGreenDeploymentIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -2523,7 +2615,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Clien
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2549,7 +2641,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2579,7 +2671,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2596,7 +2688,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 	return nil, err
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

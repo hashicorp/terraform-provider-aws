@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,12 +34,6 @@ const (
 // @SDKResource("aws_lb_target_group")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		// NLBs have restrictions on them at this time
-		CustomizeDiff: customdiff.Sequence(
-			resourceTargetGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
-
 		CreateWithoutTimeout: resourceTargetGroupCreate,
 		ReadWithoutTimeout:   resourceTargetGroupRead,
 		UpdateWithoutTimeout: resourceTargetGroupUpdate,
@@ -48,6 +43,12 @@ func ResourceTargetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		// NLBs have restrictions on them at this time
+		CustomizeDiff: customdiff.Sequence(
+			resourceTargetGroupCustomizeDiff,
+			verify.SetTagsDiff,
+		),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -56,6 +57,11 @@ func ResourceTargetGroup() *schema.Resource {
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"deregistration_delay": {
 				Type:         nullable.TypeNullableInt,
@@ -133,6 +139,13 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -145,6 +158,16 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"round_robin",
 					"least_outstanding_requests",
+				}, false),
+			},
+			"load_balancing_cross_zone_enabled": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"true",
+					"false",
+					"use_load_balancer_configuration",
 				}, false),
 			},
 			"name": {
@@ -210,11 +233,6 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"connection_termination": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -264,13 +282,8 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -303,8 +316,6 @@ func ResourceTargetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.TargetTypeEnum_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -330,9 +341,9 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("name"); ok {
 		groupName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
+		groupName = id.PrefixedUniqueId(v.(string))
 	} else {
-		groupName = resource.PrefixedUniqueId("tf-")
+		groupName = id.PrefixedUniqueId("tf-")
 	}
 
 	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
@@ -471,6 +482,13 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("load_balancing_algorithm_type"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.algorithm.type"),
+				Value: aws.String(v.(string)),
+			})
+		}
+
+		if v, ok := d.GetOk("load_balancing_cross_zone_enabled"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
 				Value: aws.String(v.(string)),
 			})
 		}
@@ -767,6 +785,13 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			})
 		}
 
+		if d.HasChange("load_balancing_cross_zone_enabled") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
+			})
+		}
+
 		if d.HasChange("target_failover") {
 			failoverBlock := d.Get("target_failover").([]interface{})
 			if len(failoverBlock) == 1 {
@@ -808,16 +833,16 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *retry.RetryError {
 			err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -853,15 +878,15 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.RetryContext(ctx, targetGroupDeleteTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, targetGroupDeleteTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteTargetGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -891,7 +916,7 @@ func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -912,7 +937,7 @@ func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) 
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -938,7 +963,7 @@ func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1093,6 +1118,9 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 		case "load_balancing.algorithm.type":
 			loadBalancingAlgorithm := aws.StringValue(attr.Value)
 			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
+		case "load_balancing.cross_zone.enabled":
+			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
+			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
 		case "preserve_client_ip.enabled":
 			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {

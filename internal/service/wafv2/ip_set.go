@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,23 +56,25 @@ func ResourceIPSet() *schema.Resource {
 				MaxItems: 10000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					o, n := d.GetChange("addresses")
-					oldAddresses := o.(*schema.Set).List()
-					newAddresses := n.(*schema.Set).List()
-					if len(oldAddresses) == len(newAddresses) {
-						for _, ov := range oldAddresses {
-							hasAddress := false
-							for _, nv := range newAddresses {
-								if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
-									hasAddress = true
-									break
+					if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
+						o, n := d.GetChange("addresses")
+						oldAddresses := o.(*schema.Set).List()
+						newAddresses := n.(*schema.Set).List()
+						if len(oldAddresses) == len(newAddresses) {
+							for _, ov := range oldAddresses {
+								hasAddress := false
+								for _, nv := range newAddresses {
+									if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
+										hasAddress = true
+										break
+									}
+								}
+								if !hasAddress {
+									return false
 								}
 							}
-							if !hasAddress {
-								return false
-							}
+							return true
 						}
-						return true
 					}
 					return false
 				},
@@ -275,7 +277,7 @@ func FindIPSetByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, s
 	output, err := conn.GetIPSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

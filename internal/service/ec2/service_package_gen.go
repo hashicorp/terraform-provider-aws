@@ -156,6 +156,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_network_insights_path",
 		},
 		{
+			Factory:  DataSourcePublicIPv4Pool,
+			TypeName: "aws_ec2_public_ipv4_pool",
+		},
+		{
+			Factory:  DataSourcePublicIPv4Pools,
+			TypeName: "aws_ec2_public_ipv4_pools",
+		},
+		{
 			Factory:  DataSourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 		},
@@ -170,6 +178,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTransitGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_attachment",
+		},
+		{
+			Factory:  DataSourceTransitGatewayAttachments,
+			TypeName: "aws_ec2_transit_gateway_attachments",
 		},
 		{
 			Factory:  DataSourceTransitGatewayConnect,
@@ -194,6 +206,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
+		},
+		{
+			Factory:  DataSourceTransitGatewayRouteTableAssociations,
+			TypeName: "aws_ec2_transit_gateway_route_table_associations",
+		},
+		{
+			Factory:  DataSourceTransitGatewayRouteTablePropagations,
+			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
 		},
 		{
 			Factory:  DataSourceTransitGatewayRouteTables,
@@ -699,6 +719,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPC,
 			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPCDHCPOptions,

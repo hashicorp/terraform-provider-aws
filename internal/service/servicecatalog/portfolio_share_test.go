@@ -24,7 +24,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
@@ -77,7 +77,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
@@ -120,7 +120,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
@@ -160,7 +160,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},

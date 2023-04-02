@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ func ResourcePolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePolicyImport,
 		},
@@ -53,6 +54,8 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -60,8 +63,6 @@ func ResourcePolicy() *schema.Resource {
 				Default:      organizations.PolicyTypeServiceControlPolicy,
 				ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -87,16 +88,16 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	var resp *organizations.CreatePolicyOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		resp, err = conn.CreatePolicyWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
 				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -125,19 +126,25 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
 	resp, err := conn.DescribePolicyWithContext(ctx, input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+		log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error reading Organizations Policy (%s): %w", d.Id(), err))
 	}
 
 	if resp.Policy == nil || resp.Policy.PolicySummary == nil {
-		log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
-		d.SetId("")
-		return nil
+		if !d.IsNewResource() {
+			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("arn", resp.Policy.PolicySummary.Arn)
