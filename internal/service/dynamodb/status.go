@@ -206,3 +206,22 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tab
 		return insight, aws.StringValue(insight.ContributorInsightsStatus), nil
 	}
 }
+
+func statusTableExport(ctx context.Context, conn *dynamodb.DynamoDB, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindTableExportByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if out.ExportDescription == nil {
+			return nil, "", nil
+		}
+
+		return out, aws.StringValue(out.ExportDescription.ExportStatus), nil
+	}
+}
