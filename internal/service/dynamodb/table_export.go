@@ -158,7 +158,7 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("Creating export table: %s", in)
 
-	out, err := conn.ExportTableToPointInTime(in)
+	out, err := conn.ExportTableToPointInTimeWithContext(ctx, in)
 	if err != nil {
 		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), err)
 	}
