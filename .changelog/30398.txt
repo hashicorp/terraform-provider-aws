@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Add `platform_override` field
+resource/aws_emrserverless_application: Add `image_configuration` field
+```
