@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_location_route_calculator")
 func ResourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRouteCalculatorCreate,
-		ReadContext:   resourceRouteCalculatorRead,
-		UpdateContext: resourceRouteCalculatorUpdate,
-		DeleteContext: resourceRouteCalculatorDelete,
+		CreateWithoutTimeout: resourceRouteCalculatorCreate,
+		ReadWithoutTimeout:   resourceRouteCalculatorRead,
+		UpdateWithoutTimeout: resourceRouteCalculatorUpdate,
+		DeleteWithoutTimeout: resourceRouteCalculatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +74,7 @@ func ResourceRouteCalculator() *schema.Resource {
 }
 
 func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	in := &locationservice.CreateRouteCalculatorInput{
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
@@ -85,7 +86,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -106,7 +107,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Id())
 
@@ -127,7 +128,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("description", out.Description)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("calculator_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("calculator_arn").(string))
 	if err != nil {
 		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
@@ -148,7 +149,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	update := false
 
@@ -164,7 +165,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("calculator_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("calculator_arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 		}
 	}
@@ -183,7 +184,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location Service Route Calculator %s", d.Id())
 
@@ -209,7 +210,7 @@ func findRouteCalculatorByName(ctx context.Context, conn *locationservice.Locati
 
 	out, err := conn.DescribeRouteCalculatorWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

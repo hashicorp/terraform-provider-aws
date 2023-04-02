@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
@@ -24,6 +26,28 @@ var (
 
 func (d durationType) TerraformType(_ context.Context) tftypes.Type {
 	return tftypes.String
+}
+
+func (d durationType) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	if in.IsUnknown() {
+		return DurationUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return DurationNull(), nil
+	}
+
+	var diags diag.Diagnostics
+	v, err := time.ParseDuration(in.ValueString())
+	if err != nil {
+		diags.AddError(
+			"Duration Type Validation Error",
+			fmt.Sprintf("Value %q cannot be parsed as a Duration.", in.ValueString()),
+		)
+		return nil, diags
+	}
+
+	return DurationValue(v), nil
 }
 
 func (d durationType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
@@ -45,7 +69,7 @@ func (d durationType) ValueFromTerraform(_ context.Context, in tftypes.Value) (a
 	v, err := time.ParseDuration(s)
 
 	if err != nil {
-		return nil, err
+		return DurationUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
 	return DurationValue(v), nil
@@ -150,6 +174,21 @@ type Duration struct {
 // Type returns a DurationType.
 func (d Duration) Type(_ context.Context) attr.Type {
 	return DurationType
+}
+
+func (d Duration) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
+	switch d.state {
+	case attr.ValueStateKnown:
+		return types.StringValue(d.value.String()), nil
+	case attr.ValueStateNull:
+		return types.StringNull(), nil
+	case attr.ValueStateUnknown:
+		return types.StringUnknown(), nil
+	default:
+		return types.StringUnknown(), diag.Diagnostics{
+			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled Duration state in ToStringValue: %s", d.state), ""),
+		}
+	}
 }
 
 // ToTerraformValue returns the data contained in the *String as a string. If

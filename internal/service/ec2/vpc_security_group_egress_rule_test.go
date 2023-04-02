@@ -16,20 +16,21 @@ import (
 )
 
 func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_egress_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupEgressRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupEgressRuleExists(resourceName, &v),
+					testAccCheckSecurityGroupEgressRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -53,21 +54,22 @@ func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_egress_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupEgressRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupEgressRuleExists(resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfec2.ResourceSecurityGroupEgressRule, resourceName),
+					testAccCheckSecurityGroupEgressRuleExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupEgressRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,31 +77,33 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityGroupEgressRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckSecurityGroupEgressRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_security_group_egress_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_security_group_egress_rule" {
+				continue
+			}
+
+			_, err := tfec2.FindSecurityGroupEgressRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Security Group Egress Rule still exists: %s", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindSecurityGroupEgressRuleByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("VPC Security Group Egress Rule still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSecurityGroupEgressRuleExists(n string, v *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupEgressRuleExists(ctx context.Context, n string, v *ec2.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -110,9 +114,9 @@ func testAccCheckSecurityGroupEgressRuleExists(n string, v *ec2.SecurityGroupRul
 			return fmt.Errorf("No VPC Security Group Egress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindSecurityGroupEgressRuleByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfec2.FindSecurityGroupEgressRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -2,9 +2,12 @@
 package s3control
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -26,12 +29,31 @@ func Tags(tags tftags.KeyValueTags) []*s3control.S3Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from s3control service tags.
-func KeyValueTags(tags []*s3control.S3Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*s3control.S3Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns s3control service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*s3control.S3Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets s3control service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*s3control.S3Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }

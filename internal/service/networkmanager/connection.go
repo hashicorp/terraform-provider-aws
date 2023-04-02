@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_connection")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -98,9 +99,9 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
@@ -143,7 +144,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -168,7 +169,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
-	tags := KeyValueTags(connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -183,7 +184,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -210,7 +211,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Connection (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -219,7 +220,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
@@ -282,7 +283,7 @@ func FindConnections(ctx context.Context, conn *networkmanager.NetworkManager, i
 	})
 
 	if globalNetworkIDNotFoundError(err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -309,7 +310,7 @@ func FindConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Networ
 
 	// Eventual consistency check.
 	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.ConnectionId) != connectionID {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -317,7 +318,7 @@ func FindConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Networ
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) resource.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
@@ -334,7 +335,7 @@ func statusConnectionState(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStatePending},
 		Target:  []string{networkmanager.ConnectionStateAvailable},
 		Timeout: timeout,
@@ -351,7 +352,7 @@ func waitConnectionCreated(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,
@@ -368,7 +369,7 @@ func waitConnectionDeleted(ctx context.Context, conn *networkmanager.NetworkMana
 }
 
 func waitConnectionUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectionID string, timeout time.Duration) (*networkmanager.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.ConnectionStateUpdating},
 		Target:  []string{networkmanager.ConnectionStateAvailable},
 		Timeout: timeout,

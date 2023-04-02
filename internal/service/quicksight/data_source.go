@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_quicksight_data_source")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -26,7 +27,7 @@ func ResourceDataSource() *schema.Resource {
 		DeleteWithoutTimeout: resourceDataSourceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -603,9 +604,9 @@ func ResourceDataSource() *schema.Resource {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
@@ -657,7 +658,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -702,7 +703,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("error setting ssl_properties: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for QuickSight Data Source (%s): %s", d.Id(), err)
@@ -742,7 +743,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
 		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
@@ -818,7 +819,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating QuickSight Data Source (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -827,7 +828,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
@@ -1271,69 +1272,6 @@ func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourcePara
 	}
 
 	return dataSourceParams
-}
-
-func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
-	old := expandDataSourcePermissions(o)
-	new := expandDataSourcePermissions(n)
-
-	var toGrant, toRevoke []*quicksight.ResourcePermission
-
-	for _, op := range old {
-		found := false
-
-		for _, np := range new {
-			if aws.StringValue(np.Principal) != aws.StringValue(op.Principal) {
-				continue
-			}
-
-			found = true
-			newActions := flex.FlattenStringSet(np.Actions)
-			oldActions := flex.FlattenStringSet(op.Actions)
-
-			if newActions.Equal(oldActions) {
-				break
-			}
-
-			toRemove := oldActions.Difference(newActions)
-			toAdd := newActions.Difference(oldActions)
-
-			if toRemove.Len() > 0 {
-				toRevoke = append(toRevoke, &quicksight.ResourcePermission{
-					Actions:   flex.ExpandStringSet(toRemove),
-					Principal: np.Principal,
-				})
-			}
-
-			if toAdd.Len() > 0 {
-				toGrant = append(toGrant, &quicksight.ResourcePermission{
-					Actions:   flex.ExpandStringSet(toAdd),
-					Principal: np.Principal,
-				})
-			}
-		}
-
-		if !found {
-			toRevoke = append(toRevoke, op)
-		}
-	}
-
-	for _, np := range new {
-		found := false
-
-		for _, op := range old {
-			if aws.StringValue(np.Principal) == aws.StringValue(op.Principal) {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			toGrant = append(toGrant, np)
-		}
-	}
-
-	return toGrant, toRevoke
 }
 
 func expandDataSourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {

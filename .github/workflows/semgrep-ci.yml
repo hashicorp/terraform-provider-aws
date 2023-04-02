@@ -23,10 +23,11 @@ jobs:
     container:
       image: returntocorp/semgrep
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
+            --config .ci/semgrep/ \
             --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \
             --config 'r/dgryski.semgrep-go.marshaljson' \
@@ -41,7 +42,7 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-caps-aws-ec2.yml
 
   naming_tests:
@@ -51,7 +52,7 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-configs.yml
 
   naming_semgrep0:
@@ -61,7 +62,7 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name0.yml
 
   naming_semgrep1:
@@ -71,7 +72,7 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name1.yml
 
   naming_semgrep2:
@@ -81,7 +82,7 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name2.yml
 
   naming_semgrep3:
@@ -91,5 +92,5 @@ jobs:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name3.yml

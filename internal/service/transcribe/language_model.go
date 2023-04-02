@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_language_model")
 func ResourceLanguageModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLanguageModelCreate,
@@ -104,7 +105,7 @@ const (
 )
 
 func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateLanguageModelInput{
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
@@ -117,13 +118,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
@@ -150,7 +151,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
@@ -203,7 +204,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -217,7 +218,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
@@ -238,7 +239,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
@@ -255,7 +256,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) resource.StateRefreshFunc {
+func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
@@ -279,7 +280,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

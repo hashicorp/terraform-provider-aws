@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,27 +14,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIdentityStoreGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group identitystore.DescribeGroupOutput
 	resourceName := "aws_identitystore_group.test"
 	displayName := "Acceptance Test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(displayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
@@ -52,26 +52,27 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group identitystore.DescribeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,56 +80,51 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
-	ctx := context.Background()
+func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_identitystore_group" {
-			continue
-		}
-
-		_, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_identitystore_group" {
+				continue
 			}
-			return err
+
+			_, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IdentityStore Group %s still exists", rs.Primary.ID)
 		}
-
-		return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameGroup, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupExists(name string, group *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, v *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, name, errors.New("not found"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, name, errors.New("not set"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
-		ctx := context.Background()
-		resp, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+
+		output, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
 
 		if err != nil {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, rs.Primary.ID, err)
+			return err
 		}
 
-		*group = *resp
+		*v = *output
 
 		return nil
 	}

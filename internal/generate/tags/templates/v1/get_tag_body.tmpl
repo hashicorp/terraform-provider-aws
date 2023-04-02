@@ -3,18 +3,11 @@
 // This function will optimise the handling over {{ .ListTagsFunc }}, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func {{ .GetTagFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
-{{- else }}
-func {{ .GetTagFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
-{{- end }}
-	return {{ .GetTagFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
-}
-
-{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func {{ .GetTagFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
-{{- else }}
-func {{ .GetTagFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
+func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key string)
+{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) -}}
+(*tftags.TagData, error) {
+{{- else -}}
+(*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
@@ -36,9 +29,9 @@ func {{ .GetTagFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, i
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	listTags := KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
-	listTags, err := {{ .ListTagsFunc }}WithContext(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	listTags, err := {{ .ListTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return nil, err

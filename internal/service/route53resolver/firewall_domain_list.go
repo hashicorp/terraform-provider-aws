@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_domain_list")
 func ResourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallDomainListCreate,
@@ -27,7 +29,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallDomainListDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,13 +57,13 @@ func ResourceFirewallDomainList() *schema.Resource {
 }
 
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
-		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
+		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
 	}
 
@@ -97,7 +99,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -138,7 +140,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("domains", aws.StringValueSlice(output))
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Firewall Domain List (%s): %s", arn, err)
@@ -159,7 +161,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	if d.HasChange("domains") {
 		o, n := d.GetChange("domains")
@@ -198,7 +200,7 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -207,7 +209,7 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Domain List: %s", d.Id())
 	_, err := conn.DeleteFirewallDomainListWithContext(ctx, &route53resolver.DeleteFirewallDomainListInput{
@@ -237,7 +239,7 @@ func FindFirewallDomainListByID(ctx context.Context, conn *route53resolver.Route
 	output, err := conn.GetFirewallDomainListWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -254,7 +256,7 @@ func FindFirewallDomainListByID(ctx context.Context, conn *route53resolver.Route
 	return output.FirewallDomainList, nil
 }
 
-func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallDomainListByID(ctx, conn, id)
 
@@ -276,7 +278,7 @@ const (
 )
 
 func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusUpdating, route53resolver.FirewallDomainListStatusImporting},
 		Target: []string{route53resolver.FirewallDomainListStatusComplete,
 			route53resolver.FirewallDomainListStatusCompleteImportFailed,
@@ -299,7 +301,7 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Ro
 }
 
 func waitFirewallDomainListDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFirewallDomainList(ctx, conn, id),

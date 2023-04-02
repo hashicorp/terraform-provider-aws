@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,20 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_partner")
 func ResourcePartner() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePartnerCreate,
-		Read:   resourcePartnerRead,
-		Delete: resourcePartnerDelete,
+		CreateWithoutTimeout: resourcePartnerCreate,
+		ReadWithoutTimeout:   resourcePartnerRead,
+		DeleteWithoutTimeout: resourcePartnerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +62,9 @@ func ResourcePartner() *schema.Resource {
 	}
 }
 
-func resourcePartnerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account := d.Get("account_id").(string)
 	clusterId := d.Get("cluster_identifier").(string)
@@ -70,29 +75,30 @@ func resourcePartnerCreate(d *schema.ResourceData, meta interface{}) error {
 		PartnerName:       aws.String(d.Get("partner_name").(string)),
 	}
 
-	out, err := conn.AddPartner(&input)
+	out, err := conn.AddPartnerWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift Partner: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Partner: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s:%s", account, clusterId, aws.StringValue(out.DatabaseName), aws.StringValue(out.PartnerName)))
 
-	return resourcePartnerRead(d, meta)
+	return append(diags, resourcePartnerRead(ctx, d, meta)...)
 }
 
-func resourcePartnerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	out, err := FindPartnerById(conn, d.Id())
+	out, err := FindPartnerById(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Partner (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Partner (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Partner (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", d.Get("account_id").(string))
@@ -102,15 +108,16 @@ func resourcePartnerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", out.Status)
 	d.Set("status_message", out.StatusMessage)
 
-	return nil
+	return diags
 }
 
-func resourcePartnerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
 	}
 
 	deleteInput := redshift.DeletePartnerInput{
@@ -120,18 +127,18 @@ func resourcePartnerDelete(d *schema.ResourceData, meta interface{}) error {
 		PartnerName:       aws.String(partnerName),
 	}
 
-	_, err = conn.DeletePartner(&deleteInput)
+	_, err = conn.DeletePartnerWithContext(ctx, &deleteInput)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
-			return nil
+			return diags
 		}
 		if err != nil {
-			return fmt.Errorf("deleting Redshift Partner (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func DecodePartnerID(id string) (string, string, string, string, error) {

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_resourcegroups_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -27,7 +28,7 @@ func ResourceGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -113,9 +114,9 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &resourcegroups.CreateGroupInput{
@@ -154,7 +155,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -210,7 +211,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Resource Groups Group (%s): %s", arn, err)
@@ -231,7 +232,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
 	if d.HasChange("configuration") && d.HasChange("resource_query") {
@@ -284,7 +285,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -293,7 +294,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
 	_, err := conn.DeleteGroupWithContext(ctx, &resourcegroups.DeleteGroupInput{
@@ -319,7 +320,7 @@ func FindGroupByName(ctx context.Context, conn *resourcegroups.ResourceGroups, n
 	output, err := conn.GetGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -344,7 +345,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	output, err := conn.GetGroupConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -361,7 +362,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	return output.GroupConfiguration, nil
 }
 
-func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) resource.StateRefreshFunc {
+func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findGroupConfigurationByGroupName(ctx, conn, groupName)
 
@@ -378,7 +379,7 @@ func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.Resource
 }
 
 func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourcegroups.GroupConfigurationStatusUpdating},
 		Target:  []string{resourcegroups.GroupConfigurationStatusUpdateComplete},
 		Refresh: statusGroupConfiguration(ctx, conn, groupName),

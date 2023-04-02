@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ const (
 	ipSetDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_ip_set")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -33,7 +34,7 @@ func ResourceIPSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceIPSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -55,23 +56,25 @@ func ResourceIPSet() *schema.Resource {
 				MaxItems: 10000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					o, n := d.GetChange("addresses")
-					oldAddresses := o.(*schema.Set).List()
-					newAddresses := n.(*schema.Set).List()
-					if len(oldAddresses) == len(newAddresses) {
-						for _, ov := range oldAddresses {
-							hasAddress := false
-							for _, nv := range newAddresses {
-								if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
-									hasAddress = true
-									break
+					if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
+						o, n := d.GetChange("addresses")
+						oldAddresses := o.(*schema.Set).List()
+						newAddresses := n.(*schema.Set).List()
+						if len(oldAddresses) == len(newAddresses) {
+							for _, ov := range oldAddresses {
+								hasAddress := false
+								for _, nv := range newAddresses {
+									if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
+										hasAddress = true
+										break
+									}
+								}
+								if !hasAddress {
+									return false
 								}
 							}
-							if !hasAddress {
-								return false
-							}
+							return true
 						}
-						return true
 					}
 					return false
 				},
@@ -116,9 +119,9 @@ func ResourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateIPSetInput{
@@ -153,7 +156,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -178,7 +181,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", ipSet.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for WAFv2 IPSet (%s): %s", arn, err)
@@ -199,7 +202,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateIPSetInput{
@@ -230,7 +233,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating tags for WAFv2 IPSet (%s): %s", arn, err)
 		}
 	}
@@ -239,7 +242,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.DeleteIPSetInput{
 		Id:        aws.String(d.Id()),
@@ -249,7 +252,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteIPSetWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException)
 
@@ -274,7 +277,7 @@ func FindIPSetByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, s
 	output, err := conn.GetIPSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

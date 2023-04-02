@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasource1Name := "data.aws_autoscaling_groups.group_list"
 	datasource2Name := "data.aws_autoscaling_groups.group_list_tag_lookup"
 	datasource3Name := "data.aws_autoscaling_groups.group_list_by_name"
@@ -18,7 +19,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

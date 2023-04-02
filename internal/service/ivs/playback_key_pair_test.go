@@ -27,6 +27,7 @@ import (
 // test fixture file is discouraged.
 
 func testAccPlaybackKeyPair_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var playbackKeyPair ivs.PlaybackKeyPair
 	resourceName := "aws_ivs_playback_key_pair.test"
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
@@ -34,18 +35,18 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
-			testAccPlaybackKeyPairPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			testAccPlaybackKeyPairPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy,
+		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaybackKeyPairConfig_basic(publicKeyPEM),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &playbackKeyPair),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &playbackKeyPair),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
@@ -63,6 +64,7 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 }
 
 func testAccPlaybackKeyPair_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 ivs.PlaybackKeyPair
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -74,18 +76,18 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
-			testAccPlaybackKeyPairPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			testAccPlaybackKeyPairPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy,
+		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaybackKeyPairConfig_name(rName1, publicKeyPEM1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &v1),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
@@ -93,7 +95,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 			{
 				Config: testAccPlaybackKeyPairConfig_name(rName2, publicKeyPEM2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &v2),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v2),
 					testAccCheckPlaybackKeyPairRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -104,6 +106,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 }
 
 func testAccPlaybackKeyPair_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 ivs.PlaybackKeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_playback_key_pair.test"
@@ -112,18 +115,18 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
-			testAccPlaybackKeyPairPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			testAccPlaybackKeyPairPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy,
+		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &v1),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -137,7 +140,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 			{
 				Config: testAccPlaybackKeyPairConfig_tags2(rName, publicKeyPEM, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &v2),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -146,7 +149,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 			{
 				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &v3),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -156,6 +159,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 }
 
 func testAccPlaybackKeyPair_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var playbackkeypair ivs.PlaybackKeyPair
 	resourceName := "aws_ivs_playback_key_pair.test"
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
@@ -163,19 +167,19 @@ func testAccPlaybackKeyPair_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
-			testAccPlaybackKeyPairPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
+			testAccPlaybackKeyPairPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy,
+		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaybackKeyPairConfig_basic(publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(resourceName, &playbackkeypair),
-					acctest.CheckResourceDisappears(acctest.Provider, tfivs.ResourcePlaybackKeyPair(), resourceName),
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &playbackkeypair),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourcePlaybackKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -183,33 +187,34 @@ func testAccPlaybackKeyPair_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPlaybackKeyPairDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
-	ctx := context.Background()
+func testAccCheckPlaybackKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ivs_playback_key_pair" {
-			continue
-		}
-
-		input := &ivs.GetPlaybackKeyPairInput{
-			Arn: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.GetPlaybackKeyPairWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ivs_playback_key_pair" {
+				continue
 			}
-			return err
+
+			input := &ivs.GetPlaybackKeyPairInput{
+				Arn: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.GetPlaybackKeyPairWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.IVS, create.ErrActionCheckingDestroyed, tfivs.ResNamePlaybackKeyPair, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.IVS, create.ErrActionCheckingDestroyed, tfivs.ResNamePlaybackKeyPair, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPlaybackKeyPairExists(name string, playbackkeypair *ivs.PlaybackKeyPair) resource.TestCheckFunc {
+func testAccCheckPlaybackKeyPairExists(ctx context.Context, name string, playbackkeypair *ivs.PlaybackKeyPair) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -220,8 +225,8 @@ func testAccCheckPlaybackKeyPairExists(name string, playbackkeypair *ivs.Playbac
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNamePlaybackKeyPair, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+
 		resp, err := tfivs.FindPlaybackKeyPairByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNamePlaybackKeyPair, rs.Primary.ID, err)
@@ -233,9 +238,8 @@ func testAccCheckPlaybackKeyPairExists(name string, playbackkeypair *ivs.Playbac
 	}
 }
 
-func testAccPlaybackKeyPairPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
-	ctx := context.Background()
+func testAccPlaybackKeyPairPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 
 	input := &ivs.ListPlaybackKeyPairsInput{}
 	_, err := conn.ListPlaybackKeyPairsWithContext(ctx, input)

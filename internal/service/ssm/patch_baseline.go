@@ -16,20 +16,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
+// @Tags(identifierAttribute="id", resourceType="PatchBaseline")
 func ResourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Create:               resourcePatchBaselineCreate,
-		Read:                 resourcePatchBaselineRead,
-		Update:               resourcePatchBaselineUpdate,
+		CreateWithoutTimeout: resourcePatchBaselineCreate,
+		ReadWithoutTimeout:   resourcePatchBaselineRead,
+		UpdateWithoutTimeout: resourcePatchBaselineUpdate,
 		DeleteWithoutTimeout: resourcePatchBaselineDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -214,8 +218,8 @@ func ResourcePatchBaseline() *schema.Resource {
 				},
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -226,166 +230,77 @@ const (
 	resNamePatchBaseline = "Patch Baseline"
 )
 
-func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
-	params := &ssm.CreatePatchBaselineInput{
-		Name:                           aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &ssm.CreatePatchBaselineInput{
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
+		Name:                           aws.String(name),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
-	}
-
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		Tags:                           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("approved_patches"); ok && v.(*schema.Set).Len() > 0 {
-		params.ApprovedPatches = flex.ExpandStringSet(v.(*schema.Set))
+		input.ApprovedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
-		params.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
+		input.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if _, ok := d.GetOk("global_filter"); ok {
-		params.GlobalFilters = expandPatchFilterGroup(d)
+		input.GlobalFilters = expandPatchFilterGroup(d)
 	}
 
 	if _, ok := d.GetOk("approval_rule"); ok {
-		params.ApprovalRules = expandPatchRuleGroup(d)
+		input.ApprovalRules = expandPatchRuleGroup(d)
 	}
 
 	if _, ok := d.GetOk("source"); ok {
-		params.Sources = expandPatchSource(d)
+		input.Sources = expandPatchSource(d)
 	}
 
 	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
-		params.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
+		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("rejected_patches_action"); ok {
-		params.RejectedPatchesAction = aws.String(v.(string))
+		input.RejectedPatchesAction = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreatePatchBaseline(params)
+	output, err := conn.CreatePatchBaselineWithContext(ctx, input)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Baseline (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.BaselineId))
-	return resourcePatchBaselineRead(d, meta)
+	d.SetId(aws.StringValue(output.BaselineId))
+
+	return append(diags, resourcePatchBaselineRead(ctx, d, meta)...)
 }
 
-func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-
-	params := &ssm.UpdatePatchBaselineInput{
-		BaselineId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("name") {
-		params.Name = aws.String(d.Get("name").(string))
-	}
-
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("approved_patches") {
-		params.ApprovedPatches = flex.ExpandStringSet(d.Get("approved_patches").(*schema.Set))
-	}
-
-	if d.HasChange("rejected_patches") {
-		params.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
-	}
-
-	if d.HasChange("approved_patches_compliance_level") {
-		params.ApprovedPatchesComplianceLevel = aws.String(d.Get("approved_patches_compliance_level").(string))
-	}
-
-	if d.HasChange("approval_rule") {
-		params.ApprovalRules = expandPatchRuleGroup(d)
-	}
-
-	if d.HasChange("global_filter") {
-		params.GlobalFilters = expandPatchFilterGroup(d)
-	}
-
-	if d.HasChange("source") {
-		params.Sources = expandPatchSource(d)
-	}
-
-	if d.HasChange("approved_patches_enable_non_security") {
-		params.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
-	}
-
-	if d.HasChange("rejected_patches_action") {
-		params.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
-	}
-
-	if d.HasChangesExcept("tags", "tags_all") {
-		_, err := conn.UpdatePatchBaseline(params)
-		if err != nil {
-			return fmt.Errorf("updating SSM Patch Baseline (%s): %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
-			return fmt.Errorf("updating SSM Patch Baseline (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourcePatchBaselineRead(d, meta)
-}
-
-func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	params := &ssm.GetPatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetPatchBaseline(params)
+	resp, err := conn.GetPatchBaselineWithContext(ctx, params)
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
-	}
-
-	d.Set("name", resp.Name)
-	d.Set("description", resp.Description)
-	d.Set("operating_system", resp.OperatingSystem)
-	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
-	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
-	d.Set("rejected_patches", flex.FlattenStringList(resp.RejectedPatches))
-	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
-	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
-
-	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return fmt.Errorf("setting global filters: %w", err)
-	}
-
-	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return fmt.Errorf("setting approval rules: %w", err)
-	}
-
-	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
-		return fmt.Errorf("setting patch sources: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -396,29 +311,91 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
 	d.Set("arn", arn.String())
+	d.Set("name", resp.Name)
+	d.Set("description", resp.Description)
+	d.Set("operating_system", resp.OperatingSystem)
+	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
+	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
+	d.Set("rejected_patches", flex.FlattenStringList(resp.RejectedPatches))
+	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
+	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
-	tags, err := ListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for SSM Patch Baseline (%s): %w", d.Id(), err)
+	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting global filters: %s", err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting approval rules: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting patch sources: %s", err)
 	}
 
-	return nil
+	return diags
+}
+
+func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ssm.UpdatePatchBaselineInput{
+			BaselineId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("approved_patches") {
+			input.ApprovedPatches = flex.ExpandStringSet(d.Get("approved_patches").(*schema.Set))
+		}
+
+		if d.HasChange("rejected_patches") {
+			input.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
+		}
+
+		if d.HasChange("approved_patches_compliance_level") {
+			input.ApprovedPatchesComplianceLevel = aws.String(d.Get("approved_patches_compliance_level").(string))
+		}
+
+		if d.HasChange("approval_rule") {
+			input.ApprovalRules = expandPatchRuleGroup(d)
+		}
+
+		if d.HasChange("global_filter") {
+			input.GlobalFilters = expandPatchFilterGroup(d)
+		}
+
+		if d.HasChange("source") {
+			input.Sources = expandPatchSource(d)
+		}
+
+		if d.HasChange("approved_patches_enable_non_security") {
+			input.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
+		}
+
+		if d.HasChange("rejected_patches_action") {
+			input.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
+		}
+
+		_, err := conn.UpdatePatchBaselineWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SSM Patch Baseline (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourcePatchBaselineRead(ctx, d, meta)...)
 }
 
 func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
 
@@ -426,17 +403,17 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 		BaselineId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePatchBaseline(params)
+	_, err := conn.DeletePatchBaselineWithContext(ctx, params)
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceInUseException) {
 		// Reset the default patch baseline before retrying
 		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient), types.OperatingSystem(d.Get("operating_system").(string)))...)
 		if diags.HasError() {
 			return
 		}
-		_, err = conn.DeletePatchBaseline(params)
+		_, err = conn.DeletePatchBaselineWithContext(ctx, params)
 	}
 	if err != nil {
-		diags = errs.AppendErrorf(diags, "deleting SSM Patch Baseline (%s): %s", d.Id(), err)
+		diags = sdkdiag.AppendErrorf(diags, "deleting SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
 	return

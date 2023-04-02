@@ -1,0 +1,3 @@
+```release-note:enhancement
+ resource/aws_wafv2_rule_group: Add `oversize_handling` argument to `body` block of the `field_to_match` block
+ ```

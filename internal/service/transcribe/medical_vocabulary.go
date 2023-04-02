@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transcribe_medical_vocabulary")
 func ResourceMedicalVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMedicalVocabularyCreate,
@@ -73,7 +74,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 }
 
 func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	vocabularyName := d.Get("vocabulary_name").(string)
 	in := &transcribe.CreateMedicalVocabularyInput{
@@ -83,7 +84,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -108,7 +109,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindMedicalVocabularyByName(ctx, conn, d.Id())
 
@@ -157,7 +158,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateMedicalVocabularyInput{
@@ -192,7 +193,7 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 
@@ -217,7 +218,7 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -236,7 +237,7 @@ func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -255,7 +256,7 @@ func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusMedicalVocabulary(ctx, conn, id),
@@ -271,7 +272,7 @@ func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, 
 	return nil, err
 }
 
-func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) resource.StateRefreshFunc {
+func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindMedicalVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -295,7 +296,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

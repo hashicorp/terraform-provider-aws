@@ -1,6 +1,7 @@
 package identitystore_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -14,18 +15,19 @@ import (
 )
 
 func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayName(name),
@@ -41,18 +43,19 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_uniqueAttributeDisplayName(name),
@@ -68,18 +71,19 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 }
 
 func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupId(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayNameAndGroupId(name),
@@ -95,11 +99,12 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupId(t *testing.
 }
 
 func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_nonExistent,
@@ -110,17 +115,18 @@ func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupDataSource_groupIdFilterMismatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	name1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIdFilterMismatch(name1, name2),
@@ -129,15 +135,17 @@ func TestAccIdentityStoreGroupDataSource_groupIdFilterMismatch(t *testing.T) {
 		},
 	})
 }
+
 func TestAccIdentityStoreGroupDataSource_externalIdConflictsWithUniqueAttribute(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_externalIdConflictsWithUniqueAttribute,
@@ -148,16 +156,17 @@ func TestAccIdentityStoreGroupDataSource_externalIdConflictsWithUniqueAttribute(
 }
 
 func TestAccIdentityStoreGroupDataSource_filterConflictsWithUniqueAttribute(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_filterConflictsWithUniqueAttribute(name),
@@ -168,16 +177,17 @@ func TestAccIdentityStoreGroupDataSource_filterConflictsWithUniqueAttribute(t *t
 }
 
 func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithUniqueAttribute(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIdConflictsWithUniqueAttribute(name),
@@ -188,16 +198,17 @@ func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithUniqueAttribute(t *
 }
 
 func TestAccIdentityStoreGroupDataSource_filterConflictsWithExternalId(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_filterConflictsWithExternalId(name),
@@ -208,16 +219,17 @@ func TestAccIdentityStoreGroupDataSource_filterConflictsWithExternalId(t *testin
 }
 
 func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithExternalId(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIdConflictsWithExternalId(name),
@@ -433,11 +445,11 @@ data "aws_identitystore_group" "test" {
 	)
 }
 
-func testAccPreCheckSSOAdminInstances(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+func testAccPreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	var instances []*ssoadmin.InstanceMetadata
-	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+	err := conn.ListInstancesPagesWithContext(ctx, &ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -32,15 +32,16 @@ func init() {
 }
 
 func sweepFunctions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LambdaConn
+	conn := client.(*conns.AWSClient).LambdaConn()
 	input := &lambda.ListFunctionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFunctionsPages(input, func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
+	err = conn.ListFunctionsPagesWithContext(ctx, input, func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -66,7 +67,7 @@ func sweepFunctions(region string) error {
 		return fmt.Errorf("error listing Lambda Functions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Lambda Functions (%s): %w", region, err)
@@ -76,16 +77,17 @@ func sweepFunctions(region string) error {
 }
 
 func sweepLayerVersions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LambdaConn
+	conn := client.(*conns.AWSClient).LambdaConn()
 	input := &lambda.ListLayersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListLayersPages(input, func(page *lambda.ListLayersOutput, lastPage bool) bool {
+	err = conn.ListLayersPagesWithContext(ctx, input, func(page *lambda.ListLayersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -96,7 +98,7 @@ func sweepLayerVersions(region string) error {
 				LayerName: aws.String(layerName),
 			}
 
-			err := conn.ListLayerVersionsPages(input, func(page *lambda.ListLayerVersionsOutput, lastPage bool) bool {
+			err := conn.ListLayerVersionsPagesWithContext(ctx, input, func(page *lambda.ListLayerVersionsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -135,7 +137,7 @@ func sweepLayerVersions(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Lambda Layers (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Lambda Layer Versions (%s): %w", region, err))

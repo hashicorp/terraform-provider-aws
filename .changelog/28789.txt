@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_api_gateway_rest_api: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_api_gateway_rest_api_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
