@@ -455,6 +455,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEBSVolume,
 			TypeName: "aws_ebs_volume",
+			Name:     "EBS Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAvailabilityZoneGroup,
