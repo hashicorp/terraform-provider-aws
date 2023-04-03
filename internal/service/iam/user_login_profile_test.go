@@ -333,20 +333,15 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 
 		decryptedPassword, err := pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("error decrypting password: %s", err)
+			return fmt.Errorf("decrypting password: %s", err)
 		}
 
 		iamAsCreatedUserSession, err := session.NewSession(&aws.Config{
 			Region:      aws.String(acctest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
-
 		if err != nil {
-			return fmt.Errorf("error creating session: %s", err)
-		}
-		_, err = iamAsCreatedUserSession.Config.Credentials.GetWithContext(ctx)
-		if err != nil {
-			return fmt.Errorf("Error getting session credentials: %s", err)
+			return fmt.Errorf("creating session: %s", err)
 		}
 
 		return retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
@@ -368,7 +363,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 					return retry.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(fmt.Errorf("Error changing decrypted password: %s", err))
+				return retry.NonRetryableError(fmt.Errorf("changing decrypted password: %s", err))
 			}
 
 			return nil
