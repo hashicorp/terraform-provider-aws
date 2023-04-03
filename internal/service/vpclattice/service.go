@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -28,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -329,26 +327,25 @@ func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest
 
 func (r *resourceService) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-
 }
 
-var dnsEntryAttrs = map[string]attr.Type{
-	"domain_name":    types.StringType,
-	"hosted_zone_id": types.StringType,
-}
+// var dnsEntryAttrs = map[string]attr.Type{
+// 	"domain_name":    types.StringType,
+// 	"hosted_zone_id": types.StringType,
+// }
 
-func flattenDNSEntry(ctx context.Context, dns *awstypes.DnsEntry) types.List {
-	elemType := types.ObjectType{AttrTypes: dnsEntryAttrs}
+// func flattenDNSEntry(ctx context.Context, dns *awstypes.DnsEntry) types.List {
+// 	elemType := types.ObjectType{AttrTypes: dnsEntryAttrs}
 
-	if dns == nil {
-		return types.ListNull(elemType)
-	}
+// 	if dns == nil {
+// 		return types.ListNull(elemType)
+// 	}
 
-	attrs := map[string]attr.Value{}
-	attrs["domain_name"] = flex.StringToFramework(ctx, dns.DomainName)
-	attrs["hosted_zone_id"] = flex.StringToFramework(ctx, dns.HostedZoneId)
+// 	attrs := map[string]attr.Value{}
+// 	attrs["domain_name"] = flex.StringToFramework(ctx, dns.DomainName)
+// 	attrs["hosted_zone_id"] = flex.StringToFramework(ctx, dns.HostedZoneId)
 
-	vals := types.ObjectValueMust(dnsEntryAttrs, attrs)
+// 	vals := types.ObjectValueMust(dnsEntryAttrs, attrs)
 
-	return types.ListValueMust(elemType, []attr.Value{vals})
-}
+// 	return types.ListValueMust(elemType, []attr.Value{vals})
+// }
