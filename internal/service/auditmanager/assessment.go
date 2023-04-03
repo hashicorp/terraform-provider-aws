@@ -331,10 +331,12 @@ func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 		resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Assessment)...)
-		state.Roles = plan.Roles
+		plan.Status = flex.StringValueToFramework(ctx, out.Assessment.Metadata.Status)
+	} else {
+		plan.Status = state.Status
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
