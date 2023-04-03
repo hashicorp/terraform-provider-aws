@@ -16,29 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccQuickSightAccountSubscription_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"Thing": {
-			"basic":      testAccAccountSubscription_basic,
-			"disappears": testAccAccountSubscription_disappears,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-// Acceptance test access AWS and cost money to run.
 func testAccAccountSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accountsubscription quicksight.AccountInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_account_subscription.test"
@@ -55,7 +37,7 @@ func testAccAccountSubscription_basic(t *testing.T) {
 			{
 				Config: testAccAccountSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSubscriptionTerminationProtectionDisabled(ctx, resourceName), // Workaround to remove termination protection
+					testAccCheckAccountSubscriptionDisableTerminationProtection(ctx, resourceName), // Workaround to remove termination protection
 					testAccCheckAccountSubscriptionExists(ctx, resourceName, &accountsubscription),
 					resource.TestCheckResourceAttr(resourceName, "account_name", rName),
 				),
@@ -71,10 +53,6 @@ func testAccAccountSubscription_basic(t *testing.T) {
 
 func testAccAccountSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accountsubscription quicksight.AccountInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_account_subscription.test"
@@ -91,7 +69,7 @@ func testAccAccountSubscription_disappears(t *testing.T) {
 			{
 				Config: testAccAccountSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSubscriptionTerminationProtectionDisabled(ctx, resourceName), // Workaround to remove termination protection
+					testAccCheckAccountSubscriptionDisableTerminationProtection(ctx, resourceName), // Workaround to remove termination protection
 					testAccCheckAccountSubscriptionExists(ctx, resourceName, &accountsubscription),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAccountSubscription(), resourceName),
 				),
@@ -129,16 +107,17 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-// Account subscription cannot be deleted after creation, termination protection can be updated with a separate API call
-func testAccCheckAccountSubscriptionTerminationProtectionDisabled(ctx context.Context, name string) resource.TestCheckFunc {
+// Account subscription cannot be automatically deleted after creation. Termination protection
+// must first be disabled which requires a separate API call.
+func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error("Quicksight", create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not found"))
+			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error("Quicksight", create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
+			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
@@ -150,7 +129,7 @@ func testAccCheckAccountSubscriptionTerminationProtectionDisabled(ctx context.Co
 		})
 
 		if err != nil {
-			return create.Error("Quicksight", "setting termination protection to false", tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
+			return create.Error(names.QuickSight, "setting termination protection to false", tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
 		}
 
 		return nil
@@ -161,11 +140,11 @@ func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, acc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error("Quicksight", create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not found"))
+			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error("Quicksight", create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
+			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
@@ -174,7 +153,7 @@ func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, acc
 		})
 
 		if err != nil {
-			return create.Error("Quicksight", create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
+			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
 		}
 
 		*accountsubscription = *resp.AccountInfo
