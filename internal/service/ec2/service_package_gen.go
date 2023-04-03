@@ -735,6 +735,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePlacementGroup,
 			TypeName: "aws_placement_group",
+			Name:     "Placement Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceRoute,
@@ -767,6 +771,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSpotFleetRequest,
 			TypeName: "aws_spot_fleet_request",
+			Name:     "Spot Fleet Request",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSpotInstanceRequest,
