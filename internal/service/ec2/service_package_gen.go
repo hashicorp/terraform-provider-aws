@@ -507,6 +507,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFleet,
 			TypeName: "aws_ec2_fleet",
+			Name:     "Fleet",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceHost,
