@@ -779,6 +779,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSpotInstanceRequest,
 			TypeName: "aws_spot_instance_request",
+			Name:     "Spot Instance Request",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSubnet,
@@ -843,6 +847,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceIPAM,
 			TypeName: "aws_vpc_ipam",
+			Name:     "IPAM",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceIPAMOrganizationAdminAccount,
@@ -851,6 +859,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
+			Name:     "IPAM Pool",
 		},
 		{
 			Factory:  ResourceIPAMPoolCIDR,
