@@ -35,7 +35,7 @@ import (
 )
 
 // @FrameworkResource(name="View")
-// @Tags
+// @Tags(identifierAttribute="id")
 func newResourceView(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceView{}, nil
 }

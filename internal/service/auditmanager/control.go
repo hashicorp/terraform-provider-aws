@@ -28,7 +28,7 @@ import (
 )
 
 // @FrameworkResource(name="Control")
-// @Tags
+// @Tags(identifierAttribute="arn")
 func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceControl{}, nil
 }

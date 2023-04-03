@@ -27,7 +27,7 @@ import (
 )
 
 // @FrameworkResource(name="Framework")
-// @Tags
+// @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
 }

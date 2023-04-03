@@ -28,7 +28,7 @@ import (
 )
 
 // @FrameworkResource(name="Security Group Ingress Rule")
-// @Tags
+// @Tags(identifierAttribute="id")
 func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupIngressRule{}
 	r.create = r.createSecurityGroupRule
