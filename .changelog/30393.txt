@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_launch_template: Make default value of `http_tokens` under `metadata_options` as optional
+```
