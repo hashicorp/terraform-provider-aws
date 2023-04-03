@@ -552,6 +552,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
+			Name:     "Managed Prefix List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceManagedPrefixListEntry,
