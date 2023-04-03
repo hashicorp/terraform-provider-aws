@@ -420,6 +420,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDefaultRouteTable,
 			TypeName: "aws_default_route_table",
+			Name:     "Route Table",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDefaultSecurityGroup,
@@ -856,6 +860,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRouteTable,
 			TypeName: "aws_route_table",
+			Name:     "Route Table",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceRouteTableAssociation,
