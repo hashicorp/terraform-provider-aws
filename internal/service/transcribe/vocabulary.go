@@ -24,6 +24,7 @@ import (
 )
 
 // @SDKResource("aws_transcribe_vocabulary", name="Vocabulary")
+// @Tags(identifierAttribute="arn")
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,

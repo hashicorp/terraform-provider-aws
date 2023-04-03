@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKResource("aws_transcribe_vocabulary_filter", name="Vocabulary Filter")
+// @Tags(identifierAttribute="arn")
 func ResourceVocabularyFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyFilterCreate,

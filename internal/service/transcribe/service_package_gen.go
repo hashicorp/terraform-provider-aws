@@ -45,11 +45,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceVocabulary,
 			TypeName: "aws_transcribe_vocabulary",
 			Name:     "Vocabulary",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVocabularyFilter,
 			TypeName: "aws_transcribe_vocabulary_filter",
 			Name:     "Vocabulary Filter",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
