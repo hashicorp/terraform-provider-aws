@@ -24,6 +24,10 @@ BUG FIXES:
 * resource/aws_glue_crawler: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_glue_trigger: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_rds_cluster: Fix crash when updating `master_password` ([#30379](https://github.com/hashicorp/terraform-provider-aws/issues/30379))
+* resource/aws_rds_cluster: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_cluster: Send `db_instance_parameter_group_name` on all modify requests when set ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_cluster_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
 * resource/aws_s3_bucket_lifecycle_configuration: Allow `rule.filter.object_size_greater_than` = 0 ([#29857](https://github.com/hashicorp/terraform-provider-aws/issues/29857))
 * resource/aws_scheduler_schedule: Mark `arn` property of `dead_letter_config` as a required property ([#30360](https://github.com/hashicorp/terraform-provider-aws/issues/30360))
 
