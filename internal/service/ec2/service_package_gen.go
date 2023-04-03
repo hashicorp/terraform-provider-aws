@@ -732,6 +732,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
+			Name:     "Egress-only Internet Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceEIP,
