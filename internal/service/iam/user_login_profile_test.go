@@ -333,13 +333,17 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 
 		decryptedPassword, err := pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting password: %s", err)
+			return fmt.Errorf("error decrypting password: %s", err)
 		}
 
-		iamAsCreatedUserSession := session.New(&aws.Config{
+		iamAsCreatedUserSession, err := session.NewSession(&aws.Config{
 			Region:      aws.String(acctest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
+
+		if err != nil {
+			return fmt.Errorf("error creating session: %s", err)
+		}
 		_, err = iamAsCreatedUserSession.Config.Credentials.GetWithContext(ctx)
 		if err != nil {
 			return fmt.Errorf("Error getting session credentials: %s", err)
