@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_service")
+// @SDKResource("aws_vpc_endpoint_service", name="VPC Endpoint Service")
+// @Tags(identifierAttribute="id")
 func ResourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointServiceCreate,
@@ -130,8 +132,8 @@ func ResourceVPCEndpointService() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(ec2.ServiceConnectivityType_Values(), false),
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -147,12 +149,10 @@ func ResourceVPCEndpointService() *schema.Resource {
 func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
-		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcEndpointService),
+		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeVpcEndpointService),
 	}
 
 	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -201,8 +201,6 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	svcCfg, err := FindVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
@@ -248,16 +246,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("state", svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", aws.StringValueSlice(svcCfg.SupportedIpAddressTypes))
 
-	tags := KeyValueTags(ctx, svcCfg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, svcCfg.Tags)
 
 	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(ctx, conn, d.Id())
 
@@ -313,14 +302,6 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if _, err := conn.ModifyVpcEndpointServicePermissionsWithContext(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPC Endpoint Service (%s) permissions: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 

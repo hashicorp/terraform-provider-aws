@@ -916,6 +916,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPCEndpointConnectionAccepter,
@@ -940,6 +944,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
+			Name:     "VPC Endpoint Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPCEndpointServiceAllowedPrincipal,
