@@ -591,10 +591,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
+			Name:     "Transit Gateway Connect",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
+			Name:     "Transit Gateway Connect Peer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTransitGatewayMulticastDomain,
