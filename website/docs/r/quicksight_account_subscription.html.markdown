@@ -14,10 +14,10 @@ Terraform resource for managing an AWS QuickSight Account Subscription.
 
 ```terraform
 resource "aws_quicksight_account_subscription" "subscription" {
-  account_name			=  "quicksight-terraform"
-  authentication_method	= "IAM_AND_QUICKSIGHT"
-  edition          		= "ENTERPRISE"
-  notification_email	= "notification@email.com"
+  account_name          =  "quicksight-terraform"
+  authentication_method = "IAM_AND_QUICKSIGHT"
+  edition               = "ENTERPRISE"
+  notification_email    = "notification@email.com"
 }
 ```
 
@@ -31,6 +31,7 @@ The following arguments are required:
 * `notification_email` - (Required) Email address that you want Amazon QuickSight to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.
 
 The following arguments are optional:
+
 * `active_directory_name` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `admin_group` - (Optional) Admin group associated with your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `authour_group` - (Optional) Author group associated with your Active Directory.

@@ -15,17 +15,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestAccQuickSightAccountSubscription_serial(t *testing.T) {
+func TestAccAccountSubscription_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Thing": {
-			"basic":      testAccQuickSightAccountSubscription_basic,
-			"disappears": testAccQuickSightAccountSubscription_disappears,
+			"basic":      testAccAccountSubscription_basic,
+			"disappears": testAccAccountSubscription_disappears,
 		},
 	}
 
@@ -33,7 +32,7 @@ func TestAccQuickSightAccountSubscription_serial(t *testing.T) {
 }
 
 // Acceptance test access AWS and cost money to run.
-func testAccQuickSightAccountSubscription_basic(t *testing.T) {
+func testAccAccountSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -70,7 +69,7 @@ func testAccQuickSightAccountSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccQuickSightAccountSubscription_disappears(t *testing.T) {
+func testAccAccountSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
