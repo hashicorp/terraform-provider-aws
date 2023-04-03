@@ -776,6 +776,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceNATGateway,
 			TypeName: "aws_nat_gateway",
+			Name:     "NAT Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceNetworkACL,
