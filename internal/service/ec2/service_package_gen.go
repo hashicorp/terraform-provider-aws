@@ -1034,6 +1034,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceIPAMResourceDiscoveryAssociation,
 			TypeName: "aws_vpc_ipam_resource_discovery_association",
 			Name:     "IPAM Resource Discovery Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceIPAMScope,
