@@ -760,6 +760,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceInternetGateway,
 			TypeName: "aws_internet_gateway",
+			Name:     "Internet Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceInternetGatewayAttachment,
