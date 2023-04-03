@@ -14,7 +14,7 @@ Terraform resource for managing an AWS QuickSight Account Subscription.
 
 ```terraform
 resource "aws_quicksight_account_subscription" "subscription" {
-  account_name          =  "quicksight-terraform"
+  account_name          = "quicksight-terraform"
   authentication_method = "IAM_AND_QUICKSIGHT"
   edition               = "ENTERPRISE"
   notification_email    = "notification@email.com"

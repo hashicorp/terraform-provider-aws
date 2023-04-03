@@ -18,7 +18,7 @@ import (
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestAccAccountSubscription_serial(t *testing.T) {
+func TestAccQuickSightAccountSubscription_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
