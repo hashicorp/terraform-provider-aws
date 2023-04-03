@@ -27,7 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Control")
+// @Tags
 func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceControl{}, nil
 }
@@ -61,8 +62,8 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"testing_information": schema.StringAttribute{
 				Optional: true,
 			},
@@ -144,6 +145,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	in := auditmanager.CreateControlInput{
 		Name:                  aws.String(plan.Name.ValueString()),
 		ControlMappingSources: cmsInput,
+		Tags:                  GetTagsIn(ctx),
 	}
 	if !plan.ActionPlanInstructions.IsNull() {
 		in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
@@ -156,15 +158,6 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	}
 	if !plan.TestingInformation.IsNull() {
 		in.TestingInformation = aws.String(plan.TestingInformation.ValueString())
-	}
-
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateControl(ctx, &in)
@@ -280,18 +273,6 @@ func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 		state.refreshFromOutput(ctx, r.Meta(), out.Control)
-	}
-
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		state.Tags = plan.Tags
-		state.TagsAll = plan.TagsAll
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -446,16 +427,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, meta *conn
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	defaultTagsConfig := meta.DefaultTagsConfig
-	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		rd.Tags = tftags.Null
-	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
-	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	SetTagsOut(ctx, out.Tags)
 
 	return diags
 }

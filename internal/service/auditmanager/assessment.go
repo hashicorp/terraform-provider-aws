@@ -34,7 +34,8 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-// @FrameworkResource
+// @FrameworkResource(name="Assessment")
+// @Tags
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
 }
@@ -91,8 +92,8 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 			"status": schema.StringAttribute{
 				Computed: true,
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"assessment_reports_destination": schema.ListNestedBlock{
@@ -189,19 +190,11 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 		Name:                         aws.String(plan.Name.ValueString()),
 		Roles:                        expandAssessmentRoles(roles),
 		Scope:                        scopeInput,
+		Tags:                         GetTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
-	}
-
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Include retry handling to allow for IAM propagation
@@ -339,18 +332,6 @@ func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequ
 		}
 		resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Assessment)...)
 		state.Roles = plan.Roles
-	}
-
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameAssessment, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		state.Tags = plan.Tags
-		state.TagsAll = plan.TagsAll
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -503,16 +484,7 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *c
 	diags.Append(d...)
 	rd.Scope = scope
 
-	defaultTagsConfig := meta.DefaultTagsConfig
-	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		rd.Tags = tftags.Null
-	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
-	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	SetTagsOut(ctx, out.Tags)
 
 	return diags
 }
