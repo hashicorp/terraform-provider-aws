@@ -28,9 +28,7 @@ func TestAccInspector2MemberAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInspector2MemberAssociationConfig_basic(),
-				Check:  resource.ComposeTestCheckFunc(
-				// resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-				),
+				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
 				ResourceName:      resourceName,
