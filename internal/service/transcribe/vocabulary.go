@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transcribe_vocabulary")
+// @SDKResource("aws_transcribe_vocabulary", name="Vocabulary")
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
@@ -63,8 +63,8 @@ func ResourceVocabulary() *schema.Resource {
 				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vocabulary_file_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -94,6 +94,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
 		LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("vocabulary_file_uri"); ok {
@@ -102,13 +103,6 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("phrases"); ok {
 		in.Phrases = expandPhrases(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateVocabulary(ctx, in)
@@ -157,24 +151,6 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set("language_code", out.LanguageCode)
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -203,14 +179,6 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if _, err := waitVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Transcribe Vocabulary (%s) tags: %s", d.Id(), err)
 		}
 	}
 

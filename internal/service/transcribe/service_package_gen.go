@@ -28,18 +28,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLanguageModel,
 			TypeName: "aws_transcribe_language_model",
+			Name:     "Language Model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMedicalVocabulary,
 			TypeName: "aws_transcribe_medical_vocabulary",
+			Name:     "Medical Vocabulary",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVocabulary,
 			TypeName: "aws_transcribe_vocabulary",
+			Name:     "Vocabulary",
 		},
 		{
 			Factory:  ResourceVocabularyFilter,
 			TypeName: "aws_transcribe_vocabulary_filter",
+			Name:     "Vocabulary Filter",
 		},
 	}
 }
