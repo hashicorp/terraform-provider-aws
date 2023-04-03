@@ -354,7 +354,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 
   rotation_rules {
     automatically_after_days = %[2]d
-	duration = "%[3]s"
+    duration                 = "%[3]s"
   }
 
   depends_on = [aws_lambda_permission.test1]
