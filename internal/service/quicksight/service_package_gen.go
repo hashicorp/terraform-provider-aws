@@ -34,6 +34,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_quicksight_data_source",
 		},
 		{
+			Factory:  ResourceFolder,
+			TypeName: "aws_quicksight_folder",
+		},
+		{
 			Factory:  ResourceGroup,
 			TypeName: "aws_quicksight_group",
 		},
