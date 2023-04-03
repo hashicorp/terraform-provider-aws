@@ -63,7 +63,7 @@ func ResourceAccountSubscription() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(quicksight.AuthenticationMethodOption_Values(), false),
 			},
-			"authour_group": {
+			"author_group": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 1,
@@ -157,7 +157,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		in.AdminGroup = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("authour_group"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("author_group"); ok && len(v.([]interface{})) > 0 {
 		in.AuthorGroup = flex.ExpandStringList(v.([]interface{}))
 	}
 

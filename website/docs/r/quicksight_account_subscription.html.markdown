@@ -34,7 +34,7 @@ The following arguments are optional:
 
 * `active_directory_name` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `admin_group` - (Optional) Admin group associated with your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
-* `authour_group` - (Optional) Author group associated with your Active Directory.
+* `author_group` - (Optional) Author group associated with your Active Directory.
 * `aws_account_id` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
 * `contact_number` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directory_id` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
