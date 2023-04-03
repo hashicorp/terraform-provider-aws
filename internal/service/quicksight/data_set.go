@@ -2076,11 +2076,7 @@ func flattenProjectOperation(apiObject *quicksight.ProjectOperation) []interface
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ProjectedColumns != nil {
-		colsTyped := make([]interface{}, len(apiObject.ProjectedColumns))
-		for i := range apiObject.ProjectedColumns {
-			colsTyped[i] = aws.StringValue(apiObject.ProjectedColumns[i])
-		}
-		tfMap["projected_columns"] = colsTyped
+		tfMap["projected_columns"] = flex.FlattenStringList(apiObject.ProjectedColumns)
 	}
 
 	return []interface{}{tfMap}
