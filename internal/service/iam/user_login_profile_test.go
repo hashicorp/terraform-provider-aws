@@ -362,6 +362,9 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 				if tfawserr.ErrCodeEquals(err, "InvalidClientTokenId") {
 					return retry.RetryableError(err)
 				}
+				if tfawserr.ErrMessageContains(err, "AccessDenied", "not authorized to perform: iam:ChangePassword") {
+					return retry.RetryableError(err)
+				}
 
 				return retry.NonRetryableError(fmt.Errorf("changing decrypted password: %s", err))
 			}
