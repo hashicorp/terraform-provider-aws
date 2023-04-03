@@ -162,7 +162,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFolderConfig_tags(rId, rName, "key1", "value1"),
+				Config: testAccFolderConfig_tags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -173,6 +173,23 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFolderConfig_tags2(rId, rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFolderExists(ctx, resourceName, &folder),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccFolderConfig_tags1(rId, rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFolderExists(ctx, resourceName, &folder),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -327,7 +344,7 @@ resource "aws_quicksight_folder" "test" {
 `, rId, rName))
 }
 
-func testAccFolderConfig_tags(rId, rName, key, value string) string {
+func testAccFolderConfig_tags1(rId, rName, key1, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_folder" "test" {
   folder_id = %[1]q
@@ -337,7 +354,21 @@ resource "aws_quicksight_folder" "test" {
     %[3]q = %[4]q
   }
 }
-`, rId, rName, key, value)
+`, rId, rName, key1, value1)
+}
+
+func testAccFolderConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_quicksight_folder" "test" {
+  folder_id = %[1]q
+  name      = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rId, rName, key1, value1, key2, value2)
 }
 
 func testAccFolderConfig_parentFolder(rId, rName string) string {

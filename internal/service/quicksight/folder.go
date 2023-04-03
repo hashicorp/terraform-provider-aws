@@ -123,6 +123,7 @@ func ResourceFolder() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -214,7 +215,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error setting folder_path: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, *out.Arn)
+	tags, err := ListTags(ctx, conn, aws.StringValue(out.Arn))
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameFolder, d.Id(), err)
 	}
