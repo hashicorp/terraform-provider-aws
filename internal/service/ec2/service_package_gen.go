@@ -432,6 +432,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDefaultVPC,
 			TypeName: "aws_default_vpc",
+			Name:     "VPC",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDefaultVPCDHCPOptions,
