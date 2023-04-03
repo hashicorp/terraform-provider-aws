@@ -37,14 +37,18 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 	}
 }
 
-func tagSpecificationsFromTags(tags []*ec2.Tag, t string) []*ec2.TagSpecification {
+// getTagSpecificationsIn returns EC2 service tags from Context.
+// nil is returned if there are no input tags.
+func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
+	tags := GetTagsIn(ctx)
+
 	if len(tags) == 0 {
 		return nil
 	}
 
 	return []*ec2.TagSpecification{
 		{
-			ResourceType: aws.String(t),
+			ResourceType: aws.String(resourceType),
 			Tags:         tags,
 		},
 	}
