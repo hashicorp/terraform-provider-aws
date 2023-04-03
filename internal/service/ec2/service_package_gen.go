@@ -576,6 +576,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrafficMirrorFilter,
 			TypeName: "aws_ec2_traffic_mirror_filter",
+			Name:     "Traffic Mirror Filter",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTrafficMirrorFilterRule,
@@ -584,10 +588,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrafficMirrorSession,
 			TypeName: "aws_ec2_traffic_mirror_session",
+			Name:     "Traffic Mirror Session",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTrafficMirrorTarget,
 			TypeName: "aws_ec2_traffic_mirror_target",
+			Name:     "Traffic Mirror Target",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTransitGateway,
