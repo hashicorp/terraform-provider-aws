@@ -210,7 +210,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
-	out, err := findAccountSubscriptionByID(ctx, conn, d.Id())
+	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) not found, removing from state", d.Id())
@@ -305,7 +305,7 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.QuickS
 
 func statusAccountSubscription(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findAccountSubscriptionByID(ctx, conn, id)
+		out, err := FindAccountSubscriptionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -318,7 +318,7 @@ func statusAccountSubscription(ctx context.Context, conn *quicksight.QuickSight,
 	}
 }
 
-func findAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.AccountInfo, error) {
+func FindAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.AccountInfo, error) {
 	in := &quicksight.DescribeAccountSubscriptionInput{
 		AwsAccountId: aws.String(id),
 	}

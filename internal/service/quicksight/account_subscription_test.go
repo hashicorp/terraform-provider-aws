@@ -88,9 +88,7 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			output, err := conn.DescribeAccountSubscriptionWithContext(ctx, &quicksight.DescribeAccountSubscriptionInput{
-				AwsAccountId: aws.String(rs.Primary.ID),
-			})
+			output, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
@@ -98,7 +96,7 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 				return err
 			}
 
-			if output != nil && output.AccountInfo != nil && *output.AccountInfo.AccountSubscriptionStatus != "UNSUBSCRIBED" {
+			if output != nil && aws.StringValue(output.AccountSubscriptionStatus) != "UNSUBSCRIBED" {
 				return fmt.Errorf("QuickSight Account Subscription (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -148,15 +146,12 @@ func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, acc
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
-		resp, err := conn.DescribeAccountSubscriptionWithContext(ctx, &quicksight.DescribeAccountSubscriptionInput{
-			AwsAccountId: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
 		}
 
-		*accountsubscription = *resp.AccountInfo
+		*accountsubscription = *resp
 
 		return nil
 	}
