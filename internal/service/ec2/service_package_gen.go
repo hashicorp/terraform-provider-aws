@@ -969,6 +969,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPNConnection,
 			TypeName: "aws_vpn_connection",
+			Name:     "VPN Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPNConnectionRoute,
