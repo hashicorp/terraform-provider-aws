@@ -200,6 +200,10 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 	var folder quicksight.Folder
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parentId1 := rId + "-parent1"
+	parentName1 := rName + "-parent1"
+	parentId2 := rId + "-parent2"
+	parentName2 := rName + "-parent2"
 	resourceName := "aws_quicksight_folder.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -212,16 +216,23 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFolderConfig_parentFolder(rId, rName),
+				Config: testAccFolderConfig_parentFolder(rId, rName, parentId1, parentName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", rId+"-parent")),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFolderConfig_parentFolder(rId, rName, parentId2, parentName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFolderExists(ctx, resourceName, &folder),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
+				),
 			},
 		},
 	})
@@ -371,19 +382,17 @@ resource "aws_quicksight_folder" "test" {
 `, rId, rName, key1, value1, key2, value2)
 }
 
-func testAccFolderConfig_parentFolder(rId, rName string) string {
-	parentId := rId + "-parent"
-	parentName := rName + "-parent"
+func testAccFolderConfig_parentFolder(rId, rName, parentId, parentName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_folder" "parent" {
-  folder_id = %[1]q
-  name      = %[2]q
+  folder_id = %[3]q
+  name      = %[4]q
 }
 
 resource "aws_quicksight_folder" "test" {
-  folder_id         = %[3]q
-  name              = %[4]q
+  folder_id         = %[1]q
+  name              = %[2]q
   parent_folder_arn = aws_quicksight_folder.parent.arn
 }
-`, parentId, parentName, rId, rName)
+`, rId, rName, parentId, parentName)
 }

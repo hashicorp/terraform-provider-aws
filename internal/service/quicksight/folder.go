@@ -63,6 +63,7 @@ func ResourceFolder() *schema.Resource {
 			"folder_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.NoZeroValues,
 					validation.StringLenBetween(1, 2048),
@@ -96,6 +97,7 @@ func ResourceFolder() *schema.Resource {
 			"parent_folder_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"permissions": {
