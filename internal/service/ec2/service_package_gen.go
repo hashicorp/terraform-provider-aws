@@ -407,6 +407,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
+			Name:     "Customer Gateway",
 		},
 		{
 			Factory:  ResourceDefaultNetworkACL,
