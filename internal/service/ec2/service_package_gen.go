@@ -695,6 +695,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLaunchTemplate,
 			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceMainRouteTableAssociation,
