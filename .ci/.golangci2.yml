@@ -21,10 +21,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: acctest.ConfigAlternateRegionProvider is deprecated: Use ConfigMultipleRegionProvider instead"
-      # tfsdk: schema.ImportStatePassthrough
-    - linters:
-        - staticcheck
-      text: "SA1019: schema.ImportStatePassthrough is deprecated: Please use the context aware ImportStatePassthroughContext instead"
       # tfsdk: MigrateState
     - linters:
         - staticcheck
