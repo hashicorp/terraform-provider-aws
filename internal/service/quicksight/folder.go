@@ -145,10 +145,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	in := &quicksight.CreateFolderInput{
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		in.Name = aws.String(v.(string))
+		Name:         aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("folder_type"); ok {
