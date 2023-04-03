@@ -889,6 +889,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceIPAMScope,
 			TypeName: "aws_vpc_ipam_scope",
+			Name:     "IPAM Scope",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPCIPv4CIDRBlockAssociation,
