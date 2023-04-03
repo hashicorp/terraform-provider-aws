@@ -428,6 +428,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDefaultSecurityGroup,
 			TypeName: "aws_default_security_group",
+			Name:     "Security Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDefaultSubnet,
@@ -872,6 +876,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSecurityGroup,
 			TypeName: "aws_security_group",
+			Name:     "Security Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSecurityGroupRule,
