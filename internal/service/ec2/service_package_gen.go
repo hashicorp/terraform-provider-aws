@@ -500,6 +500,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNEndpoint,
 			TypeName: "aws_ec2_client_vpn_endpoint",
+			Name:     "Client VPN Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceClientVPNNetworkAssociation,
