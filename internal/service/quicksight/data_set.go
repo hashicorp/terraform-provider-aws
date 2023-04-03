@@ -2078,7 +2078,7 @@ func flattenProjectOperation(apiObject *quicksight.ProjectOperation) []interface
 	if apiObject.ProjectedColumns != nil {
 		colsTyped := make([]interface{}, len(apiObject.ProjectedColumns))
 		for i := range apiObject.ProjectedColumns {
-			colsTyped[i] = *(apiObject.ProjectedColumns[i])
+			colsTyped[i] = aws.StringValue(apiObject.ProjectedColumns[i])
 		}
 		tfMap["projected_columns"] = colsTyped
 	}
