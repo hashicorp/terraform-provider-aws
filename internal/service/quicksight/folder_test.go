@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -22,7 +21,7 @@ import (
 
 func TestAccQuickSightFolder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var folder quicksight.DescribeFolderOutput
+	var folder quicksight.Folder
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_folder.test"
@@ -57,7 +56,7 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 
 func TestAccQuickSightFolder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var folder quicksight.DescribeFolderOutput
+	var folder quicksight.Folder
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_folder.test"
@@ -85,7 +84,7 @@ func TestAccQuickSightFolder_disappears(t *testing.T) {
 
 func TestAccQuickSightFolder_permissions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var folder quicksight.DescribeFolderOutput
+	var folder quicksight.Folder
 	resourceName := "aws_quicksight_folder.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -148,7 +147,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 
 func TestAccQuickSightFolder_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var folder quicksight.DescribeFolderOutput
+	var folder quicksight.Folder
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_folder.test"
@@ -181,7 +180,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 
 func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 	ctx := acctest.Context(t)
-	var folder quicksight.DescribeFolderOutput
+	var folder quicksight.Folder
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_folder.test"
@@ -220,14 +219,7 @@ func testAccCheckFolderDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			awsAccountId, folderId, err := tfquicksight.ParseFolderId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			output, err := conn.DescribeFolderWithContext(ctx, &quicksight.DescribeFolderInput{
-				AwsAccountId: aws.String(awsAccountId),
-				FolderId:     aws.String(folderId),
-			})
+			output, err := tfquicksight.FindFolderByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
@@ -235,7 +227,7 @@ func testAccCheckFolderDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if output != nil && output.Folder != nil {
+			if output != nil {
 				return fmt.Errorf("QuickSight Folder (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -244,7 +236,7 @@ func testAccCheckFolderDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFolderExists(ctx context.Context, name string, folder *quicksight.DescribeFolderOutput) resource.TestCheckFunc {
+func testAccCheckFolderExists(ctx context.Context, name string, folder *quicksight.Folder) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -255,22 +247,13 @@ func testAccCheckFolderExists(ctx context.Context, name string, folder *quicksig
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameFolder, name, errors.New("not set"))
 		}
 
-		awsAccountId, folderId, err := tfquicksight.ParseFolderId(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
-		resp, err := conn.DescribeFolderWithContext(ctx, &quicksight.DescribeFolderInput{
-			AwsAccountId: aws.String(awsAccountId),
-			FolderId:     aws.String(folderId),
-		})
-
+		output, err := tfquicksight.FindFolderByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameFolder, rs.Primary.ID, err)
 		}
 
-		*folder = *resp
+		*folder = *output
 
 		return nil
 	}
@@ -285,7 +268,7 @@ resource "aws_quicksight_folder" "test" {
 `, rId, rName)
 }
 
-func testAccFolderConfig_user(rName string) string {
+func testAccFolderConfigUserBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -305,7 +288,7 @@ resource "aws_quicksight_user" "test" {
 
 func testAccFolderConfig_permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccFolderConfig_user(rName),
+		testAccFolderConfigUserBase(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_folder" "test" {
   folder_id = %[1]q
@@ -322,7 +305,7 @@ resource "aws_quicksight_folder" "test" {
 
 func testAccFolderConfig_permissionsUpdate(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccFolderConfig_user(rName),
+		testAccFolderConfigUserBase(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_folder" "test" {
   folder_id = %[1]q

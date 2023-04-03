@@ -187,8 +187,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	out, err := findFolderByID(ctx, conn, awsAccountId, folderId)
-
+	out, err := FindFolderByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Folder (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -333,7 +332,12 @@ func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func findFolderByID(ctx context.Context, conn *quicksight.QuickSight, awsAccountId string, folderId string) (*quicksight.Folder, error) {
+func FindFolderByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Folder, error) {
+	awsAccountId, folderId, err := ParseFolderId(id)
+	if err != nil {
+		return nil, err
+	}
+
 	descOpts := &quicksight.DescribeFolderInput{
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
