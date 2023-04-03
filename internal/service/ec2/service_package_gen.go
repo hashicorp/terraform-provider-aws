@@ -808,6 +808,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceNetworkInterface,
 			TypeName: "aws_network_interface",
+			Name:     "Network Interface",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceNetworkInterfaceAttachment,
