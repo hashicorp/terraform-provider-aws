@@ -12,10 +12,6 @@ import (
 
 func TestAccQuickSightDataSetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_data_set.test"
@@ -56,6 +52,7 @@ resource "aws_quicksight_data_set" "test" {
         type = "STRING"
       }
       upload_settings {
+        format = "JSON"
       }
     }
   }
@@ -64,6 +61,5 @@ resource "aws_quicksight_data_set" "test" {
 data "aws_quicksight_data_set" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
 }
-
 `, rId, rName))
 }
