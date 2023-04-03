@@ -17,15 +17,13 @@ func TestAccAPIGatewayRestAPIsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_api_gateway_rest_apis.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testRestAPIsDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckItemInList(dataSourceName, "names", rName),
-				),
+				Check:  testCheckItemInList(dataSourceName, "names", rName),
 			},
 		},
 	})
