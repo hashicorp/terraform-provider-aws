@@ -369,6 +369,7 @@ provider "aws" {
   <li><code>transfer</code></li>
   <li><code>translate</code></li>
   <li><code>voiceid</code></li>
+  <li><code>vpclattice</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>

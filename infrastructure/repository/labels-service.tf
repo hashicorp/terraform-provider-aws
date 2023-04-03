@@ -307,6 +307,7 @@ variable "service_labels" {
     "verifiedaccess",
     "voiceid",
     "vpc",
+    "vpclattice",
     "vpnclient",
     "vpnsite",
     "waf",

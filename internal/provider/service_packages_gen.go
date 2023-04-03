@@ -196,6 +196,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -397,6 +398,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		timestreamwrite.ServicePackage,
 		transcribe.ServicePackage,
 		transfer.ServicePackage,
+		vpclattice.ServicePackage,
 		waf.ServicePackage,
 		wafregional.ServicePackage,
 		wafv2.ServicePackage,
