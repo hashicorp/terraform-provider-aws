@@ -24,9 +24,11 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Security Group Ingress Rule")
+// @Tags
 func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupIngressRule{}
 	r.create = r.createSecurityGroupRule
@@ -143,8 +145,8 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"to_port": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
@@ -175,22 +177,15 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	data.ID = types.StringValue(securityGroupRuleID)
 
 	conn := r.Meta().EC2Conn()
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, data.Tags))
+	if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
-	if len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
-
-			return
-		}
+		return
 	}
 
 	// Set values for unknowns.
 	data.ARN = r.arn(ctx, securityGroupRuleID)
 	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
-	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -203,9 +198,6 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
 	output, err := r.findByID(ctx, data.ID.ValueString())
 
@@ -246,14 +238,7 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		data.Tags = tftags.Null
-	} else {
-		data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
-	}
-	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	SetTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -295,14 +280,6 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s)", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
 		}
