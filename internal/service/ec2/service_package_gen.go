@@ -607,6 +607,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
+			Name:     "Transit Gateway Multicast Domain",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTransitGatewayMulticastDomainAssociation,
