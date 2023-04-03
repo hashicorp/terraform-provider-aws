@@ -22,10 +22,6 @@ import (
 
 func TestAccQuickSightFolder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var folder quicksight.DescribeFolderOutput
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,10 +57,6 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 
 func TestAccQuickSightFolder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var folder quicksight.DescribeFolderOutput
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -156,10 +148,6 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 
 func TestAccQuickSightFolder_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var folder quicksight.DescribeFolderOutput
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -193,10 +181,6 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 
 func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var folder quicksight.DescribeFolderOutput
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
