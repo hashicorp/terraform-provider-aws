@@ -212,6 +212,7 @@ The following arguments are optional:
 * `subnet_group_name` - (Optional) Name of the cache subnet group to be used for the replication group.
 * `tags` - (Optional) Map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
+* `transit_encryption_mode` - (Optional) Valid values are `preferred` or `required`. When enabling encryption on an existing replication group, you must first set this to `preferred` before you can set it to `required`. Required when `transit_encryption_enabled` is `true`.
 * `user_group_ids` - (Optional) User Group ID to associate with the replication group. Only a maximum of one (1) user group ID is valid. **NOTE:** This argument _is_ a set because the AWS specification allows for multiple IDs. However, in practice, AWS only allows a maximum size of one.
 
 ### Log Delivery Configuration
