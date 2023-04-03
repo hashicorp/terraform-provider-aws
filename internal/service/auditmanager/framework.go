@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -152,7 +151,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Framework)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Framework)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -182,7 +181,7 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -240,7 +239,7 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-		state.refreshFromOutput(ctx, r.Meta(), out.Framework)
+		state.refreshFromOutput(ctx, out.Framework)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -361,7 +360,7 @@ type frameworkControlSetsControlsData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Framework) diag.Diagnostics {
+func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *awstypes.Framework) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
