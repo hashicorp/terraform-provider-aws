@@ -62,7 +62,7 @@ func ResourceAccountSubscription() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"IAM_AND_QUICKSIGHT", "IAM_ONLY", "ACTIVE_DIRECTORY"}, false),
+				ValidateFunc: validation.StringInSlice(quicksight.AuthenticationMethodOption_Values(), false),
 			},
 			"authour_group": {
 				Type:     schema.TypeList,
@@ -92,7 +92,7 @@ func ResourceAccountSubscription() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"STANDARD", "ENTERPRISE", "ENTERPRISE_AND_Q"}, false),
+				ValidateFunc: validation.StringInSlice(quicksight.Edition_Values(), false),
 			},
 			"email_address": {
 				Type:     schema.TypeString,
