@@ -21,12 +21,12 @@ var (
 )
 
 var (
-	BoolToFramework           = flex.BoolToFramework
-	FlattenFrameworkStringSet = flex.FlattenFrameworkStringSet
-	Int64ToFramework          = flex.Int64ToFramework
-	Int64ToFrameworkLegacy    = flex.Int64ToFrameworkLegacy
-	StringToFramework         = flex.StringToFramework
-	StringToFrameworkLegacy   = flex.StringToFrameworkLegacy
+	BoolToFramework                 = flex.BoolToFramework
+	FlattenFrameworkStringSetLegacy = flex.FlattenFrameworkStringSetLegacy
+	Int64ToFramework                = flex.Int64ToFramework
+	Int64ToFrameworkLegacy          = flex.Int64ToFrameworkLegacy
+	StringToFramework               = flex.StringToFramework
+	StringToFrameworkLegacy         = flex.StringToFrameworkLegacy
 )
 
 func ARNStringFromFramework(_ context.Context, v fwtypes.ARN) *string {
