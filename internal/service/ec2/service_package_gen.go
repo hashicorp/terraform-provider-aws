@@ -431,14 +431,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
+			Name:     "EBS Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceEBSSnapshotCopy,
 			TypeName: "aws_ebs_snapshot_copy",
+			Name:     "EBS Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceEBSSnapshotImport,
 			TypeName: "aws_ebs_snapshot_import",
+			Name:     "EBS Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceEBSVolume,
