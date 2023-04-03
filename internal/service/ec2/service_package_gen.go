@@ -379,14 +379,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAMI,
 			TypeName: "aws_ami",
+			Name:     "AMI",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAMICopy,
 			TypeName: "aws_ami_copy",
+			Name:     "AMI",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAMIFromInstance,
 			TypeName: "aws_ami_from_instance",
+			Name:     "AMI",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAMILaunchPermission,
