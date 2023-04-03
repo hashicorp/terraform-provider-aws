@@ -479,6 +479,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCapacityReservation,
 			TypeName: "aws_ec2_capacity_reservation",
+			Name:     "Capacity Reservation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCarrierGateway,
