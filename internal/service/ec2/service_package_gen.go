@@ -982,6 +982,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
+			Name:     "VPN Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceVPNGatewayAttachment,
