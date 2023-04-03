@@ -560,10 +560,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
+			Name:     "Network Insights Analysis",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
+			Name:     "Network Insights Path",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSerialConsoleAccess,
