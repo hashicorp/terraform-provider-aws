@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -304,7 +303,7 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.QuickS
 	return nil, err
 }
 
-func statusAccountSubscription(ctx context.Context, conn *quicksight.QuickSight, id string) resource.StateRefreshFunc {
+func statusAccountSubscription(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findAccountSubscriptionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -325,7 +324,7 @@ func findAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSigh
 	}
 	out, err := conn.DescribeAccountSubscriptionWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
