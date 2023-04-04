@@ -31,7 +31,7 @@ Reproducing a bug is the process of intentionally triggering the error or unexpe
 Creating a minimal reproduction of a bug is the process of isolating the bug to its simplest form. It is _very important_ to create a minimal reproduction of bugs, especially with Terraform configurations, because it allows us to:
 
 1. **Focus on the root cause of the bug**: By eliminating any extraneous configuration or dependencies, we can focus on the specific configuration that is causing the bug. This makes it easier to understand and fix the root cause of the bug.
-2. **Save time**: By creating a minimal reproduction of the bug, we can reduce the amount of time it takes to reproduce the bug and test the fix. This is because we don't have to navigate through a large configuration or deal with unnecessary dependencies. _The minimal configuration becomes the basis of a [new acceptance test](#2-create-a-new-acceptance-test) that verifies the bug is fixed (and stays fixed in the future)._
+2. **Save time**: By creating a minimal reproduction of the bug, we can reduce the amount of time it takes to reproduce the bug and test the fix. This is because we don't have to navigate through a large configuration or deal with unnecessary dependencies. _The minimal configuration becomes the basis of a [new acceptance test](#3-create-a-new-acceptance-test) that verifies the bug is fixed (and stays fixed in the future)._
 3. **Make it easier for others to reproduce the bug**: If we are working on a team, creating a minimal reproduction of the bug makes it easier for other team members to reproduce the bug and understand the root cause.
 
 ### How to create a minimal reproduction of a bug
