@@ -215,7 +215,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return diags
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
