@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apigatewayv2_api")
+// @SDKResource("aws_apigatewayv2_api", name="API")
+// @Tags(identifierAttribute="arn")
 func ResourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,
@@ -140,8 +142,8 @@ func ResourceAPI() *schema.Resource {
 				Optional: true,
 				Default:  "$request.method $request.path",
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -161,44 +163,42 @@ func ResourceAPI() *schema.Resource {
 func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	protocolType := d.Get("protocol_type").(string)
-	req := &apigatewayv2.CreateApiInput{
+	input := &apigatewayv2.CreateApiInput{
 		Name:         aws.String(d.Get("name").(string)),
 		ProtocolType: aws.String(protocolType),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
-		req.ApiKeySelectionExpression = aws.String(v.(string))
+		input.ApiKeySelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		req.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
+		input.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("credentials_arn"); ok {
-		req.CredentialsArn = aws.String(v.(string))
+		input.CredentialsArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
-		req.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
+		input.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("route_key"); ok {
-		req.RouteKey = aws.String(v.(string))
+		input.RouteKey = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_selection_expression"); ok {
-		req.RouteSelectionExpression = aws.String(v.(string))
+		input.RouteSelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target"); ok {
-		req.Target = aws.String(v.(string))
+		input.Target = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("version"); ok {
-		req.Version = aws.String(v.(string))
+		input.Version = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateApiWithContext(ctx, req)
+	resp, err := conn.CreateApiWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
 	}
@@ -216,8 +216,6 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(d.Id()),
@@ -257,16 +255,8 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
 
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	SetTagsOut(ctx, resp.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 	d.Set("version", resp.Version)
 
 	return diags
@@ -324,13 +314,6 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		_, err := conn.UpdateApiWithContext(ctx, req)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 		}
 	}
 

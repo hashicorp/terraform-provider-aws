@@ -24,6 +24,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -172,8 +173,8 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
+		names.AttrTags:    tftags.TagsSchema(),
+		names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		"tracing_config": {
 			Type:         schema.TypeString,
 			Optional:     true,

@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_model")
+// @SDKResource("aws_sagemaker_model", name="Model")
+// @Tags(identifierAttribute="arn")
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceModelCreate,
@@ -212,8 +214,8 @@ func ResourceModel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -245,8 +247,6 @@ func ResourceModel() *schema.Resource {
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -257,6 +257,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
+		Tags:      GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
@@ -269,10 +270,6 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
@@ -316,8 +313,6 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
@@ -355,22 +350,6 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting inference_execution_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Model (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -389,15 +368,8 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 
 func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Model (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
