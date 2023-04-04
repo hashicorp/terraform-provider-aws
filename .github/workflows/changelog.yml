@@ -33,7 +33,7 @@ jobs:
 
   comment:
     needs: changes
-    if: needs.changes.outputs.changed
+    if: needs.changes.outputs.changed == 'true'
     name: Comment
     runs-on: ubuntu-latest
     steps:
